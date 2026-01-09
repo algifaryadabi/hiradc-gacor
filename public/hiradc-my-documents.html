@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokumen Saya - HIRADC System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar - Same as dashboard */
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo-section {
+            padding: 30px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .logo-circle {
+            width: 70px;
+            height: 70px;
+            background: #000;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #c41e3a;
+            margin-bottom: 3px;
+        }
+
+        .logo-subtext {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .user-info {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f9f9f9;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 20px;
+            margin: 0 auto 10px;
+        }
+
+        .user-name {
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .user-role {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: #fff5f5;
+            color: #c41e3a;
+        }
+
+        .nav-item.active {
+            background: #ffe5e5;
+            color: #c41e3a;
+            border-left: 3px solid #c41e3a;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .badge {
+            position: absolute;
+            right: 20px;
+            background: #c41e3a;
+            color: white;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+        }
+
+        .header {
+            background: white;
+            padding: 25px 40px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .btn-primary {
+            padding: 10px 20px;
+            background: #c41e3a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #a01729;
+            transform: translateY(-1px);
+        }
+
+        .content-area {
+            padding: 30px 40px;
+        }
+
+        /* Status Tabs */
+        .status-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            color: #c41e3a;
+        }
+
+        .tab.active {
+            color: #c41e3a;
+            border-bottom-color: #c41e3a;
+        }
+
+        .tab .count {
+            background: #e0e0e0;
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .tab.active .count {
+            background: #c41e3a;
+            color: white;
+        }
+
+        /* Document Cards */
+        .documents-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .document-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border-left: 4px solid #c41e3a;
+        }
+
+        .document-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .doc-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .doc-number {
+            font-size: 12px;
+            color: #999;
+            font-family: 'Courier New', monospace;
+        }
+
+        .doc-meta {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+            padding: 15px 0;
+            border-top: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .meta-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-value {
+            font-size: 13px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .doc-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-view {
+            background: #c41e3a;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #a01729;
+        }
+
+        .btn-edit {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #e68900;
+        }
+
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #d32f2f;
+        }
+
+        /* Status Badges */
+        .badge-status {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-draft {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-submitted {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-revision {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status-approved {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-rejected {
+            background: #fce4ec;
+            color: #880e4f;
+        }
+
+        /* Revision Alert */
+        .revision-alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .revision-alert strong {
+            color: #856404;
+        }
+
+        .revision-comment {
+            margin-top: 5px;
+            font-style: italic;
+            color: #666;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-section">
+                <div class="logo-circle"></div>
+                <div class="logo-text">HIRADC</div>
+                <div class="logo-subtext">System</div>
+            </div>
+
+            <div class="user-info">
+                <div class="user-avatar">JD</div>
+                <div class="user-name">John Doe</div>
+                <div class="user-role">Staff Unit Kerja</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="hiradc-user-dashboard-v2.html" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="hiradc-my-documents.html" class="nav-item active">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Dokumen Saya</span>
+                    <span class="badge">12</span>
+                </a>
+                <a href="hiradc-form-complete.html" class="nav-item">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Buat Dokumen Baru</span>
+                </a>
+                <a href="hiradc-notifications.html" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifikasi</span>
+                    <span class="badge">3</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Pengaturan</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Keluar</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <h1>Dokumen Saya</h1>
+                <a href="hiradc-form-complete.html" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Buat Dokumen Baru
+                </a>
+            </div>
+
+            <div class="content-area">
+                <!-- Status Tabs -->
+                <div class="status-tabs">
+                    <button class="tab active" onclick="filterByStatus('all')">
+                        Semua <span class="count">12</span>
+                    </button>
+                    <button class="tab" onclick="filterByStatus('draft')">
+                        Draft <span class="count">2</span>
+                    </button>
+                    <button class="tab" onclick="filterByStatus('submitted')">
+                        Menunggu Review <span class="count">3</span>
+                    </button>
+                    <button class="tab" onclick="filterByStatus('revision')">
+                        Perlu Revisi <span class="count">2</span>
+                    </button>
+                    <button class="tab" onclick="filterByStatus('approved')">
+                        Disetujui <span class="count">4</span>
+                    </button>
+                    <button class="tab" onclick="filterByStatus('rejected')">
+                        Ditolak <span class="count">1</span>
+                    </button>
+                </div>
+
+                <!-- Documents Grid -->
+                <div class="documents-grid" id="documentsGrid">
+                    <!-- Documents will be populated by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Sample documents data
+        const myDocuments = [
+            {
+                id: 'HIRADC/2026/01/101',
+                title: 'Penilaian Risiko Mesin Cutting Baru',
+                category: 'K3',
+                unit: 'Produksi',
+                date: '08 Jan 2026',
+                status: 'submitted',
+                statusText: 'Menunggu Review',
+                reviewer: 'Kepala Unit Produksi',
+                riskLevel: 'Tinggi'
+            },
+            {
+                id: 'HIRADC/2026/01/102',
+                title: 'Analisis Dampak Limbah Cair',
+                category: 'Lingkungan',
+                unit: 'Produksi',
+                date: '07 Jan 2026',
+                status: 'revision',
+                statusText: 'Perlu Revisi',
+                reviewer: 'Kepala Unit Produksi',
+                revisionComment: 'Mohon lengkapi data tindakan pengendalian pada kolom 13. Sertakan juga timeline implementasi yang lebih detail.',
+                revisionBy: 'Budi Santoso',
+                revisionDate: '08 Jan 2026',
+                riskLevel: 'Sedang'
+            },
+            {
+                id: 'HIRADC/2026/01/103',
+                title: 'Evaluasi Keamanan Akses Server Room',
+                category: 'Keamanan',
+                unit: 'IT',
+                date: '06 Jan 2026',
+                status: 'draft',
+                statusText: 'Draft',
+                riskLevel: 'Rendah'
+            },
+            {
+                id: 'HIRADC/2025/12/104',
+                title: 'Prosedur Keselamatan Forklift',
+                category: 'KO',
+                unit: 'Warehouse',
+                date: '28 Des 2025',
+                status: 'approved',
+                statusText: 'Disetujui',
+                approvedBy: 'Kepala Departemen',
+                approvedDate: '05 Jan 2026',
+                riskLevel: 'Tinggi'
+            },
+            {
+                id: 'HIRADC/2025/12/105',
+                title: 'Identifikasi Bahaya Ruang Boiler',
+                category: 'K3',
+                unit: 'Maintenance',
+                date: '25 Des 2025',
+                status: 'approved',
+                statusText: 'Disetujui',
+                approvedBy: 'Kepala Departemen',
+                approvedDate: '02 Jan 2026',
+                riskLevel: 'Sangat Tinggi'
+            },
+            {
+                id: 'HIRADC/2025/12/106',
+                title: 'Penilaian Risiko Bahan Kimia Lab',
+                category: 'K3',
+                unit: 'QC',
+                date: '20 Des 2025',
+                status: 'submitted',
+                statusText: 'Menunggu Review',
+                reviewer: 'Kepala Unit QC',
+                riskLevel: 'Tinggi'
+            },
+            {
+                id: 'HIRADC/2025/12/107',
+                title: 'Analisis Kebisingan Area Produksi',
+                category: 'K3',
+                unit: 'Produksi',
+                date: '18 Des 2025',
+                status: 'revision',
+                statusText: 'Perlu Revisi',
+                reviewer: 'Kepala Unit Produksi',
+                revisionComment: 'Data pengukuran kebisingan perlu dilengkapi dengan hasil kalibrasi alat ukur. Tambahkan juga rekomendasi APD yang spesifik.',
+                revisionBy: 'Ahmad Rizki',
+                revisionDate: '22 Des 2025',
+                riskLevel: 'Tinggi'
+            },
+            {
+                id: 'HIRADC/2025/11/108',
+                title: 'Evaluasi Sistem Pemadam Kebakaran',
+                category: 'Keamanan',
+                unit: 'Security',
+                date: '15 Nov 2025',
+                status: 'approved',
+                statusText: 'Disetujui',
+                approvedBy: 'Kepala Departemen',
+                approvedDate: '25 Nov 2025',
+                riskLevel: 'Sedang'
+            },
+            {
+                id: 'HIRADC/2025/11/109',
+                title: 'Penilaian Risiko Penggunaan Crane',
+                category: 'KO',
+                unit: 'Produksi',
+                date: '10 Nov 2025',
+                status: 'rejected',
+                statusText: 'Ditolak',
+                rejectedBy: 'Kepala Departemen',
+                rejectedDate: '20 Nov 2025',
+                rejectionReason: 'Dokumen tidak memenuhi standar. Data penilaian risiko tidak lengkap dan tidak sesuai dengan prosedur HIRADC. Silakan buat dokumen baru dengan data yang lebih komprehensif.',
+                riskLevel: 'Sangat Tinggi'
+            },
+            {
+                id: 'HIRADC/2025/11/110',
+                title: 'Analisis Dampak Limbah B3',
+                category: 'Lingkungan',
+                unit: 'Produksi',
+                date: '05 Nov 2025',
+                status: 'approved',
+                statusText: 'Disetujui',
+                approvedBy: 'Kepala Departemen',
+                approvedDate: '18 Nov 2025',
+                riskLevel: 'Sangat Tinggi'
+            },
+            {
+                id: 'HIRADC/2026/01/111',
+                title: 'Prosedur Keselamatan Kerja di Ketinggian',
+                category: 'K3',
+                unit: 'Maintenance',
+                date: '05 Jan 2026',
+                status: 'submitted',
+                statusText: 'Menunggu Review',
+                reviewer: 'Kepala Unit Maintenance',
+                riskLevel: 'Sangat Tinggi'
+            },
+            {
+                id: 'HIRADC/2026/01/112',
+                title: 'Evaluasi Pencahayaan Ruang Kerja',
+                category: 'K3',
+                unit: 'Produksi',
+                date: '03 Jan 2026',
+                status: 'draft',
+                statusText: 'Draft',
+                riskLevel: 'Rendah'
+            }
+        ];
+
+        function renderDocuments(docs) {
+            const grid = document.getElementById('documentsGrid');
+
+            if (docs.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <h3>Tidak ada dokumen</h3>
+                        <p>Belum ada dokumen dengan status ini</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = docs.map(doc => {
+                let statusBadge = '';
+                let actionButtons = '';
+                let alertSection = '';
+
+                // Status badge
+                switch (doc.status) {
+                    case 'draft':
+                        statusBadge = '<span class="badge-status status-draft">Draft</span>';
+                        actionButtons = `
+                            <a href="hiradc-form-complete.html?edit=${doc.id}" class="btn btn-edit">
+                                <i class="fas fa-edit"></i> Lanjutkan Edit
+                            </a>
+                            <button class="btn btn-delete" onclick="deleteDocument('${doc.id}')">
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                        `;
+                        break;
+                    case 'submitted':
+                        statusBadge = '<span class="badge-status status-submitted">Menunggu Review</span>';
+                        actionButtons = `
+                            <a href="hiradc-document-detail.html?id=${doc.id}" class="btn btn-view">
+                                <i class="fas fa-eye"></i> Lihat Detail
+                            </a>
+                        `;
+                        break;
+                    case 'revision':
+                        statusBadge = '<span class="badge-status status-revision">Perlu Revisi</span>';
+                        alertSection = `
+                            <div class="revision-alert">
+                                <strong><i class="fas fa-exclamation-triangle"></i> Revisi dari ${doc.revisionBy} (${doc.revisionDate})</strong>
+                                <div class="revision-comment">"${doc.revisionComment}"</div>
+                            </div>
+                        `;
+                        actionButtons = `
+                            <a href="hiradc-form-complete.html?revise=${doc.id}" class="btn btn-edit">
+                                <i class="fas fa-edit"></i> Perbaiki Dokumen
+                            </a>
+                            <a href="hiradc-document-detail.html?id=${doc.id}" class="btn btn-view">
+                                <i class="fas fa-eye"></i> Lihat Detail
+                            </a>
+                        `;
+                        break;
+                    case 'approved':
+                        statusBadge = '<span class="badge-status status-approved">Disetujui</span>';
+                        actionButtons = `
+                            <a href="hiradc-document-detail.html?id=${doc.id}" class="btn btn-view">
+                                <i class="fas fa-eye"></i> Lihat Detail
+                            </a>
+                        `;
+                        break;
+                    case 'rejected':
+                        statusBadge = '<span class="badge-status status-rejected">Ditolak</span>';
+                        alertSection = `
+                            <div class="revision-alert" style="background: #ffebee; border-color: #c62828;">
+                                <strong style="color: #b71c1c;"><i class="fas fa-times-circle"></i> Ditolak oleh ${doc.rejectedBy} (${doc.rejectedDate})</strong>
+                                <div class="revision-comment">"${doc.rejectionReason}"</div>
+                            </div>
+                        `;
+                        actionButtons = `
+                            <a href="hiradc-form-complete.html" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Buat Dokumen Baru
+                            </a>
+                            <a href="hiradc-document-detail.html?id=${doc.id}" class="btn btn-view">
+                                <i class="fas fa-eye"></i> Lihat Detail
+                            </a>
+                        `;
+                        break;
+                }
+
+                return `
+                    <div class="document-card">
+                        <div class="doc-header">
+                            <div>
+                                <div class="doc-title">${doc.title}</div>
+                                <div class="doc-number">${doc.id}</div>
+                            </div>
+                            ${statusBadge}
+                        </div>
+
+                        <div class="doc-meta">
+                            <div class="meta-item">
+                                <div class="meta-label">Kategori</div>
+                                <div class="meta-value">${doc.category}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Unit Kerja</div>
+                                <div class="meta-value">${doc.unit}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Tanggal Dibuat</div>
+                                <div class="meta-value">${doc.date}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Tingkat Risiko</div>
+                                <div class="meta-value">${doc.riskLevel}</div>
+                            </div>
+                        </div>
+
+                        ${alertSection}
+
+                        <div class="doc-actions">
+                            ${actionButtons}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterByStatus(status) {
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Filter documents
+            let filtered = myDocuments;
+            if (status !== 'all') {
+                filtered = myDocuments.filter(doc => doc.status === status);
+            }
+
+            renderDocuments(filtered);
+        }
+
+        function deleteDocument(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus dokumen ini?')) {
+                alert('Dokumen berhasil dihapus!');
+                // In real app, this would delete from database
+            }
+        }
+
+        // Initial render
+        renderDocuments(myDocuments);
+    </script>
+</body>
+
+</html>

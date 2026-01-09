@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Resiko Baru - HIRADC System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar - Same as dashboard */
+        .sidebar {
+            width: 210px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            padding: 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo-section {
+            padding: 30px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .logo-circle {
+            width: 70px;
+            height: 70px;
+            background: #000;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #c41e3a;
+            margin-bottom: 3px;
+        }
+
+        .logo-subtext {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: #fff5f5;
+            color: #c41e3a;
+        }
+
+        .nav-item.active {
+            background: #ffe5e5;
+            color: #c41e3a;
+            border-left: 3px solid #c41e3a;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 210px;
+            padding: 0;
+        }
+
+        .header {
+            background: white;
+            padding: 25px 40px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .content-area {
+            padding: 30px 40px;
+            max-width: 1200px;
+        }
+
+        /* Form Container */
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .required {
+            color: #c41e3a;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #c41e3a;
+        }
+
+        select.form-control {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            background: #f8f8f8;
+            padding: 15px 20px;
+            border-left: 4px solid #c41e3a;
+            margin: 30px 0 20px 0;
+            border-radius: 4px;
+        }
+
+        .section-header h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .section-header p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Risk Matrix */
+        .risk-matrix {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(5, 1fr);
+            gap: 5px;
+            margin-top: 15px;
+        }
+
+        .matrix-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 8px;
+        }
+
+        .matrix-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .matrix-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .matrix-cell.selected {
+            border: 3px solid #000;
+            transform: scale(1.1);
+        }
+
+        /* Risk levels */
+        .risk-low {
+            background: #4caf50;
+            color: white;
+        }
+
+        .risk-medium {
+            background: #ffeb3b;
+            color: #333;
+        }
+
+        .risk-high {
+            background: #ff9800;
+            color: white;
+        }
+
+        .risk-extreme {
+            background: #f44336;
+            color: white;
+        }
+
+        /* Risk Result Display */
+        .risk-result {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-primary {
+            background: #c41e3a;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #a01729;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(196, 30, 58, 0.3);
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .main-content {
+                margin-left: 70px;
+            }
+
+            .logo-text,
+            .logo-subtext,
+            .nav-item span {
+                display: none;
+            }
+
+            .form-row,
+            .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .matrix-grid {
+                grid-template-columns: 60px repeat(5, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-section">
+                <div class="logo-circle"></div>
+                <div class="logo-text">HIRADC</div>
+                <div class="logo-subtext">System</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="hiradc-user-dashboard.html" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item active">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Buat Form</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <h1>Input Resiko Baru</h1>
+            </div>
+
+            <div class="content-area">
+                <form id="riskForm" class="form-container">
+
+                    <!-- SECTION 1: Informasi Dasar -->
+                    <div class="section-header">
+                        <h2>📋 Informasi Dasar Dokumen</h2>
+                        <p>Informasi umum tentang dokumen risiko yang akan dibuat</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>No <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="no" placeholder="Nomor akan di-generate otomatis"
+                            readonly>
+                        <p class="help-text">Nomor dokumen akan dibuat otomatis oleh sistem</p>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Jenis Dokumen <span class="required">*</span></label>
+                            <select class="form-control" id="jenisDoc" required>
+                                <option value="">Pilih Jenis Dokumen</option>
+                                <option value="K3">K3 - Kesehatan & Keselamatan Kerja</option>
+                                <option value="KO">KO - Keselamatan Operasional</option>
+                                <option value="Lingkungan">Lingkungan - Dampak Lingkungan</option>
+                                <option value="Keamanan">Keamanan - Keamanan & Proteksi</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tanggal Penilaian <span class="required">*</span></label>
+                            <input type="date" class="form-control" id="tanggal" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Proses Bisnis/Kegiatan/Aset <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="prosesBisnis"
+                            placeholder="Contoh: Proses Produksi Mesin A, Kegiatan Maintenance, dll" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Lokasi Area Kerja <span class="required">*</span></label>
+                            <input type="text" class="form-control" id="lokasi"
+                                placeholder="Contoh: Gedung A Lantai 2, Area Produksi, dll" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Unit Kerja <span class="required">*</span></label>
+                            <input type="text" class="form-control" id="unitKerja"
+                                placeholder="Contoh: Departemen Produksi" required>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: Identifikasi Bahaya -->
+                    <div class="section-header">
+                        <h2>⚠️ Identifikasi Bahaya & Risiko</h2>
+                        <p>Identifikasi bahaya yang ada dan risiko yang mungkin terjadi</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Kategori <span class="required">*</span></label>
+                        <select class="form-control" id="kategori" required>
+                            <option value="">Pilih Kategori</option>
+                            <option value="Fisik">Bahaya Fisik</option>
+                            <option value="Kimia">Bahaya Kimia</option>
+                            <option value="Biologi">Bahaya Biologi</option>
+                            <option value="Ergonomi">Bahaya Ergonomi</option>
+                            <option value="Psikososial">Bahaya Psikososial</option>
+                            <option value="Mekanik">Bahaya Mekanik</option>
+                            <option value="Listrik">Bahaya Listrik</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Kondisi <span class="required">*</span></label>
+                        <select class="form-control" id="kondisi" required>
+                            <option value="">Pilih Kondisi</option>
+                            <option value="Normal">Kondisi Normal</option>
+                            <option value="Abnormal">Kondisi Abnormal</option>
+                            <option value="Darurat">Kondisi Darurat</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Sumber Bahaya <span class="required">*</span></label>
+                        <textarea class="form-control" id="sumberBahaya"
+                            placeholder="Jelaskan sumber bahaya yang teridentifikasi..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bahaya yang Teridentifikasi <span class="required">*</span></label>
+                        <textarea class="form-control" id="bahaya" placeholder="Jelaskan bahaya secara detail..."
+                            required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Risiko/Dampak Potensial <span class="required">*</span></label>
+                        <textarea class="form-control" id="dampak"
+                            placeholder="Jelaskan dampak yang mungkin terjadi jika risiko terealisasi..."
+                            required></textarea>
+                    </div>
+
+                    <!-- SECTION 3: Penilaian Risiko -->
+                    <div class="section-header">
+                        <h2>📊 Penilaian Tingkat Risiko</h2>
+                        <p>Tentukan tingkat kemungkinan dan keparahan risiko</p>
+                    </div>
+
+                    <div class="risk-matrix">
+                        <h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Matriks Penilaian Risiko
+                        </h3>
+                        <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Klik pada sel untuk memilih
+                            kombinasi Kemungkinan (Likelihood) dan Keparahan (Severity)</p>
+
+                        <div class="matrix-grid">
+                            <!-- Header row -->
+                            <div class="matrix-label"></div>
+                            <div class="matrix-label">1<br>Sangat<br>Rendah</div>
+                            <div class="matrix-label">2<br>Rendah</div>
+                            <div class="matrix-label">3<br>Sedang</div>
+                            <div class="matrix-label">4<br>Tinggi</div>
+                            <div class="matrix-label">5<br>Sangat<br>Tinggi</div>
+
+                            <!-- Row 5 -->
+                            <div class="matrix-label">5 - Sangat Sering</div>
+                            <div class="matrix-cell risk-medium" data-l="5" data-s="1" data-score="5">5</div>
+                            <div class="matrix-cell risk-high" data-l="5" data-s="2" data-score="10">10</div>
+                            <div class="matrix-cell risk-high" data-l="5" data-s="3" data-score="15">15</div>
+                            <div class="matrix-cell risk-extreme" data-l="5" data-s="4" data-score="20">20</div>
+                            <div class="matrix-cell risk-extreme" data-l="5" data-s="5" data-score="25">25</div>
+
+                            <!-- Row 4 -->
+                            <div class="matrix-label">4 - Sering</div>
+                            <div class="matrix-cell risk-medium" data-l="4" data-s="1" data-score="4">4</div>
+                            <div class="matrix-cell risk-medium" data-l="4" data-s="2" data-score="8">8</div>
+                            <div class="matrix-cell risk-high" data-l="4" data-s="3" data-score="12">12</div>
+                            <div class="matrix-cell risk-high" data-l="4" data-s="4" data-score="16">16</div>
+                            <div class="matrix-cell risk-extreme" data-l="4" data-s="5" data-score="20">20</div>
+
+                            <!-- Row 3 -->
+                            <div class="matrix-label">3 - Mungkin</div>
+                            <div class="matrix-cell risk-low" data-l="3" data-s="1" data-score="3">3</div>
+                            <div class="matrix-cell risk-medium" data-l="3" data-s="2" data-score="6">6</div>
+                            <div class="matrix-cell risk-medium" data-l="3" data-s="3" data-score="9">9</div>
+                            <div class="matrix-cell risk-high" data-l="3" data-s="4" data-score="12">12</div>
+                            <div class="matrix-cell risk-high" data-l="3" data-s="5" data-score="15">15</div>
+
+                            <!-- Row 2 -->
+                            <div class="matrix-label">2 - Jarang</div>
+                            <div class="matrix-cell risk-low" data-l="2" data-s="1" data-score="2">2</div>
+                            <div class="matrix-cell risk-low" data-l="2" data-s="2" data-score="4">4</div>
+                            <div class="matrix-cell risk-medium" data-l="2" data-s="3" data-score="6">6</div>
+                            <div class="matrix-cell risk-medium" data-l="2" data-s="4" data-score="8">8</div>
+                            <div class="matrix-cell risk-high" data-l="2" data-s="5" data-score="10">10</div>
+
+                            <!-- Row 1 -->
+                            <div class="matrix-label">1 - Sangat Jarang</div>
+                            <div class="matrix-cell risk-low" data-l="1" data-s="1" data-score="1">1</div>
+                            <div class="matrix-cell risk-low" data-l="1" data-s="2" data-score="2">2</div>
+                            <div class="matrix-cell risk-low" data-l="1" data-s="3" data-score="3">3</div>
+                            <div class="matrix-cell risk-medium" data-l="1" data-s="4" data-score="4">4</div>
+                            <div class="matrix-cell risk-medium" data-l="1" data-s="5" data-score="5">5</div>
+                        </div>
+
+                        <div id="riskResult" class="risk-result" style="display: none;">
+                            <span id="riskResultText"></span>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="likelihood" name="likelihood">
+                    <input type="hidden" id="severity" name="severity">
+                    <input type="hidden" id="riskScore" name="riskScore">
+                    <input type="hidden" id="riskLevel" name="riskLevel">
+
+                    <!-- SECTION 4: Pengendalian Risiko -->
+                    <div class="section-header">
+                        <h2>🛡️ Pengendalian Risiko</h2>
+                        <p>Tindakan pengendalian yang akan diterapkan untuk mengurangi risiko</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Hirarki Pengendalian <span class="required">*</span></label>
+                        <select class="form-control" id="hirarki" required>
+                            <option value="">Pilih Hirarki Pengendalian</option>
+                            <option value="Eliminasi">Eliminasi - Menghilangkan bahaya</option>
+                            <option value="Substitusi">Substitusi - Mengganti dengan yang lebih aman</option>
+                            <option value="Rekayasa">Rekayasa Teknik - Isolasi/penghalang</option>
+                            <option value="Administratif">Pengendalian Administratif - Prosedur/pelatihan</option>
+                            <option value="APD">APD - Alat Pelindung Diri</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tindakan Pengendalian yang Diterapkan <span class="required">*</span></label>
+                        <textarea class="form-control" id="pengendalian"
+                            placeholder="Jelaskan tindakan pengendalian secara detail..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Penanggung Jawab <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="penanggungJawab"
+                            placeholder="Nama penanggung jawab implementasi" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Target Penyelesaian <span class="required">*</span></label>
+                            <input type="date" class="form-control" id="targetSelesai" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Status Implementasi <span class="required">*</span></label>
+                            <select class="form-control" id="statusImplementasi" required>
+                                <option value="">Pilih Status</option>
+                                <option value="Belum Dimulai">Belum Dimulai</option>
+                                <option value="Dalam Proses">Dalam Proses</option>
+                                <option value="Selesai">Selesai</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Risiko Sisa (Residual Risk)</label>
+                        <textarea class="form-control" id="risikoSisa"
+                            placeholder="Jelaskan risiko yang masih tersisa setelah pengendalian diterapkan..."></textarea>
+                        <p class="help-text">Opsional - Risiko yang masih ada setelah tindakan pengendalian</p>
+                    </div>
+
+                    <!-- SECTION 5: Catatan Tambahan -->
+                    <div class="section-header">
+                        <h2>📝 Catatan & Dokumentasi</h2>
+                        <p>Informasi tambahan dan dokumentasi pendukung</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Catatan Tambahan</label>
+                        <textarea class="form-control" id="catatan"
+                            placeholder="Catatan atau informasi tambahan yang relevan..."></textarea>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="saveDraft()">
+                            <i class="fas fa-save"></i> Simpan Draft
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Kirim untuk Review
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Generate document number
+        function generateDocNumber() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `HIRADC/${year}/${month}/${random}`;
+        }
+
+        document.getElementById('no').value = generateDocNumber();
+
+        // Set today's date as default
+        document.getElementById('tanggal').valueAsDate = new Date();
+
+        // Risk Matrix Selection
+        const matrixCells = document.querySelectorAll('.matrix-cell');
+        const riskResult = document.getElementById('riskResult');
+        const riskResultText = document.getElementById('riskResultText');
+
+        matrixCells.forEach(cell => {
+            cell.addEventListener('click', function () {
+                // Remove previous selection
+                matrixCells.forEach(c => c.classList.remove('selected'));
+
+                // Add selection to clicked cell
+                this.classList.add('selected');
+
+                // Get values
+                const likelihood = this.dataset.l;
+                const severity = this.dataset.s;
+                const score = this.dataset.score;
+
+                // Set hidden inputs
+                document.getElementById('likelihood').value = likelihood;
+                document.getElementById('severity').value = severity;
+                document.getElementById('riskScore').value = score;
+
+                // Determine risk level
+                let level, levelText, levelClass;
+                if (score <= 3) {
+                    level = 'Rendah';
+                    levelText = 'RISIKO RENDAH';
+                    levelClass = 'risk-low';
+                } else if (score <= 8) {
+                    level = 'Sedang';
+                    levelText = 'RISIKO SEDANG';
+                    levelClass = 'risk-medium';
+                } else if (score <= 15) {
+                    level = 'Tinggi';
+                    levelText = 'RISIKO TINGGI';
+                    levelClass = 'risk-high';
+                } else {
+                    level = 'Sangat Tinggi';
+                    levelText = 'RISIKO SANGAT TINGGI';
+                    levelClass = 'risk-extreme';
+                }
+
+                document.getElementById('riskLevel').value = level;
+
+                // Show result
+                riskResult.style.display = 'block';
+                riskResult.className = 'risk-result ' + levelClass;
+                riskResultText.textContent = `${levelText} (Skor: ${score})`;
+            });
+        });
+
+        // Form Submission
+        document.getElementById('riskForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Validate risk assessment
+            if (!document.getElementById('riskScore').value) {
+                alert('Silakan pilih tingkat risiko pada matriks penilaian!');
+                return;
+            }
+
+            // Collect form data
+            const formData = {
+                no: document.getElementById('no').value,
+                jenisDoc: document.getElementById('jenisDoc').value,
+                tanggal: document.getElementById('tanggal').value,
+                prosesBisnis: document.getElementById('prosesBisnis').value,
+                lokasi: document.getElementById('lokasi').value,
+                unitKerja: document.getElementById('unitKerja').value,
+                kategori: document.getElementById('kategori').value,
+                kondisi: document.getElementById('kondisi').value,
+                sumberBahaya: document.getElementById('sumberBahaya').value,
+                bahaya: document.getElementById('bahaya').value,
+                dampak: document.getElementById('dampak').value,
+                likelihood: document.getElementById('likelihood').value,
+                severity: document.getElementById('severity').value,
+                riskScore: document.getElementById('riskScore').value,
+                riskLevel: document.getElementById('riskLevel').value,
+                hirarki: document.getElementById('hirarki').value,
+                pengendalian: document.getElementById('pengendalian').value,
+                penanggungJawab: document.getElementById('penanggungJawab').value,
+                targetSelesai: document.getElementById('targetSelesai').value,
+                statusImplementasi: document.getElementById('statusImplementasi').value,
+                risikoSisa: document.getElementById('risikoSisa').value,
+                catatan: document.getElementById('catatan').value
+            };
+
+            console.log('Form Data:', formData);
+
+            // Show success message
+            alert('Dokumen risiko berhasil dikirim untuk review!\n\nDokumen akan diperiksa oleh Kepala Unit Kerja.\nAnda akan menerima notifikasi jika ada revisi yang diperlukan.');
+
+            // Redirect to dashboard
+            window.location.href = 'hiradc-user-dashboard.html';
+        });
+
+        // Save Draft Function
+        function saveDraft() {
+            const formData = {
+                no: document.getElementById('no').value,
+                jenisDoc: document.getElementById('jenisDoc').value,
+                status: 'draft'
+            };
+
+            console.log('Saving draft:', formData);
+            alert('Draft berhasil disimpan!\n\nAnda dapat melanjutkan pengisian nanti.');
+        }
+    </script>
+</body>
+
+</html>
