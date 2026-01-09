@@ -32,7 +32,8 @@
             border-right: 1px solid #e0e0e0;
             position: fixed;
             height: 100vh;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         .logo-section {
@@ -44,9 +45,19 @@
         .logo-circle {
             width: 70px;
             height: 70px;
-            background: #000;
+            background: #fff;
             border-radius: 50%;
             margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-circle img {
+            max-width: 80%;
+            max-height: 80%;
         }
 
         .logo-text {
@@ -62,42 +73,10 @@
             font-style: italic;
         }
 
-        .user-info {
-            padding: 20px;
-            border-bottom: 1px solid #e0e0e0;
-            background: #f9f9f9;
-        }
-
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 20px;
-            margin: 0 auto 10px;
-        }
-
-        .user-name {
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-            color: #333;
-        }
-
-        .user-role {
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            margin-top: 3px;
-        }
-
         .nav-menu {
+            flex: 1;
             padding: 20px 0;
+            overflow-y: auto;
         }
 
         .nav-item {
@@ -140,6 +119,77 @@
             padding: 3px 8px;
             border-radius: 10px;
             font-weight: 600;
+        }
+
+        /* User Info at Bottom */
+        .user-info-bottom {
+            padding: 20px;
+            border-top: 2px solid #e0e0e0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 2px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         /* Main Content */
@@ -431,52 +481,56 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo-section">
-                <div class="logo-circle"></div>
-                <div class="logo-text">HIRADC</div>
-                <div class="logo-subtext">System</div>
-            </div>
-
-            <div class="user-info">
-                <div class="user-avatar">JD</div>
-                <div class="user-name">John Doe</div>
-                <div class="user-role">Staff Unit Kerja</div>
+                <div class="logo-circle">
+                     <!-- Placeholder or real logo -->
+                     <img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP">
+                </div>
+                <div class="logo-text">PT Semen Padang</div>
+                <div class="logo-subtext">HIRADC System</div>
             </div>
 
             <nav class="nav-menu">
-                <a href="hiradc-user-dashboard-v2.html" class="nav-item">
+                <a href="{{ route('dashboard') }}" class="nav-item">
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="hiradc-my-documents.html" class="nav-item">
+                <a href="{{ route('documents.index') }}" class="nav-item">
                     <i class="fas fa-folder-open"></i>
                     <span>Dokumen Saya</span>
-                    <span class="badge">12</span>
+                    <span class="badge">9</span>
                 </a>
-                <a href="hiradc-form-complete.html" class="nav-item">
+                <a href="{{ route('documents.create') }}" class="nav-item">
                     <i class="fas fa-plus-circle"></i>
                     <span>Buat Dokumen Baru</span>
                 </a>
-                <a href="hiradc-notifications.html" class="nav-item">
-                    <i class="fas fa-bell"></i>
-                    <span>Notifikasi</span>
-                    <span class="badge">5</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Pengaturan</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Keluar</span>
-                </a>
             </nav>
+
+            <!-- User Info at Bottom -->
+            <div class="user-info-bottom">
+                <div class="user-profile">
+                    <div class="user-avatar">JD</div>
+                    <div class="user-details">
+                        <div class="user-name">John Doe</div>
+                        <div class="user-role">Staff Unit Kerja</div>
+                    </div>
+                </div>
+                <!-- Logout via Form/Link -->
+                <a href="{{ route('logout') }}" class="logout-btn" 
+                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Keluar
+                </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
+            </div>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
             <div class="header">
                 <div class="header-left">
-                    <a href="hiradc-my-documents.html" class="btn-back">
+                    <a href="{{ route('documents.index') }}" class="btn-back">
                         <i class="fas fa-arrow-left"></i>
                     </a>
                     <h1>Detail Dokumen Risiko</h1>
@@ -511,7 +565,7 @@
                     </div>
 
                     <div class="action-buttons">
-                        <a href="hiradc-form-complete.html?revise=HIRADC/2026/01/102" class="btn btn-primary">
+                        <a href="#" class="btn btn-primary">
                             <i class="fas fa-edit"></i> Perbaiki Dokumen
                         </a>
                         <button class="btn btn-secondary" onclick="window.print()">

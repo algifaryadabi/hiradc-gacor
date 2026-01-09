@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - PT Semen Padang</title>
+    <title>Reset Password - PT Semen Padang</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -12,8 +12,6 @@
             /* Semen Padang Red */
             --primary-dark: #b71c1c;
             --secondary-color: #1a202c;
-            --accent-color: #ffc107;
-            --text-color: #333;
             --bg-color: #f7fafc;
         }
 
@@ -36,7 +34,7 @@
             width: 100vw;
         }
 
-        /* Left Side - Branding */
+        /* Left Side - Branding (Same as Login) */
         .login-left {
             flex: 1.2;
             background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
@@ -51,7 +49,6 @@
             text-align: center;
         }
 
-        /* Abstract shapes for premium feel */
         .shape {
             position: absolute;
             border-radius: 50%;
@@ -96,14 +93,9 @@
             justify-content: center;
             margin: 0 auto 30px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            font-size: 60px;
-            font-weight: bold;
-            color: var(--primary-color);
-            position: relative;
             overflow: hidden;
         }
 
-        /* Placeholder for Logo if image fails */
         .brand-logo-img {
             max-width: 80%;
             max-height: 80%;
@@ -134,14 +126,12 @@
             justify-content: center;
             background: white;
             padding: 40px;
-            position: relative;
         }
 
         .login-card {
             width: 100%;
             max-width: 480px;
             padding: 40px;
-            /* Glassy effect on white background? neat but subtle here */
         }
 
         .form-header {
@@ -174,18 +164,12 @@
             font-size: 14px;
         }
 
-        .input-wrapper {
-            position: relative;
-        }
-
         .form-control {
             width: 100%;
             padding: 16px 20px 16px 50px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
             font-size: 16px;
-            /* Larger text inputs */
-            font-family: inherit;
             transition: all 0.3s ease;
             background: #f8fafc;
         }
@@ -231,67 +215,17 @@
             box-shadow: 0 8px 20px rgba(211, 47, 47, 0.4);
         }
 
-        .btn-submit:active {
-            transform: translateY(0);
-        }
-
-        .extra-links {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .forgot-pass {
-            color: var(--primary-color);
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #718096;
             text-decoration: none;
-            font-weight: 600;
-        }
-
-        .forgot-pass:hover {
-            text-decoration: underline;
-        }
-
-        /* Error Message Styling */
-        .error-message {
-            background-color: #fff5f5;
-            color: #c53030;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 5px solid #fc8181;
-            margin-bottom: 25px;
-            display: none;
-            /* Hidden by default */
-            align-items: center;
-            gap: 10px;
             font-size: 14px;
-            font-weight: 500;
-            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
         }
 
-        @keyframes shake {
-
-            10%,
-            90% {
-                transform: translate3d(-1px, 0, 0);
-            }
-
-            20%,
-            80% {
-                transform: translate3d(2px, 0, 0);
-            }
-
-            30%,
-            50%,
-            70% {
-                transform: translate3d(-4px, 0, 0);
-            }
-
-            40%,
-            60% {
-                transform: translate3d(4px, 0, 0);
-            }
+        .back-link:hover {
+            color: var(--primary-color);
         }
 
         /* Responsive */
@@ -309,15 +243,13 @@
 
 <body>
     <div class="login-container">
-        <!-- Bagian Kiri: Branding PT Semen Padang -->
+        <!-- Bagian Kiri -->
         <div class="login-left">
             <div class="shape shape-1"></div>
             <div class="shape shape-2"></div>
             <div class="shape shape-3"></div>
-
             <div class="brand-content">
                 <div class="brand-logo-container">
-                    <!-- Placeholder untuk Logo. Ganti src dengan path logo asli jika ada -->
                     <img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP" class="brand-logo-img"
                         onerror="this.style.display='none'; this.parentElement.innerText='SP'">
                 </div>
@@ -327,100 +259,42 @@
             </div>
         </div>
 
-        <!-- Bagian Kanan: Login Form -->
+        <!-- Bagian Kanan -->
         <div class="login-right">
             <div class="login-card">
                 <div class="form-header">
-                    <h2>Selamat Datang!</h2>
-                    <p>Silakan login untuk mengakses dashboard.</p>
+                    <h2>Reset Password</h2>
+                    <p>Masukkan password baru Anda.</p>
                 </div>
 
-                <!-- Pesan Error Custom -->
-                <div id="custom-error" class="error-message">
-                    @if(session('error'))
-                        <div class="alert alert-danger">
-                            {{ session('error') }}
-                        </div>
-                    @endif
-
-                    @if(session('success'))
-                        <div class="alert" style="background-color: #f0fff4; color: #2f855a; border: 1px solid #68d391;">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Kita gunakan onsubmit untuk handling interaktif di frontend -->
-                <form id="loginForm" action="{{ route('login.submit') }}" method="POST">
+                <form action="{{ route('password.update') }}" method="POST">
                     @csrf
 
                     <div class="input-group">
-                        <label for="username">Username</label>
-                        <div class="input-wrapper">
-                            <input type="text" id="username" name="username" class="form-control"
-                                placeholder="Masukkan username" required autofocus>
-                            <span class="input-icon">👤</span>
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="password">Password</label>
+                        <label for="password">Password Baru</label>
                         <div class="input-wrapper">
                             <input type="password" id="password" name="password" class="form-control"
-                                placeholder="Masukkan password" required>
+                                placeholder="Masukkan password baru" required autofocus>
                             <span class="input-icon">🔒</span>
                         </div>
                     </div>
 
-                    <div class="extra-links">
-                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                            <input type="checkbox" name="remember"> Ingat Saya
-                        </label>
-                        <a href="{{ route('password.request') }}" class="forgot-pass">Lupa Password?</a>
+                    <div class="input-group">
+                        <label for="password_confirmation">Konfirmasi Password Baru</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password_confirmation" name="password_confirmation"
+                                class="form-control" placeholder="Konfirmasi password baru" required>
+                            <span class="input-icon">🔐</span>
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn-submit">Masuk Aplikasi</button>
+                    <button type="submit" class="btn-submit">Simpan Password</button>
+
+                    <a href="{{ route('login') }}" class="back-link">Kembali ke Login</a>
                 </form>
             </div>
         </div>
     </div>
-
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function (e) {
-            // Simulasi Validasi Frontend untuk tujuan demonstrasi
-            // Jika backend belum siap, kita bisa uncomment bagian ini untuk tes UI error
-
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorElement = document.getElementById('custom-error');
-
-            /* 
-               LOGIKA DEMO:
-               Jika username bukan 'admin' atau password bukan 'admin', kita akan 
-               menampilkan pesan error yang diminta user.
-               
-               Hapus block ini jika ingin menggunakan validasi backend sepenuhnya.
-            */
-            // e.preventDefault(); // Mencegah submit asli sementara untuk demo
-
-            // if (username === 'admin' && password === 'admin') {
-            //     // Simulasi Sukses -> Redirect Dashboard
-            //     window.location.href = '/dashboard'; 
-            // } else {
-            //     // Tampilkan Error
-            //     errorElement.style.display = 'flex';
-            //     // Reset password agar user mengetik ulang
-            //     document.getElementById('password').value = '';
-            //     document.getElementById('username').focus();
-            // }
-        });
-
-        // Cek jika ada error dari Laravel Session (Backend Real)
-        @if(session('error') || $errors->any())
-            const errorElement = document.getElementById('custom-error');
-            errorElement.style.display = 'flex';
-        @endif
-    </script>
 </body>
 
 </html>

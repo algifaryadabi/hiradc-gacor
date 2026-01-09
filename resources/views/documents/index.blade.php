@@ -45,9 +45,19 @@
         .logo-circle {
             width: 70px;
             height: 70px;
-            background: #000;
+            background: #fff;
             border-radius: 50%;
             margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-circle img {
+            max-width: 80%;
+            max-height: 80%;
         }
 
         .logo-text {
@@ -174,6 +184,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            text-decoration: none;
         }
 
         .logout-btn:hover {
@@ -547,59 +558,6 @@
             font-size: 14px;
             color: #333;
         }
-
-        .timeline-modal {
-            margin-top: 20px;
-        }
-
-        .timeline-item-modal {
-            position: relative;
-            padding-left: 30px;
-            margin-bottom: 20px;
-            content: '';
-            position: absolute;
-            left: -6px;
-            top: 5px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #c41e3a;
-        }
-
-        .timeline-content-modal {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 6px;
-        }
-
-        .timeline-header-modal {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .timeline-title-modal {
-            font-size: 13px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .timeline-date-modal {
-            font-size: 11px;
-            color: #999;
-        }
-
-        .timeline-message-modal {
-            font-size: 13px;
-            color: #666;
-            line-height: 1.5;
-        }
-
-        .timeline-author-modal {
-            font-size: 11px;
-            color: #999;
-            margin-top: 8px;
-        }
     </style>
 </head>
 
@@ -608,22 +566,25 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo-section">
-                <div class="logo-circle"></div>
-                <div class="logo-text">HIRADC</div>
-                <div class="logo-subtext">System</div>
+                <div class="logo-circle">
+                    <!-- Placeholder or real logo -->
+                    <img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP">
+                </div>
+                <div class="logo-text">PT Semen Padang</div>
+                <div class="logo-subtext">HIRADC System</div>
             </div>
 
             <nav class="nav-menu">
-                <a href="hiradc-user-dashboard-v3.html" class="nav-item">
+                <a href="{{ route('dashboard') }}" class="nav-item">
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="hiradc-my-documents-v2.html" class="nav-item active">
+                <a href="{{ route('documents.index') }}" class="nav-item active">
                     <i class="fas fa-folder-open"></i>
                     <span>Dokumen Saya</span>
                     <span class="badge">9</span>
                 </a>
-                <a href="hiradc-form-complete.html" class="nav-item">
+                <a href="{{ route('documents.create') }}" class="nav-item">
                     <i class="fas fa-plus-circle"></i>
                     <span>Buat Dokumen Baru</span>
                 </a>
@@ -638,10 +599,15 @@
                         <div class="user-role">Staff Unit Kerja</div>
                     </div>
                 </div>
-                <button class="logout-btn" onclick="logout()">
+                <!-- Logout via Form/Link -->
+                <a href="{{ route('logout') }}" class="logout-btn"
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="fas fa-sign-out-alt"></i>
                     Keluar
-                </button>
+                </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
             </div>
         </aside>
 
@@ -824,7 +790,7 @@
                             </div>
                         `;
                         actionButtons = `
-                            <a href="hiradc-form-complete.html?revise=${doc.id}" class="btn btn-edit">
+                            <a href="#" class="btn btn-edit">
                                 <i class="fas fa-edit"></i> Perbaiki Dokumen
                             </a>
                             <button onclick="showDocumentDetail('${doc.id}')" class="btn btn-view">
@@ -835,7 +801,7 @@
                     case 'approved':
                         statusBadge = '<span class="badge-status status-approved">Disetujui</span>';
                         actionButtons = `
-                            <button onclick="showDocumentDetail('${doc.id}')" class="btn btn-view">
+                            <button onclick="window.location.href='{{ route('documents.show') }}'" class="btn btn-view">
                                 <i class="fas fa-eye"></i> Lihat Detail
                             </button>
                         `;
@@ -849,10 +815,10 @@
                             </div>
                         `;
                         actionButtons = `
-                            <a href="hiradc-form-complete.html" class="btn btn-primary">
+                            <a href="#" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Buat Dokumen Baru
                             </a>
-                            <button onclick="showDocumentDetail('${doc.id}')" class="btn btn-view">
+                            <button onclick="window.location.href='{{ route('documents.show') }}'" class="btn btn-view">
                                 <i class="fas fa-eye"></i> Lihat Detail
                             </button>
                         `;
@@ -909,13 +875,6 @@
             }
 
             renderDocuments(filtered);
-        }
-
-        function logout() {
-            if (confirm('Apakah Anda yakin ingin keluar?')) {
-                alert('Anda telah keluar dari sistem');
-                // In real app, redirect to login page
-            }
         }
 
         // Modal functions
