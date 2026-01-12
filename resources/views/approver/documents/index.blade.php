@@ -491,7 +491,7 @@
                     'category' => $doc->kategori,
                     'date' => $doc->created_at->format('d-m-Y'),
                     'status' => $status,
-                    'viewUrl' => route('approver.review', $doc->id_document)
+                    'viewUrl' => route('approver.review', ['document' => $doc->id])
                 ];
             });
         @endphp

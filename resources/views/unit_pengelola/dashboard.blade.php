@@ -784,12 +784,12 @@
 
         const pendingDocs = @json($pendingDocuments->map(function ($doc) {
             return [
-                'id' => $doc->id_document,
+                'id' => $doc->id,
                 'title' => $doc->kolom2_kegiatan,
                 'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
                 'date' => $doc->created_at->format('d M Y'),
                 'status' => 'Pending Review',
-                'url' => route('unit_pengelola.review', $doc->id_document)
+                'url' => route('unit_pengelola.review', $doc->id)
             ];
         }));
 

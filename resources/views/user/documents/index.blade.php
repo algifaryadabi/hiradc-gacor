@@ -582,7 +582,9 @@
                 <a href="{{ route('documents.index') }}" class="nav-item active">
                     <i class="fas fa-folder-open"></i>
                     <span>Dokumen Saya</span>
-                    <span class="badge">9</span>
+                    @if(isset($revisionCount) && $revisionCount > 0)
+                        <span class="badge">{{ $revisionCount }}</span>
+                    @endif
                 </a>
                 <a href="{{ route('documents.create') }}" class="nav-item">
                     <i class="fas fa-plus-circle"></i>
@@ -619,26 +621,205 @@
                 <h1>Dokumen Saya</h1>
             </div>
 
-            <div class="content-area">
-                <!-- Status Tabs -->
-                <div class="status-tabs">
-                    <button class="tab active" onclick="filterByStatus('all')">
-                        Semua
-                    </button>
-                    <button class="tab" onclick="filterByStatus('revision')">
-                        Perlu Revisi <span class="count">{{ $documents->where('status', 'revision')->count() }}</span>
-                    </button>
-                    <button class="tab" onclick="filterByStatus('approved')">
-                        Disetujui <span class="count">{{ $documents->where('status', 'approved')->count() }}</span>
-                    </button>
+                <!-- STATUS TRACKER -->
+                <div class="filters-container" style="display: block; padding: 0; overflow: hidden; margin-bottom: 40px;">
+                    <!-- Tabs -->
+                    <div style="display: flex; border-bottom: 1px solid #eee; background: #fbfbfb;">
+                        <button class="tab-btn active" onclick="switchTab('tab_pending')">
+                            Menunggu Approval <span class="badge-count">{{ $myPending->count() }}</span>
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('tab_revision')">
+                            Perlu Revisi <span class="badge-count" style="background: #e67e22;">{{ $myRevision->count() }}</span>
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('tab_draft')">
+                            Draft <span class="badge-count" style="background: #95a5a6;">{{ $myDraft->count() }}</span>
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('tab_all')">
+                            Semua Dokumen <span class="badge-count" style="background: #333;">{{ $documents->count() }}</span>
+                        </button>
+                    </div>
 
+                    <!-- Pending Content -->
+                    <div id="tab_pending" class="tab-content" style="display: block;">
+                        @if($myPending->isEmpty())
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open"></i>
+                                <p>Tidak ada dokumen yang sedang diproses.</p>
+                            </div>
+                        @else
+                            <table class="custom-table" style="width:100%; border-collapse: collapse; margin-top:20px;">
+                                <thead style="background:#f8f9fa;">
+                                    <tr>
+                                        <th style="padding:15px; text-align:left;">Judul Kegiatan</th>
+                                        <th style="padding:15px; text-align:left;">Lokasi</th>
+                                        <th style="padding:15px; text-align:left;">Status Saat Ini</th>
+                                        <th style="padding:15px; text-align:left;">Update</th>
+                                        <th style="padding:15px; text-align:left;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($myPending as $doc)
+                                    <tr style="border-bottom:1px solid #eee;">
+                                        <td style="padding:15px;">{{ Str::limit($doc->kolom2_kegiatan, 50) }}</td>
+                                        <td style="padding:15px;">{{ $doc->kolom3_lokasi }}</td>
+                                        <td style="padding:15px;">
+                                            @if($doc->current_level == 1) <span class="badge-status" style="background:#e3f2fd; color:#1565c0; padding:5px 10px; border-radius:15px; font-size:11px;">Level 1: Ka. Unit</span>
+                                            @elseif($doc->current_level == 2) <span class="badge-status" style="background:#f3e5f5; color:#7b1fa2; padding:5px 10px; border-radius:15px; font-size:11px;">Level 2: Unit Pengelola</span>
+                                            @else <span class="badge-status" style="background:#fff3e0; color:#ef6c00; padding:5px 10px; border-radius:15px; font-size:11px;">Level 3: Ka. Dept</span>
+                                            @endif
+                                        </td>
+                                        <td style="padding:15px;">{{ $doc->updated_at->diffForHumans() }}</td>
+                                        <td style="padding:15px;">
+                                            <a href="{{ route('documents.show', $doc->id) }}" class="btn" style="background: #34495e; color:white; padding:8px 15px; border-radius:4px; text-decoration:none;"><i class="fas fa-eye"></i> Detail</a>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    </div>
+
+                    <!-- Revision Content -->
+                    <div id="tab_revision" class="tab-content" style="display: none;">
+                        @if($myRevision->isEmpty())
+                             <div class="empty-state">
+                                 <i class="fas fa-check-circle"></i>
+                                 <p>Tidak ada dokumen yang perlu direvisi.</p>
+                             </div>
+                        @else
+                            <table class="custom-table" style="width:100%; border-collapse: collapse; margin-top:20px;">
+                                <thead style="background:#f8f9fa;">
+                                    <tr>
+                                        <th style="padding:15px; text-align:left;">Judul Kegiatan</th>
+                                        <th style="padding:15px; text-align:left;">Catatan Revisi</th>
+                                        <th style="padding:15px; text-align:left;">Dari</th>
+                                        <th style="padding:15px; text-align:left;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($myRevision as $doc)
+                                    @php $lastRev = $doc->approvals->where('action', 'revision')->first(); @endphp
+                                    <tr style="border-bottom:1px solid #eee;">
+                                        <td style="padding:15px;">{{ Str::limit($doc->kolom2_kegiatan, 50) }}</td>
+                                        <td style="padding:15px; color:#c0392b; font-style:italic;">"{{ Str::limit($lastRev->catatan ?? '-', 60) }}"</td>
+                                        <td style="padding:15px;">{{ $lastRev->approver->nama_user ?? 'Approver' }}</td>
+                                        <td style="padding:15px;">
+                                            <a href="{{ route('documents.show', $doc->id) }}" class="btn" style="background: #e67e22; color:white; padding:8px 15px; border-radius:4px; text-decoration:none;"><i class="fas fa-edit"></i> Perbaiki</a>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    </div>
+
+                    <!-- Draft Content -->
+                    <div id="tab_draft" class="tab-content" style="display: none;">
+                        @if($myDraft->isEmpty())
+                           <div class="empty-state">
+                                <i class="fas fa-pencil-ruler"></i>
+                                <p>Tidak ada draft.</p>
+                           </div>
+                        @else
+                            <table class="custom-table" style="width:100%; border-collapse: collapse; margin-top:20px;">
+                                <thead style="background:#f8f9fa;">
+                                    <tr>
+                                        <th style="padding:15px; text-align:left;">Judul Kegiatan</th>
+                                        <th style="padding:15px; text-align:left;">Kategori</th>
+                                        <th style="padding:15px; text-align:left;">Terakhir Diedit</th>
+                                        <th style="padding:15px; text-align:left;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($myDraft as $doc)
+                                    <tr style="border-bottom:1px solid #eee;">
+                                        <td style="padding:15px;">{{ Str::limit($doc->kolom2_kegiatan, 50) }}</td>
+                                        <td style="padding:15px;">{{ $doc->kategori }}</td>
+                                        <td style="padding:15px;">{{ $doc->updated_at->diffForHumans() }}</td>
+                                        <td style="padding:15px;">
+                                            <a href="{{ route('documents.show', $doc->id) }}" class="btn" style="background: #95a5a6; color:white; padding:8px 15px; border-radius:4px; text-decoration:none;"><i class="fas fa-pencil-alt"></i> Edit</a>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    </div>
+                
+                    <!-- All Content -->
+                    <div id="tab_all" class="tab-content" style="display: none;">
+                         <div class="documents-grid" id="documentsGrid">
+                            @foreach($documents as $doc)
+                                <div class="document-card" style="margin-bottom:20px;">
+                                    <div class="doc-header" style="justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                         <div style="display: flex; gap: 10px;">
+                                            <a href="{{ route('documents.show', $doc->id) }}" class="btn btn-view"><i class="fas fa-eye"></i> Detail</a>
+                                         </div>
+                                         <span class="badge-status">{{ $doc->status_label }}</span>
+                                    </div>
+                                    <div class="doc-meta">
+                                        <div class="meta-item"><div class="meta-label">Kategori</div><div class="meta-value">{{ $doc->kategori }}</div></div>
+                                        <div class="meta-item"><div class="meta-label">Tanggal</div><div class="meta-value">{{ $doc->created_at->format('d M Y') }}</div></div>
+                                    </div>
+                                </div>
+                            @endforeach
+                         </div>
+                    </div>
                 </div>
 
-                <!-- Documents Grid -->
-                <div class="documents-grid" id="documentsGrid">
-                    <!-- Documents will be populated by JavaScript -->
-                </div>
-            </div>
+                <style>
+                    .tab-btn {
+                        padding: 15px 25px;
+                        border: none;
+                        background: none;
+                        font-weight: 600;
+                        color: #666;
+                        cursor: pointer;
+                        border-bottom: 3px solid transparent;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+                    .tab-btn.active {
+                        color: #667eea;
+                        border-bottom-color: #667eea;
+                        background: white;
+                    }
+                    .badge-count {
+                        background: #667eea;
+                        color: white;
+                        font-size: 10px;
+                        padding: 2px 6px;
+                        border-radius: 10px;
+                    }
+                    .empty-state {
+                        text-align: center;
+                        padding: 40px;
+                        color: #ccc;
+                    }
+                    .empty-state i {
+                        font-size: 40px;
+                        margin-bottom: 15px;
+                    }
+                </style>
+
+                <script>
+                    function switchTab(tabId) {
+                        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+                        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+                        document.getElementById(tabId).style.display = 'block';
+                        
+                        // Set active button
+                        const btn = document.querySelector(`button[onclick="switchTab('${tabId}')"]`);
+                        if(btn) btn.classList.add('active');
+                    }
+                    
+                    document.addEventListener("DOMContentLoaded", function() {
+                        @if(session('open_tab'))
+                            switchTab('{{ session('open_tab') }}');
+                        @endif
+                    });
+                </script>
         </main>
     </div>
 

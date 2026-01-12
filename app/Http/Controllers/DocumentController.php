@@ -12,17 +12,43 @@ use Illuminate\Support\Facades\Auth;
 
 class DocumentController extends Controller
 {
+    public function __construct()
+    {
+        // Share badge counts with all views handled by this controller
+        $this->middleware(function ($request, $next) {
+            if (Auth::check()) {
+                $revCount = Document::where('id_user', Auth::id())
+                    ->where('status', 'revision')
+                    ->count();
+                view()->share('revisionCount', $revCount);
+            }
+            return $next($request);
+        });
+    }
+
     /**
      * List user's documents
      */
     public function index()
     {
-        $documents = Document::where('id_user', Auth::user()->id_user)
+        $user = Auth::user();
+
+        $documents = Document::where('id_user', $user->id_user)
             ->with(['unit', 'approvals.approver'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('user.documents.index', compact('documents'));
+        // Load counts for Status Tracker
+        $myPending = $documents->whereIn('status', ['pending_level1', 'pending_level2', 'pending_level3'])
+            ->sortByDesc('updated_at');
+
+        $myRevision = $documents->where('status', 'revision')
+            ->sortByDesc('updated_at');
+
+        $myDraft = $documents->where('status', 'draft')
+            ->sortByDesc('updated_at');
+
+        return view('user.documents.index', compact('documents', 'myPending', 'myRevision', 'myDraft'));
     }
 
     /**
@@ -30,7 +56,7 @@ class DocumentController extends Controller
      */
     public function create()
     {
-        $user = Auth::user();
+        $user = Auth::user()->load(['roleJabatan', 'unit', 'departemen', 'direktorat']);
         $direktorats = Direktorat::where('status_aktif', 1)->get();
         $departemens = Departemen::all();
         $units = Unit::all();
@@ -108,7 +134,8 @@ class DocumentController extends Controller
         }
 
         return redirect()->route('documents.index')
-            ->with('success', 'Dokumen berhasil disimpan.');
+            ->with('success', 'Dokumen berhasil disimpan dan dikirim untuk approval.')
+            ->with('open_tab', 'tab_pending');
     }
 
     /**
@@ -131,7 +158,8 @@ class DocumentController extends Controller
         $document->submitForApproval();
 
         return redirect()->route('documents.index')
-            ->with('success', 'Dokumen berhasil dikirim untuk approval.');
+            ->with('success', 'Dokumen berhasil dikirim untuk approval.')
+            ->with('open_tab', 'tab_pending');
     }
 
     // ==================== APPROVAL METHODS ====================
@@ -142,12 +170,33 @@ class DocumentController extends Controller
     public function pendingApproval()
     {
         $user = Auth::user();
-        $level = match ($user->role_user) {
-            'approver' => 1,
-            'unit_pengelola' => 2,
-            'kepala_departemen' => 3,
-            default => 0,
-        };
+
+        // Use helper if available, or fallback to role_user column
+        $role = method_exists($user, 'getRoleName') ? $user->getRoleName() : $user->role_user;
+
+        // MATCHING RULES based on User's Screenshot of 'role_jabatan' table:
+        // 3 = Senior Manager --> Acts as Approver Level 1 (Kepala Unit)
+        // 2 = General Manager --> Acts as Approver Level 3 (Kepala Departemen) ?? (Assumption)
+
+        $level = 0;
+
+        // Level 1: Kepala Unit
+        // - Role User 'approver' / 'kepala_unit'
+        // - OR Role Jabatan 'Senior Manager' (id 3)
+        if (in_array($role, ['approver', 'kepala_unit']) || $user->id_role_user == 3 || $user->id_role_jabatan == 3) {
+            $level = 1;
+        }
+        // Level 2: Unit Pengelola (SHE / Security)
+        // - Typically defined by role_user 'unit_pengelola'
+        elseif ($role == 'unit_pengelola' || $user->id_role_user == 5) {
+            $level = 2;
+        }
+        // Level 3: Kepala Departemen
+        // - Role User 'kepala_departemen'
+        // - OR Role Jabatan 'General Manager' (id 2) - Assuming GM is Dept Head typically
+        elseif ($role == 'kepala_departemen' || $user->id_role_user == 4 || $user->id_role_jabatan == 2) {
+            $level = 3;
+        }
 
         $documents = Document::where('current_level', $level)
             ->where('status', 'pending_level' . $level)
@@ -171,6 +220,65 @@ class DocumentController extends Controller
         $documents = $documents->merge($historyDocuments)->unique('id_document');
 
         return view('approver.documents.index', compact('documents'));
+    }
+
+    /**
+     * Show Approver Dashboard
+     */
+    public function approverDashboard()
+    {
+        $user = Auth::user();
+
+        // Fetch pending documents for this level (Level 1)
+        $pendingDocuments = Document::where('current_level', 1)
+            ->where('status', 'pending_level1')
+            ->where('id_unit', $user->id_unit)
+            ->with(['user', 'unit'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $pendingCount = $pendingDocuments->count();
+
+        $publishedDocuments = Document::published()
+            ->with(['user', 'unit'])
+            ->orderBy('published_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        $direktorats = Direktorat::where('status_aktif', 1)->get();
+        $departemens = Departemen::all();
+        $units = Unit::all();
+
+        return view('approver.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
+    }
+
+    /**
+     * Show Unit Pengelola Dashboard
+     */
+    public function unitPengelolaDashboard()
+    {
+        $user = Auth::user();
+
+        // Fetch pending documents for this level (Level 2)
+        $pendingDocuments = Document::where('current_level', 2)
+            ->where('status', 'pending_level2')
+            ->with(['user', 'unit'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $pendingCount = $pendingDocuments->count();
+
+        $publishedDocuments = Document::published()
+            ->with(['user', 'unit'])
+            ->orderBy('published_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        $direktorats = Direktorat::where('status_aktif', 1)->get();
+        $departemens = Departemen::all();
+        $units = Unit::all();
+
+        return view('unit_pengelola.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
     }
 
     /**

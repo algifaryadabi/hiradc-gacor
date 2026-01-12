@@ -145,23 +145,51 @@ class Document extends Model
     {
         // Level 1: Kepala Unit (same unit as document)
         if ($this->current_level == 1) {
-            return $user->role_user === 'approver' && $user->id_unit == $this->id_unit;
+            $isApprover = $user->getRoleName() === 'approver' ||
+                $user->id_role_user == 3 ||
+                $user->id_role_jabatan == 3; // Senior Manager
+
+            return $isApprover && $user->id_unit == $this->id_unit;
         }
+
 
         // Level 2: Unit Pengelola based on category
         if ($this->current_level == 2) {
+            $userRole = $user->getRoleName();
+
+            // User must be 'unit_pengelola' OR 'approver'(Kepala Unit) of the managing unit
+            if ($userRole !== 'unit_pengelola' && $userRole !== 'approver') {
+                return false;
+            }
+
+            // Get user's unit name for checking
+            // We can also check IDs based on DB dump (55=Security, 56=SHE)
+            $userUnitId = $user->id_unit;
+            $userUnitName = strtoupper($user->unit->nama_unit ?? '');
+
             if (in_array($this->kategori, ['K3', 'KO', 'Lingkungan'])) {
                 // SHE unit approves
-                return $user->role_user === 'unit_pengelola'; // Add more specific logic if needed
-            } else {
+                return $userUnitId == 56 ||
+                    str_contains($userUnitName, 'SHE') ||
+                    str_contains($userUnitName, 'SAFETY') ||
+                    str_contains($userUnitName, 'LINGKUNGAN');
+            } else if ($this->kategori === 'Keamanan') {
                 // Security unit approves
-                return $user->role_user === 'unit_pengelola';
+                return $userUnitId == 55 ||
+                    str_contains($userUnitName, 'KEAMANAN') ||
+                    str_contains($userUnitName, 'SECURITY');
             }
+
+            return false;
         }
 
         // Level 3: Kepala Departemen
         if ($this->current_level == 3) {
-            return $user->role_user === 'kepala_departemen' && $user->id_dept == $this->id_dept;
+            $isDeptHead = $user->getRoleName() === 'kepala_departemen' ||
+                $user->id_role_user == 4 ||
+                $user->id_role_jabatan == 2; // General Manager
+
+            return $isDeptHead && $user->id_dept == $this->id_dept;
         }
 
         return false;

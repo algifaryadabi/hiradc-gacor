@@ -102,6 +102,7 @@ class User extends Authenticatable
 
         // Check id_role_jabatan or role_jabatan
         $roleJabatan = $this->id_role_jabatan ?? $this->role_jabatan;
+        $unitId = $this->id_unit;
 
         // Custom Role Logic based on Role Jabatan
         if ($roleId == 2) { // Assuming base role is User
@@ -111,6 +112,20 @@ class User extends Authenticatable
             if ($roleJabatan == 3) {
                 return 'approver';
             }
+
+            // Check for Unit Pengelola (SHE = 56, Security = 55)
+            // Using IDs from the provided database dump
+            if ($unitId == 55 || $unitId == 56) {
+                return 'unit_pengelola';
+            }
+
+            // Also check by name as fallback
+            if ($this->unit) {
+                $unitName = strtoupper($this->unit->nama_unit);
+                if (str_contains($unitName, 'SHE') || str_contains($unitName, 'SECURITY') || str_contains($unitName, 'KEAMANAN')) {
+                    return 'unit_pengelola';
+                }
+            }
         }
 
         // Handle numeric role values
@@ -118,7 +133,7 @@ class User extends Authenticatable
             return match ((int) $roleId) {
                 1 => 'admin',
                 2 => 'user',
-                3 => 'approver', // Explicit approver role if exists
+                3 => 'approver',
                 4 => 'unit_pengelola',
                 5 => 'kepala_departemen',
                 default => 'user',
@@ -151,7 +166,10 @@ class User extends Authenticatable
      */
     public function getRoleJabatanNameAttribute(): string
     {
-        return $this->roleJabatan->nama_role_jabatan ?? '-';
+        if ($this->roleJabatan) {
+            return $this->roleJabatan->nama_role_jabatan ?? '-';
+        }
+        return '-';
     }
 
     /**
@@ -159,7 +177,10 @@ class User extends Authenticatable
      */
     public function getDirektoratNameAttribute(): string
     {
-        return $this->direktorat->nama_direktorat ?? '-';
+        if ($this->direktorat) {
+            return $this->direktorat->nama_direktorat ?? '-';
+        }
+        return '-';
     }
 
     /**
@@ -167,7 +188,10 @@ class User extends Authenticatable
      */
     public function getDepartemenNameAttribute(): string
     {
-        return $this->departemen->nama_dept ?? '-';
+        if ($this->departemen) {
+            return $this->departemen->nama_dept ?? '-';
+        }
+        return '-';
     }
 
     /**
@@ -175,7 +199,10 @@ class User extends Authenticatable
      */
     public function getUnitNameAttribute(): string
     {
-        return $this->unit->nama_unit ?? '-';
+        if ($this->unit) {
+            return $this->unit->nama_unit ?? '-';
+        }
+        return '-';
     }
 
     /**
@@ -189,6 +216,9 @@ class User extends Authenticatable
         if ($this->departemen && $this->departemen->nama_dept) {
             return $this->departemen->nama_dept;
         }
-        return '-';
+        if ($this->direktorat && $this->direktorat->nama_direktorat) {
+            return $this->direktorat->nama_direktorat;
+        }
+        return 'User';
     }
 }

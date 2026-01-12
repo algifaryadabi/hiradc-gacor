@@ -552,7 +552,9 @@
                 <a href="{{ route('documents.index') }}" class="nav-item">
                     <i class="fas fa-folder-open"></i>
                     <span>Dokumen Saya</span>
-                    <span class="badge">2</span>
+                    @if(isset($revisionCount) && $revisionCount > 0)
+                        <span class="badge">{{ $revisionCount }}</span>
+                    @endif
                 </a>
                 <a href="{{ route('documents.create') }}" class="nav-item">
                     <i class="fas fa-plus-circle"></i>
@@ -563,11 +565,14 @@
             <div class="user-info-bottom">
                 <div class="user-profile">
                     <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}</div>
+                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
+                    </div>
                     <div class="user-details">
                         <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
                         <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">{{ Auth::user()->unit_or_dept_name }}</div>
+                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
+                            {{ Auth::user()->unit_or_dept_name }}
+                        </div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -603,19 +608,19 @@
                     <div class="filter-group">
                         <label>Departemen</label>
                         <select id="filter_department" onchange="filterUnits()">
-                             <option value="">-- Pilih Departemen --</option>
+                            <option value="">-- Pilih Departemen --</option>
                         </select>
                     </div>
                     <div class="filter-group">
                         <label>Unit Kerja</label>
                         <select id="filter_unit" onchange="filterSeksi()">
-                             <option value="">-- Pilih Unit --</option>
+                            <option value="">-- Pilih Unit --</option>
                         </select>
                     </div>
                     <div class="filter-group">
                         <label>Seksi</label>
                         <select id="filter_seksi" onchange="applyFilters()">
-                             <option value="">-- Pilih Seksi --</option>
+                            <option value="">-- Pilih Seksi --</option>
                         </select>
                     </div>
                 </div>
@@ -728,11 +733,11 @@
     <script>
         // MASTER DATA FROM DATABASE
         const directorates = @json($direktorats->map(fn($d) => ['id' => $d->id_direktorat, 'name' => $d->nama_direktorat]));
-        
+
         const departments = @json($departemens->map(fn($d) => ['id' => $d->id_dept, 'dir_id' => $d->id_direktorat, 'name' => $d->nama_dept]));
-        
+
         const units = @json($units->map(fn($u) => ['id' => $u->id_unit, 'dept_id' => $u->id_dept, 'name' => $u->nama_unit]));
-        
+
         const seksis = @json($seksis->map(fn($s) => ['id' => $s->id_seksi, 'unit_id' => $s->id_unit, 'name' => $s->nama_seksi]));
 
         const documents = [
@@ -861,9 +866,9 @@
             const unitId = document.getElementById('filter_unit').value;
             const seksiSelect = document.getElementById('filter_seksi');
             seksiSelect.innerHTML = '<option value="">-- Pilih Seksi --</option>';
-            
+
             if (!unitId) return;
-            
+
             seksis.filter(s => s.unit_id == unitId).forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s.id;

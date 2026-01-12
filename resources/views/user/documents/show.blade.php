@@ -497,7 +497,9 @@
                 <a href="{{ route('documents.index') }}" class="nav-item">
                     <i class="fas fa-folder-open"></i>
                     <span>Dokumen Saya</span>
-                    <span class="badge">9</span>
+                    @if(isset($revisionCount) && $revisionCount > 0)
+                        <span class="badge">{{ $revisionCount }}</span>
+                    @endif
                 </a>
                 <a href="{{ route('documents.create') }}" class="nav-item">
                     <i class="fas fa-plus-circle"></i>
@@ -508,10 +510,11 @@
             <!-- User Info at Bottom -->
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">JD</div>
+                    <div class="user-avatar">{{ substr(Auth::user()->nama_user, 0, 2) }}</div>
                     <div class="user-details">
-                        <div class="user-name">John Doe</div>
-                        <div class="user-role">Staff Unit Kerja</div>
+                        <div class="user-name">{{ Auth::user()->nama_user }}</div>
+                        <div class="user-role">{{ Auth::user()->role_jabatan_name ?? ucfirst(str_replace('_', ' ', Auth::user()->role_user)) }}</div>
+                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">{{ Auth::user()->unit->nama_unit ?? '' }}</div>
                     </div>
                 </div>
                 <!-- Logout via Form/Link -->
@@ -540,34 +543,38 @@
             <div class="content-area">
                 <!-- Document Header -->
                 <div class="doc-header-section">
-                    <div class="doc-title-main">Analisis Dampak Limbah Cair</div>
-                    <div class="doc-number-main">HIRADC/2026/01/102</div>
+                    <div class="doc-title-main">{{ $document->kolom2_kegiatan ?? 'Dokumen Tanpa Judul' }}</div>
+                    <div class="doc-number-main">ID: {{ $document->id_document ?? '-' }}</div>
 
                     <div class="doc-meta-grid">
                         <div class="meta-item">
                             <div class="meta-label">Status</div>
                             <div class="meta-value">
-                                <span class="badge-status status-revision">Perlu Revisi</span>
+                                <span
+                                    class="badge-status {{ $document->status == 'revision' ? 'status-revision' : '' }}">{{ $document->status_label }}</span>
                             </div>
                         </div>
                         <div class="meta-item">
                             <div class="meta-label">Kategori</div>
-                            <div class="meta-value">Lingkungan</div>
+                            <div class="meta-value">{{ $document->kategori }}</div>
                         </div>
                         <div class="meta-item">
                             <div class="meta-label">Unit Kerja</div>
-                            <div class="meta-value">Produksi</div>
+                            <div class="meta-value">{{ $document->unit->nama_unit ?? '-' }}</div>
                         </div>
                         <div class="meta-item">
                             <div class="meta-label">Tanggal Dibuat</div>
-                            <div class="meta-value">07 Jan 2026</div>
+                            <div class="meta-value">{{ $document->created_at->format('d M Y') }}</div>
                         </div>
                     </div>
 
                     <div class="action-buttons">
-                        <a href="{{ route('documents.create', ['mode' => 'edit', 'id' => 'DOC-102']) }}" class="btn btn-primary">
-                            <i class="fas fa-edit"></i> Perbaiki Dokumen
-                        </a>
+                        @if($document->status == 'revision' || $document->status == 'draft')
+                            <a href="{{ route('documents.create', ['mode' => 'edit', 'id' => $document->id_document]) }}"
+                                class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Perbaiki / Edit
+                            </a>
+                        @endif
                         <button class="btn btn-secondary" onclick="window.print()">
                             <i class="fas fa-print"></i> Cetak
                         </button>
@@ -580,19 +587,40 @@
                     <div class="info-grid">
                         <div class="info-row">
                             <div class="info-label">Proses Bisnis/Kegiatan</div>
-                            <div class="info-value">Pengolahan Limbah Pabrik</div>
+                            <div class="info-value">{{ $document->kolom2_proses }}</div>
                         </div>
                         <div class="info-row">
                             <div class="info-label">Lokasi/Area Kerja</div>
-                            <div class="info-value">Area Pengolahan Limbah, Gedung C</div>
+                            <div class="info-value">{{ $document->kolom3_lokasi }}</div>
                         </div>
                         <div class="info-row">
-                            <div class="info-label">Jenis Bahaya</div>
-                            <div class="info-value">Bahaya Kimia - Cairan korosif, Limbah beracun</div>
+                            <div class="info-label">Kondisi</div>
+                            <div class="info-value">{{ $document->kolom5_kondisi }}</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Bahaya Identifikasi</div>
+                            <div class="info-value">
+                                @php 
+                                    $bahaya = is_string($document->kolom6_bahaya) ? json_decode($document->kolom6_bahaya, true) : $document->kolom6_bahaya;
+                                @endphp
+                            @if($bahaya)
+                                <div><strong>Type:</strong> {{ $bahaya['type'] ?? '-' }}</div>
+                                    <div><strong>Kategori:</strong> {{ $bahaya['kategori'] ?? '-' }}</div>
+                                <div><strong>Manual:</strong> {{ $bahaya['manual'] ?? '-' }}</div>
+                            @else
+                                    -
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Dampak</div>
+                            <div class="info-value">{{ $document->kolom7_dampak }}</div>
                         </div>
                         <div class="info-row">
-                            <div class="info-label">Dampak Potensial</div>
-                            <div class="info-value">Pencemaran air, Kerusakan ekosistem, Gangguan kesehatan</div>
+                            <div class="info-label">Risiko Awal</div>
+                            <div class="info-value">{{ $document->kolom9_risiko }}</div>
                         </div>
                         <div class="info-row">
                             <div class="info-label">Kondisi</div>
@@ -631,28 +659,34 @@
                 <div class="doc-content-section">
                     <h2 class="section-title">Pengendalian Risiko</h2>
                     <div class="info-grid">
-                        <div class="info-row">
-                            <div class="info-label">Hirarki Pengendalian</div>
-                            <div class="info-value">Rekayasa Teknik - Isolasi/penghalang</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">Tindakan Pengendalian</div>
-                            <div class="info-value">Instalasi sistem pengolahan limbah dengan teknologi filtrasi dan
-                                netralisasi. Pemantauan kualitas air limbah secara berkala. Pemasangan sensor deteksi
-                                kebocoran.</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">Penanggung Jawab</div>
-                            <div class="info-value">Supervisor Lingkungan</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">Target Penyelesaian</div>
-                            <div class="info-value">31 Januari 2026</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">Status Implementasi</div>
-                            <div class="info-value">Dalam Proses</div>
-                        </div>
+                        @php
+                            $controls = is_string($document->kolom10_pengendalian) ? json_decode($document->kolom10_pengendalian, true) : $document->kolom10_pengendalian;
+                        @endphp
+                        
+                        @if($controls)
+                            <div class="info-row">
+                                <div class="info-label">Hirarki Pengendalian</div>
+                                <div class="info-value">{{ $controls['hirarki'] ?? '-' }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Tindakan Pengendalian</div>
+                                <div class="info-value">{{ $controls['tindakan'] ?? '-' }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Penanggung Jawab</div>
+                                <div class="info-value">{{ $controls['pic'] ?? '-' }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Target Penyelesaian</div>
+                                <div class="info-value">{{ $controls['deadline'] ?? '-' }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Status Implementasi</div>
+                                <div class="info-value">{{ $controls['status'] ?? '-' }}</div>
+                            </div>
+                        @else
+                           <div class="info-row"><div class="info-value">- Belum ada data pengendalian -</div></div>
+                        @endif
                     </div>
                 </div>
 
@@ -660,52 +694,55 @@
                 <div class="doc-content-section">
                     <h2 class="section-title">Riwayat Revisi & Komentar</h2>
                     <div class="timeline">
+                        @forelse($document->approvals->sortByDesc('created_at') as $approval)
                         <div class="timeline-item">
                             <div class="timeline-dot"></div>
                             <div class="timeline-content">
                                 <div class="timeline-header">
-                                    <div class="timeline-title">Permintaan Revisi</div>
-                                    <div class="timeline-date">08 Jan 2026, 14:30</div>
+                                    <div class="timeline-title">
+                                        @if($approval->action == 'approved')
+                                            Disetujui
+                                        @elseif($approval->action == 'revised')
+                                            Permintaan Revisi
+                                        @elseif($approval->action == 'rejected')
+                                            Ditolak
+                                        @else
+                                            {{ ucfirst($approval->action) }}
+                                        @endif
+                                    </div>
+                                    <div class="timeline-date">{{ $approval->created_at->format('d M Y, H:i') }}</div>
                                 </div>
                                 <div class="timeline-message">
-                                    "Mohon lengkapi data tindakan pengendalian pada kolom 13. Sertakan juga timeline
-                                    implementasi yang lebih detail. Tambahkan informasi mengenai frekuensi pemantauan
-                                    kualitas air limbah."
+                                    {{ $approval->catatan ?? '-' }}
                                 </div>
                                 <div class="timeline-author">
-                                    <i class="fas fa-user"></i> Budi Santoso (Kepala Unit Produksi)
+                                    <i class="fas fa-user"></i> {{ $approval->approver->nama_user ?? 'Unknown' }}
+                                    ({{ $approval->approver->role_jabatan_name ?? ($approval->approver->role_user ?? '-') }})
                                 </div>
                             </div>
                         </div>
-
+                        @empty
                         <div class="timeline-item">
-                            <div class="timeline-dot"></div>
+                            <div class="timeline-dot" style="background: #ccc; border-color: #fff;"></div>
                             <div class="timeline-content">
-                                <div class="timeline-header">
-                                    <div class="timeline-title">Dokumen Dikirim untuk Review</div>
-                                    <div class="timeline-date">07 Jan 2026, 16:45</div>
-                                </div>
-                                <div class="timeline-message">
-                                    Dokumen telah dikirim ke Kepala Unit Kerja untuk review.
-                                </div>
-                                <div class="timeline-author">
-                                    <i class="fas fa-user"></i> John Doe (Staff Unit Kerja)
-                                </div>
+                                <div class="timeline-message">Belum ada riwayat approval/revisi.</div>
                             </div>
                         </div>
+                        @endforelse
 
+                        <!-- Submission Log -->
                         <div class="timeline-item">
                             <div class="timeline-dot"></div>
                             <div class="timeline-content">
                                 <div class="timeline-header">
                                     <div class="timeline-title">Dokumen Dibuat</div>
-                                    <div class="timeline-date">07 Jan 2026, 10:15</div>
+                                    <div class="timeline-date">{{ $document->created_at->format('d M Y, H:i') }}</div>
                                 </div>
                                 <div class="timeline-message">
-                                    Dokumen risiko baru dibuat.
+                                    Dokumen risiko dibuat dan disubmit.
                                 </div>
                                 <div class="timeline-author">
-                                    <i class="fas fa-user"></i> John Doe (Staff Unit Kerja)
+                                    <i class="fas fa-user"></i> {{ $document->user->nama_user ?? 'Unknown' }}
                                 </div>
                             </div>
                         </div>

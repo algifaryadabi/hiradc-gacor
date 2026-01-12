@@ -747,19 +747,19 @@
         @php
             // Prepare data for JS
             $directoratesData = $direktorats->map(fn($d) => [
-                'id' => $d->id_direktorat, 
+                'id' => $d->id_direktorat,
                 'name' => $d->nama_direktorat
             ]);
 
             $departmentsData = $departemens->map(fn($d) => [
-                'id' => $d->id_dept, 
-                'dir_id' => $d->id_direktorat, 
+                'id' => $d->id_dept,
+                'dir_id' => $d->id_direktorat,
                 'name' => $d->nama_dept
             ]);
 
             $unitsData = $units->map(fn($u) => [
-                'id' => $u->id_unit, 
-                'dept_id' => $u->id_dept, 
+                'id' => $u->id_unit,
+                'dept_id' => $u->id_dept,
                 'name' => $u->nama_unit
             ]);
 
@@ -775,15 +775,28 @@
                     'dir_id' => $doc->id_direktorat,
                     'dept_id' => $doc->id_dept,
                     'unit_id' => $doc->id_unit,
-                    'status' => 'DISETUJUI', 
+                    'status' => 'DISETUJUI',
                     'risk_level' => $doc->risk_level,
                     'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
                     'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
                 ];
             });
+
+            $pendingDocsData = $pendingDocuments->filter(function ($doc) {
+                return $doc && $doc->id;
+            })->map(function ($doc) {
+                return [
+                    'id' => $doc->id,
+                    'title' => $doc->kolom2_kegiatan ?? 'Untitled',
+                    'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
+                    'date' => $doc->created_at->format('d M Y'),
+                    'status' => 'Pending Review',
+                    'url' => route('approver.review', ['document' => $doc->id])
+                ];
+            })->values();
         @endphp
 
-<<<<<<< HEAD
+
         // MASTER DATA
         const directorates = @json($directoratesData);
 
@@ -793,59 +806,42 @@
 
         const documents = @json($documentsData);
 
-        let activeCategory = '';
-=======
-            const pendingDocs = @json($pendingDocuments->map(function ($doc) {
-                return [
-                    'id' => $doc->id_document,
-                    'title' => $doc->kolom2_kegiatan,
-                    'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
-                    'date' => $doc->created_at->format('d M Y'),
-                    'status' => 'Pending Review',
-                    'url' => route('approver.review', $doc->id_document)
-                ];
-            }));
+        const pendingDocs = @json($pendingDocsData);
 
-            let activeCategory = '';
->>>>>>> 68ccf352a910ddaa95bd77ff692f98fdbcf0adaa
+        let activeCategory = '';
 
         document.addEventListener('DOMContentLoaded', () => {
             populateDirectorates();
             filterDepartments();
-            populatePendingTable(); // New Function
+            populatePendingTable();
         });
 
-<<<<<<< HEAD
-        function populateDirectorates() {
-=======
-            function populatePendingTable() {
+        function populatePendingTable() {
             const tbody = document.getElementById('pendingTableBody');
             const noMsg = document.getElementById('noPendingMsg');
-            tbody.innerHTML = '';
-
-            if(pendingDocs.length === 0) {
+          tbod y.innerHTML = '';
+              if(pendingDocs.length === 0) {
                 document.getElementById('pendingTable').style.display = 'none';
-            noMsg.style.display = 'block';
-            return;
+                noMsg.style.display = 'block';
+                return;
             }
 
             pendingDocs.forEach(doc => {
                 const tr = document.createElement('tr');
-            tr.innerHTML = `
-            <td><strong>${doc.title}</strong></td>
-            <td>${doc.unit}</td>
-            <td>${doc.date}</td>
-            <td><span class="status-pill warning">${doc.status}</span></td>
-            <td>
-                <a href="${doc.url}" class="action-btn view-btn"><i class="fas fa-edit"></i> Review</a>
-            </td>
-            `;
-            tbody.appendChild(tr);
+                tr.innerHTML = `
+                    <td><strong>${doc.title}</strong></td>
+                    <td>${doc.unit}</td>
+                    <td>${doc.date}</td>
+                    <td><span class="status-pill warning">${doc.status}</span></td>
+                    <td>
+                        <a href="${doc.url}" class="action-btn view-btn"><i class="fas fa-edit"></i> Review</a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
         }
 
-            function populateDirectorates() {
->>>>>>> 68ccf352a910ddaa95bd77ff692f98fdbcf0adaa
+        function populateDirectorates() {
             const select = document.getElementById('filter_directorate');
             select.innerHTML = '<option value="">........</option>';
             directorates.forEach(d => {

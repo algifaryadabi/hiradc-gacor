@@ -476,7 +476,9 @@
                     class="nav-item {{ request('mode') == 'edit' ? 'active' : '' }}">
                     <i class="fas fa-folder-open"></i>
                     <span>Dokumen Saya</span>
-                    <span class="badge">9</span>
+                    @if(isset($revisionCount) && $revisionCount > 0)
+                        <span class="badge">{{ $revisionCount }}</span>
+                    @endif
                 </a>
                 <a href="{{ route('documents.create') }}"
                     class="nav-item {{ request('mode') != 'edit' ? 'active' : '' }}">
@@ -517,6 +519,38 @@
             <div class="content-area">
                 <form id="hiradcForm" class="form-container" method="POST" action="{{ route('documents.store') }}">
                     @csrf
+
+                    <!-- SUCCESS MESSAGE -->
+                    @if(session('success'))
+                        <div
+                            style="background: #d4edda; border-left: 4px solid #28a745; padding: 20px; border-radius: 4px; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <i class="fas fa-check-circle" style="font-size: 24px; color: #28a745;"></i>
+                                <div>
+                                    <strong style="color: #155724;">Berhasil!</strong>
+                                    <p style="margin: 5px 0 0 0; color: #155724;">{{ session('success') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- VALIDATION ERRORS -->
+                    @if($errors->any())
+                        <div
+                            style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; border-radius: 4px; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: start; gap: 15px;">
+                                <i class="fas fa-exclamation-circle" style="font-size: 24px; color: #721c24;"></i>
+                                <div>
+                                    <strong style="color: #721c24;">Terjadi Kesalahan!</strong>
+                                    <ul style="margin: 10px 0 0 20px; color: #721c24;">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     <!-- REVISION ALERT (Hidden by default) -->
                     <div id="revision_alert_container" class="hidden" style="margin-bottom: 30px;">
