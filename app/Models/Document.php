@@ -44,7 +44,8 @@ class Document extends Model
     ];
 
     protected $casts = [
-        'kolom8_pihak' => 'array',
+        'kolom6_bahaya' => 'array',
+        'kolom8_pihak' => 'array', // Will be removed in DB but keep for now or remove
         'kolom10_pengendalian' => 'array',
         'published_at' => 'datetime',
     ];

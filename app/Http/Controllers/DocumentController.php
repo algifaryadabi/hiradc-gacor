@@ -53,6 +53,22 @@ class DocumentController extends Controller
 
         $user = Auth::user();
 
+        // 1. Construct Kolom 6 (Bahaya) JSON from various inputs
+        $bahayaData = [
+            'type' => $request->bahaya_type, // condition / action
+            'kategori' => $request->bahaya_kategori, // fisika, kimia, dll
+            'details' => $request->bahaya_detail ?? [], // Array of checked items
+            'manual' => $request->bahaya_manual, // Manual input string
+            'aspects' => $request->bahaya_aspect ?? [], // Lingkungan checkboxes
+            'threats' => $request->bahaya_security ?? [], // Keamanan checkboxes
+        ];
+
+        // 2. Construct Kolom 10 (Pengendalian) JSON
+        $controlsData = [
+            'hierarchy' => $request->hirarki ?? [], // Checkboxes (Eliminasi, dll)
+            'new_controls' => $request->new_controls ?? [], // Dynamic array from JS
+        ];
+
         $document = Document::create([
             'id_user' => $user->id_user,
             'id_direktorat' => $user->id_direktorat,
@@ -66,20 +82,24 @@ class DocumentController extends Controller
             'kolom2_kegiatan' => $request->kolom2_kegiatan,
             'kolom3_lokasi' => $request->kolom3_lokasi,
             'kolom5_kondisi' => $request->kolom5_kondisi,
-            'kolom6_bahaya' => $request->kolom6_bahaya,
+            'kolom6_bahaya' => $bahayaData, // Casted to Array/JSON by Model
             'kolom7_dampak' => $request->kolom7_dampak,
-            'kolom8_pihak' => $request->kolom8_pihak,
+            // 'kolom8_pihak' => $request->kolom8_pihak, // Removed
             'kolom9_risiko' => $request->kolom9_risiko,
-            'kolom10_pengendalian' => $request->kolom10_pengendalian,
+            'kolom10_pengendalian' => $controlsData, // Casted to Array/JSON by Model
             'kolom11_existing' => $request->kolom11_existing,
             'kolom12_kemungkinan' => $request->kolom12_kemungkinan,
             'kolom13_konsekuensi' => $request->kolom13_konsekuensi,
             'kolom14_score' => $request->kolom12_kemungkinan * $request->kolom13_konsekuensi,
             'kolom15_regulasi' => $request->kolom15_regulasi,
-            'kolom16_aspek' => $request->kolom16_aspek,
+            'kolom16_aspek' => $request->kolom16_penting,
             'kolom17_risiko' => $request->kolom17_risiko,
             'kolom17_peluang' => $request->kolom17_peluang,
             'kolom18_tindak_lanjut' => $request->kolom18_tindak_lanjut,
+            // Residual
+            'residual_kemungkinan' => $request->residual_kemungkinan,
+            'residual_konsekuensi' => $request->residual_konsekuensi,
+            'residual_score' => $request->residual_kemungkinan * $request->residual_konsekuensi,
         ]);
 
         // Submit for approval if requested
@@ -160,7 +180,11 @@ class DocumentController extends Controller
     {
         $document->load(['user', 'approvals.approver', 'direktorat', 'departemen', 'unit', 'seksi']);
 
-        return view('approver.documents.review', compact('document'));
+        return view(match (auth()->user()->getRoleName()) {
+            'unit_pengelola' => 'unit_pengelola.documents.review',
+            'kepala_departemen' => 'kepala_departemen.documents.review',
+            default => 'approver.documents.review',
+        }, compact('document'));
     }
 
     /**
@@ -174,26 +198,51 @@ class DocumentController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk menyetujui dokumen ini.');
         }
 
-        // Update document fields if edited
-        if ($request->has('edited_fields')) {
-            $document->update($request->only([
-                'kolom2_proses',
-                'kolom2_kegiatan',
-                'kolom3_lokasi',
-                'kolom5_kondisi',
-                'kolom6_bahaya',
-                'kolom7_dampak',
-                'kolom9_risiko',
-                'kolom11_existing',
-                'kolom12_kemungkinan',
-                'kolom13_konsekuensi',
-                'kolom15_regulasi',
-                'kolom16_aspek',
-                'kolom17_risiko',
-                'kolom17_peluang',
-                'kolom18_tindak_lanjut',
-            ]));
+        // Update document fields (Always update with latest form data)
+        // if ($request->has('edited_fields')) { // REMOVED CHECK
+        $dataToUpdate = $request->only([
+            'kolom2_proses',
+            'kolom2_kegiatan',
+            'kolom3_lokasi',
+            'kolom5_kondisi',
+            'kolom7_dampak',
+            'kolom9_risiko',
+            'kolom11_existing',
+            'kolom12_kemungkinan',
+            'kolom13_konsekuensi',
+            'kolom15_regulasi',
+            'kolom16_aspek',
+            'kolom17_risiko',
+            'kolom17_peluang',
+            'kolom18_tindak_lanjut'
+        ]);
+
+        // Handle JSON/Complex Fields specially
+        if ($request->has('bahaya_type')) {
+            $dataToUpdate['kolom6_bahaya'] = [
+                'type' => $request->bahaya_type,
+                'kategori' => $request->bahaya_kategori,
+                'details' => $request->bahaya_detail ?? [],
+                'manual' => $request->bahaya_manual,
+                'aspects' => $request->bahaya_aspect ?? [],
+                'threats' => $request->bahaya_security ?? [],
+            ];
         }
+
+        if ($request->has('hirarki') || $request->has('new_controls')) {
+            $dataToUpdate['kolom10_pengendalian'] = [
+                'hierarchy' => $request->hirarki ?? [],
+                'new_controls' => $request->new_controls ?? [],
+            ];
+        }
+
+        // Recalculate Score if matrix changed
+        if (isset($dataToUpdate['kolom12_kemungkinan']) && isset($dataToUpdate['kolom13_konsekuensi'])) {
+            $dataToUpdate['kolom14_score'] = $dataToUpdate['kolom12_kemungkinan'] * $dataToUpdate['kolom13_konsekuensi'];
+        }
+
+        $document->update($dataToUpdate);
+        // } // REMOVED CLOSING BRACE
 
         $document->approve($user, $request->catatan);
 
