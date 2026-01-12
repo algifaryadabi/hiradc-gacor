@@ -719,52 +719,73 @@
     </div>
 
     <script>
-        <script>
-        // MASTER DATA
-            const directorates = @json($direktorats->map(fn($d) => ['id' => $d->id_direktorat, 'name' => $d->nama_direktorat]));
+        @php
+            // Prepare data for JS
+            $directoratesData = $direktorats->map(fn($d) => [
+                'id' => $d->id_direktorat, 
+                'name' => $d->nama_direktorat
+            ]);
 
-            const departments = @json($departemens->map(fn($d) => ['id' => $d->id_dept, 'dir_id' => $d->id_direktorat, 'name' => $d->nama_dept]));
+            $departmentsData = $departemens->map(fn($d) => [
+                'id' => $d->id_dept, 
+                'dir_id' => $d->id_direktorat, 
+                'name' => $d->nama_dept
+            ]);
 
-            const units = @json($units->map(fn($u) => ['id' => $u->id_unit, 'dept_id' => $u->id_dept, 'name' => $u->nama_unit]));
+            $unitsData = $units->map(fn($u) => [
+                'id' => $u->id_unit, 
+                'dept_id' => $u->id_dept, 
+                'name' => $u->nama_unit
+            ]);
 
-            const documents = @json($publishedDocuments->map(function ($doc) {
+            $documentsData = $publishedDocuments->map(function ($doc) {
                 $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
                 return [
                     'id' => $doc->id_document,
                     'title' => $doc->kolom2_kegiatan,
                     'category' => $doc->kategori,
                     'date' => $doc->created_at->format('d M Y'),
-                    'author' => $doc->user->nama_user ?? '-', // Or specific format
+                    'author' => $doc->user->nama_user ?? '-',
                     'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
                     'dir_id' => $doc->id_direktorat,
                     'dept_id' => $doc->id_dept,
                     'unit_id' => $doc->id_unit,
-                    'status' => 'DISETUJUI', // Dashboard shows published docs
+                    'status' => 'DISETUJUI', 
                     'risk_level' => $doc->risk_level,
                     'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
                     'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
                 ];
-            }));
+            });
+        @endphp
 
-            let activeCategory = '';
+        // MASTER DATA
+        const directorates = @json($directoratesData);
+
+        const departments = @json($departmentsData);
+
+        const units = @json($unitsData);
+
+        const documents = @json($documentsData);
+
+        let activeCategory = '';
 
         document.addEventListener('DOMContentLoaded', () => {
-                populateDirectorates();
+            populateDirectorates();
             filterDepartments();
         });
 
-            function populateDirectorates() {
+        function populateDirectorates() {
             const select = document.getElementById('filter_directorate');
             select.innerHTML = '<option value="">........</option>';
             directorates.forEach(d => {
                 const opt = document.createElement('option');
-            opt.value = d.id;
-            opt.textContent = d.name;
-            select.appendChild(opt);
+                opt.value = d.id;
+                opt.textContent = d.name;
+                select.appendChild(opt);
             });
         }
 
-            function filterDepartments() {
+        function filterDepartments() {
             const dirId = document.getElementById('filter_directorate').value;
             const deptSelect = document.getElementById('filter_department');
 
@@ -777,15 +798,15 @@
 
             filteredDepts.forEach(d => {
                 const opt = document.createElement('option');
-            opt.value = d.id;
-            opt.textContent = d.name;
-            deptSelect.appendChild(opt);
+                opt.value = d.id;
+                opt.textContent = d.name;
+                deptSelect.appendChild(opt);
             });
 
             filterUnits();
         }
 
-            function filterUnits() {
+        function filterUnits() {
             const deptId = document.getElementById('filter_department').value;
             const unitSelect = document.getElementById('filter_unit');
 
@@ -798,57 +819,57 @@
 
             filteredUnits.forEach(u => {
                 const opt = document.createElement('option');
-            opt.value = u.id;
-            opt.textContent = u.name;
-            unitSelect.appendChild(opt);
+                opt.value = u.id;
+                opt.textContent = u.name;
+                unitSelect.appendChild(opt);
             });
             applyFilters();
         }
 
-            function selectCategory(cat, el) {
-                document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
+        function selectCategory(cat, el) {
+            document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
             if (activeCategory === cat) {
                 activeCategory = '';
             } else {
                 activeCategory = cat;
-            el.classList.add('active');
+                el.classList.add('active');
             }
             applyFilters();
         }
 
-            function applyFilters() {
+        function applyFilters() {
             const dirId = document.getElementById('filter_directorate').value;
             const deptId = document.getElementById('filter_department').value;
             const unitId = document.getElementById('filter_unit').value;
 
             const filtered = documents.filter(doc => {
                 let match = true;
-            if (dirId && doc.dir_id != dirId) match = false;
-            if (deptId && doc.dept_id != deptId) match = false;
-            if (unitId && doc.unit_id != unitId) match = false;
-            if (activeCategory && doc.category !== activeCategory) match = false;
-            return match;
+                if (dirId && doc.dir_id != dirId) match = false;
+                if (deptId && doc.dept_id != deptId) match = false;
+                if (unitId && doc.unit_id != unitId) match = false;
+                if (activeCategory && doc.category !== activeCategory) match = false;
+                return match;
             });
 
             renderTable(filtered);
         }
 
-            function renderTable(data = documents) {
+        function renderTable(data = documents) {
             const tbody = document.getElementById('tableBody');
             const tableSection = document.querySelector('.table-section');
 
             if (data.length === 0) {
                 // Keep table header, empty body or hide
                 tableSection.style.display = 'none';
-            return;
+                return;
             }
 
             tableSection.style.display = 'block';
 
             tbody.innerHTML = data.map(doc => {
                 const unit = units.find(u => u.id === doc.unit_id);
-            const unitName = unit ? unit.name : '-';
-            return `
+                const unitName = unit ? unit.name : '-';
+                return `
             <tr>
                 <td><strong>${unitName}</strong></td>
                 <td><span class="badge-status" style="background: #eee;">${doc.category}</span></td>
@@ -860,8 +881,8 @@
             `}).join('');
         }
 
-            // MODAL FUNCTIONS
-            function openDetailModal(id) {
+        // MODAL FUNCTIONS
+        function openDetailModal(id) {
             const doc = documents.find(d => d.id === id);
             if (!doc) return;
 
@@ -898,7 +919,6 @@
                 modal.style.display = 'none';
             }
         }
-
     </script>
 </body>
 

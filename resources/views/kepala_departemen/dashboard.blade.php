@@ -558,10 +558,13 @@
 
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">KD</div>
+                    <div class="user-avatar">{{ substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2) }}</div>
                     <div class="user-details">
-                        <div class="user-name">Bpk. Wijaya</div>
-                        <div class="user-role">Kepala Departemen</div>
+                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
+                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
+                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
+                            {{ Auth::user()->unit_or_dept_name }}
+                        </div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -714,31 +717,53 @@
     </div>
 
     <script>
+        @php
+            // Prepare data for JS
+            $directoratesData = $direktorats->map(fn($d) => [
+                'id' => $d->id_direktorat,
+                'name' => $d->nama_direktorat
+            ]);
+
+            $departmentsData = $departemens->map(fn($d) => [
+                'id' => $d->id_dept,
+                'dir_id' => $d->id_direktorat,
+                'name' => $d->nama_dept
+            ]);
+
+            $unitsData = $units->map(fn($u) => [
+                'id' => $u->id_unit,
+                'dept_id' => $u->id_dept,
+                'name' => $u->nama_unit
+            ]);
+
+            $documentsData = $publishedDocuments->map(function ($doc) {
+                $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
+                return [
+                    'id' => $doc->id_document,
+                    'title' => $doc->kolom2_kegiatan,
+                    'category' => $doc->kategori,
+                    'date' => $doc->created_at->format('d M Y'),
+                    'author' => $doc->user->nama_user ?? '-',
+                    'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
+                    'dir_id' => $doc->id_direktorat,
+                    'dept_id' => $doc->id_dept,
+                    'unit_id' => $doc->id_unit,
+                    'status' => 'DISETUJUI',
+                    'risk_level' => $doc->risk_level,
+                    'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
+                    'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
+                ];
+            });
+        @endphp
+
         // MASTER DATA
-        const directorates = @json($direktorats->map(fn($d) => ['id' => $d->id_direktorat, 'name' => $d->nama_direktorat]));
+        const directorates = @json($directoratesData);
 
-        const departments = @json($departemens->map(fn($d) => ['id' => $d->id_dept, 'dir_id' => $d->id_direktorat, 'name' => $d->nama_dept]));
+        const departments = @json($departmentsData);
 
-        const units = @json($units->map(fn($u) => ['id' => $u->id_unit, 'dept_id' => $u->id_dept, 'name' => $u->nama_unit]));
+        const units = @json($unitsData);
 
-        const documents = @json($publishedDocuments->map(function ($doc) {
-            $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
-            return [
-                'id' => $doc->id_document,
-                'title' => $doc->kolom2_kegiatan,
-                'category' => $doc->kategori,
-                'date' => $doc->created_at->format('d M Y'),
-                'author' => $doc->user->nama_user ?? '-',
-                'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
-                'dir_id' => $doc->id_direktorat,
-                'dept_id' => $doc->id_dept,
-                'unit_id' => $doc->id_unit,
-                'status' => 'DISETUJUI',
-                'risk_level' => $doc->risk_level,
-                'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
-                'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
-            ];
-        }));
+        const documents = @json($documentsData);
 
         let activeCategory = '';
 

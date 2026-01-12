@@ -26,5 +26,12 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+
+        // Redirect 419 to login
+        $this->renderable(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            if ($e->getStatusCode() === 419) {
+                return redirect()->route('login')->with('error', 'Sesi anda telah berakhir, silahkan login kembali.');
+            }
+        });
     }
 }

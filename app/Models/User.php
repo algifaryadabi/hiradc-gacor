@@ -24,8 +24,10 @@ class User extends Authenticatable
         'id_unit',
         'id_seksi',
         'role_jabatan',
+        'id_role_jabatan', // Added as fallback
         'foto_user',
         'role_user',
+        'id_role_user',
         'user_aktif',
     ];
 
@@ -40,6 +42,7 @@ class User extends Authenticatable
      */
     public function roleJabatan()
     {
+        // Try both possible keys
         return $this->belongsTo(RoleJabatan::class, 'role_jabatan', 'id_role_jabatan');
     }
 
@@ -81,7 +84,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role_user === 'admin' || $this->role_user == 1;
+        return $this->getRoleName() === 'admin';
     }
 
     public function isActive(): bool
@@ -94,12 +97,28 @@ class User extends Authenticatable
      */
     public function getRoleName(): string
     {
-        // Handle numeric role_user values
-        if (is_numeric($this->role_user)) {
-            return match ((int) $this->role_user) {
+        // Check id_role_user first (as requested)
+        $roleId = $this->id_role_user ?? $this->role_user;
+
+        // Check id_role_jabatan or role_jabatan
+        $roleJabatan = $this->id_role_jabatan ?? $this->role_jabatan;
+
+        // Custom Role Logic based on Role Jabatan
+        if ($roleId == 2) { // Assuming base role is User
+            if ($roleJabatan == 2) {
+                return 'kepala_departemen';
+            }
+            if ($roleJabatan == 3) {
+                return 'approver';
+            }
+        }
+
+        // Handle numeric role values
+        if (is_numeric($roleId)) {
+            return match ((int) $roleId) {
                 1 => 'admin',
                 2 => 'user',
-                3 => 'approver',
+                3 => 'approver', // Explicit approver role if exists
                 4 => 'unit_pengelola',
                 5 => 'kepala_departemen',
                 default => 'user',
@@ -121,9 +140,7 @@ class User extends Authenticatable
         };
     }
 
-    /**
-     * Get display name for the user
-     */
+
     public function getDisplayNameAttribute(): string
     {
         return $this->nama_user ?? $this->username;

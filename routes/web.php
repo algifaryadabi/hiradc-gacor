@@ -155,7 +155,7 @@ Route::middleware('auth')->group(function () {
             ->with(['user', 'unit'])
             ->orderBy('created_at', 'desc')
             ->get();
-        return view('kepala_departemen.documents.index', compact('documents'));
+        return view('kepala_departemen.review', compact('documents'));
     })->name('kepala_departemen.check_documents');
 
     Route::get('/kepala-departemen/documents/{document}/review', [DocumentController::class, 'review'])->name('kepala_departemen.review');
