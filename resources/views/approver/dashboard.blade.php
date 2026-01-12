@@ -565,7 +565,8 @@
                         <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
                         <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
                         <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}</div>
+                            {{ Auth::user()->unit_or_dept_name }}
+                        </div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -718,127 +719,52 @@
     </div>
 
     <script>
+        <script>
         // MASTER DATA
-        const directorates = [
-            { id: 1, name: 'President Directorate' },
-            { id: 2, name: 'Operation Directorate' },
-            { id: 3, name: 'Finance Directorate' }
-        ];
+            const directorates = @json($direktorats->map(fn($d) => ['id' => $d->id_direktorat, 'name' => $d->nama_direktorat]));
 
-        const departments = [
-            { id: 1, dir_id: 1, name: 'Corporate Secretary' },
-            { id: 2, dir_id: 2, name: 'Department of BIP Production' },
-            { id: 3, dir_id: 2, name: 'Department of Cement Prod' },
-            { id: 4, dir_id: 2, name: 'Department of Clinker Prod' },
-            { id: 5, dir_id: 3, name: 'Department of Financial' },
-            { id: 6, dir_id: 2, name: 'Department of Human Capital' },
-            { id: 7, dir_id: 2, name: 'Department of Maint' },
-            { id: 8, dir_id: 3, name: 'Department of Marketing Plan and Develop' },
-            { id: 9, dir_id: 2, name: 'Department of Mining & Raw Mtrl Mgt' },
-            { id: 10, dir_id: 2, name: 'Department of Prod Planning & Ctrl' },
-            { id: 11, dir_id: 1, name: 'Department of Project Mgt Office' },
-            { id: 12, dir_id: 3, name: 'Department of Sales' },
-            { id: 13, dir_id: 1, name: 'Internal Audit' },
-            { id: 14, dir_id: 1, name: 'Non Cement Incubation Business' },
-            { id: 15, dir_id: 1, name: 'Staff of Portofolio' }
-        ];
+            const departments = @json($departemens->map(fn($d) => ['id' => $d->id_dept, 'dir_id' => $d->id_direktorat, 'name' => $d->nama_dept]));
 
-        const units = [
-            { id: 1, dept_id: 12, name: 'Section Technical & Customer Support' },
-            { id: 2, dept_id: 10, name: 'Staff of AFR' },
-            { id: 3, dept_id: 13, name: 'Staff of Internal Audit' },
-            { id: 4, dept_id: 14, name: 'Staff of Non Cement Incubation Business' },
-            { id: 5, dept_id: 11, name: 'TPM Officer' },
-            { id: 6, dept_id: 5, name: 'Unit of Accounting' },
-            { id: 7, dept_id: 3, name: 'Unit of Bag Plant' },
-            { id: 8, dept_id: 2, name: 'Unit of BIP Mech Production&Tech Support' },
-            { id: 9, dept_id: 2, name: 'Unit of BIP Production & Application' },
-            { id: 10, dept_id: 11, name: 'Unit of Capex' },
-            { id: 11, dept_id: 3, name: 'Unit of Cement Prod' },
-            { id: 12, dept_id: 4, name: 'Unit of Clinker 1 Prod' },
-            { id: 13, dept_id: 4, name: 'Unit of Clinker 2 Prod' },
-            { id: 14, dept_id: 1, name: 'Unit of Communication & Secretariat' },
-            { id: 15, dept_id: 1, name: 'Unit of CSR' },
-            { id: 16, dept_id: 3, name: 'Unit of Dumai Plant' },
-            { id: 17, dept_id: 7, name: 'Unit of Electrical Maint' },
-            { id: 18, dept_id: 9, name: 'Unit of Heavy Equipment' },
-            { id: 59, dept_id: 0, name: 'Unit of Warehouse' }
-        ];
+            const units = @json($units->map(fn($u) => ['id' => $u->id_unit, 'dept_id' => $u->id_dept, 'name' => $u->nama_unit]));
 
-        const documents = [
-            {
-                id: 1,
-                title: 'Penilaian Risiko Penggunaan Mesin Produksi A',
-                category: 'K3',
-                date: '15 Des 2025',
-                author: 'Ahmad Rizki',
-                approver: 'Bpk. Ahmad (Ka. Dept Produksi)',
-                dir_id: 2, dept_id: 3, unit_id: 11,
-                status: 'DISETUJUI',
-                risk_level: 'Tinggi',
-                approval_date: '14 Des 2025',
-                approval_note: '"Dokumen telah memenuhi standar K3L dan siap untuk dipublikasikan."'
-            },
-            {
-                id: 2,
-                title: 'Audit Lingkungan Tahunan',
-                category: 'Lingkungan',
-                date: '05 Jan 2026',
-                author: 'Siti (Unit Environmental)',
-                approver: 'Ibu Ratna (Ka. Dept LH)',
-                dir_id: 2, dept_id: 3, unit_id: 11,
-                status: 'DISETUJUI',
-                risk_level: 'Sedang',
-                approval_date: '04 Jan 2026',
-                approval_note: '"Data audit valid dan sesuai regulasi lingkungan."'
-            },
-            {
-                id: 3,
-                title: 'Prosedur Keamanan Gerbang',
-                category: 'Keamanan',
-                date: '01 Jan 2026',
-                author: 'Agus (Security)',
-                approver: 'Bpk. Joko (Ka. Dept Keamanan)',
-                dir_id: 1, dept_id: 1, unit_id: 14,
-                status: 'DISETUJUI',
-                risk_level: 'Rendah',
-                approval_date: '31 Des 2025',
-                approval_note: '"SOP keamanan baru disetujui untuk implementasi segera."'
-            },
-            {
-                id: 4,
-                title: 'Laporan Keuangan Q4',
-                category: 'KO',
-                date: '31 Des 2025',
-                author: 'Dewi (Finance)',
-                approver: 'Ibu Sri (Ka. Dept Keuangan)',
-                dir_id: 3, dept_id: 5, unit_id: 6,
-                status: 'DISETUJUI',
-                risk_level: 'Tinggi',
-                approval_date: '30 Des 2025',
-                approval_note: '"Laporan keuangan telah diaudit internal dan disahkan."'
-            },
-        ];
+            const documents = @json($publishedDocuments->map(function ($doc) {
+                $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
+                return [
+                    'id' => $doc->id_document,
+                    'title' => $doc->kolom2_kegiatan,
+                    'category' => $doc->kategori,
+                    'date' => $doc->created_at->format('d M Y'),
+                    'author' => $doc->user->nama_user ?? '-', // Or specific format
+                    'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
+                    'dir_id' => $doc->id_direktorat,
+                    'dept_id' => $doc->id_dept,
+                    'unit_id' => $doc->id_unit,
+                    'status' => 'DISETUJUI', // Dashboard shows published docs
+                    'risk_level' => $doc->risk_level,
+                    'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
+                    'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
+                ];
+            }));
 
-        let activeCategory = '';
+            let activeCategory = '';
 
         document.addEventListener('DOMContentLoaded', () => {
-            populateDirectorates();
+                populateDirectorates();
             filterDepartments();
         });
 
-        function populateDirectorates() {
+            function populateDirectorates() {
             const select = document.getElementById('filter_directorate');
             select.innerHTML = '<option value="">........</option>';
             directorates.forEach(d => {
                 const opt = document.createElement('option');
-                opt.value = d.id;
-                opt.textContent = d.name;
-                select.appendChild(opt);
+            opt.value = d.id;
+            opt.textContent = d.name;
+            select.appendChild(opt);
             });
         }
 
-        function filterDepartments() {
+            function filterDepartments() {
             const dirId = document.getElementById('filter_directorate').value;
             const deptSelect = document.getElementById('filter_department');
 
@@ -851,15 +777,15 @@
 
             filteredDepts.forEach(d => {
                 const opt = document.createElement('option');
-                opt.value = d.id;
-                opt.textContent = d.name;
-                deptSelect.appendChild(opt);
+            opt.value = d.id;
+            opt.textContent = d.name;
+            deptSelect.appendChild(opt);
             });
 
             filterUnits();
         }
 
-        function filterUnits() {
+            function filterUnits() {
             const deptId = document.getElementById('filter_department').value;
             const unitSelect = document.getElementById('filter_unit');
 
@@ -872,70 +798,70 @@
 
             filteredUnits.forEach(u => {
                 const opt = document.createElement('option');
-                opt.value = u.id;
-                opt.textContent = u.name;
-                unitSelect.appendChild(opt);
+            opt.value = u.id;
+            opt.textContent = u.name;
+            unitSelect.appendChild(opt);
             });
             applyFilters();
         }
 
-        function selectCategory(cat, el) {
-            document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
+            function selectCategory(cat, el) {
+                document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
             if (activeCategory === cat) {
                 activeCategory = '';
             } else {
                 activeCategory = cat;
-                el.classList.add('active');
+            el.classList.add('active');
             }
             applyFilters();
         }
 
-        function applyFilters() {
+            function applyFilters() {
             const dirId = document.getElementById('filter_directorate').value;
             const deptId = document.getElementById('filter_department').value;
             const unitId = document.getElementById('filter_unit').value;
 
             const filtered = documents.filter(doc => {
                 let match = true;
-                if (dirId && doc.dir_id != dirId) match = false;
-                if (deptId && doc.dept_id != deptId) match = false;
-                if (unitId && doc.unit_id != unitId) match = false;
-                if (activeCategory && doc.category !== activeCategory) match = false;
-                return match;
+            if (dirId && doc.dir_id != dirId) match = false;
+            if (deptId && doc.dept_id != deptId) match = false;
+            if (unitId && doc.unit_id != unitId) match = false;
+            if (activeCategory && doc.category !== activeCategory) match = false;
+            return match;
             });
 
             renderTable(filtered);
         }
 
-        function renderTable(data = documents) {
+            function renderTable(data = documents) {
             const tbody = document.getElementById('tableBody');
             const tableSection = document.querySelector('.table-section');
 
             if (data.length === 0) {
                 // Keep table header, empty body or hide
                 tableSection.style.display = 'none';
-                return;
+            return;
             }
 
             tableSection.style.display = 'block';
 
             tbody.innerHTML = data.map(doc => {
                 const unit = units.find(u => u.id === doc.unit_id);
-                const unitName = unit ? unit.name : '-';
-                return `
-                <tr>
-                    <td><strong>${unitName}</strong></td>
-                    <td><span class="badge-status" style="background: #eee;">${doc.category}</span></td>
-                    <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
-                    <td>${doc.date}</td>
-                    <td>${doc.author}</td>
-                    <td><button onclick="openDetailModal(${doc.id})" class="btn-action" style="border:none; cursor:pointer;">Detail</button></td>
-                </tr>
+            const unitName = unit ? unit.name : '-';
+            return `
+            <tr>
+                <td><strong>${unitName}</strong></td>
+                <td><span class="badge-status" style="background: #eee;">${doc.category}</span></td>
+                <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
+                <td>${doc.date}</td>
+                <td>${doc.author}</td>
+                <td><button onclick="openDetailModal(${doc.id})" class="btn-action" style="border:none; cursor:pointer;">Detail</button></td>
+            </tr>
             `}).join('');
         }
 
-        // MODAL FUNCTIONS
-        function openDetailModal(id) {
+            // MODAL FUNCTIONS
+            function openDetailModal(id) {
             const doc = documents.find(d => d.id === id);
             if (!doc) return;
 

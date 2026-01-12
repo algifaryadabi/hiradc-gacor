@@ -598,7 +598,8 @@
                         <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
                         <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
                         <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}</div>
+                            {{ Auth::user()->unit_or_dept_name }}
+                        </div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -625,10 +626,10 @@
                         Semua
                     </button>
                     <button class="tab" onclick="filterByStatus('revision')">
-                        Perlu Revisi <span class="count">2</span>
+                        Perlu Revisi <span class="count">{{ $documents->where('status', 'revision')->count() }}</span>
                     </button>
                     <button class="tab" onclick="filterByStatus('approved')">
-                        Disetujui <span class="count">1</span>
+                        Disetujui <span class="count">{{ $documents->where('status', 'approved')->count() }}</span>
                     </button>
 
                 </div>
@@ -642,50 +643,52 @@
     </div>
 
     <script>
-        // Sample documents data (Filtered for Unit: Produksi)
-        const myDocuments = [
-            {
-                id: 'DOC-102',
-                title: 'Analisis Dampak Limbah Cair',
-                category: 'Lingkungan',
-                unit: 'Produksi',
-                date: '07 Jan 2026',
-                status: 'revision',
-                statusText: 'Perlu Revisi',
-                reviewer: 'Kepala Unit Produksi',
-                revisionComment: 'Mohon lengkapi data tindakan pengendalian pada kolom 13. Sertakan juga timeline implementasi yang lebih detail.',
-                revisionBy: 'Budi Santoso',
-                revisionDate: '08 Jan 2026',
-                riskLevel: 'Sedang'
-            },
-            {
-                id: 'DOC-107',
-                title: 'Analisis Kebisingan Area Produksi',
-                category: 'K3',
-                unit: 'Produksi',
-                date: '18 Des 2025',
-                status: 'revision',
-                statusText: 'Perlu Revisi',
-                reviewer: 'Kepala Unit Produksi',
-                revisionComment: 'Data pengukuran kebisingan perlu dilengkapi dengan hasil kalibrasi alat ukur. Tambahkan juga rekomendasi APD yang spesifik.',
-                revisionBy: 'Ahmad Rizki',
-                revisionDate: '22 Des 2025',
-                riskLevel: 'Tinggi'
-            },
-            // Rejected document removed as per request
-            {
-                id: 'DOC-110',
-                title: 'Analisis Dampak Limbah B3',
-                category: 'Lingkungan',
-                unit: 'Produksi',
-                date: '05 Nov 2025',
-                status: 'approved',
-                statusText: 'Disetujui',
-                approvedBy: 'Kepala Departemen',
-                approvedDate: '18 Nov 2025',
-                riskLevel: 'Sangat Tinggi'
-            }
-        ];
+        @php
+            $documentsJson = $documents->map(function ($doc) {
+                // Find relevant approval actions
+                $lastRevision = $doc->approvals->where('action', 'revised')->sortByDesc('created_at')->first();
+                $lastRejection = $doc->approvals->where('action', 'rejected')->sortByDesc('created_at')->first();
+                $approval = $doc->approvals->where('action', 'approved')->sortByDesc('created_at')->first();
+
+                // Determine map status for JS
+                $jsStatus = match ($doc->status) {
+                    'revision' => 'revision',
+                    'approved' => 'approved',
+                    'published' => 'approved',
+                    'rejected' => 'rejected',
+                    default => 'pending'
+                };
+
+                return [
+                    'id' => $doc->id_document, // Or preserve ID string format? JS uses string ID for find. int is fine.
+                    'title' => $doc->kolom2_kegiatan ?? 'Dokumen Tanpa Judul',
+                    'category' => $doc->kategori,
+                    'unit' => $doc->unit->nama_unit ?? '-',
+                    'date' => $doc->created_at->translatedFormat('d M Y'),
+                    'status' => $jsStatus,
+                    'statusText' => $doc->status_label,
+                    'riskLevel' => $doc->risk_level,
+
+                    // Revision Data
+                    'revisionBy' => $lastRevision ? ($lastRevision->approver->nama_user ?? '-') : '-',
+                    'revisionDate' => $lastRevision ? $lastRevision->created_at->translatedFormat('d M Y') : '-',
+                    'revisionComment' => $lastRevision ? $lastRevision->catatan : '-',
+                    'reviewer' => $lastRevision ? ($lastRevision->approver->role_jabatan_name ?? '-') : '-',
+
+                    // Approved Data
+                    'approvedBy' => $approval ? ($approval->approver->nama_user ?? '-') : '-',
+                    'approvedDate' => $doc->published_at ? $doc->published_at->translatedFormat('d M Y') : '-',
+
+                    // Rejected Data
+                    'rejectedBy' => $lastRejection ? ($lastRejection->approver->nama_user ?? '-') : '-',
+                    'rejectedDate' => $lastRejection ? $lastRejection->created_at->translatedFormat('d M Y') : '-',
+                    'rejectionReason' => $lastRejection ? $lastRejection->catatan : '-',
+                ];
+            });
+        @endphp
+
+        // Real data from database
+        const myDocuments = @json($documentsJson);
 
         function renderDocuments(docs) {
             const grid = document.getElementById('documentsGrid');

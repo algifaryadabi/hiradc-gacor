@@ -386,7 +386,8 @@
                         <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
                         <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
                         <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}</div>
+                            {{ Auth::user()->unit_or_dept_name }}
+                        </div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -457,18 +458,45 @@
     </div>
 
     <script>
-        const currentUserUnit = 'Unit Produksi A'; // Simulasi Unit Kerja User yang Login
+        const currentUserUnit = '{{ Auth::user()->unit->nama_unit ?? "Unknown" }}';
 
-        const documents = [
-            { id: 1, unit: 'Unit Produksi A', title: 'Penilaian Risiko Unit A', category: 'K3', date: '18-10-2025', status: 'Menunggu' },
-            { id: 2, unit: 'Unit Lingkungan', title: 'Laporan Lingkungan B3', category: 'KO', date: '18-10-2025', status: 'Disetujui' },
-            { id: 3, unit: 'Unit Keamanan', title: 'Audit Keamanan Post 2', category: 'Lingkungan', date: '18-10-2025', status: 'Disetujui' },
-            { id: 4, unit: 'Unit Keamanan', title: 'Cek Operasional Forklift', category: 'Pengamanan', date: '18-10-2025', status: 'Menunggu' },
-            { id: 5, unit: 'Unit Operasional', title: 'Analisis Kebisingan', category: 'K3', date: '19-10-2025', status: 'Revisi' },
-            { id: 6, unit: 'Unit Technical', title: 'Prosedur Darurat Gempa', category: 'KO', date: '20-10-2025', status: 'Revisi' },
-            { id: 7, unit: 'Unit Produksi A', title: 'Inspeksi Harian Mesin', category: 'K3', date: '21-10-2025', status: 'Disetujui' },
-            { id: 8, unit: 'Unit Produksi A', title: 'Laporan Kerusakan Alat', category: 'KO', date: '22-10-2025', status: 'Revisi' },
-        ];
+        @php
+            $documentsJson = $documents->map(function ($doc) {
+                $user = Auth::user();
+                // Determine status relative to approver
+                $status = 'Disetujui'; // Default fallback
+
+                // Check if it is pending for THIS user
+                if ($doc->canBeApprovedBy($user)) {
+                    $status = 'Menunggu';
+                } elseif ($doc->status === 'revision') {
+                    // Check if THIS user revised it
+                    // Or if it is just in revision status
+                    $lastRev = $doc->approvals->where('action', 'revised')->last();
+                    if ($lastRev && $lastRev->approver_id == $user->id_user) {
+                        $status = 'Revisi';
+                    } else {
+                        $status = 'Revisi'; // Show as revisi generally
+                    }
+                } elseif ($doc->status === 'rejected') {
+                    $status = 'Ditolak';
+                } elseif ($doc->approvals->where('approver_id', $user->id_user)->where('action', 'approved')->count() > 0) {
+                    $status = 'Disetujui';
+                }
+
+                return [
+                    'id' => $doc->id_document,
+                    'unit' => $doc->unit->nama_unit ?? '-',
+                    'title' => $doc->kolom2_kegiatan ?? '-',
+                    'category' => $doc->kategori,
+                    'date' => $doc->created_at->format('d-m-Y'),
+                    'status' => $status,
+                    'viewUrl' => route('approver.review', $doc->id_document)
+                ];
+            });
+        @endphp
+
+        const documents = @json($documentsJson);
 
         let currentStatusFilter = 'Semua';
 
@@ -476,8 +504,8 @@
             const container = document.getElementById('documentList');
             const catFilter = document.getElementById('catFilter').value;
 
-            // Filter by Unit first (Approver only sees their own unit's documents)
-            let filtered = documents.filter(d => d.unit === currentUserUnit);
+            // Start with all documents (currentUserUnit filtering removed as we fetch related docs only)
+            let filtered = documents;
 
             // Filter by Status
             if (currentStatusFilter !== 'Semua') {
@@ -491,7 +519,7 @@
 
             let html = '';
             if (filtered.length === 0) {
-                html = '<div style="padding:20px; text-align:center; color:#999;">Tidak ada dokumen ditemukan untuk unit Anda.</div>';
+                html = '<div style="padding:20px; text-align:center; color:#999;">Tidak ada dokumen ditemukan.</div>';
             } else {
                 filtered.forEach(doc => {
                     html += `
@@ -501,7 +529,7 @@
                         <div>${doc.date}</div>
                         <div class="status-${doc.status.toLowerCase()}">${doc.status}</div>
                         <div style="text-align: center;">
-                            <a href="{{ route('approver.review') }}?status=${doc.status}&id=${doc.id}" class="btn-view">View</a>
+                            <a href="${doc.viewUrl}" class="btn-view">View</a>
                         </div>
                     </div>
                     `;
@@ -525,12 +553,9 @@
         }
 
         function updateCounts() {
-            // Count based on the user's unit only
-            const myDocs = documents.filter(d => d.unit === currentUserUnit);
-
-            const waiting = myDocs.filter(d => d.status === 'Menunggu').length;
-            const approved = myDocs.filter(d => d.status === 'Disetujui').length;
-            const revision = myDocs.filter(d => d.status === 'Revisi').length;
+            const waiting = documents.filter(d => d.status === 'Menunggu').length;
+            const approved = documents.filter(d => d.status === 'Disetujui').length;
+            const revision = documents.filter(d => d.status === 'Revisi').length;
 
             document.getElementById('count-waiting').textContent = waiting;
             document.getElementById('count-approved').textContent = approved;

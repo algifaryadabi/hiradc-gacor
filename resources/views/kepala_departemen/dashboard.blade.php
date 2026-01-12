@@ -222,7 +222,7 @@
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             margin-bottom: 30px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -303,7 +303,7 @@
         .table-section {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             border: 1px solid #eee;
         }
@@ -316,9 +316,9 @@
             border-bottom: 1px solid #eee;
             background-color: #fbfbfb;
         }
-        
+
         .table-header h2 {
-            font-size: 16px; 
+            font-size: 16px;
             font-weight: 700;
             color: #333;
         }
@@ -357,7 +357,7 @@
             color: #555;
             vertical-align: middle;
         }
-        
+
         .btn-filter-toggle {
             padding: 8px 16px;
             background: #fff;
@@ -368,16 +368,16 @@
         }
 
         .btn-action {
-             padding: 8px 18px;
-             background: #c41e3a; 
-             color: white;
-             border-radius: 6px;
-             text-decoration: none;
-             font-size: 12px;
-             font-weight: 500;
-             transition: background 0.2s;
+            padding: 8px 18px;
+            background: #c41e3a;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.2s;
         }
-        
+
         .badge-status {
             padding: 6px 14px;
             border-radius: 20px;
@@ -389,33 +389,40 @@
 
         /* MODAL STYLES */
         .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 9999; 
+            display: none;
+            position: fixed;
+            z-index: 9999;
             left: 0;
             top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.5); 
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
             font-family: 'Inter', sans-serif;
         }
 
         .modal-content {
             background-color: #fefefe;
-            margin: 5% auto; 
+            margin: 5% auto;
             padding: 0;
             border: 1px solid #888;
             width: 600px;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             position: relative;
             animation: slideDown 0.3s ease-out;
         }
 
         @keyframes slideDown {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .modal-header {
@@ -452,13 +459,14 @@
         .section-title {
             font-size: 14px;
             font-weight: 700;
-            color: #c41e3a; /* Red color */
+            color: #c41e3a;
+            /* Red color */
             margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .section-title.green {
             color: #2e7d32;
         }
@@ -499,7 +507,8 @@
         }
 
         .approval-box {
-            background-color: #f1f8e9; /* Light green bg */
+            background-color: #f1f8e9;
+            /* Light green bg */
             border-left: 4px solid #2e7d32;
             padding: 15px;
             border-radius: 4px;
@@ -511,14 +520,14 @@
             color: #33691e;
             line-height: 1.5;
         }
-        
+
         .approval-header {
-             font-weight: 700;
-             margin-bottom: 5px;
-             color: #1b5e20;
-             display: flex;
-             align-items: center;
-             gap: 8px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #1b5e20;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
     </style>
 </head>
@@ -573,7 +582,7 @@
             </div>
 
             <div class="content-area">
-                
+
                 <!-- 3 FILTERS -->
                 <div class="filters-container">
                     <div class="filter-group">
@@ -586,15 +595,15 @@
                     <div class="filter-group">
                         <label>Departemen</label>
                         <select id="filter_department" onchange="filterUnits()">
-                             <option value="">........</option>
-                             <!-- JS Populated -->
+                            <option value="">........</option>
+                            <!-- JS Populated -->
                         </select>
                     </div>
                     <div class="filter-group">
                         <label>Kepala Unit Kerja</label>
                         <select id="filter_unit" onchange="applyFilters()">
-                             <option value="">........</option>
-                             <!-- JS Populated -->
+                            <option value="">........</option>
+                            <!-- JS Populated -->
                         </select>
                     </div>
                 </div>
@@ -706,112 +715,36 @@
 
     <script>
         // MASTER DATA
-        const directorates = [
-            { id: 1, name: 'President Directorate' },
-            { id: 2, name: 'Operation Directorate' },
-            { id: 3, name: 'Finance Directorate' }
-        ];
+        const directorates = @json($direktorats->map(fn($d) => ['id' => $d->id_direktorat, 'name' => $d->nama_direktorat]));
 
-        const departments = [
-            { id: 1, dir_id: 1, name: 'Corporate Secretary' },
-            { id: 2, dir_id: 2, name: 'Department of BIP Production' },
-            { id: 3, dir_id: 2, name: 'Department of Cement Prod' },
-            { id: 4, dir_id: 2, name: 'Department of Clinker Prod' },
-            { id: 5, dir_id: 3, name: 'Department of Financial' },
-            { id: 6, dir_id: 2, name: 'Department of Human Capital' },
-            { id: 7, dir_id: 2, name: 'Department of Maint' },
-            { id: 8, dir_id: 3, name: 'Department of Marketing Plan and Develop' },
-            { id: 9, dir_id: 2, name: 'Department of Mining & Raw Mtrl Mgt' },
-            { id: 10, dir_id: 2, name: 'Department of Prod Planning & Ctrl' },
-            { id: 11, dir_id: 1, name: 'Department of Project Mgt Office' },
-            { id: 12, dir_id: 3, name: 'Department of Sales' },
-            { id: 13, dir_id: 1, name: 'Internal Audit' },
-            { id: 14, dir_id: 1, name: 'Non Cement Incubation Business' },
-            { id: 15, dir_id: 1, name: 'Staff of Portofolio' }
-        ];
+        const departments = @json($departemens->map(fn($d) => ['id' => $d->id_dept, 'dir_id' => $d->id_direktorat, 'name' => $d->nama_dept]));
 
-        const units = [
-            { id: 1, dept_id: 12, name: 'Section Technical & Customer Support' },
-            { id: 2, dept_id: 10, name: 'Staff of AFR' },
-            { id: 3, dept_id: 13, name: 'Staff of Internal Audit' },
-            { id: 4, dept_id: 14, name: 'Staff of Non Cement Incubation Business' },
-            { id: 5, dept_id: 11, name: 'TPM Officer' },
-            { id: 6, dept_id: 5, name: 'Unit of Accounting' },
-            { id: 7, dept_id: 3, name: 'Unit of Bag Plant' },
-            { id: 8, dept_id: 2, name: 'Unit of BIP Mech Production&Tech Support' },
-            { id: 9, dept_id: 2, name: 'Unit of BIP Production & Application' },
-            { id: 10, dept_id: 11, name: 'Unit of Capex' },
-            { id: 11, dept_id: 3, name: 'Unit of Cement Prod' },
-            { id: 12, dept_id: 4, name: 'Unit of Clinker 1 Prod' },
-            { id: 13, dept_id: 4, name: 'Unit of Clinker 2 Prod' },
-            { id: 14, dept_id: 1, name: 'Unit of Communication & Secretariat' },
-            { id: 15, dept_id: 1, name: 'Unit of CSR' },
-            { id: 16, dept_id: 3, name: 'Unit of Dumai Plant' },
-            { id: 17, dept_id: 7, name: 'Unit of Electrical Maint' },
-            { id: 18, dept_id: 9, name: 'Unit of Heavy Equipment' },
-            { id: 59, dept_id: 0, name: 'Unit of Warehouse' }
-        ];
+        const units = @json($units->map(fn($u) => ['id' => $u->id_unit, 'dept_id' => $u->id_dept, 'name' => $u->nama_unit]));
 
-        const documents = [
-            { 
-                id: 1, 
-                title: 'Penilaian Risiko Penggunaan Mesin Produksi A', 
-                category: 'K3', 
-                date: '15 Des 2025', 
-                author: 'Ahmad Rizki', 
-                approver: 'Bpk. Ahmad (Ka. Dept Produksi)', 
-                dir_id: 2, dept_id: 3, unit_id: 11,
-                status: 'DISETUJUI',
-                risk_level: 'Tinggi',
-                approval_date: '14 Des 2025',
-                approval_note: '"Dokumen telah memenuhi standar K3L dan siap untuk dipublikasikan."'
-            },
-            { 
-                id: 2, 
-                title: 'Audit Lingkungan Tahunan', 
-                category: 'Lingkungan', 
-                date: '05 Jan 2026', 
-                author: 'Siti (Unit Environmental)', 
-                approver: 'Ibu Ratna (Ka. Dept LH)', 
-                dir_id: 2, dept_id: 3, unit_id: 11,
-                status: 'DISETUJUI',
-                risk_level: 'Sedang',
-                approval_date: '04 Jan 2026',
-                approval_note: '"Data audit valid dan sesuai regulasi lingkungan."'
-            },
-            { 
-                id: 3, 
-                title: 'Prosedur Keamanan Gerbang', 
-                category: 'Keamanan', 
-                date: '01 Jan 2026', 
-                author: 'Agus (Security)', 
-                approver: 'Bpk. Joko (Ka. Dept Keamanan)', 
-                dir_id: 1, dept_id: 1, unit_id: 14,
-                status: 'DISETUJUI',
-                risk_level: 'Rendah',
-                approval_date: '31 Des 2025',
-                approval_note: '"SOP keamanan baru disetujui untuk implementasi segera."'
-            },
-            { 
-                id: 4, 
-                title: 'Laporan Keuangan Q4', 
-                category: 'KO', 
-                date: '31 Des 2025', 
-                author: 'Dewi (Finance)', 
-                approver: 'Ibu Sri (Ka. Dept Keuangan)', 
-                dir_id: 3, dept_id: 5, unit_id: 6,
-                status: 'DISETUJUI',
-                risk_level: 'Tinggi',
-                approval_date: '30 Des 2025',
-                approval_note: '"Laporan keuangan telah diaudit internal dan disahkan."'
-            },
-        ];
+        const documents = @json($publishedDocuments->map(function ($doc) {
+            $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
+            return [
+                'id' => $doc->id_document,
+                'title' => $doc->kolom2_kegiatan,
+                'category' => $doc->kategori,
+                'date' => $doc->created_at->format('d M Y'),
+                'author' => $doc->user->nama_user ?? '-',
+                'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
+                'dir_id' => $doc->id_direktorat,
+                'dept_id' => $doc->id_dept,
+                'unit_id' => $doc->id_unit,
+                'status' => 'DISETUJUI',
+                'risk_level' => $doc->risk_level,
+                'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
+                'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
+            ];
+        }));
 
         let activeCategory = '';
 
         document.addEventListener('DOMContentLoaded', () => {
-             populateDirectorates();
-             filterDepartments();
+            populateDirectorates();
+            filterDepartments();
         });
 
         function populateDirectorates() {
@@ -828,9 +761,9 @@
         function filterDepartments() {
             const dirId = document.getElementById('filter_directorate').value;
             const deptSelect = document.getElementById('filter_department');
-            
+
             deptSelect.innerHTML = '<option value="">........</option>';
-            
+
             let filteredDepts = departments;
             if (dirId) {
                 filteredDepts = departments.filter(d => d.dir_id == dirId);
@@ -842,14 +775,14 @@
                 opt.textContent = d.name;
                 deptSelect.appendChild(opt);
             });
-            
-            filterUnits(); 
+
+            filterUnits();
         }
 
         function filterUnits() {
             const deptId = document.getElementById('filter_department').value;
             const unitSelect = document.getElementById('filter_unit');
-            
+
             unitSelect.innerHTML = '<option value="">........</option>';
 
             let filteredUnits = units;
@@ -903,7 +836,7 @@
                 tableSection.style.display = 'none';
                 return;
             }
-            
+
             tableSection.style.display = 'block';
 
             tbody.innerHTML = data.map(doc => {
@@ -924,7 +857,7 @@
         // MODAL FUNCTIONS
         function openDetailModal(id) {
             const doc = documents.find(d => d.id === id);
-            if(!doc) return;
+            if (!doc) return;
 
             const unit = units.find(u => u.id === doc.unit_id);
             const unitName = unit ? unit.name : '-';
@@ -932,16 +865,16 @@
             document.getElementById('m_title').innerText = doc.title;
             document.getElementById('m_status').innerText = doc.status;
             document.getElementById('m_category').innerText = doc.category;
-            document.getElementById('m_unit').innerText = unitName; 
+            document.getElementById('m_unit').innerText = unitName;
             document.getElementById('m_date').innerText = doc.date;
             document.getElementById('m_author').innerText = doc.author;
-            
+
             // Risk Level Styling
             const riskEl = document.getElementById('m_risk');
             riskEl.innerText = doc.risk_level;
             riskEl.className = 'info-value'; // Reset
             if (doc.risk_level === 'Tinggi') riskEl.classList.add('risk-high');
-            
+
             document.getElementById('m_approval_header').innerText = `Disetujui oleh Kepala Departemen pada ${doc.approval_date}`;
             document.getElementById('m_approval_note').innerText = doc.approval_note;
 
@@ -953,7 +886,7 @@
         }
 
         // Close modal if clicked outside
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('detailModal');
             if (event.target == modal) {
                 modal.style.display = 'none';
@@ -962,4 +895,5 @@
 
     </script>
 </body>
+
 </html>

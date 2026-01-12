@@ -18,6 +18,7 @@ class DocumentController extends Controller
     public function index()
     {
         $documents = Document::where('id_user', Auth::user()->id_user)
+            ->with(['unit', 'approvals.approver'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -141,6 +142,13 @@ class DocumentController extends Controller
             ->with(['user', 'unit'])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        // History: Documents approved/revised by this user
+        $historyDocuments = Document::whereHas('approvals', function ($q) use ($user) {
+            $q->where('approver_id', $user->id_user);
+        })->with(['user', 'unit'])->get();
+
+        $documents = $documents->merge($historyDocuments)->unique('id_document');
 
         return view('approver.documents.index', compact('documents'));
     }

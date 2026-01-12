@@ -79,9 +79,14 @@ Route::middleware('auth')->group(function () {
             ->with(['user', 'unit'])
             ->orderBy('published_at', 'desc')
             ->limit(10)
+            ->limit(10)
             ->get();
 
-        return view('approver.dashboard', compact('user', 'pendingCount', 'publishedDocuments'));
+        $direktorats = \App\Models\Direktorat::where('status_aktif', 1)->get();
+        $departemens = \App\Models\Departemen::all();
+        $units = \App\Models\Unit::all();
+
+        return view('approver.dashboard', compact('user', 'pendingCount', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
     })->name('approver.dashboard');
 
     Route::get('/approver/check-documents', [DocumentController::class, 'pendingApproval'])->name('approver.check_documents');
@@ -102,7 +107,11 @@ Route::middleware('auth')->group(function () {
             ->limit(10)
             ->get();
 
-        return view('unit_pengelola.dashboard', compact('user', 'pendingCount', 'publishedDocuments'));
+        $direktorats = \App\Models\Direktorat::where('status_aktif', 1)->get();
+        $departemens = \App\Models\Departemen::all();
+        $units = \App\Models\Unit::all();
+
+        return view('unit_pengelola.dashboard', compact('user', 'pendingCount', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
     })->name('unit_pengelola.dashboard');
 
     Route::get('/unit-pengelola/check-documents', function () {
@@ -132,7 +141,11 @@ Route::middleware('auth')->group(function () {
             ->limit(10)
             ->get();
 
-        return view('kepala_departemen.dashboard', compact('user', 'pendingCount', 'publishedDocuments'));
+        $direktorats = \App\Models\Direktorat::where('status_aktif', 1)->get();
+        $departemens = \App\Models\Departemen::all();
+        $units = \App\Models\Unit::all();
+
+        return view('kepala_departemen.dashboard', compact('user', 'pendingCount', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
     })->name('kepala_departemen.dashboard');
 
     Route::get('/kepala-departemen/check-documents', function () {
