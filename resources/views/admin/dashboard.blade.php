@@ -67,19 +67,24 @@
         .user-section {
             padding: 20px;
             border-top: 1px solid #eee;
-            background: #fafafa;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
 
         .logout-btn {
             display: block;
             text-align: center;
             padding: 10px;
-            background: #c41e3a;
+            background: rgba(255, 255, 255, 0.2);
             color: white;
             border-radius: 6px;
             text-decoration: none;
             font-size: 14px;
             margin-top: 10px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .main-content {
@@ -103,7 +108,7 @@
 
         .cards {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -142,6 +147,69 @@
             font-size: 28px;
             color: #333;
         }
+
+        .documents-table {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 15px 25px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        td {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .badge-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-approved {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .badge-pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
     </style>
 </head>
 
@@ -165,8 +233,9 @@
             </a>
         </nav>
         <div class="user-section">
-            <div style="font-weight: 600; font-size: 14px;">Administrator</div>
-            <div style="font-size: 12px; color: #666;">Super Admin</div>
+            <div style="font-weight: 600; font-size: 14px;">{{ Auth::user()->nama_user ?? Auth::user()->username }}
+            </div>
+            <div style="font-size: 12px; opacity: 0.8;">{{ Auth::user()->role_jabatan_name }}</div>
             <a href="{{ route('logout') }}" class="logout-btn"
                 onclick="event.preventDefault(); document.getElementById('logout').submit();">Keluar</a>
             <form id="logout" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
@@ -175,8 +244,8 @@
 
     <main class="main-content">
         <div class="header">
-            <h1>Selamat Datang, Admin</h1>
-            <div class="date">{{ date('l, d F Y') }}</div>
+            <h1>Selamat Datang, {{ Auth::user()->nama_user ?? Auth::user()->username }}</h1>
+            <div class="date">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</div>
         </div>
 
         <div class="cards">
@@ -184,30 +253,67 @@
                 <div class="card-icon"><i class="fas fa-users"></i></div>
                 <div class="card-info">
                     <h3>Total Users</h3>
-                    <h2>1,250</h2>
+                    <h2>{{ \App\Models\User::count() }}</h2>
                 </div>
             </div>
             <div class="card">
                 <div class="card-icon"><i class="fas fa-file-contract"></i></div>
                 <div class="card-info">
                     <h3>Total Dokumen</h3>
-                    <h2>850</h2>
+                    <h2>{{ $totalDocuments ?? 0 }}</h2>
                 </div>
             </div>
             <div class="card">
-                <div class="card-icon"><i class="fas fa-server"></i></div>
+                <div class="card-icon" style="background: #e8f5e9; color: #2e7d32;"><i class="fas fa-check-circle"></i>
+                </div>
                 <div class="card-info">
-                    <h3>System Status</h3>
-                    <h2 style="font-size: 18px; color: #2e7d32;">Online</h2>
+                    <h3>Dipublikasi</h3>
+                    <h2>{{ $publishedDocuments ?? 0 }}</h2>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background: #fff3e0; color: #f57c00;"><i class="fas fa-clock"></i></div>
+                <div class="card-info">
+                    <h3>Menunggu Approval</h3>
+                    <h2>{{ $pendingDocuments ?? 0 }}</h2>
                 </div>
             </div>
         </div>
 
-        <div
-            style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; color: #888;">
-            <img src="https://cdni.iconscout.com/illustration/premium/thumb/admin-panel-4439225-3687271.png" alt="Admin"
-                style="width: 200px; opacity: 0.8;">
-            <p>Pilih menu di samping untuk mengelola data sistem.</p>
+        <div class="documents-table">
+            <div class="table-header">
+                <h2>Dokumen Terbaru yang Dipublikasi</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Judul</th>
+                        <th>Kategori</th>
+                        <th>Pembuat</th>
+                        <th>Unit</th>
+                        <th>Tanggal Publikasi</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($documents ?? [] as $doc)
+                        <tr>
+                            <td>{{ $doc->kolom2_kegiatan ?? 'Dokumen HIRADC' }}</td>
+                            <td>{{ $doc->kategori }}</td>
+                            <td>{{ $doc->user->nama_user ?? $doc->user->username ?? '-' }}</td>
+                            <td>{{ $doc->unit->nama_unit ?? '-' }}</td>
+                            <td>{{ $doc->published_at ? $doc->published_at->format('d M Y') : '-' }}</td>
+                            <td><span class="badge-status badge-approved">Dipublikasi</span></td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
+                                Belum ada dokumen yang dipublikasi
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </main>
 

@@ -322,9 +322,20 @@
         }
 
         /* Status Colors */
-        .status-menunggu { color: #fd7e14; font-weight: 700; }
-        .status-disetujui { color: #28a745; font-weight: 700; }
-        .status-revisi { color: #dc3545; font-weight: 700; }
+        .status-menunggu {
+            color: #fd7e14;
+            font-weight: 700;
+        }
+
+        .status-disetujui {
+            color: #28a745;
+            font-weight: 700;
+        }
+
+        .status-revisi {
+            color: #dc3545;
+            font-weight: 700;
+        }
 
         .btn-view {
             background: #c41e3a;
@@ -370,10 +381,12 @@
 
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">KU</div>
+                    <div class="user-avatar">{{ substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2) }}</div>
                     <div class="user-details">
-                        <div class="user-name">Budi Santoso</div>
-                        <div class="user-role">Kepala Unit Kerja</div>
+                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
+                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
+                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
+                            {{ Auth::user()->unit_or_dept_name }}</div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -386,7 +399,7 @@
         </aside>
 
         <!-- Main Content -->
-<main class="main-content">
+        <main class="main-content">
             <div class="header">
                 <h1>Cek Dokumen</h1>
             </div>
@@ -462,7 +475,7 @@
         function renderList() {
             const container = document.getElementById('documentList');
             const catFilter = document.getElementById('catFilter').value;
-            
+
             // Filter by Unit first (Approver only sees their own unit's documents)
             let filtered = documents.filter(d => d.unit === currentUserUnit);
 
@@ -477,7 +490,7 @@
             }
 
             let html = '';
-            if(filtered.length === 0) {
+            if (filtered.length === 0) {
                 html = '<div style="padding:20px; text-align:center; color:#999;">Tidak ada dokumen ditemukan untuk unit Anda.</div>';
             } else {
                 filtered.forEach(doc => {
@@ -514,7 +527,7 @@
         function updateCounts() {
             // Count based on the user's unit only
             const myDocs = documents.filter(d => d.unit === currentUserUnit);
-            
+
             const waiting = myDocs.filter(d => d.status === 'Menunggu').length;
             const approved = myDocs.filter(d => d.status === 'Disetujui').length;
             const revision = myDocs.filter(d => d.status === 'Revisi').length;

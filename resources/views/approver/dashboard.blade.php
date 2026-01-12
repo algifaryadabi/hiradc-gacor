@@ -552,16 +552,20 @@
                 <a href="{{ route('approver.check_documents') }}" class="nav-item">
                     <i class="fas fa-file-contract"></i>
                     <span>Cek Dokumen</span>
-                    <span class="badge">3</span>
+                    @if(isset($pendingCount) && $pendingCount > 0)
+                        <span class="badge">{{ $pendingCount }}</span>
+                    @endif
                 </a>
             </nav>
 
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">KU</div>
+                    <div class="user-avatar">{{ substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2) }}</div>
                     <div class="user-details">
-                        <div class="user-name">Budi Santoso</div>
-                        <div class="user-role">Kepala Unit Kerja</div>
+                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
+                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
+                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
+                            {{ Auth::user()->unit_or_dept_name }}</div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"

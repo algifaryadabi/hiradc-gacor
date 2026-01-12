@@ -472,12 +472,14 @@
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('documents.index') }}" class="nav-item {{ request('mode') == 'edit' ? 'active' : '' }}">
+                <a href="{{ route('documents.index') }}"
+                    class="nav-item {{ request('mode') == 'edit' ? 'active' : '' }}">
                     <i class="fas fa-folder-open"></i>
                     <span>Dokumen Saya</span>
                     <span class="badge">9</span>
                 </a>
-                <a href="{{ route('documents.create') }}" class="nav-item {{ request('mode') != 'edit' ? 'active' : '' }}">
+                <a href="{{ route('documents.create') }}"
+                    class="nav-item {{ request('mode') != 'edit' ? 'active' : '' }}">
                     <i class="fas fa-plus-circle"></i>
                     <span>Buat Dokumen Baru</span>
                 </a>
@@ -486,13 +488,14 @@
             <!-- User Info at Bottom -->
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">JD</div>
+                    <div class="user-avatar">{{ substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2) }}</div>
                     <div class="user-details">
-                        <div class="user-name">John Doe</div>
-                        <div class="user-role">Staff Unit Kerja</div>
+                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
+                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
+                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
+                            {{ Auth::user()->unit_or_dept_name }}</div>
                     </div>
                 </div>
-                <!-- Logout via Form/Link -->
                 <a href="{{ route('logout') }}" class="logout-btn"
                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="fas fa-sign-out-alt"></i>
@@ -511,22 +514,28 @@
             </div>
 
             <div class="content-area">
-                <form id="hiradcForm" class="form-container">
-                    
+                <form id="hiradcForm" class="form-container" method="POST" action="{{ route('documents.store') }}">
+                    @csrf
+
                     <!-- REVISION ALERT (Hidden by default) -->
                     <div id="revision_alert_container" class="hidden" style="margin-bottom: 30px;">
-                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 4px;">
+                        <div
+                            style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 4px;">
                             <div style="display: flex; align-items: start; gap: 15px;">
                                 <div style="font-size: 24px; color: #856404;">
                                     <i class="fas fa-exclamation-triangle"></i>
                                 </div>
                                 <div>
-                                    <h3 style="margin: 0 0 10px 0; color: #856404; font-size: 16px;">Dokumen Perlu Perbaikan</h3>
+                                    <h3 style="margin: 0 0 10px 0; color: #856404; font-size: 16px;">Dokumen Perlu
+                                        Perbaikan</h3>
                                     <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">
-                                        Dokumen ini dikembalikan oleh <strong><span id="reviewer_name">Nama Reviewer</span></strong> 
-                                        (<span id="reviewer_role">Role</span>) pada <span id="revision_date">Tanggal</span>.
+                                        Dokumen ini dikembalikan oleh <strong><span id="reviewer_name">Nama
+                                                Reviewer</span></strong>
+                                        (<span id="reviewer_role">Role</span>) pada <span
+                                            id="revision_date">Tanggal</span>.
                                     </p>
-                                    <div style="background: rgba(255,255,255,0.5); padding: 15px; border-radius: 6px; font-style: italic; color: #333; border: 1px solid rgba(0,0,0,0.05);">
+                                    <div
+                                        style="background: rgba(255,255,255,0.5); padding: 15px; border-radius: 6px; font-style: italic; color: #333; border: 1px solid rgba(0,0,0,0.05);">
                                         "<span id="revision_comment">Komentar revisi akan muncul di sini...</span>"
                                     </div>
                                 </div>
@@ -1219,7 +1228,7 @@
             'DOC-102': {
                 id: 'DOC-102',
                 proses: 'PRODUKSI',
-                kegiatan_lain: 'Pembuangan Limbah Cair', 
+                kegiatan_lain: 'Pembuangan Limbah Cair',
                 lokasi: 'Area IPAL Unit Produksi',
                 kategori: 'Lingkungan',
                 kondisi: 'R',
@@ -1296,7 +1305,7 @@
         };
 
         // CHECK FOR EDIT MODE ON LOAD
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const urlParams = new URLSearchParams(window.location.search);
             const mode = urlParams.get('mode');
             const docId = urlParams.get('id');
@@ -1319,7 +1328,7 @@
                 document.getElementById('reviewer_role').textContent = rev.reviewer;
                 document.getElementById('revision_date').textContent = rev.date;
                 document.getElementById('revision_comment').textContent = rev.comment;
-                
+
                 // Scroll to top
                 window.scrollTo(0, 0);
             }
@@ -1344,8 +1353,8 @@
                     document.getElementById('bahaya_kimia').checked = true;
                     toggleBahayaDropdown('kimia');
                     // Select options in multi-select (simplified)
-                } 
-                 if (doc.bahaya_kategori === 'fisika') {
+                }
+                if (doc.bahaya_kategori === 'fisika') {
                     document.getElementById('bahaya_fisika').checked = true;
                     toggleBahayaDropdown('fisika');
                 }
@@ -1357,8 +1366,8 @@
 
             // Pihak
             doc.pihak.forEach(p => {
-                if(p === 'Pekerja') document.getElementById('pihak_pekerja').checked = true;
-                if(p === 'Lingkungan') document.getElementById('pihak_lingkungan').checked = true;
+                if (p === 'Pekerja') document.getElementById('pihak_pekerja').checked = true;
+                if (p === 'Lingkungan') document.getElementById('pihak_lingkungan').checked = true;
             });
 
             document.getElementById('kolom10_bahaya').value = doc.bahaya_identifikasi;
