@@ -79,7 +79,6 @@ Route::middleware('auth')->group(function () {
             ->with(['user', 'unit'])
             ->orderBy('published_at', 'desc')
             ->limit(10)
-            ->limit(10)
             ->get();
 
         $direktorats = \App\Models\Direktorat::where('status_aktif', 1)->get();
