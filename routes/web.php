@@ -70,10 +70,14 @@ Route::middleware('auth')->group(function () {
     // ==================== APPROVER (KEPALA UNIT) ROUTES ====================
     Route::get('/approver/dashboard', function () {
         $user = Auth::user();
-        $pendingCount = \App\Models\Document::where('current_level', 1)
+        $pendingDocuments = \App\Models\Document::where('current_level', 1)
             ->where('status', 'pending_level1')
             ->where('id_unit', $user->id_unit)
-            ->count();
+            ->with(['user', 'unit'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $pendingCount = $pendingDocuments->count();
 
         $publishedDocuments = \App\Models\Document::published()
             ->with(['user', 'unit'])
@@ -85,7 +89,7 @@ Route::middleware('auth')->group(function () {
         $departemens = \App\Models\Departemen::all();
         $units = \App\Models\Unit::all();
 
-        return view('approver.dashboard', compact('user', 'pendingCount', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
+        return view('approver.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
     })->name('approver.dashboard');
 
     Route::get('/approver/check-documents', [DocumentController::class, 'pendingApproval'])->name('approver.check_documents');
@@ -94,11 +98,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/approver/documents/{document}/revise', [DocumentController::class, 'revise'])->name('approver.revise');
 
     // ==================== UNIT PENGELOLA (SHE/KEAMANAN) ROUTES ====================
+
     Route::get('/unit-pengelola/dashboard', function () {
         $user = Auth::user();
-        $pendingCount = \App\Models\Document::where('current_level', 2)
+        $pendingDocuments = \App\Models\Document::where('current_level', 2)
             ->where('status', 'pending_level2')
-            ->count();
+            ->with(['user', 'unit'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $pendingCount = $pendingDocuments->count();
 
         $publishedDocuments = \App\Models\Document::published()
             ->with(['user', 'unit'])
@@ -110,7 +119,7 @@ Route::middleware('auth')->group(function () {
         $departemens = \App\Models\Departemen::all();
         $units = \App\Models\Unit::all();
 
-        return view('unit_pengelola.dashboard', compact('user', 'pendingCount', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
+        return view('unit_pengelola.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
     })->name('unit_pengelola.dashboard');
 
     Route::get('/unit-pengelola/check-documents', function () {
@@ -129,10 +138,14 @@ Route::middleware('auth')->group(function () {
     // ==================== KEPALA DEPARTEMEN ROUTES ====================
     Route::get('/kepala-departemen/dashboard', function () {
         $user = Auth::user();
-        $pendingCount = \App\Models\Document::where('current_level', 3)
+        $pendingDocuments = \App\Models\Document::where('current_level', 3)
             ->where('status', 'pending_level3')
             ->where('id_dept', $user->id_dept)
-            ->count();
+            ->with(['user', 'unit'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $pendingCount = $pendingDocuments->count();
 
         $publishedDocuments = \App\Models\Document::published()
             ->with(['user', 'unit'])
@@ -144,7 +157,7 @@ Route::middleware('auth')->group(function () {
         $departemens = \App\Models\Departemen::all();
         $units = \App\Models\Unit::all();
 
-        return view('kepala_departemen.dashboard', compact('user', 'pendingCount', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
+        return view('kepala_departemen.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
     })->name('kepala_departemen.dashboard');
 
     Route::get('/kepala-departemen/check-documents', function () {

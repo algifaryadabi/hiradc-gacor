@@ -4,11 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review Dokumen - Kepala Departemen</title>
+    <title>Review Dokumen - HIRADC (Ka. Dept)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Base styles from create.blade.php */
         * {
             margin: 0;
             padding: 0;
@@ -20,7 +19,6 @@
             background: #f5f5f5;
             color: #333;
             padding-bottom: 200px;
-            /* Space for footer */
         }
 
         .container {
@@ -35,8 +33,13 @@
             position: fixed;
             height: 100vh;
             display: flex;
-            flex-direction: column;
+            flexDirection: column;
             z-index: 101;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
         }
 
         .logo-section {
@@ -54,7 +57,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
@@ -93,17 +95,15 @@
             font-size: 14px;
             font-weight: 500;
             text-decoration: none;
-            position: relative;
         }
 
-        .nav-item:hover {
+        .nav-item:hover,
+        .nav-item.active {
             background: #fff5f5;
             color: #c41e3a;
         }
 
         .nav-item.active {
-            background: #ffe5e5;
-            color: #c41e3a;
             border-left: 3px solid #c41e3a;
         }
 
@@ -180,12 +180,6 @@
 
         .logout-btn:hover {
             background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
         }
 
         .header {
@@ -230,6 +224,10 @@
             margin-bottom: 8px;
         }
 
+        .required {
+            color: #c41e3a;
+        }
+
         .form-control {
             width: 100%;
             padding: 12px 15px;
@@ -237,20 +235,12 @@
             border-radius: 6px;
             font-size: 14px;
             font-family: 'Inter', sans-serif;
-            background-color: #f9f9f9;
-            /* Readonly style */
+            transition: border-color 0.3s;
         }
 
-        .form-control:disabled {
-            background-color: #f9f9f9;
-            color: #555;
-            cursor: not-allowed;
-            border-color: #eee;
-        }
-
-        textarea.form-control {
-            min-height: 100px;
-            resize: vertical;
+        .form-control:focus {
+            outline: none;
+            border-color: #c41e3a;
         }
 
         .form-row {
@@ -279,7 +269,87 @@
             color: #666;
         }
 
-        /* Review Footer Fixed */
+        .checkbox-group {
+            display: flex;
+            flexDirection: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checkbox-item:hover {
+            background: #f9f9f9;
+            border-color: #c41e3a;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn-toggle {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .btn-toggle:hover {
+            border-color: #c41e3a;
+            background: #fff5f5;
+        }
+
+        .btn-toggle.active {
+            border-color: #c41e3a;
+            background: #c41e3a;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #c41e3a;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
         .review-footer {
             position: fixed;
             bottom: 0;
@@ -295,18 +365,6 @@
             align-items: end;
         }
 
-        .comment-section {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .comment-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #555;
-        }
-
         .comment-input {
             width: 100%;
             height: 60px;
@@ -316,14 +374,6 @@
             font-family: inherit;
             font-size: 14px;
             resize: none;
-            background: #fff;
-            transition: all 0.2s;
-        }
-
-        .comment-input:focus {
-            border-color: #c41e3a;
-            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
-            height: 80px;
         }
 
         .action-buttons {
@@ -332,129 +382,90 @@
             padding-bottom: 5px;
         }
 
-        .btn {
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            font-family: 'Inter';
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .btn-reject {
-            background: white;
-            border: 1px solid #dc3545;
-            color: #dc3545;
-        }
-
-        .btn-reject:hover {
-            background: #fff5f5;
-        }
-
-        .btn-approve {
-            background: #2e7d32;
-            /* Green for Final Approval */
-            color: white;
-        }
-
-        .btn-approve:hover {
-            background: #1b5e20;
-        }
-
-        /* Timeline Styles */
         .timeline-container {
-            position: relative;
+            margin-top: 50px;
             padding-left: 20px;
             border-left: 2px solid #e0e0e0;
             margin-left: 10px;
-            margin-top: 20px;
         }
 
         .timeline-item {
             position: relative;
-            margin-bottom: 25px;
-            padding-left: 25px;
+            margin-bottom: 30px;
+            padding-left: 20px;
         }
 
         .timeline-icon {
             position: absolute;
-            left: -11px;
-            top: 0;
+            left: -31px;
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: white;
             font-size: 10px;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .bg-blue {
             background: #007bff;
         }
 
-        .bg-orange {
-            background: #fd7e14;
-        }
-
         .bg-green {
             background: #28a745;
         }
 
-        .timeline-header {
-            font-size: 13px;
-            margin-bottom: 4px;
-            color: #777;
+        .bg-orange {
+            background: #fd7e14;
         }
 
-        .timeline-header .actor {
-            font-weight: 700;
-            color: #333;
-            margin-right: 5px;
-        }
-
-        .timeline-body {
-            background: #fff;
-            padding: 10px 15px;
+        .timeline-content {
+            background: #f9f9f9;
+            padding: 15px;
             border-radius: 6px;
             border: 1px solid #eee;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .actor {
+            font-weight: 700;
+            color: #333;
             font-size: 14px;
-            color: #555;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <!-- Sidebar -->
+        <!-- Sidebar Kepala Departemen -->
         <aside class="sidebar">
             <div class="logo-section">
                 <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
                 <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System (Head Dept)</div>
+                <div class="logo-subtext">HIRADC System (Ka. Dept)</div>
             </div>
             <nav class="nav-menu">
                 <a href="{{ route('kepala_departemen.dashboard') }}" class="nav-item">
                     <i class="fas fa-th-large"></i><span>Dashboard</span>
                 </a>
                 <a href="{{ route('kepala_departemen.check_documents') }}" class="nav-item active">
-                    <i class="fas fa-file-contract"></i><span>Validasi Dokumen</span>
+                    <i class="fas fa-file-signature"></i><span>Cek Dokumen</span>
                 </a>
             </nav>
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">KD</div>
+                    <div class="user-avatar">{{ substr(Auth::user()->nama_user, 0, 2) }}</div>
                     <div class="user-details">
-                        <div class="user-name">Bpk. Wijaya</div>
-                        <div class="user-role">Kepala Departemen</div>
+                        <div class="user-name">{{ Auth::user()->nama_user }}</div>
+                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -468,140 +479,408 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="header">
-                <div style="display:flex; align-items:center;">
-                    <h1>Review & Validasi Dokumen</h1>
-                </div>
-                <a href="{{ route('kepala_departemen.check_documents') }}" class="btn"
-                    style="background:#ddd; color:#333;"><i class="fas fa-arrow-left"></i> Kembali</a>
+                <h1>Review Dokumen (Mode Edit)</h1>
+                <a href="{{ route('kepala_departemen.check_documents') }}" class="btn btn-secondary"><i
+                        class="fas fa-arrow-left"></i> Kembali</a>
             </div>
 
             <div class="content-area">
-                <form id="hiradcForm" class="form-container">
-                    <!-- Readonly View of Form Data -->
+                <form id="hiradcForm" class="form-container" method="POST"
+                    action="{{ route('kepala_departemen.approve', $document->id_document) }}">
+                    @csrf
+                    <!-- Hidden Actions -->
+                    <input type="hidden" name="action" id="action_input" value="approve">
+                    <input type="hidden" name="catatan" id="catatan_input">
+
+                    <!-- FORM CONTENT -->
                     <div class="section-header">
-                        <h2>📋 Detail Dokumen</h2>
-                        <p>Dokumen yang ditinjau untuk persetujuan akhir</p>
+                        <h2>📋 Kolom 2: Proses Bisnis / Kegiatan / Aset</h2>
                     </div>
-
                     <div class="form-row">
-                        <div class="form-group"><label>Unit Kerja</label><input type="text" class="form-control"
-                                value="Unit Produksi A" disabled></div>
-                        <div class="form-group"><label>Kategori</label><input type="text" class="form-control"
-                                value="K3 - Kesehatan & Keselamatan Kerja" disabled></div>
-                    </div>
-
-                    <div class="form-group"><label>Judul / Kegiatan</label><input type="text" class="form-control"
-                            value="Penilaian Risiko Unit A - Mesin Crusher" disabled></div>
-
-                    <div class="form-row">
-                        <div class="form-group"><label>Bahaya</label><input type="text" class="form-control"
-                                value="Kebisingan suara mesin > 85dB" disabled></div>
-                        <div class="form-group"><label>Risiko</label><input type="text" class="form-control"
-                                value="Gangguan Pendengaran (NIHL)" disabled></div>
-                    </div>
-
-                    <div class="form-group"><label>Pengendalian Yang Diusulkan</label>
-                        <textarea class="form-control" disabled>1. Pemasangan barrier akustik pada mesin area A.
-2. Sosialisasi penggunaan ear muff wajib bagi operator.
-3. Rotasi shift kerja untuk mengurangi durasi paparan.</textarea>
+                        <div class="form-group"><label>Proses Bisnis</label><input type="text" class="form-control"
+                                id="kolom2_proses" name="kolom2_proses" required></div>
+                        <div class="form-group"><label>Kegiatan</label><input type="text" class="form-control"
+                                id="kolom2_activity_manual" name="kolom2_kegiatan" required></div>
                     </div>
 
                     <div class="section-header">
-                        <h2>📊 Penilaian Risiko</h2>
+                        <h2>📍 Kolom 3: Lokasi / Area Kerja</h2>
+                    </div>
+                    <div class="form-group"><label>Lokasi</label><input type="text" class="form-control"
+                            id="kolom3_lokasi" name="kolom3_lokasi" required></div>
+
+                    <div class="section-header">
+                        <h2>📑 Kolom 4 & 5: Kategori & Kondisi</h2>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label>Level Risiko Awal</label><input type="text" class="form-control"
-                                value="TINGGI (16)" disabled style="font-weight:bold; color:#d32f2f;"></div>
-                        <div class="form-group"><label>Target Risiko</label><input type="text" class="form-control"
-                                value="SEDANG (8)" disabled style="font-weight:bold; color:#f57c00;"></div>
+                        <div class="form-group"><label>Jenis Dokumen</label>
+                            <select class="form-control" id="kolom4_kategori" name="kategori" required
+                                onchange="updateConditionOptions()">
+                                <option value="">-- Pilih --</option>
+                                <option value="K3">K3</option>
+                                <option value="KO">KO</option>
+                                <option value="Lingkungan">Lingkungan</option>
+                                <option value="Keamanan">Keamanan</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Kondisi</label>
+                            <select class="form-control" id="kolom5_kondisi" name="kolom5_kondisi" required>
+                                <option value="">-- Pilih Kategori Dulu --</option>
+                            </select>
+                        </div>
                     </div>
 
+                    <div class="section-header">
+                        <h2>⚠️ Kolom 6: Jenis Bahaya / Aspek</h2>
+                    </div>
+                    <div id="section_k3_ko" class="hidden">
+                        <input type="hidden" name="bahaya_type" id="bahaya_type">
+                        <div class="button-group">
+                            <button type="button" class="btn-toggle active" id="btn_unsafe_condition"
+                                onclick="selectBahayaType('condition')">Unsafe Condition</button>
+                            <button type="button" class="btn-toggle" id="btn_unsafe_action"
+                                onclick="selectBahayaType('action')">Unsafe Action</button>
+                        </div>
+                        <div id="unsafe_condition_options" class="hidden"></div>
+                        <div id="unsafe_action_options" class="hidden"></div>
+                    </div>
+                    <div id="section_lingkungan" class="hidden">
+                        <div id="lingkungan_options"></div>
+                    </div>
+                    <div id="section_keamanan" class="hidden">
+                        <div id="keamanan_options"></div>
+                    </div>
+                    <div class="form-group" style="margin-top:20px;">
+                        <label id="manual_bahaya_label">Input Manual</label>
+                        <input type="text" class="form-control" id="bahaya_manual" name="bahaya_manual">
+                    </div>
+
+                    <div class="section-header">
+                        <h2>💥 Kolom 7 & 9: Dampak & Risiko</h2>
+                    </div>
+                    <div class="form-group"><label>Dampak (Kolom 7)</label><textarea class="form-control"
+                            id="kolom7_dampak" name="kolom7_dampak" required></textarea></div>
+                    <div class="form-group"><label>Identifikasi Risiko (Kolom 9)</label><textarea class="form-control"
+                            id="kolom9_risiko" name="kolom9_risiko" required></textarea></div>
+
+                    <div class="section-header">
+                        <h2>🛡️ Kolom 10: Hirarki Pengendalian</h2>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <div class="checkbox-item"><input type="checkbox" id="h1" name="hirarki[]"
+                                    value="Eliminasi"><label for="h1">Eliminasi</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="h2" name="hirarki[]"
+                                    value="Substitusi"><label for="h2">Substitusi</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="h3" name="hirarki[]"
+                                    value="Rekayasa Teknik"><label for="h3">Rekayasa Teknik</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="h4" name="hirarki[]"
+                                    value="Administratif"><label for="h4">Administratif</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="h5" name="hirarki[]"
+                                    value="APD"><label for="h5">APD</label></div>
+                        </div>
+                        <div id="additional_controls" style="margin-top:20px;"></div>
+                        <button type="button" class="btn btn-secondary" onclick="addControlInput()"
+                            style="margin-top:10px; width:100%;">+ Tambah Detail</button>
+                    </div>
+
+                    <div class="section-header">
+                        <h2>✅ Kolom 11: Pengendalian Existing</h2>
+                    </div>
+                    <div class="form-group"><textarea class="form-control" id="kolom11_pengendalian"
+                            name="kolom11_existing" required></textarea></div>
+
+                    <div class="section-header">
+                        <h2>📊 Penilaian Risiko Awal</h2>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Kemungkinan (12)</label><select class="form-control"
+                                id="kolom12_kemungkinan" name="kolom12_kemungkinan" onchange="calculateRisk()">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select></div>
+                        <div class="form-group"><label>Konsekuensi (13)</label><select class="form-control"
+                                id="kolom13_konsekuensi" name="kolom13_konsekuensi" onchange="calculateRisk()">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select></div>
+                    </div>
+                    <div class="form-group"><label>Nilai Risiko (14)</label><input type="text" class="form-control"
+                            id="kolom14_nilai_risiko" readonly></div>
+
+                    <div class="section-header">
+                        <h2>📜 Kolom 15 & 16: Regulasi</h2>
+                    </div>
+                    <div class="form-group"><label>Peraturan</label><textarea class="form-control"
+                            id="kolom15_peraturan" name="kolom15_regulasi" oninput="checkRegulasi()"></textarea></div>
+                    <div class="form-group" id="kolom16_container">
+                        <label>Status Penting?</label>
+                        <div style="display: flex; gap: 20px;">
+                            <label><input type="radio" name="kolom16_penting" value="P"> Penting</label>
+                            <label><input type="radio" name="kolom16_penting" value="TP"> Tidak Penting</label>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <h2>💡 Kolom 17-19</h2>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Risiko</label><textarea class="form-control" id="kolom17_risiko"
+                                name="kolom17_risiko"></textarea></div>
+                        <div class="form-group"><label>Peluang</label><textarea class="form-control"
+                                id="kolom17_peluang" name="kolom17_peluang"></textarea></div>
+                    </div>
+
+                    <div class="section-header">
+                        <h2>⚖️ Tindak Lanjut & Residual</h2>
+                    </div>
+                    <div class="form-group"><label>Tindak Lanjut (19)</label><textarea class="form-control"
+                            id="kolom19_tindak_lanjut" name="kolom18_tindak_lanjut" required></textarea></div>
+
+                    <div class="form-row">
+                        <div class="form-group"><label>Kemungkinan Residual</label><select class="form-control"
+                                id="kolom20_kemungkinan" name="residual_kemungkinan" onchange="calculateResidualRisk()">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select></div>
+                        <div class="form-group"><label>Konsekuensi Residual</label><select class="form-control"
+                                id="kolom21_konsekuensi" name="residual_konsekuensi" onchange="calculateResidualRisk()">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select></div>
+                    </div>
+                    <div class="form-group"><label>Risiko Residual</label><input type="text" class="form-control"
+                            id="kolom22_nilai_risiko" readonly></div>
                 </form>
 
-                <!-- Activity Log -->
-                <div class="section-header" style="margin-top: 50px; border-left-color: #555;">
-                    <h2 style="color: #555;"><i class="fas fa-history"></i> Riwayat Persetujuan</h2>
+                <!-- REVIEW FOOTER -->
+                <div class="review-footer">
+                    <div class="comment-section">
+                        <label class="comment-label">Catatan Review / Revisi:</label>
+                        <textarea class="comment-input" id="review_notes" placeholder="Tuliskan catatan..."></textarea>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-revisi" onclick="submitReview('revision')"><i
+                                class="fas fa-undo"></i> Minta Revisi</button>
+                        <button type="button" class="btn btn-approve" onclick="submitReview('approved')"><i
+                                class="fas fa-check"></i> Setujui Dokumen</button>
+                    </div>
                 </div>
 
+                <!-- HISTORY -->
+                <div class="section-header" style="margin-top: 50px;">
+                    <h2><i class="fas fa-history"></i> Riwayat Aktivitas</h2>
+                </div>
+                <!-- ... Same Timeline ... -->
                 <div class="timeline-container">
-                    <div class="timeline-item">
-                        <div class="timeline-icon bg-blue"><i class="fas fa-paper-plane"></i></div>
-                        <div class="timeline-content">
-                            <div class="timeline-header"><span class="actor">Ahmad Rizki (Staff)</span> <span
-                                    class="time">18 Okt 2025</span></div>
-                            <div class="timeline-body">Mengimput data awal.</div>
+                    @foreach($document->approvals as $approval)
+                        <div class="timeline-item">
+                            <div
+                                class="timeline-icon {{ $approval->action == 'approved' ? 'bg-green' : ($approval->action == 'revision' ? 'bg-orange' : 'bg-blue') }}">
+                                <i
+                                    class="fas {{ $approval->action == 'approved' ? 'fa-check' : ($approval->action == 'revision' ? 'fa-undo' : 'fa-info') }}"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-header">
+                                    <span class="actor">{{ $approval->approver->nama_user ?? 'User' }}</span>
+                                    <span class="time">{{ $approval->created_at->format('d M Y, H:i') }}</span>
+                                </div>
+                                <div class="timeline-body">
+                                    <strong>Status: {{ ucfirst($approval->action) }}</strong><br>
+                                    "{{ $approval->catatan ?? '-' }}"
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-icon bg-green"><i class="fas fa-check"></i></div>
-                        <div class="timeline-content">
-                            <div class="timeline-header"><span class="actor">Budi Santoso (Ka. Unit)</span> <span
-                                    class="time">19 Okt 2025</span></div>
-                            <div class="timeline-body">Dokumen disetujui dan diteruskan ke Kepala Departemen.</div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
-
             </div>
         </main>
-
-        <!-- Footer Control -->
-        <div class="review-footer">
-            <div class="comment-section">
-                <label class="comment-label">Catatan Penolakan / Tambahan (Opsional untuk Setujui, Wajib untuk
-                    Tolak)</label>
-                <textarea class="comment-input" id="commentBox"
-                    placeholder="Tulis alasan penolakan atau catatan tambahan disini..."></textarea>
-            </div>
-            <div class="action-buttons">
-                <button type="button" onclick="rejectDocument()" class="btn btn-reject">
-                    <i class="fas fa-times"></i> Tolak & Kembalikan
-                </button>
-                <button type="button" onclick="approveDocument()" class="btn btn-approve">
-                    <i class="fas fa-check-double"></i> Setujui & Publikasi
-                </button>
-            </div>
-        </div>
-
     </div>
 
+    <!-- Inject JS (Same) -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const status = urlParams.get('status');
+        window.editingDocument = @json($document);
+        const routeApprove = "{{ route('kepala_departemen.approve', $document->id_document) }}";
+        const routeRevise = "{{ route('kepala_departemen.revise', $document->id_document) }}";
 
-            if (status === 'Disetujui' || status === 'Published') { // Logic for already processed
-                document.querySelector('.review-footer').style.display = 'none';
-                const badge = document.createElement('div');
-                badge.innerHTML = '<br><div style="padding:15px; background:#d4edda; color:#155724; border:1px solid #c3e6cb; border-radius:8px; text-align:center;"><strong>✅ Dokumen ini sudah Di-Publikasi</strong></div>';
-                document.querySelector('.content-area').appendChild(badge);
-            }
-        });
+        const hazardData = {
+            k3_condition: {
+                "Fisika": ["Bekerja di ketinggian", "Permukaan licin", "Kejatuhan material", "Ruang terbatas", "Benda berputar", "Radiasi", "Bising", "Tersengat listrik", "Suhu ekstrim"],
+                "Kimia": ["Terhirup bahan kimia", "Kontak bahan kimia", "Tertelan bahan kimia", "Penyimpanan tidak sesuai"],
+                "Biologi": ["Virus", "Bakteri", "Ular", "Serangga", "Makanan terkontaminasi"]
+            },
+            k3_action: { "Fisiologis/Ergonomi": ["Pengangkatan manual berlebih"], "Psikologis": ["Bekerja berlebihan"], "Prilaku": ["Tidak pakai APD"] },
+            lingkungan: { "Emisi": "Debu", "Air": "Limbah", "Tanah": "Sampah", "SDA": "Air", "Energi": "Listrik", "Limbah": "B3" },
+            keamanan: ["Terorisme", "Sabotase", "Pencurian"]
+        };
 
-        function rejectDocument() {
-            const comment = document.getElementById('commentBox').value;
-            if (!comment.trim()) {
-                alert('⚠️ Anda wajib mengisi catatan/alasan jika menolak dokumen ini!');
-                document.getElementById('commentBox').focus();
-                return;
-            }
-
-            if (confirm('Apakah Anda yakin ingin MENOLAK dokumen ini dan mengembalikannya ke User?')) {
-                // Here you would typically make an AJAX request to update status
-                alert(`🛑 Dokumen Ditolak.\n\nStatus diubah menjadi REVISI.\nDikembalikan ke User berisi form terakhir dengan catatan:\n"${comment}"`);
-                window.location.href = "{{ route('kepala_departemen.check_documents') }}";
+        function selectBahayaType(type) {
+            document.getElementById('bahaya_type').value = type;
+            const divCondition = document.getElementById('unsafe_condition_options');
+            const divAction = document.getElementById('unsafe_action_options');
+            if (type === 'condition') {
+                document.getElementById('btn_unsafe_condition').classList.add('active');
+                document.getElementById('btn_unsafe_action').classList.remove('active');
+                divCondition.classList.remove('hidden');
+                divAction.classList.add('hidden');
+            } else {
+                document.getElementById('btn_unsafe_condition').classList.remove('active');
+                document.getElementById('btn_unsafe_action').classList.add('active');
+                divCondition.classList.add('hidden');
+                divAction.classList.remove('hidden');
             }
         }
 
-        function approveDocument() {
-            const comment = document.getElementById('commentBox').value;
-            let msg = '✅ Apakah Anda yakin ingin MENYETUJUI dan MEMPUBLIKASIKAN dokumen ini?';
+        function updateBahayaContent(category) {
+            document.getElementById('section_k3_ko').classList.add('hidden');
+            document.getElementById('section_lingkungan').classList.add('hidden');
+            document.getElementById('section_keamanan').classList.add('hidden');
 
-            if (confirm(msg)) {
-                // Here you would typically make an AJAX request to update status
-                alert('🎉 Sukses! Dokumen telah disetujui dan kini Terpublikasi di Dashboard semua role.');
-                window.location.href = "{{ route('kepala_departemen.check_documents') }}";
+            if (category === 'K3' || category === 'KO') {
+                document.getElementById('section_k3_ko').classList.remove('hidden');
+                document.getElementById('unsafe_condition_options').innerHTML = renderCheckboxes(hazardData.k3_condition, 'cond', 'bahaya_detail[]');
+                document.getElementById('unsafe_action_options').innerHTML = renderCheckboxes(hazardData.k3_action, 'act', 'bahaya_detail[]');
+                selectBahayaType('condition');
+            } else if (category === 'Lingkungan') {
+                document.getElementById('section_lingkungan').classList.remove('hidden');
+                document.getElementById('lingkungan_options').innerHTML = renderSimpleCheckboxes(hazardData.lingkungan, 'bahaya_aspect[]');
+            } else if (category === 'Keamanan') {
+                document.getElementById('section_keamanan').classList.remove('hidden');
+                document.getElementById('keamanan_options').innerHTML = renderSimpleCheckboxes(hazardData.keamanan, 'bahaya_security[]');
             }
+        }
+
+        function renderCheckboxes(data, prefix, name) {
+            let html = '<div class="checkbox-group">';
+            for (const [key, vals] of Object.entries(data)) {
+                html += `<div style="margin-bottom:5px;"><strong>${key}</strong>`;
+                vals.forEach(v => {
+                    html += `<div class="checkbox-item"><input type="checkbox" name="${name}" value="${key}: ${v}"><label>${v}</label></div>`;
+                });
+                html += `</div>`;
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function renderSimpleCheckboxes(data, name) {
+            let html = '<div class="checkbox-group">';
+            if (Array.isArray(data)) {
+                data.forEach(v => { html += `<div class="checkbox-item"><input type="checkbox" name="${name}" value="${v}"><label>${v}</label></div>`; });
+            } else {
+                for (const [k, v] of Object.entries(data)) {
+                    html += `<div class="checkbox-item"><input type="checkbox" name="${name}" value="${k}"><label>${k} (${v})</label></div>`;
+                }
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function updateConditionOptions() {
+            const cat = document.getElementById('kolom4_kategori').value;
+            let html = '<option value="">-- Pilih --</option>';
+            if (cat === 'K3' || cat === 'KO') { html += '<option value="R">Rutin</option><option value="NR">Non Rutin</option><option value="EM">Emergency</option>'; }
+            else if (cat === 'Lingkungan') { html += '<option value="N">Normal</option><option value="TN">Tak Normal</option><option value="EM">Emergency</option>'; }
+            else { html += '<option value="EM">Emergency</option>'; }
+            document.getElementById('kolom5_kondisi').innerHTML = html;
+            updateBahayaContent(cat);
+        }
+
+        function addControlInput() {
+            const div = document.createElement('div');
+            div.innerHTML = `<div style="display:flex;gap:10px;margin-bottom:5px;"><input type="text" name="new_controls[][desc]" class="form-control" placeholder="Pengendalian..."><button type="button" class="btn" style="color:red;" onclick="this.parentElement.remove()">X</button></div>`;
+            document.getElementById('additional_controls').appendChild(div);
+        }
+
+        function calculateRisk() {
+            const l = document.getElementById('kolom12_kemungkinan').value;
+            const c = document.getElementById('kolom13_konsekuensi').value;
+            if (l && c) document.getElementById('kolom14_nilai_risiko').value = l * c;
+        }
+        function calculateResidualRisk() {
+            const l = document.getElementById('kolom20_kemungkinan').value;
+            const c = document.getElementById('kolom21_konsekuensi').value;
+            if (l && c) document.getElementById('kolom22_nilai_risiko').value = l * c;
+        }
+        function checkRegulasi() {
+            const val = document.getElementById('kolom15_peraturan').value;
+            if (val.length > 0) document.querySelector('input[name="kolom16_penting"][value="P"]').checked = true;
+            else document.querySelector('input[name="kolom16_penting"][value="TP"]').checked = true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const doc = window.editingDocument;
+            if (!doc) return;
+
+            if (document.getElementById('kolom2_proses')) document.getElementById('kolom2_proses').value = doc.kolom2_proses || '';
+            if (document.getElementById('kolom2_activity_manual')) document.getElementById('kolom2_activity_manual').value = doc.kolom2_kegiatan || '';
+            if (document.getElementById('kolom3_lokasi')) document.getElementById('kolom3_lokasi').value = doc.kolom3_lokasi || '';
+
+            if (document.getElementById('kolom4_kategori')) {
+                document.getElementById('kolom4_kategori').value = doc.kategori;
+                updateConditionOptions();
+            }
+            if (document.getElementById('kolom5_kondisi')) document.getElementById('kolom5_kondisi').value = doc.kolom5_kondisi || '';
+
+            if (doc.kolom6_bahaya && typeof doc.kolom6_bahaya === 'object') {
+                const h = doc.kolom6_bahaya;
+                if (h.type) selectBahayaType(h.type);
+                if (document.getElementById('bahaya_manual')) document.getElementById('bahaya_manual').value = h.manual || '';
+            }
+
+            if (document.getElementById('kolom7_dampak')) document.getElementById('kolom7_dampak').value = doc.kolom7_dampak || '';
+            if (document.getElementById('kolom9_risiko')) document.getElementById('kolom9_risiko').value = doc.kolom9_risiko || '';
+
+            if (doc.kolom10_pengendalian && typeof doc.kolom10_pengendalian === 'object') {
+                const c = doc.kolom10_pengendalian;
+                if (c.hierarchy) {
+                    c.hierarchy.forEach(v => {
+                        const el = document.querySelector(`input[name="hirarki[]"][value="${v}"]`);
+                        if (el) el.checked = true;
+                    });
+                }
+            }
+
+            if (document.getElementById('kolom11_pengendalian')) document.getElementById('kolom11_pengendalian').value = doc.kolom11_existing || '';
+            if (document.getElementById('kolom12_kemungkinan')) document.getElementById('kolom12_kemungkinan').value = doc.kolom12_kemungkinan || 1;
+            if (document.getElementById('kolom13_konsekuensi')) document.getElementById('kolom13_konsekuensi').value = doc.kolom13_konsekuensi || 1;
+            calculateRisk();
+
+            if (document.getElementById('kolom15_peraturan')) {
+                document.getElementById('kolom15_peraturan').value = doc.kolom15_regulasi || '';
+                checkRegulasi();
+            }
+
+            if (document.getElementById('kolom19_tindak_lanjut')) document.getElementById('kolom19_tindak_lanjut').value = doc.kolom18_tindak_lanjut || '';
+            if (document.getElementById('kolom20_kemungkinan')) document.getElementById('kolom20_kemungkinan').value = doc.residual_kemungkinan || 1;
+            if (document.getElementById('kolom21_konsekuensi')) document.getElementById('kolom21_konsekuensi').value = doc.residual_konsekuensi || 1;
+            calculateResidualRisk();
+        });
+
+        function submitReview(action) {
+            const form = document.getElementById('hiradcForm');
+            if (action === 'revision') form.action = routeRevise;
+            else form.action = routeApprove;
+
+            document.getElementById('action_input').value = action;
+            document.getElementById('catatan_input').value = document.getElementById('review_notes').value;
+            if (action === 'revision' && document.getElementById('review_notes').value.trim() === '') {
+                alert('Harap isi catatan revisi!');
+                return;
+            }
+            document.getElementById('hiradcForm').submit();
         }
     </script>
 </body>

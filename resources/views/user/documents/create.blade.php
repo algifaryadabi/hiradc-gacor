@@ -493,7 +493,8 @@
                         <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
                         <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
                         <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}</div>
+                            {{ Auth::user()->unit_or_dept_name }}
+                        </div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -546,40 +547,19 @@
                     <!-- KOLOM 2: Proses Bisnis/Kegiatan/Aset -->
                     <div class="section-header">
                         <h2>📋 Kolom 2: Proses Bisnis / Kegiatan / Aset</h2>
-                        <p>Pilih proses bisnis, lalu centang kegiatan yang sesuai</p>
+                        <p>Input proses bisnis dan kegiatan yang dilakukan</p>
                     </div>
 
-                    <div class="form-group">
-                        <label>Pilih Proses Bisnis <span class="required">*</span></label>
-                        <select class="form-control" id="kolom2_proses" required onchange="showActivityOptions()">
-                            <option value="">-- Pilih Proses Bisnis --</option>
-                            <option value="PERPUSTAKAAN">PERPUSTAKAAN</option>
-                            <option value="LABORATORIUM">LABORATORIUM</option>
-                            <option value="LISTRIK">LISTRIK</option>
-                            <option value="SATPAM">SATPAM</option>
-                            <option value="PRODUKSI">PRODUKSI</option>
-                            <option value="SAAT OVERHAUL">SAAT OVERHAUL</option>
-                            <option value="SAAT TROUBLE SHOOTING">SAAT TROUBLE SHOOTING</option>
-                            <option value="POOL KENDARAAN">POOL KENDARAAN</option>
-                        </select>
-                    </div>
-
-                    <!-- Activity Options Container -->
-                    <div id="activity_options_container" class="hidden" style="margin-top: 20px;">
+                    <div class="form-row">
                         <div class="form-group">
-                            <label>Pilih Kegiatan yang Sesuai <span class="required">*</span></label>
-                            <p class="help-text">Centang satu atau lebih kegiatan yang sesuai dengan proses bisnis</p>
-
-                            <div class="checkbox-group" id="activity_checkboxes">
-                                <!-- Checkboxes will be populated by JavaScript -->
-                            </div>
-
-                            <!-- Manual Input for Other Activities -->
-                            <div class="form-group" style="margin-top: 15px;">
-                                <label>Atau Input Kegiatan Lainnya (Opsional)</label>
-                                <input type="text" class="form-control" id="kolom2_activity_manual"
-                                    placeholder="Masukkan kegiatan lain jika tidak ada di list...">
-                            </div>
+                            <label>Proses Bisnis <span class="required">*</span></label>
+                            <input type="text" class="form-control" id="kolom2_proses" name="kolom2_proses" required
+                                placeholder="Contoh: Produksi, Maintenance, Gudang...">
+                        </div>
+                        <div class="form-group">
+                            <label>Kegiatan <span class="required">*</span></label>
+                            <input type="text" class="form-control" id="kolom2_activity_manual" name="kolom2_kegiatan"
+                                required placeholder="Jelaskan kegiatan spesifik...">
                         </div>
                     </div>
 
@@ -591,7 +571,7 @@
 
                     <div class="form-group">
                         <label>Lokasi / Area Kerja <span class="required">*</span></label>
-                        <input type="text" class="form-control" id="kolom3_lokasi"
+                        <input type="text" class="form-control" id="kolom3_lokasi" name="kolom3_lokasi"
                             placeholder="Contoh: Gedung A Lantai 2, Area Produksi, dll" required>
                     </div>
 
@@ -603,7 +583,8 @@
 
                     <div class="form-group">
                         <label>Jenis Dokumen <span class="required">*</span></label>
-                        <select class="form-control" id="kolom4_kategori" required>
+                        <select class="form-control" id="kolom4_kategori" name="kategori" required
+                            onchange="updateConditionOptions()">
                             <option value="">-- Pilih Kategori --</option>
                             <option value="K3">K3 - Kesehatan & Keselamatan Kerja</option>
                             <option value="KO">KO - Keselamatan Operasional</option>
@@ -620,161 +601,62 @@
 
                     <div class="form-group">
                         <label>Kondisi <span class="required">*</span></label>
-                        <select class="form-control" id="kolom5_kondisi" required>
-                            <option value="">-- Pilih Kondisi --</option>
-                            <option value="R">R - Rutin (Kegiatan sehari-hari terkait operasi khusus K3)</option>
-                            <option value="NR">NR - Non Rutin (Kegiatan diluar operasi, maintenance tidak terjadwal,
-                                shut down, mati listrik, dll)</option>
-                            <option value="N">N - Normal (Kegiatan rutin dan non-rutin berjalan sesuai standar)</option>
-                            <option value="TN">TN - Tidak Normal (Kegiatan rutin dan non-rutin tidak sesuai standar)
-                            </option>
-                            <option value="EM">EM - Emergency (Potensi bahaya muncul saat emergency/tanggap darurat)
-                            </option>
+                        <select class="form-control" id="kolom5_kondisi" name="kolom5_kondisi" required>
+                            <option value="">-- Pilih Kategori Terlebih Dahulu --</option>
                         </select>
                     </div>
 
                     <!-- KOLOM 6: Jenis Bahaya -->
+                    <!-- KOLOM 6: Jenis Bahaya / Aspek / Ancaman -->
                     <div class="section-header">
-                        <h2>⚠️ Kolom 6: Jenis Bahaya</h2>
-                        <p>Pilih jenis bahaya: Unsafe Condition atau Unsafe Action, lalu pilih kategori bahaya</p>
+                        <h2 id="kolom6_title">⚠️ Kolom 6: Jenis Bahaya / Aspek / Ancaman</h2>
+                        <p id="kolom6_desc">Pilih jenis bahaya atau aspek yang sesuai dengan kategori</p>
                     </div>
 
-                    <div class="button-group">
-                        <button type="button" class="btn-toggle" id="btn_unsafe_condition"
-                            onclick="selectBahayaType('condition')">
-                            Bahaya (Unsafe Condition)
-                        </button>
-                        <button type="button" class="btn-toggle" id="btn_unsafe_action"
-                            onclick="selectBahayaType('action')">
-                            Bahaya (Unsafe Action)
-                        </button>
-                    </div>
+                    <!-- K3 / KO Section: Unsafe Condition vs Unsafe Action -->
+                    <div id="section_k3_ko" class="hidden">
+                        <input type="hidden" name="bahaya_type" id="bahaya_type">
+                        <div class="button-group">
+                            <button type="button" class="btn-toggle active" id="btn_unsafe_condition"
+                                onclick="selectBahayaType('condition')">
+                                Bahaya (Unsafe Condition)
+                            </button>
+                            <button type="button" class="btn-toggle" id="btn_unsafe_action"
+                                onclick="selectBahayaType('action')">
+                                Bahaya (Unsafe Action)
+                            </button>
+                        </div>
 
-                    <!-- Unsafe Condition Options -->
-                    <div id="unsafe_condition_options" class="hidden">
-                        <div class="checkbox-group">
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="bahaya_fisika" onchange="toggleBahayaDropdown('fisika')">
-                                <label for="bahaya_fisika">Bahaya Fisika</label>
-                            </div>
-                            <div class="dynamic-dropdown" id="dropdown_fisika">
-                                <label>Pilih Contoh Bahaya Fisika:</label>
-                                <select class="form-control" id="select_fisika" multiple size="5">
-                                    <option value="Kebisingan">Kebisingan</option>
-                                    <option value="Getaran">Getaran</option>
-                                    <option value="Suhu ekstrim">Suhu ekstrim</option>
-                                    <option value="Pencahayaan kurang">Pencahayaan kurang</option>
-                                    <option value="Radiasi">Radiasi</option>
-                                </select>
-                                <input type="text" class="form-control" style="margin-top: 10px;"
-                                    placeholder="Atau input manual jika tidak ada di list">
-                            </div>
+                        <!-- Unsafe Condition -->
+                        <div id="unsafe_condition_options" class="hidden">
+                            <!-- Populated via JS -->
+                        </div>
 
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="bahaya_kimia" onchange="toggleBahayaDropdown('kimia')">
-                                <label for="bahaya_kimia">Bahaya Kimia</label>
-                            </div>
-                            <div class="dynamic-dropdown" id="dropdown_kimia">
-                                <label>Pilih Contoh Bahaya Kimia:</label>
-                                <select class="form-control" id="select_kimia" multiple size="5">
-                                    <option value="Gas beracun">Gas beracun</option>
-                                    <option value="Cairan korosif">Cairan korosif</option>
-                                    <option value="Debu kimia">Debu kimia</option>
-                                    <option value="Asap berbahaya">Asap berbahaya</option>
-                                    <option value="Bahan mudah terbakar">Bahan mudah terbakar</option>
-                                </select>
-                                <input type="text" class="form-control" style="margin-top: 10px;"
-                                    placeholder="Atau input manual jika tidak ada di list">
-                            </div>
-
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="bahaya_biologi" onchange="toggleBahayaDropdown('biologi')">
-                                <label for="bahaya_biologi">Bahaya Biologi</label>
-                            </div>
-                            <div class="dynamic-dropdown" id="dropdown_biologi">
-                                <label>Pilih Contoh Bahaya Biologi:</label>
-                                <select class="form-control" id="select_biologi" multiple size="5">
-                                    <option value="Bakteri">Bakteri</option>
-                                    <option value="Virus">Virus</option>
-                                    <option value="Jamur">Jamur</option>
-                                    <option value="Parasit">Parasit</option>
-                                    <option value="Limbah medis">Limbah medis</option>
-                                </select>
-                                <input type="text" class="form-control" style="margin-top: 10px;"
-                                    placeholder="Atau input manual jika tidak ada di list">
-                            </div>
-
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="bahaya_ergonomi" onchange="toggleBahayaDropdown('ergonomi')">
-                                <label for="bahaya_ergonomi">Bahaya Ergonomi</label>
-                            </div>
-                            <div class="dynamic-dropdown" id="dropdown_ergonomi">
-                                <label>Pilih Contoh Bahaya Ergonomi:</label>
-                                <select class="form-control" id="select_ergonomi" multiple size="5">
-                                    <option value="Posisi kerja tidak ergonomis">Posisi kerja tidak ergonomis</option>
-                                    <option value="Gerakan berulang">Gerakan berulang</option>
-                                    <option value="Mengangkat beban berat">Mengangkat beban berat</option>
-                                    <option value="Kursi tidak ergonomis">Kursi tidak ergonomis</option>
-                                </select>
-                                <input type="text" class="form-control" style="margin-top: 10px;"
-                                    placeholder="Atau input manual jika tidak ada di list">
-                            </div>
-
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="bahaya_psikososial"
-                                    onchange="toggleBahayaDropdown('psikososial')">
-                                <label for="bahaya_psikososial">Bahaya Psikososial</label>
-                            </div>
-                            <div class="dynamic-dropdown" id="dropdown_psikososial">
-                                <label>Pilih Contoh Bahaya Psikososial:</label>
-                                <select class="form-control" id="select_psikososial" multiple size="5">
-                                    <option value="Stres kerja">Stres kerja</option>
-                                    <option value="Beban kerja berlebih">Beban kerja berlebih</option>
-                                    <option value="Konflik interpersonal">Konflik interpersonal</option>
-                                    <option value="Jam kerja panjang">Jam kerja panjang</option>
-                                </select>
-                                <input type="text" class="form-control" style="margin-top: 10px;"
-                                    placeholder="Atau input manual jika tidak ada di list">
-                            </div>
+                        <!-- Unsafe Action -->
+                        <div id="unsafe_action_options" class="hidden">
+                            <!-- Populated via JS -->
                         </div>
                     </div>
 
-                    <!-- Unsafe Action Options -->
-                    <div id="unsafe_action_options" class="hidden">
-                        <div class="checkbox-group">
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="action_prosedur" onchange="toggleBahayaDropdown('prosedur')">
-                                <label for="action_prosedur">Tidak Mengikuti Prosedur</label>
-                            </div>
-                            <div class="dynamic-dropdown" id="dropdown_prosedur">
-                                <label>Pilih Contoh:</label>
-                                <select class="form-control" id="select_prosedur" multiple size="5">
-                                    <option value="Tidak menggunakan APD">Tidak menggunakan APD</option>
-                                    <option value="Mengabaikan SOP">Mengabaikan SOP</option>
-                                    <option value="Bekerja tanpa izin">Bekerja tanpa izin</option>
-                                    <option value="Shortcut berbahaya">Mengambil jalan pintas berbahaya</option>
-                                </select>
-                                <input type="text" class="form-control" style="margin-top: 10px;"
-                                    placeholder="Atau input manual jika tidak ada di list">
-                            </div>
-
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="action_kecerobohan"
-                                    onchange="toggleBahayaDropdown('kecerobohan')">
-                                <label for="action_kecerobohan">Kecerobohan</label>
-                            </div>
-                            <div class="dynamic-dropdown" id="dropdown_kecerobohan">
-                                <label>Pilih Contoh:</label>
-                                <select class="form-control" id="select_kecerobohan" multiple size="5">
-                                    <option value="Bekerja sambil mengantuk">Bekerja sambil mengantuk</option>
-                                    <option value="Tidak fokus">Tidak fokus/terganggu</option>
-                                    <option value="Terburu-buru">Terburu-buru</option>
-                                    <option value="Kurang pelatihan">Kurang pelatihan</option>
-                                </select>
-                                <input type="text" class="form-control" style="margin-top: 10px;"
-                                    placeholder="Atau input manual jika tidak ada di list">
-                            </div>
+                    <!-- Lingkungan Section -->
+                    <div id="section_lingkungan" class="hidden">
+                        <div id="lingkungan_options">
+                            <!-- Populated via JS -->
                         </div>
+                    </div>
+
+                    <!-- Keamanan Section -->
+                    <div id="section_keamanan" class="hidden">
+                        <div id="keamanan_options">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Manual Input (Always available but labeled dynamically) -->
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label id="manual_bahaya_label">Input Bahaya/Aspek Lainnya (Manual)</label>
+                        <input type="text" class="form-control" id="bahaya_manual" name="bahaya_manual"
+                            placeholder="Deskripsikan potensi bahaya/aspek secara spesifik...">
                     </div>
 
                     <!-- KOLOM 7: Dampak/Konsekuensi -->
@@ -785,43 +667,11 @@
 
                     <div class="form-group">
                         <label id="kolom7_label">Dampak / Konsekuensi <span class="required">*</span></label>
-                        <textarea class="form-control" id="kolom7_dampak" required
+                        <textarea class="form-control" id="kolom7_dampak" name="kolom7_dampak" required
                             placeholder="Jelaskan dampak yang mungkin terjadi akibat bahaya tersebut..."></textarea>
                     </div>
 
-                    <!-- KOLOM 8: Pihak Terkena Dampak -->
-                    <div class="section-header">
-                        <h2>👥 Kolom 8: Pihak Terkena Dampak</h2>
-                        <p>Pilih pihak yang berpotensi terkena dampak</p>
-                    </div>
 
-                    <div class="form-group">
-                        <label>Pilih Pihak Terkena <span class="required">*</span></label>
-                        <div class="checkbox-group">
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="pihak_pekerja" value="Pekerja">
-                                <label for="pihak_pekerja">Pekerja Internal</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="pihak_kontraktor" value="Kontraktor">
-                                <label for="pihak_kontraktor">Kontraktor</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="pihak_pengunjung" value="Pengunjung">
-                                <label for="pihak_pengunjung">Pengunjung</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="pihak_masyarakat" value="Masyarakat">
-                                <label for="pihak_masyarakat">Masyarakat Sekitar</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="pihak_lingkungan" value="Lingkungan">
-                                <label for="pihak_lingkungan">Lingkungan</label>
-                            </div>
-                        </div>
-                        <input type="text" class="form-control" id="pihak_lainnya" style="margin-top: 10px;"
-                            placeholder="Atau sebutkan pihak lainnya...">
-                    </div>
 
                     <!-- KOLOM 9: Identifikasi Risiko (Category-specific) -->
                     <div class="section-header">
@@ -831,7 +681,7 @@
 
                     <div class="form-group">
                         <label id="kolom9_label">Identifikasi Risiko <span class="required">*</span></label>
-                        <textarea class="form-control" id="kolom9_risiko" required
+                        <textarea class="form-control" id="kolom9_risiko" name="kolom9_risiko" required
                             placeholder="Jelaskan risiko yang teridentifikasi..."></textarea>
                     </div>
 
@@ -865,6 +715,16 @@
                                 <label for="hirarki_apd">5. APD (Alat Pelindung Diri)</label>
                             </div>
                         </div>
+
+                        <!-- Dynamic Control Inputs -->
+                        <div id="additional_controls" style="margin-top: 20px;">
+                            <!-- Dynamic inputs will appear here -->
+                        </div>
+
+                        <button type="button" class="btn btn-secondary" onclick="addControlInput()"
+                            style="margin-top: 10px; width: 100%;">
+                            <i class="fas fa-plus"></i> Tambahkan Detail Pengendalian Baru
+                        </button>
                     </div>
 
                     <!-- KOLOM 11: Pengendalian yang Sudah Dilakukan -->
@@ -875,7 +735,7 @@
 
                     <div class="form-group">
                         <label>Pengendalian Existing <span class="required">*</span></label>
-                        <textarea class="form-control" id="kolom11_pengendalian" required
+                        <textarea class="form-control" id="kolom11_pengendalian" name="kolom11_existing" required
                             placeholder="Jelaskan pengendalian yang sudah diterapkan sesuai hirarki yang dipilih..."></textarea>
                     </div>
 
@@ -889,7 +749,8 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div class="form-group">
                             <label>Kolom 12: Nilai Kemungkinan (Likelihood) <span class="required">*</span></label>
-                            <select class="form-control" id="kolom12_kemungkinan" required onchange="calculateRisk()">
+                            <select class="form-control" id="kolom12_kemungkinan" name="kolom12_kemungkinan" required
+                                onchange="calculateRisk()">
                                 <option value="">-- Pilih --</option>
                                 <option value="1">1 - Sangat Jarang (Hampir tidak pernah terjadi)</option>
                                 <option value="2">2 - Jarang (Terjadi dalam kondisi tertentu)</option>
@@ -901,7 +762,8 @@
 
                         <div class="form-group">
                             <label>Kolom 13: Nilai Konsekuensi (Consequence) <span class="required">*</span></label>
-                            <select class="form-control" id="kolom13_konsekuensi" required onchange="calculateRisk()">
+                            <select class="form-control" id="kolom13_konsekuensi" name="kolom13_konsekuensi" required
+                                onchange="calculateRisk()">
                                 <option value="">-- Pilih --</option>
                                 <option value="1">1 - Tidak Signifikan (Cedera ringan)</option>
                                 <option value="2">2 - Minor (Cedera sedang, P3K)</option>
@@ -932,7 +794,8 @@
 
                     <div class="form-group">
                         <label>Peraturan Perundangan</label>
-                        <textarea class="form-control" id="kolom15_peraturan" oninput="checkRegulasi()"
+                        <textarea class="form-control" id="kolom15_peraturan" name="kolom15_regulasi"
+                            oninput="checkRegulasi()"
                             placeholder="Contoh: UU No. 1 Tahun 1970, PP No. 50 Tahun 2012, dll..."></textarea>
                     </div>
 
@@ -966,12 +829,12 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Risiko</label>
-                            <textarea class="form-control" id="kolom17_risiko"
+                            <textarea class="form-control" id="kolom17_risiko" name="kolom17_risiko"
                                 placeholder="Jelaskan risiko yang perlu dimitigasi..."></textarea>
                         </div>
                         <div class="form-group">
                             <label>Peluang</label>
-                            <textarea class="form-control" id="kolom17_peluang"
+                            <textarea class="form-control" id="kolom17_peluang" name="kolom17_peluang"
                                 placeholder="Jelaskan peluang untuk improvement..."></textarea>
                         </div>
                     </div>
@@ -1004,7 +867,7 @@
 
                     <div class="form-group">
                         <label>Pengendalian Tindak Lanjut <span class="required">*</span></label>
-                        <textarea class="form-control" id="kolom19_tindak_lanjut" required
+                        <textarea class="form-control" id="kolom19_tindak_lanjut" name="kolom18_tindak_lanjut" required
                             placeholder="Jelaskan rencana tindakan yang akan dilakukan untuk mengendalikan risiko..."></textarea>
                     </div>
 
@@ -1017,7 +880,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div class="form-group">
                             <label>Kolom 20: Nilai Kemungkinan Ulang <span class="required">*</span></label>
-                            <select class="form-control" id="kolom20_kemungkinan" required
+                            <select class="form-control" id="kolom20_kemungkinan" name="residual_kemungkinan" required
                                 onchange="calculateResidualRisk()">
                                 <option value="">-- Pilih --</option>
                                 <option value="1">1 - Sangat Jarang</option>
@@ -1030,7 +893,7 @@
 
                         <div class="form-group">
                             <label>Kolom 21: Nilai Konsekuensi Ulang <span class="required">*</span></label>
-                            <select class="form-control" id="kolom21_konsekuensi" required
+                            <select class="form-control" id="kolom21_konsekuensi" name="residual_konsekuensi" required
                                 onchange="calculateResidualRisk()">
                                 <option value="">-- Pilih --</option>
                                 <option value="1">1 - Tidak Signifikan</option>
@@ -1056,6 +919,10 @@
 
                     <!-- Form Actions -->
                     <div class="form-actions">
+                        <input type="hidden" name="submit_for_approval" value="1">
+                        <a href="{{ route('documents.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </a>
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-paper-plane"></i> Kirim untuk Review
                         </button>
@@ -1066,59 +933,36 @@
     </div>
 
     <script>
-        // Data Dummy untuk Kegiatan
-        const activitiesDB = {
-            "PERPUSTAKAAN": [
-                "Peminjaman buku",
-                "Pengembalian buku",
-                "Perawatan buku berkala",
-                "Penataan rak buku"
-            ],
-            "LABORATORIUM": [
-                "Pengujian sampel air",
-                "Pengujian sampel udara",
-                "Kalibrasi alat ukur",
-                "Penanganan limbah B3"
-            ],
-            "PRODUKSI": [
-                "Pengoperasian mesin crusher",
-                "Pemantauan conveyor belt",
-                "Pembersihan area kerja",
-                "Maintenance ringan mesin"
-            ],
-            "LISTRIK": [
-                "Perbaikan panel listrik",
-                "Instalasi kabel baru",
-                "Pengecekan genset",
-                "Pergantian lampu area"
+
+
+        // ---- NEW HAZARD DATA STRUCTURE ----
+        const hazardData = {
+            k3_condition: {
+                "Fisika": ["Bekerja di ketinggian", "Permukaan licin", "Permukaan tidak selevel", "Kejatuhan material", "Ruang kerja terbatas", "Pekerjaan berulang", "Tersangkut/Terjerat", "Terbakar/Peledakan", "Benda berputar", "Radiasi", "Bising", "Tersengat listrik", "Getaran", "Gas bertekanan", "Suhu ekstrim"],
+                "Kimia": ["Terhirup bahan kimia", "Kontak bahan kimia", "Tertelan bahan kimia", "Penyimpanan tidak sesuai", "Limbah kimia tidak sesuai"],
+                "Biologi": ["Virus", "Bakteri", "Ular", "Serangga", "Laba-laba", "Nyamuk", "Makanan kadaluarsa/terkontaminasi"]
+            },
+            k3_action: {
+                "Fisiologis/Ergonomi": ["Pengangkatan manual berlebih", "Gerakan berulang", "Posisi kerja buruk", "Layout kerja buruk"],
+                "Psikologis": ["Bekerja berlebihan", "Gelisah", "Intimidasi", "Kekerasan fisik", "Ancaman"],
+                "Prilaku": ["Tidak pakai APD", "Tidak konsentrasi", "Short cut", "Bercanda saat kerja", "Abaikan prosedur"]
+            },
+            lingkungan: {
+                "Emisi ke udara": "Contoh: Emisi debu, gas (asap, uap, fume)",
+                "Pembuangan ke air": "Contoh: Tumpahan oli, limbah laboratorium",
+                "Pembuangan ke tanah": "Contoh: Tumpahan oli, limbah lab, terak, sampah",
+                "Penggunaan Bahan Baku & SDA": "Contoh: Penggunaan air, kertas, bahan uji",
+                "Penggunaan energi": "Contoh: Listrik",
+                "Paparan energi": "Contoh: Panas, radiasi, getaran",
+                "Limbah": "Contoh: Limbah B3 (padat/cair/gas), Limbah Non B3"
+            },
+            keamanan: [
+                "Terorisme", "Sabotase", "Intimidasi", "Pencurian", "Perusakan aset"
             ]
         };
 
-        function showActivityOptions() {
-            const proses = document.getElementById('kolom2_proses').value;
-            const container = document.getElementById('activity_options_container');
-            const checkboxContainer = document.getElementById('activity_checkboxes');
-
-            if (proses && activitiesDB[proses]) {
-                container.classList.remove('hidden');
-                checkboxContainer.innerHTML = ''; // Clear existing
-
-                activitiesDB[proses].forEach((activity, index) => {
-                    const id = `activity_${index}`;
-                    const html = `
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="${id}" name="kegiatan[]" value="${activity}">
-                            <label for="${id}">${activity}</label>
-                        </div>
-                    `;
-                    checkboxContainer.insertAdjacentHTML('beforeend', html);
-                });
-            } else {
-                container.classList.add('hidden');
-            }
-        }
-
         function selectBahayaType(type) {
+            document.getElementById('bahaya_type').value = type;
             const btnCondition = document.getElementById('btn_unsafe_condition');
             const btnAction = document.getElementById('btn_unsafe_action');
             const divCondition = document.getElementById('unsafe_condition_options');
@@ -1137,14 +981,103 @@
             }
         }
 
-        function toggleBahayaDropdown(idSuffix) {
-            const checkbox = document.querySelector(`input[onchange="toggleBahayaDropdown('${idSuffix}')"]`);
-            const dropdown = document.getElementById(`dropdown_${idSuffix}`);
+        function updateBahayaContent(category) {
+            // Hide all first
+            document.getElementById('section_k3_ko').classList.add('hidden');
+            document.getElementById('section_lingkungan').classList.add('hidden');
+            document.getElementById('section_keamanan').classList.add('hidden');
 
-            if (checkbox.checked) {
-                dropdown.classList.add('active');
+            const containerCondition = document.getElementById('unsafe_condition_options');
+            const containerAction = document.getElementById('unsafe_action_options');
+            const containerLingkungan = document.getElementById('lingkungan_options');
+            const containerKeamanan = document.getElementById('keamanan_options');
+
+            if (category === 'K3' || category === 'KO') {
+                document.getElementById('section_k3_ko').classList.remove('hidden');
+                document.getElementById('manual_bahaya_label').textContent = "Input Bahaya Lainnya (Manual)";
+
+                // Render K3 Conditions
+                containerCondition.innerHTML = renderK3Checkboxes(hazardData.k3_condition, 'cond');
+                // Render K3 Actions
+                containerAction.innerHTML = renderK3Checkboxes(hazardData.k3_action, 'act');
+
+                // Default to Condition
+                selectBahayaType('condition');
+
+            } else if (category === 'Lingkungan') {
+                document.getElementById('section_lingkungan').classList.remove('hidden');
+                document.getElementById('manual_bahaya_label').textContent = "Input Aspek Lingkungan Lainnya (Manual)";
+
+                let html = '<div class="checkbox-group">';
+                for (const [key, desc] of Object.entries(hazardData.lingkungan)) {
+                    html += `
+                        <div class="checkbox-item" style="flex-direction:column; align-items:flex-start;">
+                            <div style="display:flex; align-items:center; width:100%;">
+                                <input type="checkbox" name="bahaya_aspect[]" value="${key}">
+                                <label style="margin-left:10px;">${key}</label>
+                            </div>
+                            <div style="font-size:11px; color:#666; margin-left:30px; margin-top:2px;">${desc}</div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                containerLingkungan.innerHTML = html;
+
+            } else if (category === 'Keamanan') {
+                document.getElementById('section_keamanan').classList.remove('hidden');
+                document.getElementById('manual_bahaya_label').textContent = "Input Ancaman Keamanan Lainnya (Manual)";
+
+                let html = '<div class="checkbox-group">';
+                hazardData.keamanan.forEach(item => {
+                    html += `
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="bahaya_security[]" value="${item}">
+                            <label style="margin-left:10px;">${item}</label>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                containerKeamanan.innerHTML = html;
+            }
+        }
+
+        function renderK3Checkboxes(data, prefix) {
+            let html = '<div class="checkbox-group">';
+            for (const [subCat, examples] of Object.entries(data)) {
+
+                const idSafe = subCat.replace(/[^a-zA-Z0-9]/g, '_');
+                html += `
+                    <div class="checkbox-item" style="flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; width:100%;">
+                            <input type="checkbox" id="chk_${prefix}_${idSafe}" onchange="toggleChild('${prefix}_${idSafe}')">
+                            <label for="chk_${prefix}_${idSafe}" style="margin-left:10px; font-weight:bold;">${subCat}</label>
+                        </div>
+                        <div id="child_${prefix}_${idSafe}" class="hidden" style="width:100%; margin-left:30px; margin-top:10px; border-top:1px dashed #eee; padding-top:10px;">
+                            ${examples.map(ex => `
+                                <div style="margin-bottom:5px;">
+                                    <label style="font-weight:normal; font-size:13px; display:flex; align-items:center;">
+                                        <input type="checkbox" name="bahaya_detail[]" value="${subCat}: ${ex}"> 
+                                        <span style="margin-left:8px;">${ex}</span>
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function toggleChild(idSuffix) {
+            const parentChk = document.getElementById(`chk_${idSuffix}`);
+            const childDiv = document.getElementById(`child_${idSuffix}`);
+            if (parentChk.checked) {
+                childDiv.classList.remove('hidden');
             } else {
-                dropdown.classList.remove('active');
+                childDiv.classList.add('hidden');
+                const checkboxes = childDiv.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = false);
             }
         }
 
@@ -1152,10 +1085,73 @@
         function checkRegulasi() {
             const val = document.getElementById('kolom15_peraturan').value;
             const radioP = document.querySelector('input[name="kolom16_penting"][value="P"]');
+            const radioTP = document.querySelector('input[name="kolom16_penting"][value="TP"]');
 
             if (val.trim().length > 0) {
                 radioP.checked = true;
+            } else {
+                radioTP.checked = true;
             }
+        }
+
+        function updateConditionOptions() {
+            const category = document.getElementById('kolom4_kategori').value;
+            const conditionSelect = document.getElementById('kolom5_kondisi');
+
+            // Clear current options
+            conditionSelect.innerHTML = '<option value="">-- Pilih Kondisi --</option>';
+
+            let options = [];
+
+            if (category === 'K3' || category === 'KO') {
+                options = [
+                    { val: 'R', text: 'R - Rutin (Kegiatan sehari-hari)' },
+                    { val: 'NR', text: 'NR - Non Rutin (Maintenance, Shut down, dll)' },
+                    { val: 'EM', text: 'EM - Emergency' }
+                ];
+            } else if (category === 'Lingkungan') {
+                options = [
+                    { val: 'N', text: 'N - Normal' },
+                    { val: 'TN', text: 'TN - Tak Normal' },
+                    { val: 'EM', text: 'EM - Emergency' }
+                ];
+            } else if (category === 'Keamanan') {
+                options = [
+                    { val: 'EM', text: 'EM - Emergency' }
+                ];
+            }
+
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt.val;
+                option.textContent = opt.text;
+                conditionSelect.appendChild(option);
+            });
+
+            if (typeof updateBahayaContent === 'function') {
+                updateBahayaContent(category);
+            }
+        }
+
+        function addControlInput() {
+            const container = document.getElementById('additional_controls');
+            const index = container.children.length + 1;
+            const div = document.createElement('div');
+            div.style.marginBottom = '10px';
+            div.innerHTML = `
+                <div style="display:flex; gap:10px;">
+                    <select class="form-control" name="new_controls[${index}][type]" style="width: 30%;">
+                         <option value="Eliminasi">Eliminasi</option>
+                         <option value="Substitusi">Substitusi</option>
+                         <option value="Rekayasa Teknik">Rekayasa Teknik</option>
+                         <option value="Administratif">Administratif</option>
+                         <option value="APD">APD</option>
+                    </select>
+                    <input type="text" class="form-control" name="new_controls[${index}][desc]" placeholder="Deskripsi pengendalian baru...">
+                    <button type="button" class="btn btn-secondary" style="padding: 0 15px; color: red;" onclick="this.parentElement.parentElement.remove()">X</button>
+                </div>
+            `;
+            container.appendChild(div);
         }
 
         // Calculate Risk (Kolom 12-14)
@@ -1316,64 +1312,124 @@
         });
 
         function loadDocumentData(id) {
-            const doc = mockDocuments[id];
-            const rev = revisionComments[id];
+            // Check for global editingDocument loaded from Controller
+            if (typeof editingDocument === 'undefined' || !editingDocument) return;
 
-            if (!doc) return;
-
-            // 1. Show Revision Alert
-            if (rev) {
+            const doc = editingDocument;
+            const rev = doc.latest_approval_rejection;
+            if (doc.status === 'revision' && rev) {
                 document.getElementById('revision_alert_container').classList.remove('hidden');
-                document.getElementById('reviewer_name').textContent = rev.name;
-                document.getElementById('reviewer_role').textContent = rev.reviewer;
-                document.getElementById('revision_date').textContent = rev.date;
-                document.getElementById('revision_comment').textContent = rev.comment;
+                document.getElementById('reviewer_name').textContent = rev.approver ? rev.approver.name : 'Unknown';
+                document.getElementById('reviewer_role').textContent = rev.approver ? rev.approver.role_user.replace('_', ' ').toUpperCase() : '-';
+                document.getElementById('revision_date').textContent = new Date(rev.created_at).toLocaleDateString();
+                document.getElementById('revision_comment').textContent = rev.catatan;
 
                 // Scroll to top
                 window.scrollTo(0, 0);
             }
 
             // 2. Pre-fill Form Fields
-            document.getElementById('kolom2_proses').value = doc.proses;
-            showActivityOptions(); // Trigger change event logic
-            // Handle activity checkboxes or manual input logic here (simplified for demo)
-            if (doc.kegiatan_lain) {
-                document.getElementById('kolom2_activity_manual').value = doc.kegiatan_lain;
-            }
+            if (document.getElementById('kolom2_proses')) document.getElementById('kolom2_proses').value = doc.kolom2_proses || '';
 
-            document.getElementById('kolom3_lokasi').value = doc.lokasi;
-            document.getElementById('kolom4_kategori').value = doc.kategori;
-            document.getElementById('kolom5_kondisi').value = doc.kondisi;
+            if (document.getElementById('kolom2_activity_manual')) document.getElementById('kolom2_activity_manual').value = doc.kolom2_kegiatan || '';
+            if (document.getElementById('kolom3_lokasi')) document.getElementById('kolom3_lokasi').value = doc.kolom3_lokasi || '';
+            if (document.getElementById('kolom4_kategori')) {
+                document.getElementById('kolom4_kategori').value = doc.kategori;
+                updateConditionOptions();
+            }
+            if (document.getElementById('kolom5_kondisi')) document.getElementById('kolom5_kondisi').value = doc.kolom5_kondisi || '';
 
             // Bahaya Type
-            if (doc.bahaya_type === 'condition') {
-                selectBahayaType('condition');
-                // Tick categories
-                if (doc.bahaya_kategori === 'kimia') {
-                    document.getElementById('bahaya_kimia').checked = true;
-                    toggleBahayaDropdown('kimia');
-                    // Select options in multi-select (simplified)
+            // 3. Pre-fill Kolom 6 (Bahaya) JSON Data
+            if (doc.kolom6_bahaya && typeof doc.kolom6_bahaya === 'object') {
+                const hazard = doc.kolom6_bahaya;
+
+                if (hazard.type) selectBahayaType(hazard.type);
+
+                if (document.getElementById('bahaya_manual')) {
+                    document.getElementById('bahaya_manual').value = hazard.manual || '';
                 }
-                if (doc.bahaya_kategori === 'fisika') {
-                    document.getElementById('bahaya_fisika').checked = true;
-                    toggleBahayaDropdown('fisika');
+
+                if ((doc.kategori === 'K3' || doc.kategori === 'KO') && hazard.details && Array.isArray(hazard.details)) {
+                    hazard.details.forEach(val => {
+                        const chk = document.querySelector(`input[name="bahaya_detail[]"][value="${val}"]`);
+                        if (chk) {
+                            chk.checked = true;
+                            const parentDiv = chk.closest('div[id^="child_"]');
+                            if (parentDiv) {
+                                parentDiv.classList.remove('hidden');
+                                const parentId = parentDiv.id.replace('child_', 'chk_');
+                                const parentChk = document.getElementById(parentId);
+                                if (parentChk) parentChk.checked = true;
+                            }
+                        }
+                    });
                 }
-            } else {
-                selectBahayaType('action');
+                else if (doc.kategori === 'Lingkungan' && hazard.aspects && Array.isArray(hazard.aspects)) {
+                    hazard.aspects.forEach(val => {
+                        const chk = document.querySelector(`input[name="bahaya_aspect[]"][value="${val}"]`);
+                        if (chk) chk.checked = true;
+                    });
+                }
+                else if (doc.kategori === 'Keamanan' && hazard.threats && Array.isArray(hazard.threats)) {
+                    hazard.threats.forEach(val => {
+                        const chk = document.querySelector(`input[name="bahaya_security[]"][value="${val}"]`);
+                        if (chk) chk.checked = true;
+                    });
+                }
             }
 
             document.getElementById('kolom7_dampak').value = doc.dampak;
 
-            // Pihak
-            doc.pihak.forEach(p => {
-                if (p === 'Pekerja') document.getElementById('pihak_pekerja').checked = true;
-                if (p === 'Lingkungan') document.getElementById('pihak_lingkungan').checked = true;
-            });
+            document.getElementById('kolom7_dampak').value = doc.dampak;
 
-            document.getElementById('kolom10_bahaya').value = doc.bahaya_identifikasi;
-            document.getElementById('kolom11_risiko_k3').value = doc.risiko_k3;
-            document.getElementById('kolom11_risiko_lingkungan').value = doc.risiko_lingkungan;
-            document.getElementById('kolom12_regulasi').value = doc.regulasi;
+            // Pihak (Legacy removed)
+
+            if (document.getElementById('kolom7_dampak')) document.getElementById('kolom7_dampak').value = doc.kolom7_dampak || '';
+            if (document.getElementById('kolom9_risiko')) document.getElementById('kolom9_risiko').value = doc.kolom9_risiko || '';
+
+            // 4. Pre-fill Kolom 10 (Pengendalian) JSON
+            if (doc.kolom10_pengendalian && typeof doc.kolom10_pengendalian === 'object') {
+                const controls = doc.kolom10_pengendalian;
+
+                if (controls.hierarchy && Array.isArray(controls.hierarchy)) {
+                    controls.hierarchy.forEach(val => {
+                        const chk = document.querySelector(`input[name="hirarki[]"][value="${val}"]`);
+                        if (chk) chk.checked = true;
+                    });
+                }
+
+                if (controls.new_controls && Array.isArray(controls.new_controls)) {
+                    const container = document.getElementById('additional_controls');
+                    if (container) {
+                        controls.new_controls.forEach((nc, idx) => {
+                            const index = container.children.length + 1;
+                            const div = document.createElement('div');
+                            div.style.marginBottom = '10px';
+                            div.innerHTML = `
+                                <div style="display:flex; gap:10px;">
+                                    <select class="form-control" name="new_controls[${index}][type]" style="width: 30%;">
+                                         <option value="Eliminasi" ${nc.type == 'Eliminasi' ? 'selected' : ''}>Eliminasi</option>
+                                         <option value="Substitusi" ${nc.type == 'Substitusi' ? 'selected' : ''}>Substitusi</option>
+                                         <option value="Rekayasa Teknik" ${nc.type == 'Rekayasa Teknik' ? 'selected' : ''}>Rekayasa Teknik</option>
+                                         <option value="Administratif" ${nc.type == 'Administratif' ? 'selected' : ''}>Administratif</option>
+                                         <option value="APD" ${nc.type == 'APD' ? 'selected' : ''}>APD</option>
+                                    </select>
+                                    <input type="text" class="form-control" name="new_controls[${index}][desc]" value="${nc.desc}" placeholder="Deskripsi pengendalian baru...">
+                                    <button type="button" class="btn btn-secondary" style="padding: 0 15px; color: red;" onclick="this.parentElement.parentElement.remove()">X</button>
+                                </div>
+                            `;
+                            container.appendChild(div);
+                        });
+                    }
+                }
+            }
+
+            if (document.getElementById('kolom11_pengendalian')) document.getElementById('kolom11_pengendalian').value = doc.kolom11_existing || '';
+            if (document.getElementById('kolom15_peraturan')) {
+                document.getElementById('kolom15_peraturan').value = doc.kolom15_regulasi || '';
+                checkRegulasi();
+            }
 
             // Risk Assessment
             if (doc.kategori === 'Lingkungan') {
