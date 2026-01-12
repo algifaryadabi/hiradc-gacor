@@ -222,7 +222,7 @@
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             margin-bottom: 30px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -303,7 +303,7 @@
         .table-section {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             border: 1px solid #eee;
         }
@@ -316,9 +316,9 @@
             border-bottom: 1px solid #eee;
             background-color: #fbfbfb;
         }
-        
+
         .table-header h2 {
-            font-size: 16px; 
+            font-size: 16px;
             font-weight: 700;
             color: #333;
         }
@@ -357,7 +357,7 @@
             color: #555;
             vertical-align: middle;
         }
-        
+
         .btn-filter-toggle {
             padding: 8px 16px;
             background: #fff;
@@ -368,16 +368,16 @@
         }
 
         .btn-action {
-             padding: 8px 18px;
-             background: #c41e3a; 
-             color: white;
-             border-radius: 6px;
-             text-decoration: none;
-             font-size: 12px;
-             font-weight: 500;
-             transition: background 0.2s;
+            padding: 8px 18px;
+            background: #c41e3a;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.2s;
         }
-        
+
         .badge-status {
             padding: 6px 14px;
             border-radius: 20px;
@@ -389,33 +389,40 @@
 
         /* MODAL STYLES */
         .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 9999; 
+            display: none;
+            position: fixed;
+            z-index: 9999;
             left: 0;
             top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.5); 
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
             font-family: 'Inter', sans-serif;
         }
 
         .modal-content {
             background-color: #fefefe;
-            margin: 5% auto; 
+            margin: 5% auto;
             padding: 0;
             border: 1px solid #888;
             width: 600px;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             position: relative;
             animation: slideDown 0.3s ease-out;
         }
 
         @keyframes slideDown {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .modal-header {
@@ -452,13 +459,14 @@
         .section-title {
             font-size: 14px;
             font-weight: 700;
-            color: #c41e3a; /* Red color */
+            color: #c41e3a;
+            /* Red color */
             margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .section-title.green {
             color: #2e7d32;
         }
@@ -499,7 +507,8 @@
         }
 
         .approval-box {
-            background-color: #f1f8e9; /* Light green bg */
+            background-color: #f1f8e9;
+            /* Light green bg */
             border-left: 4px solid #2e7d32;
             padding: 15px;
             border-radius: 4px;
@@ -511,14 +520,14 @@
             color: #33691e;
             line-height: 1.5;
         }
-        
+
         .approval-header {
-             font-weight: 700;
-             margin-bottom: 5px;
-             color: #1b5e20;
-             display: flex;
-             align-items: center;
-             gap: 8px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #1b5e20;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
     </style>
 </head>
@@ -536,27 +545,23 @@
             </div>
 
             <nav class="nav-menu">
-                <a href="{{ route('user.dashboard') }}" class="nav-item active">
+                <a href="{{ route('approver.dashboard') }}" class="nav-item active">
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('documents.index') }}" class="nav-item">
-                    <i class="fas fa-folder-open"></i>
-                    <span>Dokumen Saya</span>
-                    <span class="badge">2</span>
-                </a>
-                <a href="{{ route('documents.create') }}" class="nav-item">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Buat Dokumen Baru</span>
+                <a href="{{ route('approver.check_documents') }}" class="nav-item">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Cek Dokumen</span>
+                    <span class="badge">3</span>
                 </a>
             </nav>
 
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">JD</div>
+                    <div class="user-avatar">KU</div>
                     <div class="user-details">
-                        <div class="user-name">John Doe</div>
-                        <div class="user-role">Staff Unit Kerja</div>
+                        <div class="user-name">Budi Santoso</div>
+                        <div class="user-role">Kepala Unit Kerja</div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -577,7 +582,7 @@
             </div>
 
             <div class="content-area">
-                
+
                 <!-- 3 FILTERS -->
                 <div class="filters-container">
                     <div class="filter-group">
@@ -590,15 +595,15 @@
                     <div class="filter-group">
                         <label>Departemen</label>
                         <select id="filter_department" onchange="filterUnits()">
-                             <option value="">........</option>
-                             <!-- JS Populated -->
+                            <option value="">........</option>
+                            <!-- JS Populated -->
                         </select>
                     </div>
                     <div class="filter-group">
                         <label>Kepala Unit Kerja</label>
                         <select id="filter_unit" onchange="applyFilters()">
-                             <option value="">........</option>
-                             <!-- JS Populated -->
+                            <option value="">........</option>
+                            <!-- JS Populated -->
                         </select>
                     </div>
                 </div>
@@ -757,52 +762,52 @@
         ];
 
         const documents = [
-            { 
-                id: 1, 
-                title: 'Penilaian Risiko Penggunaan Mesin Produksi A', 
-                category: 'K3', 
-                date: '15 Des 2025', 
-                author: 'Ahmad Rizki', 
-                approver: 'Bpk. Ahmad (Ka. Dept Produksi)', 
+            {
+                id: 1,
+                title: 'Penilaian Risiko Penggunaan Mesin Produksi A',
+                category: 'K3',
+                date: '15 Des 2025',
+                author: 'Ahmad Rizki',
+                approver: 'Bpk. Ahmad (Ka. Dept Produksi)',
                 dir_id: 2, dept_id: 3, unit_id: 11,
                 status: 'DISETUJUI',
                 risk_level: 'Tinggi',
                 approval_date: '14 Des 2025',
                 approval_note: '"Dokumen telah memenuhi standar K3L dan siap untuk dipublikasikan."'
             },
-            { 
-                id: 2, 
-                title: 'Audit Lingkungan Tahunan', 
-                category: 'Lingkungan', 
-                date: '05 Jan 2026', 
-                author: 'Siti (Unit Environmental)', 
-                approver: 'Ibu Ratna (Ka. Dept LH)', 
+            {
+                id: 2,
+                title: 'Audit Lingkungan Tahunan',
+                category: 'Lingkungan',
+                date: '05 Jan 2026',
+                author: 'Siti (Unit Environmental)',
+                approver: 'Ibu Ratna (Ka. Dept LH)',
                 dir_id: 2, dept_id: 3, unit_id: 11,
                 status: 'DISETUJUI',
                 risk_level: 'Sedang',
                 approval_date: '04 Jan 2026',
                 approval_note: '"Data audit valid dan sesuai regulasi lingkungan."'
             },
-            { 
-                id: 3, 
-                title: 'Prosedur Keamanan Gerbang', 
-                category: 'Keamanan', 
-                date: '01 Jan 2026', 
-                author: 'Agus (Security)', 
-                approver: 'Bpk. Joko (Ka. Dept Keamanan)', 
+            {
+                id: 3,
+                title: 'Prosedur Keamanan Gerbang',
+                category: 'Keamanan',
+                date: '01 Jan 2026',
+                author: 'Agus (Security)',
+                approver: 'Bpk. Joko (Ka. Dept Keamanan)',
                 dir_id: 1, dept_id: 1, unit_id: 14,
                 status: 'DISETUJUI',
                 risk_level: 'Rendah',
                 approval_date: '31 Des 2025',
                 approval_note: '"SOP keamanan baru disetujui untuk implementasi segera."'
             },
-            { 
-                id: 4, 
-                title: 'Laporan Keuangan Q4', 
-                category: 'KO', 
-                date: '31 Des 2025', 
-                author: 'Dewi (Finance)', 
-                approver: 'Ibu Sri (Ka. Dept Keuangan)', 
+            {
+                id: 4,
+                title: 'Laporan Keuangan Q4',
+                category: 'KO',
+                date: '31 Des 2025',
+                author: 'Dewi (Finance)',
+                approver: 'Ibu Sri (Ka. Dept Keuangan)',
                 dir_id: 3, dept_id: 5, unit_id: 6,
                 status: 'DISETUJUI',
                 risk_level: 'Tinggi',
@@ -814,8 +819,8 @@
         let activeCategory = '';
 
         document.addEventListener('DOMContentLoaded', () => {
-             populateDirectorates();
-             filterDepartments(); // Initialize Departments
+            populateDirectorates();
+            filterDepartments();
         });
 
         function populateDirectorates() {
@@ -832,15 +837,9 @@
         function filterDepartments() {
             const dirId = document.getElementById('filter_directorate').value;
             const deptSelect = document.getElementById('filter_department');
-            // Reset is handled by re-populating. If logic was appending, we'd need to clear. 
-            // innerHTML assignment clears it.
-            
+
             deptSelect.innerHTML = '<option value="">........</option>';
-            
-            // Should units be reset here? Yes, because department list changes/resets
-            // But we will call filterUnits right after to re-populate them based on empty dept (Show All) or selected dept
-            // Just clearing it here might cause blink if filterUnits isn't fast, but it's JS so it's blocking/fast.
-            
+
             let filteredDepts = departments;
             if (dirId) {
                 filteredDepts = departments.filter(d => d.dir_id == dirId);
@@ -852,14 +851,14 @@
                 opt.textContent = d.name;
                 deptSelect.appendChild(opt);
             });
-            
-            filterUnits(); 
+
+            filterUnits();
         }
 
         function filterUnits() {
             const deptId = document.getElementById('filter_department').value;
             const unitSelect = document.getElementById('filter_unit');
-            
+
             unitSelect.innerHTML = '<option value="">........</option>';
 
             let filteredUnits = units;
@@ -909,12 +908,11 @@
             const tableSection = document.querySelector('.table-section');
 
             if (data.length === 0) {
-                // Hide table if empty
+                // Keep table header, empty body or hide
                 tableSection.style.display = 'none';
                 return;
             }
-            
-            // Show table if has data
+
             tableSection.style.display = 'block';
 
             tbody.innerHTML = data.map(doc => {
@@ -935,7 +933,7 @@
         // MODAL FUNCTIONS
         function openDetailModal(id) {
             const doc = documents.find(d => d.id === id);
-            if(!doc) return;
+            if (!doc) return;
 
             const unit = units.find(u => u.id === doc.unit_id);
             const unitName = unit ? unit.name : '-';
@@ -943,24 +941,16 @@
             document.getElementById('m_title').innerText = doc.title;
             document.getElementById('m_status').innerText = doc.status;
             document.getElementById('m_category').innerText = doc.category;
-            document.getElementById('m_unit').innerText = unitName; // Show Unit Name
+            document.getElementById('m_unit').innerText = unitName;
             document.getElementById('m_date').innerText = doc.date;
             document.getElementById('m_author').innerText = doc.author;
-            
+
             // Risk Level Styling
             const riskEl = document.getElementById('m_risk');
             riskEl.innerText = doc.risk_level;
             riskEl.className = 'info-value'; // Reset
             if (doc.risk_level === 'Tinggi') riskEl.classList.add('risk-high');
-            
-            // Approval Info
-            // Extract the Approver Name part before the () if needed, or use full string. 
-            // The image says: "Disetujui oleh Kepala Departemen pada [Date]"
-            // But our data has "approver" containing name. Let's format it nicely.
-            // Assumption: The approver string "Bpk. Ahmad (Ka. Dept Produksi)" implies role is in parens.
-            // For now, let's just use "Kepala Departemen" generic text + date as requested in image, or use the real data.
-            // The image text is: "Disetujui oleh Kepala Departemen pada 14 Des 2025"
-            
+
             document.getElementById('m_approval_header').innerText = `Disetujui oleh Kepala Departemen pada ${doc.approval_date}`;
             document.getElementById('m_approval_note').innerText = doc.approval_note;
 
@@ -972,7 +962,7 @@
         }
 
         // Close modal if clicked outside
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('detailModal');
             if (event.target == modal) {
                 modal.style.display = 'none';
@@ -981,4 +971,5 @@
 
     </script>
 </body>
+
 </html>

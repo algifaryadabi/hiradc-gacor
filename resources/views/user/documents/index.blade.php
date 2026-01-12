@@ -575,7 +575,7 @@
             </div>
 
             <nav class="nav-menu">
-                <a href="{{ route('dashboard') }}" class="nav-item">
+                <a href="{{ route('user.dashboard') }}" class="nav-item">
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
@@ -596,7 +596,7 @@
                     <div class="user-avatar">JD</div>
                     <div class="user-details">
                         <div class="user-name">John Doe</div>
-                        <div class="user-role">Staff Unit Kerja</div>
+                        <div class="user-role">Staff Unit Produksi</div>
                     </div>
                 </div>
                 <!-- Logout via Form/Link -->
@@ -621,17 +621,15 @@
                 <!-- Status Tabs -->
                 <div class="status-tabs">
                     <button class="tab active" onclick="filterByStatus('all')">
-                        Semua <span class="count">9</span>
+                        Semua
                     </button>
                     <button class="tab" onclick="filterByStatus('revision')">
                         Perlu Revisi <span class="count">2</span>
                     </button>
                     <button class="tab" onclick="filterByStatus('approved')">
-                        Disetujui <span class="count">6</span>
+                        Disetujui <span class="count">1</span>
                     </button>
-                    <button class="tab" onclick="filterByStatus('rejected')">
-                        Ditolak <span class="count">1</span>
-                    </button>
+
                 </div>
 
                 <!-- Documents Grid -->
@@ -643,7 +641,7 @@
     </div>
 
     <script>
-        // Sample documents data (removed draft and submitted)
+        // Sample documents data (Filtered for Unit: Produksi)
         const myDocuments = [
             {
                 id: 'DOC-102',
@@ -660,30 +658,6 @@
                 riskLevel: 'Sedang'
             },
             {
-                id: 'DOC-104',
-                title: 'Prosedur Keselamatan Forklift',
-                category: 'KO',
-                unit: 'Warehouse',
-                date: '28 Des 2025',
-                status: 'approved',
-                statusText: 'Disetujui',
-                approvedBy: 'Kepala Departemen',
-                approvedDate: '05 Jan 2026',
-                riskLevel: 'Tinggi'
-            },
-            {
-                id: 'DOC-105',
-                title: 'Identifikasi Bahaya Ruang Boiler',
-                category: 'K3',
-                unit: 'Maintenance',
-                date: '25 Des 2025',
-                status: 'approved',
-                statusText: 'Disetujui',
-                approvedBy: 'Kepala Departemen',
-                approvedDate: '02 Jan 2026',
-                riskLevel: 'Sangat Tinggi'
-            },
-            {
                 id: 'DOC-107',
                 title: 'Analisis Kebisingan Area Produksi',
                 category: 'K3',
@@ -697,31 +671,7 @@
                 revisionDate: '22 Des 2025',
                 riskLevel: 'Tinggi'
             },
-            {
-                id: 'DOC-108',
-                title: 'Evaluasi Sistem Pemadam Kebakaran',
-                category: 'Keamanan',
-                unit: 'Security',
-                date: '15 Nov 2025',
-                status: 'approved',
-                statusText: 'Disetujui',
-                approvedBy: 'Kepala Departemen',
-                approvedDate: '25 Nov 2025',
-                riskLevel: 'Sedang'
-            },
-            {
-                id: 'DOC-109',
-                title: 'Penilaian Risiko Penggunaan Crane',
-                category: 'KO',
-                unit: 'Produksi',
-                date: '10 Nov 2025',
-                status: 'rejected',
-                statusText: 'Ditolak',
-                rejectedBy: 'Kepala Departemen',
-                rejectedDate: '20 Nov 2025',
-                rejectionReason: 'Dokumen tidak memenuhi standar. Data penilaian risiko tidak lengkap dan tidak sesuai dengan prosedur HIRADC. Silakan buat dokumen baru dengan data yang lebih komprehensif.',
-                riskLevel: 'Sangat Tinggi'
-            },
+            // Rejected document removed as per request
             {
                 id: 'DOC-110',
                 title: 'Analisis Dampak Limbah B3',
@@ -732,30 +682,6 @@
                 statusText: 'Disetujui',
                 approvedBy: 'Kepala Departemen',
                 approvedDate: '18 Nov 2025',
-                riskLevel: 'Sangat Tinggi'
-            },
-            {
-                id: 'DOC-113',
-                title: 'Penilaian Risiko Bahan Kimia Lab',
-                category: 'K3',
-                unit: 'QC',
-                date: '02 Nov 2025',
-                status: 'approved',
-                statusText: 'Disetujui',
-                approvedBy: 'Kepala Departemen',
-                approvedDate: '15 Nov 2025',
-                riskLevel: 'Tinggi'
-            },
-            {
-                id: 'DOC-114',
-                title: 'Prosedur Keselamatan Kerja Ketinggian',
-                category: 'K3',
-                unit: 'Maintenance',
-                date: '28 Okt 2025',
-                status: 'approved',
-                statusText: 'Disetujui',
-                approvedBy: 'Kepala Departemen',
-                approvedDate: '10 Nov 2025',
                 riskLevel: 'Sangat Tinggi'
             }
         ];
@@ -790,7 +716,7 @@
                             </div>
                         `;
                         actionButtons = `
-                            <a href="#" class="btn btn-edit">
+                            <a href="{{ route('documents.create') }}?id=${doc.id}&mode=edit" class="btn btn-edit">
                                 <i class="fas fa-edit"></i> Perbaiki Dokumen
                             </a>
                             <button onclick="showDocumentDetail('${doc.id}')" class="btn btn-view">
@@ -801,7 +727,7 @@
                     case 'approved':
                         statusBadge = '<span class="badge-status status-approved">Disetujui</span>';
                         actionButtons = `
-                            <button onclick="window.location.href='{{ route('documents.show') }}'" class="btn btn-view">
+                            <button onclick="window.location.href='{{ url('/user/documents') }}/${doc.id}'" class="btn btn-view">
                                 <i class="fas fa-eye"></i> Lihat Detail
                             </button>
                         `;
@@ -815,10 +741,10 @@
                             </div>
                         `;
                         actionButtons = `
-                            <a href="#" class="btn btn-primary">
+                            <a href="{{ route('documents.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Buat Dokumen Baru
                             </a>
-                            <button onclick="window.location.href='{{ route('documents.show') }}'" class="btn btn-view">
+                            <button onclick="window.location.href='{{ url('/user/documents') }}/${doc.id}'" class="btn btn-view">
                                 <i class="fas fa-eye"></i> Lihat Detail
                             </button>
                         `;
@@ -827,11 +753,9 @@
 
                 return `
                     <div class="document-card">
-                        <div class="doc-header">
-                            <div>
-                                <div class="doc-title">${doc.title}</div>
-                            </div>
-                            ${statusBadge}
+                        <div class="doc-header" style="justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                             <div style="display: flex; gap: 10px;">${actionButtons}</div>
+                             ${statusBadge}
                         </div>
 
                         <div class="doc-meta">
@@ -854,10 +778,6 @@
                         </div>
 
                         ${alertSection}
-
-                        <div class="doc-actions">
-                            ${actionButtons}
-                        </div>
                     </div>
                 `;
             }).join('');
@@ -947,10 +867,7 @@
                 <div class="detail-section">
                     <h3 class="detail-section-title">📋 Informasi Dokumen</h3>
                     <div class="detail-grid">
-                        <div class="detail-item">
-                            <div class="detail-label">Judul Dokumen:</div>
-                            <div class="detail-value"><strong>${doc.title}</strong></div>
-                        </div>
+        
                         <div class="detail-item">
                             <div class="detail-label">Status:</div>
                             <div class="detail-value">${statusBadge}</div>

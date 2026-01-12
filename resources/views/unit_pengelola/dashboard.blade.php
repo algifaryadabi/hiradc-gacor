@@ -536,29 +536,35 @@
             </div>
 
             <nav class="nav-menu">
-                <a href="{{ route('user.dashboard') }}" class="nav-item active">
+                <a href="{{ route('unit_pengelola.dashboard') }}" class="nav-item active">
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('documents.index') }}" class="nav-item">
+                <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item">
                     <i class="fas fa-folder-open"></i>
-                    <span>Dokumen Saya</span>
-                    <span class="badge">2</span>
-                </a>
-                <a href="{{ route('documents.create') }}" class="nav-item">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Buat Dokumen Baru</span>
+                    <span>Cek Dokumen</span>
+                    <span class="badge">5</span>
                 </a>
             </nav>
 
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">JD</div>
+                    <div class="user-avatar">UP</div>
                     <div class="user-details">
-                        <div class="user-name">John Doe</div>
-                        <div class="user-role">Staff Unit Kerja</div>
+                        <div class="user-name">Staff Unit Pengelola</div>
+                        <div class="user-role">Unit Pengelola SHE</div>
                     </div>
                 </div>
+
+                <!-- ROLE SWITCHER -->
+                <div style="margin-bottom: 10px; padding: 5px; background: rgba(0,0,0,0.1); border-radius: 4px;">
+                    <label style="font-size: 10px; opacity:0.8; display:block; margin-bottom: 3px; color: white;">Simulasi Role:</label>
+                    <select id="roleSwitcher" onchange="switchRole(this.value)" style="width: 100%; padding: 4px; font-size: 11px; border: none; border-radius: 3px; color:#333;">
+                        <option value="SHE">SHE (K3/KO/Env)</option>
+                        <option value="Keamanan">Keamanan</option>
+                    </select>
+                </div>
+
                 <a href="{{ route('logout') }}" class="logout-btn"
                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="fas fa-sign-out-alt"></i>
@@ -709,6 +715,10 @@
     </div>
 
     <script>
+        // MASTER CONFIG FOR SIMULATION
+        // Read from Storage or Default to 'SHE'
+        const currentUserRole = localStorage.getItem('up_role') || 'SHE'; 
+
         // MASTER DATA
         const directorates = [
             { id: 1, name: 'President Directorate' },
@@ -802,87 +812,120 @@
                 category: 'KO', 
                 date: '31 Des 2025', 
                 author: 'Dewi (Finance)', 
-                approver: 'Ibu Sri (Ka. Dept Keuangan)', 
+                approver: 'Bpk. Budi (Ka. Dept Finance)', 
                 dir_id: 3, dept_id: 5, unit_id: 6,
                 status: 'DISETUJUI',
-                risk_level: 'Tinggi',
+                risk_level: 'Rendah',
                 approval_date: '30 Des 2025',
-                approval_note: '"Laporan keuangan telah diaudit internal dan disahkan."'
-            },
+                approval_note: '"Laporan keuangan valid."'
+            }
         ];
 
-        let activeCategory = '';
+        let selectedCategory = 'All';
 
         document.addEventListener('DOMContentLoaded', () => {
-             populateDirectorates();
-             filterDepartments(); // Initialize Departments
+            // Set Switcher Value
+            const switcher = document.getElementById('roleSwitcher');
+            if(switcher) switcher.value = currentUserRole;
+
+            updateUserProfile();
+            updateCategoryCards();
+            populateDirectorates();
+            // Simulate initial filter
+            applyFilters();
         });
+
+        function updateUserProfile() {
+            const roleEl = document.querySelector('.user-role'); 
+            if(roleEl) {
+                roleEl.textContent = currentUserRole === 'SHE' ? 'Unit Pengelola SHE' : 'Unit Pengelola Keamanan';
+            }
+        }
+
+        function updateCategoryCards() {
+            const cards = document.querySelectorAll('.cat-card');
+            cards.forEach(card => {
+                const catName = card.querySelector('h2').textContent.trim();
+                let shouldShow = false;
+
+                if(currentUserRole === 'SHE') {
+                    if(['K3', 'KO', 'Lingkungan'].includes(catName)) shouldShow = true;
+                } else {
+                    if(['Keamanan'].includes(catName)) shouldShow = true;
+                }
+
+                if(!shouldShow) {
+                    card.style.display = 'none';
+                } else {
+                    card.style.display = 'flex'; // Reset display
+                }
+            });
+        }
+
+        function switchRole(role) {
+            localStorage.setItem('up_role', role);
+            window.location.reload();
+        }
 
         function populateDirectorates() {
             const select = document.getElementById('filter_directorate');
-            select.innerHTML = '<option value="">........</option>';
+            select.innerHTML = '<option value="">Semua Direktorat</option>';
             directorates.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d.id;
-                opt.textContent = d.name;
-                select.appendChild(opt);
+                const option = document.createElement('option');
+                option.value = d.id;
+                option.textContent = d.name;
+                select.appendChild(option);
             });
         }
 
         function filterDepartments() {
             const dirId = document.getElementById('filter_directorate').value;
             const deptSelect = document.getElementById('filter_department');
-            // Reset is handled by re-populating. If logic was appending, we'd need to clear. 
-            // innerHTML assignment clears it.
+            const unitSelect = document.getElementById('filter_unit');
             
-            deptSelect.innerHTML = '<option value="">........</option>';
+            deptSelect.innerHTML = '<option value="">Semua Departemen</option>';
+            unitSelect.innerHTML = '<option value="">Semua Unit</option>';
             
-            // Should units be reset here? Yes, because department list changes/resets
-            // But we will call filterUnits right after to re-populate them based on empty dept (Show All) or selected dept
-            // Just clearing it here might cause blink if filterUnits isn't fast, but it's JS so it's blocking/fast.
-            
-            let filteredDepts = departments;
-            if (dirId) {
-                filteredDepts = departments.filter(d => d.dir_id == dirId);
-            }
+            if (!dirId) return;
 
+            const filteredDepts = departments.filter(d => d.dir_id == dirId);
             filteredDepts.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d.id;
-                opt.textContent = d.name;
-                deptSelect.appendChild(opt);
+                const option = document.createElement('option');
+                option.value = d.id;
+                option.textContent = d.name;
+                deptSelect.appendChild(option);
             });
-            
-            filterUnits(); 
+            applyFilters();
         }
 
         function filterUnits() {
             const deptId = document.getElementById('filter_department').value;
             const unitSelect = document.getElementById('filter_unit');
             
-            unitSelect.innerHTML = '<option value="">........</option>';
+            unitSelect.innerHTML = '<option value="">Semua Unit</option>';
+            
+            if (!deptId) return;
 
-            let filteredUnits = units;
-            if (deptId) {
-                filteredUnits = units.filter(u => u.dept_id == deptId);
-            }
-
+            const filteredUnits = units.filter(u => u.dept_id == deptId);
             filteredUnits.forEach(u => {
-                const opt = document.createElement('option');
-                opt.value = u.id;
-                opt.textContent = u.name;
-                unitSelect.appendChild(opt);
+                const option = document.createElement('option');
+                option.value = u.id;
+                option.textContent = u.name;
+                unitSelect.appendChild(option);
             });
             applyFilters();
         }
 
-        function selectCategory(cat, el) {
+        function selectCategory(cat, card) {
+            // Remove active class from all cards
             document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
-            if (activeCategory === cat) {
-                activeCategory = '';
+            
+            // Toggle selection
+            if(selectedCategory === cat) {
+                selectedCategory = 'All'; // Deselect
             } else {
-                activeCategory = cat;
-                el.classList.add('active');
+                selectedCategory = cat;
+                card.classList.add('active');
             }
             applyFilters();
         }
@@ -892,77 +935,71 @@
             const deptId = document.getElementById('filter_department').value;
             const unitId = document.getElementById('filter_unit').value;
 
+            // 1. Filter by Role & Category (including selected card)
             const filtered = documents.filter(doc => {
-                let match = true;
-                if (dirId && doc.dir_id != dirId) match = false;
-                if (deptId && doc.dept_id != deptId) match = false;
-                if (unitId && doc.unit_id != unitId) match = false;
-                if (activeCategory && doc.category !== activeCategory) match = false;
-                return match;
+                // Role Filter
+                let roleMatch = false;
+                if(currentUserRole === 'SHE') {
+                    if(['K3', 'KO', 'Lingkungan'].includes(doc.category)) roleMatch = true;
+                } else {
+                    if(['Keamanan', 'Pengamanan'].includes(doc.category)) roleMatch = true;
+                }
+                if(!roleMatch) return false;
+
+                // UI Filters
+                if (dirId && doc.dir_id != dirId) return false;
+                if (deptId && doc.dept_id != deptId) return false;
+                if (unitId && doc.unit_id != unitId) return false;
+                if (selectedCategory !== 'All' && doc.category !== selectedCategory) return false;
+                
+                return true;
             });
 
             renderTable(filtered);
         }
 
-        function renderTable(data = documents) {
+        function renderTable(data) {
             const tbody = document.getElementById('tableBody');
-            const tableSection = document.querySelector('.table-section');
+            tbody.innerHTML = '';
 
             if (data.length === 0) {
-                // Hide table if empty
-                tableSection.style.display = 'none';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">Tidak ada dokumen ditemukan.</td></tr>';
                 return;
             }
-            
-            // Show table if has data
-            tableSection.style.display = 'block';
 
-            tbody.innerHTML = data.map(doc => {
-                const unit = units.find(u => u.id === doc.unit_id);
-                const unitName = unit ? unit.name : '-';
-                return `
-                <tr>
-                    <td><strong>${unitName}</strong></td>
-                    <td><span class="badge-status" style="background: #eee;">${doc.category}</span></td>
-                    <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
-                    <td>${doc.date}</td>
+            data.forEach(doc => {
+                const unitName = units.find(u => u.id === doc.unit_id)?.name || 'Unknown Unit';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${unitName}</strong><br><small style="color:#888;">${doc.title}</small></td>
+                    <td><span style="font-weight:600;">${doc.category}</span></td>
+                    <td>${doc.approver}</td>
+                    <td>${doc.approval_date}</td>
                     <td>${doc.author}</td>
-                    <td><button onclick="openDetailModal(${doc.id})" class="btn-action" style="border:none; cursor:pointer;">Detail</button></td>
-                </tr>
-            `}).join('');
+                    <td><button onclick="openDetailModal(${doc.id})" class="btn-action">Detail</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        // MODAL FUNCTIONS
+        // Modal Functions
         function openDetailModal(id) {
             const doc = documents.find(d => d.id === id);
-            if(!doc) return;
+            if (!doc) return;
 
-            const unit = units.find(u => u.id === doc.unit_id);
-            const unitName = unit ? unit.name : '-';
+            const unitName = units.find(u => u.id === doc.unit_id)?.name || '-';
 
-            document.getElementById('m_title').innerText = doc.title;
-            document.getElementById('m_status').innerText = doc.status;
-            document.getElementById('m_category').innerText = doc.category;
-            document.getElementById('m_unit').innerText = unitName; // Show Unit Name
-            document.getElementById('m_date').innerText = doc.date;
-            document.getElementById('m_author').innerText = doc.author;
+            document.getElementById('m_title').textContent = doc.title;
+            document.getElementById('m_status').textContent = doc.status;
+            document.getElementById('m_category').textContent = doc.category;
+            document.getElementById('m_unit').textContent = unitName;
+            document.getElementById('m_date').textContent = doc.date;
+            document.getElementById('m_author').textContent = doc.author;
+            document.getElementById('m_risk').textContent = doc.risk_level;
             
-            // Risk Level Styling
-            const riskEl = document.getElementById('m_risk');
-            riskEl.innerText = doc.risk_level;
-            riskEl.className = 'info-value'; // Reset
-            if (doc.risk_level === 'Tinggi') riskEl.classList.add('risk-high');
-            
-            // Approval Info
-            // Extract the Approver Name part before the () if needed, or use full string. 
-            // The image says: "Disetujui oleh Kepala Departemen pada [Date]"
-            // But our data has "approver" containing name. Let's format it nicely.
-            // Assumption: The approver string "Bpk. Ahmad (Ka. Dept Produksi)" implies role is in parens.
-            // For now, let's just use "Kepala Departemen" generic text + date as requested in image, or use the real data.
-            // The image text is: "Disetujui oleh Kepala Departemen pada 14 Des 2025"
-            
-            document.getElementById('m_approval_header').innerText = `Disetujui oleh Kepala Departemen pada ${doc.approval_date}`;
-            document.getElementById('m_approval_note').innerText = doc.approval_note;
+            document.getElementById('m_approval_header').textContent = "Disetujui oleh " + doc.approver + " pada " + doc.approval_date;
+            document.getElementById('m_approval_note').textContent = doc.approval_note;
 
             document.getElementById('detailModal').style.display = 'block';
         }
@@ -971,14 +1008,13 @@
             document.getElementById('detailModal').style.display = 'none';
         }
 
-        // Close modal if clicked outside
+        // Close modal when clicking outside
         window.onclick = function(event) {
             const modal = document.getElementById('detailModal');
             if (event.target == modal) {
-                modal.style.display = 'none';
+                modal.style.display = "none";
             }
         }
-
     </script>
 </body>
 </html>

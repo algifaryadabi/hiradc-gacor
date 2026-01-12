@@ -482,15 +482,15 @@
         <aside class="sidebar">
             <div class="logo-section">
                 <div class="logo-circle">
-                     <!-- Placeholder or real logo -->
-                     <img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP">
+                    <!-- Placeholder or real logo -->
+                    <img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP">
                 </div>
                 <div class="logo-text">PT Semen Padang</div>
                 <div class="logo-subtext">HIRADC System</div>
             </div>
 
             <nav class="nav-menu">
-                <a href="{{ route('dashboard') }}" class="nav-item">
+                <a href="{{ route('user.dashboard') }}" class="nav-item">
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
@@ -515,8 +515,8 @@
                     </div>
                 </div>
                 <!-- Logout via Form/Link -->
-                <a href="{{ route('logout') }}" class="logout-btn" 
-                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <a href="{{ route('logout') }}" class="logout-btn"
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="fas fa-sign-out-alt"></i>
                     Keluar
                 </a>
@@ -565,7 +565,7 @@
                     </div>
 
                     <div class="action-buttons">
-                        <a href="#" class="btn btn-primary">
+                        <a href="{{ route('documents.create', ['mode' => 'edit', 'id' => 'DOC-102']) }}" class="btn btn-primary">
                             <i class="fas fa-edit"></i> Perbaiki Dokumen
                         </a>
                         <button class="btn btn-secondary" onclick="window.print()">

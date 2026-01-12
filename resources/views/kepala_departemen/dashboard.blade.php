@@ -536,27 +536,23 @@
             </div>
 
             <nav class="nav-menu">
-                <a href="{{ route('user.dashboard') }}" class="nav-item active">
+                <a href="{{ route('kepala_departemen.dashboard') }}" class="nav-item active">
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('documents.index') }}" class="nav-item">
-                    <i class="fas fa-folder-open"></i>
-                    <span>Dokumen Saya</span>
+                <a href="{{ route('kepala_departemen.check_documents') }}" class="nav-item">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Review Dokumen</span>
                     <span class="badge">2</span>
-                </a>
-                <a href="{{ route('documents.create') }}" class="nav-item">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Buat Dokumen Baru</span>
                 </a>
             </nav>
 
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">JD</div>
+                    <div class="user-avatar">KD</div>
                     <div class="user-details">
-                        <div class="user-name">John Doe</div>
-                        <div class="user-role">Staff Unit Kerja</div>
+                        <div class="user-name">Bpk. Wijaya</div>
+                        <div class="user-role">Kepala Departemen</div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -815,7 +811,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
              populateDirectorates();
-             filterDepartments(); // Initialize Departments
+             filterDepartments();
         });
 
         function populateDirectorates() {
@@ -832,14 +828,8 @@
         function filterDepartments() {
             const dirId = document.getElementById('filter_directorate').value;
             const deptSelect = document.getElementById('filter_department');
-            // Reset is handled by re-populating. If logic was appending, we'd need to clear. 
-            // innerHTML assignment clears it.
             
             deptSelect.innerHTML = '<option value="">........</option>';
-            
-            // Should units be reset here? Yes, because department list changes/resets
-            // But we will call filterUnits right after to re-populate them based on empty dept (Show All) or selected dept
-            // Just clearing it here might cause blink if filterUnits isn't fast, but it's JS so it's blocking/fast.
             
             let filteredDepts = departments;
             if (dirId) {
@@ -909,12 +899,11 @@
             const tableSection = document.querySelector('.table-section');
 
             if (data.length === 0) {
-                // Hide table if empty
+                // Keep table header, empty body or hide
                 tableSection.style.display = 'none';
                 return;
             }
             
-            // Show table if has data
             tableSection.style.display = 'block';
 
             tbody.innerHTML = data.map(doc => {
@@ -943,7 +932,7 @@
             document.getElementById('m_title').innerText = doc.title;
             document.getElementById('m_status').innerText = doc.status;
             document.getElementById('m_category').innerText = doc.category;
-            document.getElementById('m_unit').innerText = unitName; // Show Unit Name
+            document.getElementById('m_unit').innerText = unitName; 
             document.getElementById('m_date').innerText = doc.date;
             document.getElementById('m_author').innerText = doc.author;
             
@@ -952,14 +941,6 @@
             riskEl.innerText = doc.risk_level;
             riskEl.className = 'info-value'; // Reset
             if (doc.risk_level === 'Tinggi') riskEl.classList.add('risk-high');
-            
-            // Approval Info
-            // Extract the Approver Name part before the () if needed, or use full string. 
-            // The image says: "Disetujui oleh Kepala Departemen pada [Date]"
-            // But our data has "approver" containing name. Let's format it nicely.
-            // Assumption: The approver string "Bpk. Ahmad (Ka. Dept Produksi)" implies role is in parens.
-            // For now, let's just use "Kepala Departemen" generic text + date as requested in image, or use the real data.
-            // The image text is: "Disetujui oleh Kepala Departemen pada 14 Des 2025"
             
             document.getElementById('m_approval_header').innerText = `Disetujui oleh Kepala Departemen pada ${doc.approval_date}`;
             document.getElementById('m_approval_note').innerText = doc.approval_note;

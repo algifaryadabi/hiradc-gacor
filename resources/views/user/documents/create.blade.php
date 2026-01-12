@@ -468,16 +468,16 @@
             </div>
 
             <nav class="nav-menu">
-                <a href="{{ route('dashboard') }}" class="nav-item">
+                <a href="{{ route('user.dashboard') }}" class="nav-item">
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('documents.index') }}" class="nav-item">
+                <a href="{{ route('documents.index') }}" class="nav-item {{ request('mode') == 'edit' ? 'active' : '' }}">
                     <i class="fas fa-folder-open"></i>
                     <span>Dokumen Saya</span>
                     <span class="badge">9</span>
                 </a>
-                <a href="{{ route('documents.create') }}" class="nav-item active">
+                <a href="{{ route('documents.create') }}" class="nav-item {{ request('mode') != 'edit' ? 'active' : '' }}">
                     <i class="fas fa-plus-circle"></i>
                     <span>Buat Dokumen Baru</span>
                 </a>
@@ -493,8 +493,8 @@
                     </div>
                 </div>
                 <!-- Logout via Form/Link -->
-                <a href="{{ route('logout') }}" class="logout-btn" 
-                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <a href="{{ route('logout') }}" class="logout-btn"
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="fas fa-sign-out-alt"></i>
                     Keluar
                 </a>
@@ -512,6 +512,27 @@
 
             <div class="content-area">
                 <form id="hiradcForm" class="form-container">
+                    
+                    <!-- REVISION ALERT (Hidden by default) -->
+                    <div id="revision_alert_container" class="hidden" style="margin-bottom: 30px;">
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 4px;">
+                            <div style="display: flex; align-items: start; gap: 15px;">
+                                <div style="font-size: 24px; color: #856404;">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div>
+                                    <h3 style="margin: 0 0 10px 0; color: #856404; font-size: 16px;">Dokumen Perlu Perbaikan</h3>
+                                    <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">
+                                        Dokumen ini dikembalikan oleh <strong><span id="reviewer_name">Nama Reviewer</span></strong> 
+                                        (<span id="reviewer_role">Role</span>) pada <span id="revision_date">Tanggal</span>.
+                                    </p>
+                                    <div style="background: rgba(255,255,255,0.5); padding: 15px; border-radius: 6px; font-style: italic; color: #333; border: 1px solid rgba(0,0,0,0.05);">
+                                        "<span id="revision_comment">Komentar revisi akan muncul di sini...</span>"
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- KOLOM 2: Proses Bisnis/Kegiatan/Aset -->
                     <div class="section-header">
@@ -656,7 +677,7 @@
                                 <input type="text" class="form-control" style="margin-top: 10px;"
                                     placeholder="Atau input manual jika tidak ada di list">
                             </div>
-                            
+
                             <div class="checkbox-item">
                                 <input type="checkbox" id="bahaya_biologi" onchange="toggleBahayaDropdown('biologi')">
                                 <label for="bahaya_biologi">Bahaya Biologi</label>
@@ -727,7 +748,7 @@
                                 <input type="text" class="form-control" style="margin-top: 10px;"
                                     placeholder="Atau input manual jika tidak ada di list">
                             </div>
-                            
+
                             <div class="checkbox-item">
                                 <input type="checkbox" id="action_kecerobohan"
                                     onchange="toggleBahayaDropdown('kecerobohan')">
@@ -1110,7 +1131,7 @@
         function toggleBahayaDropdown(idSuffix) {
             const checkbox = document.querySelector(`input[onchange="toggleBahayaDropdown('${idSuffix}')"]`);
             const dropdown = document.getElementById(`dropdown_${idSuffix}`);
-            
+
             if (checkbox.checked) {
                 dropdown.classList.add('active');
             } else {
@@ -1122,8 +1143,8 @@
         function checkRegulasi() {
             const val = document.getElementById('kolom15_peraturan').value;
             const radioP = document.querySelector('input[name="kolom16_penting"][value="P"]');
-            
-            if(val.trim().length > 0) {
+
+            if (val.trim().length > 0) {
                 radioP.checked = true;
             }
         }
@@ -1192,6 +1213,179 @@
             }
         }
 
+
+        // MOCK DATA FOR EDIT MODE
+        const mockDocuments = {
+            'DOC-102': {
+                id: 'DOC-102',
+                proses: 'PRODUKSI',
+                kegiatan_lain: 'Pembuangan Limbah Cair', 
+                lokasi: 'Area IPAL Unit Produksi',
+                kategori: 'Lingkungan',
+                kondisi: 'R',
+                bahaya_type: 'condition',
+                bahaya_kategori: 'kimia',
+                bahaya_detail: ['Cairan korosif'],
+                bahaya_manual: '',
+                dampak: 'Pencemaran air sungai dan tanah sekitar, potensi iritasi kulit pada pekerja.',
+                pihak: ['Lingkungan', 'Masyarakat'],
+                pihak_lain: '',
+                bahaya_identifikasi: 'Kebocoran pipa pembuangan limbah',
+                risiko_k3: 'Iritasi kulit',
+                risiko_lingkungan: 'Pencemaran sungai',
+                regulasi: 'UU No. 32 Tahun 2009 tentang PPLH',
+                keparahan: '3',
+                frekuensi_k3: '2',
+                kemungkinan_lingkungan: '3',
+                // Control
+                eliminasi: '',
+                substitusi: '',
+                rekayasa: 'Pemasangan sensor kebocoran otomatis',
+                administrasi: 'SOP Penanganan Limbah Cair',
+                apd: 'Sarung tangan karet, Sepatu safety boot',
+                // Result
+                kemungkinan_akhir: '1',
+                konsekuensi_akhir: '3'
+            },
+            'DOC-107': {
+                id: 'DOC-107',
+                proses: 'PRODUKSI',
+                kegiatan_lain: 'Maschine Running',
+                lokasi: 'Factory Floor 1',
+                kategori: 'K3',
+                kondisi: 'N',
+                bahaya_type: 'condition',
+                bahaya_kategori: 'fisika',
+                bahaya_detail: ['Kebisingan'],
+                bahaya_manual: '',
+                dampak: 'Gangguan pendengaran permanen (NIHL) pada pekerja jika terpapar jangka panjang.',
+                pihak: ['Pekerja'],
+                pihak_lain: '',
+                bahaya_identifikasi: 'Suara mesin turbin lebihi 85dB',
+                risiko_k3: 'Tuli konduktif',
+                risiko_lingkungan: '',
+                regulasi: 'Permenaker No. 5 Tahun 2018',
+                keparahan: '4',
+                frekuensi_k3: '4',
+                kemungkinan_lingkungan: '',
+                // Control
+                eliminasi: '',
+                substitusi: '',
+                rekayasa: 'Pemasangan silencer pada mesin',
+                administrasi: 'Rotasi kerja, Training kebisingan',
+                apd: 'Ear plug / Ear muff',
+                // Result
+                kemungkinan_akhir: '2',
+                konsekuensi_akhir: '4'
+            }
+        };
+
+        const revisionComments = {
+            'DOC-102': {
+                reviewer: 'Kepala Unit Produksi',
+                name: 'Budi Santoso',
+                date: '08 Jan 2026',
+                comment: 'Mohon lengkapi data tindakan pengendalian pada kolom 13. Sertakan juga timeline implementasi yang lebih detail.'
+            },
+            'DOC-107': {
+                reviewer: 'Kepala Unit Produksi',
+                name: 'Ahmad Rizki',
+                date: '22 Des 2025',
+                comment: 'Data pengukuran kebisingan perlu dilengkapi dengan hasil kalibrasi alat ukur. Tambahkan juga rekomendasi APD yang spesifik.'
+            }
+        };
+
+        // CHECK FOR EDIT MODE ON LOAD
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            const docId = urlParams.get('id');
+
+            if (mode === 'edit' && docId) {
+                loadDocumentData(docId);
+            }
+        });
+
+        function loadDocumentData(id) {
+            const doc = mockDocuments[id];
+            const rev = revisionComments[id];
+
+            if (!doc) return;
+
+            // 1. Show Revision Alert
+            if (rev) {
+                document.getElementById('revision_alert_container').classList.remove('hidden');
+                document.getElementById('reviewer_name').textContent = rev.name;
+                document.getElementById('reviewer_role').textContent = rev.reviewer;
+                document.getElementById('revision_date').textContent = rev.date;
+                document.getElementById('revision_comment').textContent = rev.comment;
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+            }
+
+            // 2. Pre-fill Form Fields
+            document.getElementById('kolom2_proses').value = doc.proses;
+            showActivityOptions(); // Trigger change event logic
+            // Handle activity checkboxes or manual input logic here (simplified for demo)
+            if (doc.kegiatan_lain) {
+                document.getElementById('kolom2_activity_manual').value = doc.kegiatan_lain;
+            }
+
+            document.getElementById('kolom3_lokasi').value = doc.lokasi;
+            document.getElementById('kolom4_kategori').value = doc.kategori;
+            document.getElementById('kolom5_kondisi').value = doc.kondisi;
+
+            // Bahaya Type
+            if (doc.bahaya_type === 'condition') {
+                selectBahayaType('condition');
+                // Tick categories
+                if (doc.bahaya_kategori === 'kimia') {
+                    document.getElementById('bahaya_kimia').checked = true;
+                    toggleBahayaDropdown('kimia');
+                    // Select options in multi-select (simplified)
+                } 
+                 if (doc.bahaya_kategori === 'fisika') {
+                    document.getElementById('bahaya_fisika').checked = true;
+                    toggleBahayaDropdown('fisika');
+                }
+            } else {
+                selectBahayaType('action');
+            }
+
+            document.getElementById('kolom7_dampak').value = doc.dampak;
+
+            // Pihak
+            doc.pihak.forEach(p => {
+                if(p === 'Pekerja') document.getElementById('pihak_pekerja').checked = true;
+                if(p === 'Lingkungan') document.getElementById('pihak_lingkungan').checked = true;
+            });
+
+            document.getElementById('kolom10_bahaya').value = doc.bahaya_identifikasi;
+            document.getElementById('kolom11_risiko_k3').value = doc.risiko_k3;
+            document.getElementById('kolom11_risiko_lingkungan').value = doc.risiko_lingkungan;
+            document.getElementById('kolom12_regulasi').value = doc.regulasi;
+
+            // Risk Assessment
+            if (doc.kategori === 'Lingkungan') {
+                document.getElementById('kolom14_frekuensi_k3').value = 0; // Reset
+                document.getElementById('kolom14_kemungkinan_lingkungan').value = doc.kemungkinan_lingkungan;
+            } else {
+                document.getElementById('kolom14_frekuensi_k3').value = doc.frekuensi_k3;
+            }
+            document.getElementById('kolom14_keparahan').value = doc.keparahan;
+            calculateRisk(); // Recalculate
+
+            // Controls
+            document.getElementById('kolom15_rekayasa').value = doc.rekayasa;
+            document.getElementById('kolom16_administrasi').value = doc.administrasi;
+            document.getElementById('kolom17_apd').value = doc.apd;
+
+            // Residual
+            document.getElementById('kolom20_kemungkinan').value = doc.kemungkinan_akhir;
+            document.getElementById('kolom21_konsekuensi').value = doc.konsekuensi_akhir;
+            calculateResidualRisk();
+        }
 
     </script>
 </body>
