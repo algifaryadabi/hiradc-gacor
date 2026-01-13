@@ -712,8 +712,8 @@
     <!-- Inject JS (Same) -->
     <script>
         window.editingDocument = @json($document);
-        const routeApprove = "{{ route('kepala_departemen.approve', $document->id_document) }}";
-        const routeRevise = "{{ route('kepala_departemen.revise', $document->id_document) }}";
+        const routeApprove = "{{ route('kepala_departemen.approve', $document->id) }}";
+        const routeRevise = "{{ route('kepala_departemen.revise', $document->id) }}";
 
         const hazardData = {
             k3_condition: {

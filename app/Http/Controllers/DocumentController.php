@@ -186,9 +186,10 @@ class DocumentController extends Controller
         if (in_array($role, ['approver', 'kepala_unit']) || $user->id_role_user == 3 || $user->id_role_jabatan == 3) {
             $level = 1;
         }
-        // Level 2: Unit Pengelola (SHE / Security)
-        // - Typically defined by role_user 'unit_pengelola'
-        elseif ($role == 'unit_pengelola' || $user->id_role_user == 5) {
+        // Level 2: Unit Pengelola (SHE / Security) - ONLY Kepala Unit
+        // - Kepala Unit: role_jabatan = 3 (Senior Manager)
+        // - Must be from Unit SHE (id=56) or Unit Security (id=55)
+        elseif ($user->id_role_jabatan == 3 && in_array($user->id_unit, [55, 56])) {
             $level = 2;
         }
         // Level 3: Kepala Departemen
@@ -259,9 +260,25 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
 
-        // Fetch pending documents for this level (Level 2)
+        // Verify user is Kepala Unit from SHE or Security
+        if ($user->id_role_jabatan != 3 || !in_array($user->id_unit, [55, 56])) {
+            abort(403, 'Akses ditolak. Hanya Kepala Unit SHE/Security yang dapat mengakses halaman ini.');
+        }
+
+        // Filter documents by category based on user's unit
+        $categoryFilter = [];
+        if ($user->id_unit == 56) {
+            // SHE unit: K3, KO, Lingkungan
+            $categoryFilter = ['K3', 'KO', 'Lingkungan'];
+        } elseif ($user->id_unit == 55) {
+            // Security unit: Keamanan
+            $categoryFilter = ['Keamanan'];
+        }
+
+        // Fetch pending documents for this level (Level 2) with category filter
         $pendingDocuments = Document::where('current_level', 2)
             ->where('status', 'pending_level2')
+            ->whereIn('kategori', $categoryFilter)
             ->with(['user', 'unit'])
             ->orderBy('created_at', 'desc')
             ->get();

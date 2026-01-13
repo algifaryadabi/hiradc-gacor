@@ -143,41 +143,36 @@ class Document extends Model
      */
     public function canBeApprovedBy(User $user): bool
     {
-        // Level 1: Kepala Unit (same unit as document)
-        if ($this->current_level == 1) {
-            $isApprover = $user->getRoleName() === 'approver' ||
-                $user->id_role_user == 3 ||
-                $user->id_role_jabatan == 3; // Senior Manager
-
-            return $isApprover && $user->id_unit == $this->id_unit;
+        // Level 0: Kepala Seksi (Optional/Future use)
+        // If workflow ever starts at Level 0, this handles it
+        if ($this->current_level == 0) {
+            return $user->isKepalaSeksi() && $user->id_seksi == $this->id_seksi;
         }
 
+        // Level 1: Kepala Unit (same unit as document)
+        if ($this->current_level == 1) {
+            // Must be Senior Manager (Role 3) AND same Unit
+            return $user->isKepalaUnit() && $user->id_unit == $this->id_unit;
+        }
 
         // Level 2: Unit Pengelola based on category
+        // ONLY Kepala Unit (Senior Manager, role_jabatan=3) from SHE or Security can approve
         if ($this->current_level == 2) {
-            $userRole = $user->getRoleName();
-
-            // User must be 'unit_pengelola' OR 'approver'(Kepala Unit) of the managing unit
-            if ($userRole !== 'unit_pengelola' && $userRole !== 'approver') {
+            // Must be Kepala Unit (Senior Manager)
+            if (!$user->isKepalaUnit()) {
                 return false;
             }
 
-            // Get user's unit name for checking
-            // We can also check IDs based on DB dump (55=Security, 56=SHE)
+            // Get user's unit ID
             $userUnitId = $user->id_unit;
-            $userUnitName = strtoupper($user->unit->nama_unit ?? '');
 
+            // Check if user is from the correct managing unit based on document category
             if (in_array($this->kategori, ['K3', 'KO', 'Lingkungan'])) {
-                // SHE unit approves
-                return $userUnitId == 56 ||
-                    str_contains($userUnitName, 'SHE') ||
-                    str_contains($userUnitName, 'SAFETY') ||
-                    str_contains($userUnitName, 'LINGKUNGAN');
+                // SHE unit (id=56) approves
+                return $userUnitId == 56;
             } else if ($this->kategori === 'Keamanan') {
-                // Security unit approves
-                return $userUnitId == 55 ||
-                    str_contains($userUnitName, 'KEAMANAN') ||
-                    str_contains($userUnitName, 'SECURITY');
+                // Security unit (id=55) approves
+                return $userUnitId == 55;
             }
 
             return false;
@@ -185,11 +180,8 @@ class Document extends Model
 
         // Level 3: Kepala Departemen
         if ($this->current_level == 3) {
-            $isDeptHead = $user->getRoleName() === 'kepala_departemen' ||
-                $user->id_role_user == 4 ||
-                $user->id_role_jabatan == 2; // General Manager
-
-            return $isDeptHead && $user->id_dept == $this->id_dept;
+            // Must be General Manager (Role 2) AND same Dept
+            return $user->isKepalaDepartemen() && $user->id_dept == $this->id_dept;
         }
 
         return false;

@@ -92,54 +92,54 @@ class User extends Authenticatable
         return $this->user_aktif == 1 || $this->user_aktif === 'aktif' || $this->user_aktif === true;
     }
 
+    // ==================== ROLE CHECKERS ====================
+
+    public function isKepalaDepartemen(): bool
+    {
+        return $this->id_role_jabatan == 2 || $this->role_jabatan == 2;
+    }
+
+    public function isKepalaUnit(): bool
+    {
+        return $this->id_role_jabatan == 3 || $this->role_jabatan == 3;
+    }
+
+    public function isKepalaSeksi(): bool
+    {
+        return $this->id_role_jabatan == 4 || $this->role_jabatan == 4;
+    }
+
     /**
-     * Get role name from numeric role_user
+     * Get role name based on hierarchy
      */
     public function getRoleName(): string
     {
-        // Check id_role_user first (as requested)
-        $roleId = $this->id_role_user ?? $this->role_user;
-
-        // Check id_role_jabatan or role_jabatan
-        $roleJabatan = $this->id_role_jabatan ?? $this->role_jabatan;
-        $unitId = $this->id_unit;
-
-        // Custom Role Logic based on Role Jabatan
-        if ($roleId == 2) { // Assuming base role is User
-            if ($roleJabatan == 2) {
-                return 'kepala_departemen';
-            }
-            if ($roleJabatan == 3) {
-                return 'approver';
-            }
-
-            // Check for Unit Pengelola (SHE = 56, Security = 55)
-            // Using IDs from the provided database dump
-            if ($unitId == 55 || $unitId == 56) {
+        // 1. Check for Unit Pengelola (Special Case for Level 2 Approver)
+        // Must be Kepala Unit (Role 3) AND from specific units
+        if ($this->isKepalaUnit()) {
+            if (in_array($this->id_unit, [55, 56])) { // 55=Security, 56=SHE
                 return 'unit_pengelola';
             }
-
-            // Also check by name as fallback
-            if ($this->unit) {
-                $unitName = strtoupper($this->unit->nama_unit);
-                if (str_contains($unitName, 'SHE') || str_contains($unitName, 'SECURITY') || str_contains($unitName, 'KEAMANAN')) {
-                    return 'unit_pengelola';
-                }
-            }
+            return 'approver'; // Standard Kepala Unit
         }
 
-        // Handle numeric role values
-        if (is_numeric($roleId)) {
-            return match ((int) $roleId) {
-                1 => 'admin',
-                2 => 'user',
-                3 => 'approver',
-                4 => 'unit_pengelola',
-                5 => 'kepala_departemen',
-                default => 'user',
-            };
+        // 2. Kepala Departemen
+        if ($this->isKepalaDepartemen()) {
+            return 'kepala_departemen';
         }
-        return $this->role_user ?? 'user';
+
+        // 3. User (Role 4, 5, 6)
+        // Role 4 (Manager) could be Kepala Seksi, but they act as Users in this workflow unless we add Level 0
+        if (in_array($this->role_jabatan ?? $this->id_role_jabatan, [4, 5, 6])) {
+            return 'user';
+        }
+
+        // 4. Admin
+        if (($this->role_user ?? $this->id_role_user) == 1) {
+            return 'admin';
+        }
+
+        return 'user';
     }
 
     public function getDashboardRoute(): string

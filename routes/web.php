@@ -112,8 +112,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/unit-pengelola/dashboard', [DocumentController::class, 'unitPengelolaDashboard'])->name('unit_pengelola.dashboard');
 
     Route::get('/unit-pengelola/check-documents', function () {
+        $user = Auth::user();
+
+        // Verify user is Kepala Unit from SHE or Security
+        if ($user->id_role_jabatan != 3 || !in_array($user->id_unit, [55, 56])) {
+            abort(403, 'Akses ditolak. Hanya Kepala Unit SHE/Security yang dapat mengakses halaman ini.');
+        }
+
+        // Filter documents by category based on user's unit
+        $categoryFilter = [];
+        if ($user->id_unit == 56) {
+            // SHE unit: K3, KO, Lingkungan
+            $categoryFilter = ['K3', 'KO', 'Lingkungan'];
+        } elseif ($user->id_unit == 55) {
+            // Security unit: Keamanan
+            $categoryFilter = ['Keamanan'];
+        }
+
         $documents = \App\Models\Document::where('current_level', 2)
             ->where('status', 'pending_level2')
+            ->whereIn('kategori', $categoryFilter)
             ->with(['user', 'unit'])
             ->orderBy('created_at', 'desc')
             ->get();

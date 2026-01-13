@@ -488,7 +488,7 @@
 
             <div class="content-area">
                 <form id="hiradcForm" class="form-container" method="POST"
-                    action="{{ route('approver.approve', $document->id_document) }}">
+                    action="{{ route('approver.approve', $document->id) }}">
                     @csrf
                     <!-- Hidden Actions -->
                     <input type="hidden" name="action" id="action_input" value="approve">
@@ -731,8 +731,8 @@
     <!-- Inject Data -->
     <script>
         window.editingDocument = @json($document);
-        const routeApprove = "{{ route('approver.approve', $document->id_document) }}";
-        const routeRevise = "{{ route('approver.revise', $document->id_document) }}";
+        const routeApprove = "{{ route('approver.approve', $document->id) }}";
+        const routeRevise = "{{ route('approver.revise', $document->id) }}";
 
         // Hazard Data (Same as Create)
         const hazardData = {

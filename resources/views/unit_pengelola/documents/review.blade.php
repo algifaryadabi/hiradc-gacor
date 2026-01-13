@@ -711,8 +711,8 @@
     <!-- Inject JS (Same as above) -->
     <script>
         window.editingDocument = @json($document);
-        const routeApprove = "{{ route('unit_pengelola.approve', $document->id_document) }}";
-        const routeRevise = "{{ route('unit_pengelola.revise', $document->id_document) }}";
+        const routeApprove = "{{ route('unit_pengelola.approve', $document->id) }}";
+        const routeRevise = "{{ route('unit_pengelola.revise', $document->id) }}";
         // ... (Include same JS Logic as Approver View) ...
         // For brevity in prompt I'll paste the full JS block again in the actual tool call
 
