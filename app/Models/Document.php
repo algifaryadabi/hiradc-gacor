@@ -135,6 +135,8 @@ class Document extends Model
         ]);
 
         $this->status = 'revision';
+        // Reset level to 0 (Draft/Revision) so flow restarts from beginning when resubmitted
+        $this->current_level = 0;
         $this->save();
     }
 

@@ -552,7 +552,9 @@
                 <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item">
                     <i class="fas fa-folder-open"></i>
                     <span>Cek Dokumen</span>
-                    <span class="badge">5</span>
+                    @if(isset($pendingCount) && $pendingCount > 0)
+                        <span class="badge">{{ $pendingCount }}</span>
+                    @endif
                 </a>
             </nav>
 
@@ -560,22 +562,12 @@
                 <div class="user-profile">
                     <div class="user-avatar">UP</div>
                     <div class="user-details">
-                        <div class="user-name">Staff Unit Pengelola</div>
-                        <div class="user-role">Unit Pengelola SHE</div>
+                        <div class="user-name">{{ Auth::user()->nama_user }}</div>
+                        <div class="user-role">{{ Auth::user()->unit->nama_unit ?? 'Unit Pengelola' }}</div>
                     </div>
                 </div>
 
-                <!-- ROLE SWITCHER -->
-                <div style="margin-bottom: 10px; padding: 5px; background: rgba(0,0,0,0.1); border-radius: 4px;">
-                    <label
-                        style="font-size: 10px; opacity:0.8; display:block; margin-bottom: 3px; color: white;">Simulasi
-                        Role:</label>
-                    <select id="roleSwitcher" onchange="switchRole(this.value)"
-                        style="width: 100%; padding: 4px; font-size: 11px; border: none; border-radius: 3px; color:#333;">
-                        <option value="SHE">SHE (K3/KO/Env)</option>
-                        <option value="Keamanan">Keamanan</option>
-                    </select>
-                </div>
+                <!-- Role Check: {{ $user->isKepalaUnit() ? 'Kepala Unit' : 'Staff' }} -->
 
                 <a href="{{ route('logout') }}" class="logout-btn"
                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
@@ -752,9 +744,14 @@
     </div>
 
     <script>
-        // MASTER CONFIG FOR SIMULATION
-        // Read from Storage or Default to 'SHE'
-        const currentUserRole = localStorage.getItem('up_role') || 'SHE';
+        // MASTER CONFIG
+        // Read from Auth
+        const currentUserRole = "{{ Auth::user()->unit->nama_unit ?? 'Unit Pengelola' }}"; // Or use unit ID logic logic
+        // But better is to rely on backend filtering.
+        // For UI purposes:
+        const isSHE = {{ in_array(Auth::user()->id_unit, [56]) ? 'true' : 'false' }};
+        const isSecurity = {{ in_array(Auth::user()->id_unit, [55]) ? 'true' : 'false' }};
+        const activeRoleName = isSHE ? 'SHE' : (isSecurity ? 'Keamanan' : 'Other');
 
         // MASTER DATA
         const directorates = @json($direktorats->map(fn($d) => ['id' => $d->id_direktorat, 'name' => $d->nama_direktorat]));
@@ -763,44 +760,19 @@
 
         const units = @json($units->map(fn($u) => ['id' => $u->id_unit, 'dept_id' => $u->id_dept, 'name' => $u->nama_unit]));
 
-        const documents = @json($publishedDocuments->map(function ($doc) {
-            $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
-            return [
-                'id' => $doc->id_document,
-                'title' => $doc->kolom2_kegiatan,
-                'category' => $doc->kategori,
-                'date' => $doc->created_at->format('d M Y'),
-                'author' => $doc->user->nama_user ?? '-',
-                'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
-                'dir_id' => $doc->id_direktorat,
-                'dept_id' => $doc->id_dept,
-                'unit_id' => $doc->id_unit,
-                'status' => 'DISETUJUI',
-                'risk_level' => $doc->risk_level,
-                'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
-                'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
-            ];
-        }));
+        const documents = @json($publishedData);
 
-        const pendingDocs = @json($pendingDocuments->map(function ($doc) {
-            return [
-                'id' => $doc->id,
-                'title' => $doc->kolom2_kegiatan,
-                'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
-                'date' => $doc->created_at->format('d M Y'),
-                'status' => 'Pending Review',
-                'url' => route('unit_pengelola.review', $doc->id)
-            ];
-        }));
+        const pendingDocs = @json($pendingData);
 
         let selectedCategory = 'All';
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Set Switcher Value
-            const switcher = document.getElementById('roleSwitcher');
-            if (switcher) switcher.value = currentUserRole;
+            // Set Switcher Value - Removed
+            // const switcher = document.getElementById('roleSwitcher');
+            // if (switcher) switcher.value = currentUserRole;
 
-            updateUserProfile();
+            // updateUserProfile(); // Removed to keep server rendered text
+            updateCategoryCards();
             updateCategoryCards();
             populateDirectorates();
             populatePendingTable(); // New Function
@@ -834,12 +806,7 @@
             });
         }
 
-        function updateUserProfile() {
-            const roleEl = document.querySelector('.user-role');
-            if (roleEl) {
-                roleEl.textContent = currentUserRole === 'SHE' ? 'Unit Pengelola SHE' : 'Unit Pengelola Keamanan';
-            }
-        }
+
 
         function updateCategoryCards() {
             const cards = document.querySelectorAll('.cat-card');
@@ -847,7 +814,7 @@
                 const catName = card.querySelector('h2').textContent.trim();
                 let shouldShow = false;
 
-                if (currentUserRole === 'SHE') {
+                if (activeRoleName === 'SHE') {
                     if (['K3', 'KO', 'Lingkungan'].includes(catName)) shouldShow = true;
                 } else {
                     if (['Keamanan'].includes(catName)) shouldShow = true;
@@ -861,10 +828,7 @@
             });
         }
 
-        function switchRole(role) {
-            localStorage.setItem('up_role', role);
-            window.location.reload();
-        }
+
 
         function populateDirectorates() {
             const select = document.getElementById('filter_directorate');
@@ -938,9 +902,10 @@
             const filtered = documents.filter(doc => {
                 // Role Filter
                 let roleMatch = false;
-                if (currentUserRole === 'SHE') {
+                if (activeRoleName === 'SHE') {
                     if (['K3', 'KO', 'Lingkungan'].includes(doc.category)) roleMatch = true;
                 } else {
+                    // Security
                     if (['Keamanan', 'Pengamanan'].includes(doc.category)) roleMatch = true;
                 }
                 if (!roleMatch) return false;

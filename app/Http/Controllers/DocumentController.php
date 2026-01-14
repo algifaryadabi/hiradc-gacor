@@ -188,39 +188,45 @@ class DocumentController extends Controller
         }
         // Level 2: Unit Pengelola (SHE / Security) - ONLY Kepala Unit
         // - Kepala Unit: role_jabatan = 3 (Senior Manager)
-        // - Must be from Unit SHE (id=56) or Unit Security (id=55)
-        elseif ($user->id_role_jabatan == 3 && in_array($user->id_unit, [55, 56])) {
-            $level = 2;
-        }
-        // Level 3: Kepala Departemen
-        // - Role User 'kepala_departemen'
-        // - OR Role Jabatan 'General Manager' (id 2) - Assuming GM is Dept Head typically
-        elseif ($role == 'kepala_departemen' || $user->id_role_user == 4 || $user->id_role_jabatan == 2) {
-            $level = 3;
-        }
+        // User Request: "Semua list nya yang ada, disetujui revisi maupun sdg diproses"
+        // Show ALL documents for this Unit (excluding drafts potentially, unless asked)
+        // assuming Monitor Unit Documents mode.
 
-        $documents = Document::where('current_level', $level)
-            ->where('status', 'pending_level' . $level)
-            ->when($level == 1, function ($q) use ($user) {
-                // Level 1: Same unit
-                return $q->where('id_unit', $user->id_unit);
-            })
-            ->when($level == 3, function ($q) use ($user) {
-                // Level 3: Same department
-                return $q->where('id_dept', $user->id_dept);
-            })
+        $documents = Document::where('id_unit', $user->id_unit)
             ->with(['user', 'unit'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // History: Documents approved/revised by this user
-        $historyDocuments = Document::whereHas('approvals', function ($q) use ($user) {
-            $q->where('approver_id', $user->id_user);
-        })->with(['user', 'unit'])->get();
+        // Transform for View
+        $documentsData = $documents->map(function ($doc) use ($user) {
+            $status = 'Disetujui'; // Default fallback (History/Done)
 
-        $documents = $documents->merge($historyDocuments)->unique('id_document');
+            // Logic Status
+            if ($doc->canBeApprovedBy($user)) {
+                $status = 'Menunggu';
+            } elseif ($doc->status === 'revision') {
+                $status = 'Revisi';
+            } elseif ($doc->status === 'approved') {
+                $status = 'Disetujui';
+            } elseif ($doc->current_level > 1) {
+                $status = 'Diproses'; // Lanjut ke level berikutnya
+            }
 
-        return view('approver.documents.index', compact('documents'));
+            // Friendly Unit Name
+            $unitName = $doc->unit->nama_unit ?? '-';
+
+            return [
+                'id' => $doc->id,
+                'unit' => $unitName,
+                'title' => $doc->kolom2_kegiatan,
+                'category' => $doc->kategori,
+                'date' => $doc->created_at->format('d-m-Y'),
+                'status' => $status,
+                'viewUrl' => route('approver.review', ['document' => $doc->id])
+            ];
+        });
+
+        return view('approver.documents.index', compact('documentsData'));
     }
 
     /**
@@ -261,7 +267,7 @@ class DocumentController extends Controller
         $user = Auth::user();
 
         // Verify user is Kepala Unit from SHE or Security
-        if ($user->id_role_jabatan != 3 || !in_array($user->id_unit, [55, 56])) {
+        if (!$user->isKepalaUnit() || !in_array($user->id_unit, [55, 56])) {
             abort(403, 'Akses ditolak. Hanya Kepala Unit SHE/Security yang dapat mengakses halaman ini.');
         }
 
@@ -291,11 +297,43 @@ class DocumentController extends Controller
             ->limit(10)
             ->get();
 
+        // Transform Pending Documents for JS
+        $pendingData = $pendingDocuments->map(function ($doc) {
+            return [
+                'id' => $doc->id, // Correct ID
+                'title' => $doc->kolom2_kegiatan,
+                'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
+                'date' => $doc->created_at->format('d M Y'),
+                'status' => 'Pending Review',
+                'url' => route('unit_pengelola.review', $doc->id)
+            ];
+        });
+
+        // Transform Published Documents for JS
+        $publishedData = $publishedDocuments->map(function ($doc) {
+            $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
+            return [
+                'id' => $doc->id, // Correct ID
+                'title' => $doc->kolom2_kegiatan,
+                'category' => $doc->kategori,
+                'date' => $doc->created_at->format('d M Y'),
+                'author' => $doc->user->nama_user ?? '-',
+                'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
+                'dir_id' => $doc->id_direktorat,
+                'dept_id' => $doc->id_dept,
+                'unit_id' => $doc->id_unit,
+                'status' => 'DISETUJUI',
+                'risk_level' => $doc->risk_level ?? 'High', // Default value if null
+                'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
+                'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
+            ];
+        });
+
         $direktorats = Direktorat::where('status_aktif', 1)->get();
         $departemens = Departemen::all();
         $units = Unit::all();
 
-        return view('unit_pengelola.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
+        return view('unit_pengelola.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'pendingData', 'publishedData', 'direktorats', 'departemens', 'units'));
     }
 
     /**

@@ -381,11 +381,8 @@
                 <div class="user-profile">
                     <div class="user-avatar">{{ substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2) }}</div>
                     <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}
-                        </div>
+                        <div class="user-name">{{ Auth::user()->nama_user }}</div>
+                        <div class="user-role">{{ Auth::user()->departemen->nama_dept ?? 'Kepala Departemen' }}</div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -451,33 +448,10 @@
     </div>
 
     <script>
-        @php
-            // Prepare data and pre-calculate route URLs
-            $documentsData = $documents->map(function ($doc) {
-                // Determine friendly status
-                $status = 'Menunggu';
-                if ($doc->status == 'approved' || $doc->current_level > 3) {
-                    $status = 'Disetujui';
-                } elseif (str_contains($doc->status, 'revise')) {
-                    $status = 'Revisi';
-                }
-
-                // Friendly Unit Name
-                $unitName = $doc->unit->nama_unit ?? '-';
-
-                return [
-                    'id' => $doc->id_document,
-                    'unit' => $unitName,
-                    'title' => $doc->kolom2_kegiatan,
-                    'category' => $doc->kategori,
-                    'date' => $doc->created_at->format('d-m-Y'),
-                    'status' => $status,
-                    'review_url' => route('kepala_departemen.review', ['document' => $doc->id_document])
-                ];
-            });
-        @endphp
-
+        // Data already transformed in Controller Route
         const documents = @json($documentsData);
+
+
 
         let currentStatusFilter = 'Semua';
 

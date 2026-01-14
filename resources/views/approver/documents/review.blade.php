@@ -789,7 +789,9 @@
 
         function renderCheckboxes(data, prefix, name) {
             let html = '<div class="checkbox-group">';
-            for (const [key, vals] of Object.entries(data)) {
+            for (const entry of Object.entries(data)) {
+                const key = entry[0];
+                const vals = entry[1];
                 html += `<div style="margin-bottom:5px;"><strong>${key}</strong>`;
                 vals.forEach(v => {
                     html += `<div class="checkbox-item"><input type="checkbox" name="${name}" value="${key}: ${v}"><label>${v}</label></div>`;

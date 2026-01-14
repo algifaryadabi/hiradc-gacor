@@ -740,60 +740,7 @@
 
         const seksis = @json($seksis->map(fn($s) => ['id' => $s->id_seksi, 'unit_id' => $s->id_unit, 'name' => $s->nama_seksi]));
 
-        const documents = [
-            {
-                id: 1,
-                title: 'Penilaian Risiko Penggunaan Mesin Produksi A',
-                category: 'K3',
-                date: '15 Des 2025',
-                author: 'Ahmad Rizki',
-                approver: 'Bpk. Ahmad (Ka. Dept Produksi)',
-                dir_id: 2, dept_id: 3, unit_id: 11,
-                status: 'DISETUJUI',
-                risk_level: 'Tinggi',
-                approval_date: '14 Des 2025',
-                approval_note: '"Dokumen telah memenuhi standar K3L dan siap untuk dipublikasikan."'
-            },
-            {
-                id: 2,
-                title: 'Audit Lingkungan Tahunan',
-                category: 'Lingkungan',
-                date: '05 Jan 2026',
-                author: 'Siti (Unit Environmental)',
-                approver: 'Ibu Ratna (Ka. Dept LH)',
-                dir_id: 2, dept_id: 3, unit_id: 11,
-                status: 'DISETUJUI',
-                risk_level: 'Sedang',
-                approval_date: '04 Jan 2026',
-                approval_note: '"Data audit valid dan sesuai regulasi lingkungan."'
-            },
-            {
-                id: 3,
-                title: 'Prosedur Keamanan Gerbang',
-                category: 'Keamanan',
-                date: '01 Jan 2026',
-                author: 'Agus (Security)',
-                approver: 'Bpk. Joko (Ka. Dept Keamanan)',
-                dir_id: 1, dept_id: 1, unit_id: 14,
-                status: 'DISETUJUI',
-                risk_level: 'Rendah',
-                approval_date: '31 Des 2025',
-                approval_note: '"SOP keamanan baru disetujui untuk implementasi segera."'
-            },
-            {
-                id: 4,
-                title: 'Laporan Keuangan Q4',
-                category: 'KO',
-                date: '31 Des 2025',
-                author: 'Dewi (Finance)',
-                approver: 'Ibu Sri (Ka. Dept Keuangan)',
-                dir_id: 3, dept_id: 5, unit_id: 6,
-                status: 'DISETUJUI',
-                risk_level: 'Tinggi',
-                approval_date: '30 Des 2025',
-                approval_note: '"Laporan keuangan telah diaudit internal dan disahkan."'
-            },
-        ];
+        const documents = @json($documents);
 
         let activeCategory = '';
 

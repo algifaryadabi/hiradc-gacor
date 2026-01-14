@@ -254,23 +254,17 @@
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
                     <div
                         style="width:35px; height:35px; background:white; color:#2575fc; border-radius:50%; display:flex; justify-content:center; align-items:center; font-weight:bold;">
-                        UP</div>
+                        {{ substr(Auth::user()->nama_user, 0, 2) }}
+                    </div>
                     <div>
-                        <div style="font-size:13px; font-weight:600;">Staff UP</div>
-                        <div class="user-role" style="font-size:10px; opacity:0.8;">Unit Pengelola SHE</div>
+                        <div style="font-size:13px; font-weight:600;">{{ Auth::user()->nama_user }}</div>
+                        <div class="user-role" style="font-size:10px; opacity:0.8;">
+                            {{ Auth::user()->unit->nama_unit ?? 'Unit Pengelola' }}
+                        </div>
                     </div>
                 </div>
 
-                <!-- ROLE SWITCHER -->
-                <div style="margin-bottom: 10px; padding: 5px; background: rgba(0,0,0,0.1); border-radius: 4px;">
-                    <label style="font-size: 10px; opacity:0.8; display:block; margin-bottom: 3px;">Simulasi
-                        Role:</label>
-                    <select id="roleSwitcher" onchange="switchRole(this.value)"
-                        style="width: 100%; padding: 4px; font-size: 11px; border: none; border-radius: 3px; color:#333;">
-                        <option value="SHE">SHE (K3/KO/Env)</option>
-                        <option value="Keamanan">Keamanan</option>
-                    </select>
-                </div>
+                <!-- Role Switcher Removed -->
 
                 <a href="{{ route('logout') }}" class="logout-btn"
                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Keluar</a>
@@ -381,103 +375,32 @@
 
                 <div style="margin-top:20px; text-align:right;" id="action_container">
                     <!-- Action buttons if needed, e.g. Link to Verify -->
-                    <a href="{{ route('unit_pengelola.review') }}" class="btn-view" style="display:none;"
-                        id="btn_verify_modal">Lanjut Verifikasi</a>
+                    <a href="#" class="btn-view" style="display:none;" id="btn_verify_modal">Lanjut Verifikasi</a>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // MASTER CONFIG FOR SIMULATION
-        // Read from Storage or Default to 'SHE'
-        const currentUserRole = localStorage.getItem('up_role') || 'SHE'; 
-
-
-        // Mock Data
-        const documents = [
-            {
-                id: 1,
-                unit: 'Unit Produksi A',
-                title: 'Penilaian Risiko Unit A',
-                category: 'K3',
-                date: '18-10-2025',
-                status: 'waiting',
-                status_text: 'Menunggu Verifikasi',
-                notes: 'Menunggu tindak lanjut dari Unit Pengelola.'
-            },
-            {
-                id: 2,
-                unit: 'Unit Lingkungan',
-                title: 'Laporan Lingkungan B3',
-                category: 'Lingkungan',
-                date: '18-10-2025',
-                status: 'waiting',
-                status_text: 'Menunggu Verifikasi',
-                notes: 'Dokumen baru diajukan, perlu verifikasi.'
-            },
-            {
-                id: 3,
-                unit: 'Unit Keamanan',
-                title: 'Audit Keamanan Post 2',
-                category: 'Pengamanan', // Matches option value
-                date: '15-10-2025',
-                status: 'approved',
-                status_text: 'Disetujui (Ke KD)',
-                notes: 'Disetujui dan diteruskan ke Kepala Departemen.'
-            },
-            {
-                id: 4,
-                unit: 'Unit K3',
-                title: 'Evaluasi K3 Tahunan',
-                category: 'K3',
-                date: '10-10-2025',
-                status: 'approved',
-                status_text: 'Disetujui (Ke KD)',
-                notes: 'Sudah diverifikasi dan disetujui.'
-            },
-            {
-                id: 5,
-                unit: 'Unit Operasi',
-                title: 'Laporan Operasional Mesin X',
-                category: 'KO',
-                date: '09-10-2025',
-                status: 'approved',
-                status_text: 'Disetujui (Ke KD)',
-                notes: 'Laporan valid. Disetujui.'
-            }
-        ];
+        // REAL DATA FROM BACKEND
+        const documents = @json($documentsJson);
 
         let currentStatus = 'all';
         let currentCategory = 'all';
 
         document.addEventListener('DOMContentLoaded', () => {
-            updateUserProfile();
+            // Removing updateUserProfile() call as it was for simulation
             renderTable();
             updateCounts();
         });
 
-        function updateUserProfile() {
-            const roleEl = document.querySelector('.user-role'); // Assuming class exists sidebar
-            if (roleEl) {
-                roleEl.textContent = currentUserRole === 'SHE' ? 'Unit Pengelola SHE' : 'Unit Pengelola Keamanan';
-            }
-        }
+        // Removed updateUserProfile()
 
-        function filterByRole(docs) {
-            return docs.filter(d => {
-                if (currentUserRole === 'SHE') {
-                    return ['K3', 'KO', 'Lingkungan'].includes(d.category);
-                } else if (currentUserRole === 'Keamanan') {
-                    return ['Keamanan', 'Pengamanan'].includes(d.category);
-                }
-                return true;
-            });
-        }
+        // Removed filterByRole() - Data is already filtered by backend
 
         function updateCounts() {
-            // Apply Role Filter first
-            const roleDocs = filterByRole(documents);
+            // No need to filter by role again
+            const roleDocs = documents;
 
             const waiting = roleDocs.filter(d => d.status === 'waiting').length;
             const approved = roleDocs.filter(d => d.status === 'approved').length;
@@ -509,8 +432,8 @@
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            // 1. Filter by Role
-            let filtered = filterByRole(documents);
+            // 1. Filter by Role (Already done by Backend)
+            let filtered = documents;
 
             // 2. Filter by Status & Category UI controls
             filtered = filtered.filter(doc => {
@@ -532,7 +455,7 @@
                     <td>${doc.category}</td>
                     <td>${doc.date}</td>
                     <td><span class="status-text ${statusClass}">${doc.status_text}</span></td>
-                    <td><button onclick="openDetailModal(${doc.id})" class="btn-view" style="border:none; cursor:pointer;">View</button></td>
+                    <td><a href="${doc.url}" class="btn-view" style="border:none; cursor:pointer;">Review</a></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -554,6 +477,7 @@
             const btnVerify = document.getElementById('btn_verify_modal');
             if (doc.status === 'waiting') {
                 btnVerify.style.display = 'inline-block';
+                btnVerify.href = doc.url; // Set dynamic URL
             } else {
                 btnVerify.style.display = 'none';
             }
@@ -574,32 +498,7 @@
     </script>
     </script>
 
-    <script>
-        // Role Switcher Logic
-        document.addEventListener('DOMContentLoaded', () => {
-            const switcher = document.getElementById('roleSwitcher');
-            if (switcher) switcher.value = currentUserRole;
-        });
 
-        function switchRole(role) {
-            localStorage.setItem('up_role', role);
-            window.location.reload();
-        }
-    </script>
-    </script>
-    
-    <script>
-        // Role Switcher Logic
-        document.addEventListener('DOMContentLoaded', () => {
-             const switcher = document.getElementById('roleSwitcher');
-             if(switcher) switcher.value = currentUserRole;
-        });
-
-        function switchRole(role) {
-            localStorage.setItem('up_role', role);
-            window.location.reload();
-        }
-    </script>
 </body>
 
 </html>

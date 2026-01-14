@@ -465,7 +465,7 @@
                     <div class="user-avatar">{{ substr(Auth::user()->nama_user, 0, 2) }}</div>
                     <div class="user-details">
                         <div class="user-name">{{ Auth::user()->nama_user }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
+                        <div class="user-role">{{ Auth::user()->departemen->nama_dept ?? 'Kepala Departemen' }}</div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -486,7 +486,7 @@
 
             <div class="content-area">
                 <form id="hiradcForm" class="form-container" method="POST"
-                    action="{{ route('kepala_departemen.approve', $document->id_document) }}">
+                    action="{{ route('kepala_departemen.approve', $document->id) }}">
                     @csrf
                     <!-- Hidden Actions -->
                     <input type="hidden" name="action" id="action_input" value="approve">
@@ -673,7 +673,7 @@
                     </div>
                     <div class="action-buttons">
                         <button type="button" class="btn btn-revisi" onclick="submitReview('revision')"><i
-                                class="fas fa-undo"></i> Minta Revisi</button>
+                                class="fas fa-undo"></i> Tolak / Revisi</button>
                         <button type="button" class="btn btn-approve" onclick="submitReview('approved')"><i
                                 class="fas fa-check"></i> Setujui Dokumen</button>
                     </div>
@@ -764,7 +764,9 @@
 
         function renderCheckboxes(data, prefix, name) {
             let html = '<div class="checkbox-group">';
-            for (const [key, vals] of Object.entries(data)) {
+            for (const entry of Object.entries(data)) {
+                const key = entry[0];
+                const vals = entry[1];
                 html += `<div style="margin-bottom:5px;"><strong>${key}</strong>`;
                 vals.forEach(v => {
                     html += `<div class="checkbox-item"><input type="checkbox" name="${name}" value="${key}: ${v}"><label>${v}</label></div>`;

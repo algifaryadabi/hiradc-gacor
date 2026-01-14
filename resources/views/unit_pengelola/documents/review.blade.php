@@ -465,7 +465,7 @@
                     <div class="user-avatar">{{ substr(Auth::user()->nama_user, 0, 2) }}</div>
                     <div class="user-details">
                         <div class="user-name">{{ Auth::user()->nama_user }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
+                        <div class="user-role">{{ Auth::user()->unit->nama_unit ?? 'Unit Pengelola' }}</div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -486,7 +486,7 @@
 
             <div class="content-area">
                 <form id="hiradcForm" class="form-container" method="POST"
-                    action="{{ route('unit_pengelola.approve', $document->id_document) }}">
+                    action="{{ route('unit_pengelola.approve', $document->id) }}">
                     @csrf
                     <!-- Hidden Actions -->
                     <input type="hidden" name="action" id="action_input" value="approve">
@@ -665,6 +665,61 @@
                             id="kolom22_nilai_risiko" readonly></div>
                 </form>
 
+                <!-- CHECKLIST KESESUAIAN -->
+                <div class="checklist-section"
+                    style="margin-top: 30px; margin-bottom: 20px; background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <h3 style="margin-bottom: 15px; color: #333; font-size: 16px; font-weight: 700;">✅ Checklist
+                        Kesesuaian</h3>
+                    <div style="margin-bottom:10px; font-size:12px; color:#666;">
+                        <i class="fas fa-info-circle"></i> Pastikan semua item checklist bernilai <strong>OK</strong>
+                        sebelum melakukan persetujuan.
+                    </div>
+                    <table class="checklist-table" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #007bff; color: white;">
+                                <th style="padding: 10px; text-align: center; border: 1px solid #0056b3; width: 40px;">
+                                    No</th>
+                                <th style="padding: 10px; text-align: left; border: 1px solid #0056b3;">Kriteria</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #0056b3; width: 60px;">
+                                    OK</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #0056b3; width: 60px;">
+                                    NOK</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #0056b3; width: 80px;">
+                                    Tdk Lengkap</th>
+                                <th style="padding: 10px; text-align: left; border: 1px solid #0056b3;">Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                $criteria = [
+                                    1 => 'Standar Format (Penomoran, program-bisnis)',
+                                    2 => 'Penomoran Dokumen',
+                                    3 => 'Kemutakhiran Nomor Revisi',
+                                    4 => 'Approval Dokumen',
+                                    5 => 'Ident. sdh mencakup semua proses bisnis/kegiatan/aset',
+                                    6 => 'Ident. sdh mencakup semua kondisi (R, NR, N, TN & E)',
+                                    7 => 'Kesesuaian Program Mitigasi'
+                                ];
+                            @endphp
+                            @foreach($criteria as $k => $info)
+                                <tr style="background: {{ $k % 2 == 0 ? '#f9f9f9' : 'white' }};">
+                                    <td style="padding:8px; border:1px solid #ddd; text-align:center;">{{ $k }}</td>
+                                    <td style="padding:8px; border:1px solid #ddd; font-weight:500;">{{ $info }}</td>
+                                    <td style="padding:8px; border:1px solid #ddd; text-align:center;"><input type="radio"
+                                            name="cl_{{ $k }}" value="OK" style="transform:scale(1.2);"></td>
+                                    <td style="padding:8px; border:1px solid #ddd; text-align:center;"><input type="radio"
+                                            name="cl_{{ $k }}" value="NOK" style="transform:scale(1.2);"></td>
+                                    <td style="padding:8px; border:1px solid #ddd; text-align:center;"><input type="radio"
+                                            name="cl_{{ $k }}" value="NA" style="transform:scale(1.2);"></td>
+                                    <td style="padding:8px; border:1px solid #ddd;"><input type="text" id="cl_note_{{ $k }}"
+                                            class="form-control" style="font-size:12px; height:30px; border:1px solid #ccc;"
+                                            placeholder="Keterangan..."></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
                 <!-- REVIEW FOOTER -->
                 <div class="review-footer">
                     <div class="comment-section">
@@ -765,7 +820,9 @@
 
         function renderCheckboxes(data, prefix, name) {
             let html = '<div class="checkbox-group">';
-            for (const [key, vals] of Object.entries(data)) {
+            for (const entry of Object.entries(data)) {
+                const key = entry[0];
+                const vals = entry[1];
                 html += `<div style="margin-bottom:5px;"><strong>${key}</strong>`;
                 vals.forEach(v => {
                     html += `<div class="checkbox-item"><input type="checkbox" name="${name}" value="${key}: ${v}"><label>${v}</label></div>`;
@@ -872,15 +929,58 @@
 
         function submitReview(action) {
             const form = document.getElementById('hiradcForm');
+
+            // 1. Checklist Validation logic
+            let checklistResults = "=== HASIL CHECKLIST KESESUAIAN ===\n";
+            let allOK = true;
+            let checkMissing = false;
+
+            // Total 7 criteria
+            for (let i = 1; i <= 7; i++) {
+                const radios = document.getElementsByName('cl_' + i);
+                const note = document.getElementById('cl_note_' + i).value;
+                let val = null;
+                for (const r of radios) { if (r.checked) val = r.value; }
+
+                if (!val) {
+                    checkMissing = true;
+                    break;
+                }
+
+                if (val !== 'OK') allOK = false;
+                checklistResults += `${i}. ${val} - ${note}\n`;
+            }
+
+            if (checkMissing) {
+                alert("Harap lengkapi semua checklist kesesuaian sebelum memproses dokumen.");
+                return;
+            }
+
+            if (action === 'approved' && !allOK) {
+                alert("Tidak dapat menyetujui dokumen karena ada item checklist yang NOK / Tidak Lengkap. Silakan pilih 'Minta Revisi' atau koreksi checklist.");
+                return;
+            }
+
+            // 2. Prepare Form
             if (action === 'revision') form.action = routeRevise;
             else form.action = routeApprove;
 
+            // 3. Combine Notes
+            const userNote = document.getElementById('review_notes').value;
+            const finalNote = userNote + "\n\n" + checklistResults;
+
             document.getElementById('action_input').value = action;
-            document.getElementById('catatan_input').value = document.getElementById('review_notes').value;
-            if (action === 'revision' && document.getElementById('review_notes').value.trim() === '') {
-                alert('Harap isi catatan revisi!');
-                return;
+            document.getElementById('catatan_input').value = finalNote;
+
+            if (action === 'revision' && userNote.trim() === '') {
+                // For revision, make user note mandatory? Or just checklist is enough?
+                // Let's enforce a simple note.
+                if (document.getElementById('review_notes').value.trim() === '') {
+                    alert('Harap isi catatan revisi!');
+                    return;
+                }
             }
+
             document.getElementById('hiradcForm').submit();
         }
     </script>

@@ -337,6 +337,12 @@
             font-weight: 700;
         }
 
+        .status-diproses {
+            color: #17a2b8;
+            /* Cyan/Teal */
+            font-weight: 700;
+        }
+
         .btn-view {
             background: #c41e3a;
             color: white;
@@ -421,6 +427,10 @@
                         <div class="summary-title">Revisi</div>
                         <div class="summary-count" id="count-revision">0</div>
                     </div>
+                    <div class="summary-card">
+                        <div class="summary-title">Diproses</div>
+                        <div class="summary-count" id="count-process">0</div>
+                    </div>
                 </div>
 
                 <!-- Tabs & Filters -->
@@ -429,6 +439,7 @@
                     <button class="tab-btn" onclick="filterData('Menunggu', this)">Menunggu</button>
                     <button class="tab-btn" onclick="filterData('Disetujui', this)">Disetujui</button>
                     <button class="tab-btn" onclick="filterData('Revisi', this)">Revisi</button>
+                    <button class="tab-btn" onclick="filterData('Diproses', this)">Diproses</button>
 
                     <select class="category-filter" id="catFilter" onchange="filterByCategory()">
                         <option value="All">Semua Kategori</option>
@@ -460,43 +471,7 @@
     <script>
         const currentUserUnit = '{{ Auth::user()->unit->nama_unit ?? "Unknown" }}';
 
-        @php
-            $documentsJson = $documents->map(function ($doc) {
-                $user = Auth::user();
-                // Determine status relative to approver
-                $status = 'Disetujui'; // Default fallback
-
-                // Check if it is pending for THIS user
-                if ($doc->canBeApprovedBy($user)) {
-                    $status = 'Menunggu';
-                } elseif ($doc->status === 'revision') {
-                    // Check if THIS user revised it
-                    // Or if it is just in revision status
-                    $lastRev = $doc->approvals->where('action', 'revised')->last();
-                    if ($lastRev && $lastRev->approver_id == $user->id_user) {
-                        $status = 'Revisi';
-                    } else {
-                        $status = 'Revisi'; // Show as revisi generally
-                    }
-                } elseif ($doc->status === 'rejected') {
-                    $status = 'Ditolak';
-                } elseif ($doc->approvals->where('approver_id', $user->id_user)->where('action', 'approved')->count() > 0) {
-                    $status = 'Disetujui';
-                }
-
-                return [
-                    'id' => $doc->id_document,
-                    'unit' => $doc->unit->nama_unit ?? '-',
-                    'title' => $doc->kolom2_kegiatan ?? '-',
-                    'category' => $doc->kategori,
-                    'date' => $doc->created_at->format('d-m-Y'),
-                    'status' => $status,
-                    'viewUrl' => route('approver.review', ['document' => $doc->id])
-                ];
-            });
-        @endphp
-
-        const documents = @json($documentsJson);
+        const documents = @json($documentsData);
 
         let currentStatusFilter = 'Semua';
 
@@ -522,6 +497,9 @@
                 html = '<div style="padding:20px; text-align:center; color:#999;">Tidak ada dokumen ditemukan.</div>';
             } else {
                 filtered.forEach(doc => {
+                    let btnLabel = 'Detail';
+                    if (doc.status === 'Menunggu') btnLabel = 'Review';
+
                     html += `
                     <div class="table-row">
                         <div><strong>${doc.unit}</strong></div>
@@ -529,7 +507,7 @@
                         <div>${doc.date}</div>
                         <div class="status-${doc.status.toLowerCase()}">${doc.status}</div>
                         <div style="text-align: center;">
-                            <a href="${doc.viewUrl}" class="btn-view">View</a>
+                            <a href="${doc.viewUrl}" class="btn-view">${btnLabel}</a>
                         </div>
                     </div>
                     `;
@@ -555,11 +533,12 @@
         function updateCounts() {
             const waiting = documents.filter(d => d.status === 'Menunggu').length;
             const approved = documents.filter(d => d.status === 'Disetujui').length;
-            const revision = documents.filter(d => d.status === 'Revisi').length;
-
             document.getElementById('count-waiting').textContent = waiting;
             document.getElementById('count-approved').textContent = approved;
+            const revision = documents.filter(d => d.status === 'Revisi').length;
             document.getElementById('count-revision').textContent = revision;
+            const processed = documents.filter(d => d.status === 'Diproses').length;
+            document.getElementById('count-process').textContent = processed;
         }
 
         // Initial Render

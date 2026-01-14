@@ -58,10 +58,40 @@ Route::middleware('auth')->group(function () {
         $seksis = \App\Models\Seksi::all();
 
         // Load published documents (General View)
-        $documents = \App\Models\Document::published()
-            ->with(['user', 'unit'])
+        // Load published documents (General View)
+        $rawDocuments = \App\Models\Document::published()
+            ->with(['user', 'unit', 'approvals.approver'])
             ->orderBy('published_at', 'desc')
             ->get();
+
+        $documents = $rawDocuments->map(function ($doc) {
+            // Find Level 3 Approver (Kepala Departemen)
+            $approverName = '-';
+            $approvalNote = '-';
+            $approvalDate = $doc->published_at ? $doc->published_at->format('d M Y') : '-';
+
+            $lastApproval = $doc->approvals->sortByDesc('created_at')->first();
+            if ($lastApproval) {
+                $approverName = $lastApproval->approver->nama_user ?? 'Unknown';
+                $approvalNote = $lastApproval->catatan ?? '-';
+            }
+
+            return [
+                'id' => $doc->id,
+                'title' => $doc->kolom2_kegiatan,
+                'category' => $doc->kategori,
+                'date' => $doc->published_at ? $doc->published_at->format('d M Y') : $doc->created_at->format('d M Y'),
+                'author' => $doc->user->nama_user ?? 'Unknown',
+                'approver' => $approverName,
+                'dir_id' => $doc->id_direktorat,
+                'dept_id' => $doc->id_dept,
+                'unit_id' => $doc->id_unit,
+                'status' => 'DISETUJUI',
+                'risk_level' => $doc->risk_level ?? 'Normal',
+                'approval_date' => $approvalDate,
+                'approval_note' => $approvalNote
+            ];
+        });
 
         // Load MY pending/revision/draft documents
         $myPending = \App\Models\Document::where('id_user', $user->id_user)
@@ -115,7 +145,7 @@ Route::middleware('auth')->group(function () {
         $user = Auth::user();
 
         // Verify user is Kepala Unit from SHE or Security
-        if ($user->id_role_jabatan != 3 || !in_array($user->id_unit, [55, 56])) {
+        if (!$user->isKepalaUnit() || !in_array($user->id_unit, [55, 56])) {
             abort(403, 'Akses ditolak. Hanya Kepala Unit SHE/Security yang dapat mengakses halaman ini.');
         }
 
@@ -129,13 +159,28 @@ Route::middleware('auth')->group(function () {
             $categoryFilter = ['Keamanan'];
         }
 
-        $documents = \App\Models\Document::where('current_level', 2)
+        $documentsRaw = \App\Models\Document::where('current_level', 2)
             ->where('status', 'pending_level2')
             ->whereIn('kategori', $categoryFilter)
             ->with(['user', 'unit'])
             ->orderBy('created_at', 'desc')
             ->get();
-        return view('unit_pengelola.documents.index', compact('documents'));
+
+        $documentsJson = $documentsRaw->map(function ($doc) {
+            return [
+                'id' => $doc->id,
+                'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
+                'title' => $doc->kolom2_kegiatan,
+                'category' => $doc->kategori,
+                'date' => $doc->created_at->format('d-m-Y'),
+                'status' => 'waiting', // Since we only fetch pending_level2
+                'status_text' => 'Menunggu Verifikasi',
+                'notes' => '-',
+                'url' => route('unit_pengelola.review', $doc->id)
+            ];
+        });
+
+        return view('unit_pengelola.documents.index', compact('documentsJson'));
     })->name('unit_pengelola.check_documents');
 
     Route::get('/unit-pengelola/documents/{document}/review', [DocumentController::class, 'review'])->name('unit_pengelola.review');
@@ -147,6 +192,8 @@ Route::middleware('auth')->group(function () {
         $user = Auth::user();
         $pendingDocuments = \App\Models\Document::where('current_level', 3)
             ->where('status', 'pending_level3')
+            // Temporarily remove strict Department filtering if user data is incomplete for testing? 
+            // Better to keep it but ensure user knows.
             ->where('id_dept', $user->id_dept)
             ->with(['user', 'unit'])
             ->orderBy('created_at', 'desc')
@@ -160,11 +207,35 @@ Route::middleware('auth')->group(function () {
             ->limit(10)
             ->get();
 
+        // Transform for View (JSON)
+        $pendingData = $pendingDocuments->map(function ($doc) {
+            return [
+                'id' => $doc->id,
+                'title' => $doc->kolom2_kegiatan,
+                'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
+                'date' => $doc->created_at->format('d M Y'),
+                'risk_level' => $doc->risk_level ?? 'High',
+                'status' => 'Menunggu Approval'
+            ];
+        });
+
+        $publishedData = $publishedDocuments->map(function ($doc) {
+            $lastApproval = $doc->approvals()->latest()->first();
+            return [
+                'id' => $doc->id,
+                'title' => $doc->kolom2_kegiatan,
+                'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
+                'risk_level' => $doc->risk_level ?? 'High',
+                'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
+                'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
+            ];
+        });
+
         $direktorats = \App\Models\Direktorat::where('status_aktif', 1)->get();
         $departemens = \App\Models\Departemen::all();
         $units = \App\Models\Unit::all();
 
-        return view('kepala_departemen.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
+        return view('kepala_departemen.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'pendingData', 'publishedData', 'direktorats', 'departemens', 'units'));
     })->name('kepala_departemen.dashboard');
 
     Route::get('/kepala-departemen/check-documents', function () {
@@ -175,7 +246,24 @@ Route::middleware('auth')->group(function () {
             ->with(['user', 'unit'])
             ->orderBy('created_at', 'desc')
             ->get();
-        return view('kepala_departemen.review', compact('documents'));
+
+        // Transform for View (JSON)
+        $documentsData = $documents->map(function ($doc) {
+            // Friendly Unit Name
+            $unitName = $doc->unit->nama_unit ?? '-';
+
+            return [
+                'id' => $doc->id, // Use ID primary key
+                'unit' => $unitName,
+                'title' => $doc->kolom2_kegiatan,
+                'category' => $doc->kategori,
+                'date' => $doc->created_at->format('d-m-Y'),
+                'status' => 'Menunggu', // Default for this page
+                'review_url' => route('kepala_departemen.review', $doc->id)
+            ];
+        });
+
+        return view('kepala_departemen.review', compact('documentsData'));
     })->name('kepala_departemen.check_documents');
 
     Route::get('/kepala-departemen/documents/{document}/review', [DocumentController::class, 'review'])->name('kepala_departemen.review');
