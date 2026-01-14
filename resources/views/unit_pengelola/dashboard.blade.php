@@ -633,30 +633,9 @@
                     </div>
                 </div>
 
-                <!-- PENDING TABLE -->
-                <div class="table-section pending-section"
-                    style="margin-bottom: 30px; border-left: 4px solid #ff9800; background: #fff3e026;">
-                    <div class="table-header">
-                        <h2 style="color: #ef6c00;">⚠️ Perlu Validasi / Review</h2>
-                    </div>
-                    <table class="custom-table" id="pendingTable">
-                        <thead>
-                            <tr>
-                                <th width="35%">Judul / Kegiatan</th>
-                                <th width="20%">Unit Penginput</th>
-                                <th width="15%">Tanggal</th>
-                                <th width="15%">Status</th>
-                                <th width="15%">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendingTableBody">
-                            <!-- JS Populated -->
-                        </tbody>
-                    </table>
-                    <div id="noPendingMsg" style="text-align:center; padding:20px; color:#777; display:none;">
-                        Tidak ada dokumen yang perlu direview saat ini.
-                    </div>
-                </div>
+                <!-- PENDING TABLE REMOVED -->
+                <div style="display:none;" id="pendingTable"></div>
+
 
                 <!-- TABLE -->
                 <div class="table-section">
@@ -775,36 +754,12 @@
             updateCategoryCards();
             updateCategoryCards();
             populateDirectorates();
-            populatePendingTable(); // New Function
+            // populatePendingTable(); // Removed
             // Simulate initial filter
             applyFilters();
         });
 
-        function populatePendingTable() {
-            const tbody = document.getElementById('pendingTableBody');
-            const noMsg = document.getElementById('noPendingMsg');
-            tbody.innerHTML = '';
-
-            if (pendingDocs.length === 0) {
-                document.getElementById('pendingTable').style.display = 'none';
-                noMsg.style.display = 'block';
-                return;
-            }
-
-            pendingDocs.forEach(doc => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${doc.title}</strong></td>
-                    <td>${doc.unit}</td>
-                    <td>${doc.date}</td>
-                    <td><span class="status-pill warning">${doc.status}</span></td>
-                    <td>
-                        <a href="${doc.url}" class="action-btn view-btn"><i class="fas fa-edit"></i> Review</a>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+        /* populatePendingTable Removed */
 
 
 

@@ -521,7 +521,19 @@
         // Initial Render
         updateCounts();
         renderList();
+
+        // SweetAlert for Success Message
+        @if(session('success'))
+            Swal.fire({
+                title: 'Berhasil!',
+                text: "{{ session('success') }}",
+                icon: 'success',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#c41e3a'
+            });
+        @endif
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

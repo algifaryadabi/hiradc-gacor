@@ -874,8 +874,8 @@
             const tableSection = document.querySelector('.table-section');
 
             if (data.length === 0) {
-                // Keep table header, empty body or hide
-                tableSection.style.display = 'none';
+                tableSection.style.display = 'block';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#999; font-style:italic;">Form belum terpublish</td></tr>';
                 return;
             }
 

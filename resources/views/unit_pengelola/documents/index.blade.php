@@ -307,8 +307,10 @@
                             <th>Unit Penginput</th>
                             <th>Kategori</th>
                             <th>Tanggal Submit</th>
-                            <th>Status Terakhir</th>
+                            <th>Status Akhir</th>
+                            <th>Pengaju</th>
                             <th>Aksi</th>
+                            <th>Waktu Terima Dokumen</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -455,7 +457,9 @@
                     <td>${doc.category}</td>
                     <td>${doc.date}</td>
                     <td><span class="status-text ${statusClass}">${doc.status_text}</span></td>
+                    <td>${doc.applicant}</td>
                     <td><a href="${doc.url}" class="btn-view" style="border:none; cursor:pointer;">Review</a></td>
+                    <td><small style="color:#666;">${doc.received_at}</small></td>
                 `;
                 tbody.appendChild(tr);
             });

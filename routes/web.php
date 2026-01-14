@@ -163,7 +163,9 @@ Route::middleware('auth')->group(function () {
         $documentsPending = \App\Models\Document::where('current_level', 2)
             ->where('status', 'pending_level2')
             ->whereIn('kategori', $categoryFilter)
-            ->with(['user', 'unit'])
+            ->where('status', 'pending_level2')
+            ->whereIn('kategori', $categoryFilter)
+            ->with(['user', 'unit', 'approvals'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -177,7 +179,7 @@ Route::middleware('auth')->group(function () {
                 $q->where('current_level', '>', 2)
                     ->orWhere('status', 'published');
             })
-            ->with(['user', 'unit'])
+            ->with(['user', 'unit', 'approvals'])
             ->orderBy('updated_at', 'desc')
             ->limit(50) // Limit history
             ->get();
@@ -189,6 +191,19 @@ Route::middleware('auth')->group(function () {
             $statusRaw = $isApproved ? 'approved' : 'waiting';
             $statusText = $isApproved ? 'Disetujui' : 'Menunggu Verifikasi';
 
+            $applicant = $doc->user ? $doc->user->nama_user : '-';
+
+            // Find Level 1 approval (Kepala Unit) to get "received_at"
+            // Start default with created_at
+            $receivedAt = $doc->created_at->format('d-m-Y H:i');
+
+            $level1Approval = $doc->approvals->where('level', 1)->where('action', 'approved')->first();
+            if ($level1Approval) {
+                $receivedAt = $level1Approval->created_at->format('d-m-Y H:i') . ' WIB';
+            } else {
+                $receivedAt = $doc->created_at->format('d-m-Y H:i') . ' WIB';
+            }
+
             return [
                 'id' => $doc->id,
                 'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
@@ -198,7 +213,9 @@ Route::middleware('auth')->group(function () {
                 'status' => $statusRaw,
                 'status_text' => $statusText,
                 'notes' => '-',
-                'url' => route('unit_pengelola.review', $doc->id)
+                'url' => route('unit_pengelola.review', $doc->id),
+                'applicant' => $applicant,
+                'received_at' => $receivedAt
             ];
         });
 
@@ -274,7 +291,7 @@ Route::middleware('auth')->group(function () {
         $documentsPending = \App\Models\Document::where('current_level', 3)
             ->where('status', 'pending_level3')
             ->where('id_dept', $user->id_dept)
-            ->with(['user', 'unit'])
+            ->with(['user', 'unit', 'approvals'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -295,13 +312,33 @@ Route::middleware('auth')->group(function () {
             $isApproved = $doc->status === 'published';
             $statusText = $isApproved ? 'Disetujui' : 'Menunggu';
 
+            // Calculate received_at (Time received by Kepala Departemen)
+            // This is when Level 2 (Unit Pengelola) approved it.
+            $receivedAt = '-';
+            $dateDisplay = $doc->created_at->format('d-m-Y'); // Default
+
+            if ($doc->created_at) {
+                $receivedAt = $doc->created_at->format('H:i') . ' WIB';
+            }
+
+            // Find Level 2 Approval
+            $level2Approval = $doc->approvals->where('level', 2)->where('action', 'approved')->first();
+            if ($level2Approval) {
+                $receivedAt = $level2Approval->created_at->format('H:i') . ' WIB';
+                $dateDisplay = $level2Approval->created_at->format('d-m-Y');
+            } else {
+                // Fallback if no level 2 approval found
+                $receivedAt = $doc->created_at->format('H:i') . ' WIB';
+            }
+
             return [
                 'id' => $doc->id, // Use ID primary key
                 'unit' => $unitName,
                 'title' => $doc->kolom2_kegiatan,
                 'category' => $doc->kategori,
-                'date' => $doc->created_at->format('d-m-Y'),
+                'date' => $dateDisplay,
                 'status' => $statusText,
+                'received_at' => $receivedAt,
                 'review_url' => route('kepala_departemen.review', $doc->id)
             ];
         });

@@ -291,14 +291,14 @@
             border-top-left-radius: 8px;
             border-top-right-radius: 8px;
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
             font-weight: 600;
             font-size: 14px;
         }
 
         .table-row {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
             padding: 20px 25px;
             border-bottom: 1px solid #eee;
             align-items: center;
@@ -433,7 +433,8 @@
                 <div class="table-header-red">
                     <div>Unit Penginput</div>
                     <div>Kategori</div>
-                    <div>Tanggal Submit</div>
+                    <div>Tanggal Diterima</div>
+                    <div>Waktu Terima</div>
                     <div>Status Terakhir</div>
                     <div style="text-align: center;">Aksi</div>
                 </div>
@@ -486,6 +487,7 @@
                         <div><strong>${doc.unit}</strong></div>
                         <div>${doc.category}</div>
                         <div>${doc.date}</div>
+                        <div>${doc.received_at}</div>
                         <div class="${statusClass}">${doc.status}</div>
                         <div style="text-align: center;">
                             <a href="${doc.review_url}" class="btn-view">Detail</a>
