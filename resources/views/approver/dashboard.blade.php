@@ -588,8 +588,8 @@
 
             <div class="content-area">
 
-                <!-- 3 FILTERS -->
-                <div class="filters-container">
+                <!-- 4 FILTERS -->
+                <div class="filters-container" style="grid-template-columns: repeat(4, 1fr);">
                     <div class="filter-group">
                         <label>Direktorat</label>
                         <select id="filter_directorate" onchange="filterDepartments()">
@@ -606,7 +606,14 @@
                     </div>
                     <div class="filter-group">
                         <label>Kepala Unit Kerja</label>
-                        <select id="filter_unit" onchange="applyFilters()">
+                        <select id="filter_unit" onchange="filterSeksi()">
+                            <option value="">........</option>
+                            <!-- JS Populated -->
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Seksi</label>
+                        <select id="filter_seksi" onchange="applyFilters()">
                             <option value="">........</option>
                             <!-- JS Populated -->
                         </select>
@@ -775,6 +782,7 @@
                     'dir_id' => $doc->id_direktorat,
                     'dept_id' => $doc->id_dept,
                     'unit_id' => $doc->id_unit,
+                    'seksi_id' => $doc->id_seksi,
                     'status' => 'DISETUJUI',
                     'risk_level' => $doc->risk_level,
                     'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
@@ -794,6 +802,12 @@
                     'url' => route('approver.review', ['document' => $doc->id])
                 ];
             })->values();
+
+            $seksisData = $seksis->map(fn($s) => [
+                'id' => $s->id_seksi,
+                'unit_id' => $s->id_unit,
+                'name' => $s->nama_seksi
+            ]);
         @endphp
 
 
@@ -803,6 +817,8 @@
         const departments = @json($departmentsData);
 
         const units = @json($unitsData);
+
+        const seksis = @json($seksisData);
 
         const documents = @json($documentsData);
 
@@ -819,7 +835,7 @@
         function populatePendingTable() {
             const tbody = document.getElementById('pendingTableBody');
             const noMsg = document.getElementById('noPendingMsg');
-          tbod y.innerHTML = '';
+            tbody.innerHTML = '';
               if(pendingDocs.length === 0) {
                 document.getElementById('pendingTable').style.display = 'none';
                 noMsg.style.display = 'block';
@@ -890,6 +906,25 @@
                 opt.textContent = u.name;
                 unitSelect.appendChild(opt);
             });
+            filterSeksi();
+        }
+
+        function filterSeksi() {
+            const unitId = document.getElementById('filter_unit').value;
+            const seksiSelect = document.getElementById('filter_seksi');
+            seksiSelect.innerHTML = '<option value="">........</option>';
+
+            let filteredSeksis = seksis;
+            if (unitId) {
+                filteredSeksis = seksis.filter(s => s.unit_id == unitId);
+            }
+
+            filteredSeksis.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name;
+                seksiSelect.appendChild(opt);
+            });
             applyFilters();
         }
 
@@ -908,12 +943,14 @@
             const dirId = document.getElementById('filter_directorate').value;
             const deptId = document.getElementById('filter_department').value;
             const unitId = document.getElementById('filter_unit').value;
+            const seksiId = document.getElementById('filter_seksi').value;
 
             const filtered = documents.filter(doc => {
                 let match = true;
                 if (dirId && doc.dir_id != dirId) match = false;
                 if (deptId && doc.dept_id != deptId) match = false;
                 if (unitId && doc.unit_id != unitId) match = false;
+                if (seksiId && doc.seksi_id != seksiId) match = false;
                 if (activeCategory && doc.category !== activeCategory) match = false;
                 return match;
             });

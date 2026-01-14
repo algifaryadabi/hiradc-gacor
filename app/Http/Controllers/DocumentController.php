@@ -255,8 +255,9 @@ class DocumentController extends Controller
         $direktorats = Direktorat::where('status_aktif', 1)->get();
         $departemens = Departemen::all();
         $units = Unit::all();
+        $seksis = Seksi::all();
 
-        return view('approver.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units'));
+        return view('approver.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units', 'seksis'));
     }
 
     /**
@@ -413,10 +414,10 @@ class DocumentController extends Controller
         if ($user->hasRole('admin')) {
             return redirect()->route('admin.dashboard')->with('success', 'Dokumen berhasil disetujui.');
         } // Check Level 3 first (Kepala Departemen)
-        elseif ($document->approvals()->where('level', 3)->where('id_approver', $user->id_user)->exists()) {
+        elseif ($document->approvals()->where('level', 3)->where('approver_id', $user->id_user)->exists()) {
             return redirect()->route('kepala_departemen.check_documents')->with('success', 'Dokumen berhasil disetujui.');
         } // Check Level 2 (Unit Pengelola)
-        elseif ($document->approvals()->where('level', 2)->where('id_approver', $user->id_user)->exists() || $user->isUnitPengelola()) {
+        elseif ($document->approvals()->where('level', 2)->where('approver_id', $user->id_user)->exists() || $user->isUnitPengelola()) {
             return redirect()->route('unit_pengelola.check_documents')->with('success', 'Dokumen berhasil disetujui.');
         } // Check Level 1 (Kepala Unit/Seksi)
         else {

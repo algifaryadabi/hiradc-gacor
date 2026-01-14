@@ -586,8 +586,8 @@
 
             <div class="content-area">
 
-                <!-- 3 FILTERS -->
-                <div class="filters-container">
+                <!-- 4 FILTERS -->
+                <div class="filters-container" style="grid-template-columns: repeat(4, 1fr);">
                     <div class="filter-group">
                         <label>Direktorat</label>
                         <select id="filter_directorate" onchange="filterDepartments()">
@@ -604,7 +604,14 @@
                     </div>
                     <div class="filter-group">
                         <label>Kepala Unit Kerja</label>
-                        <select id="filter_unit" onchange="applyFilters()">
+                        <select id="filter_unit" onchange="filterSeksi()">
+                            <option value="">........</option>
+                            <!-- JS Populated -->
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Seksi</label>
+                        <select id="filter_seksi" onchange="applyFilters()">
                             <option value="">........</option>
                             <!-- JS Populated -->
                         </select>
@@ -631,30 +638,7 @@
                     </div>
                 </div>
 
-                <!-- PENDING TABLE -->
-                <div class="table-section pending-section"
-                    style="margin-bottom: 30px; border-left: 4px solid #ff9800; background: #fff3e026;">
-                    <div class="table-header">
-                        <h2 style="color: #ef6c00;">⚠️ Perlu Validasi / Review</h2>
-                    </div>
-                    <table class="custom-table" id="pendingTable">
-                        <thead>
-                            <tr>
-                                <th width="35%">Judul / Kegiatan</th>
-                                <th width="20%">Unit Penginput</th>
-                                <th width="15%">Tanggal</th>
-                                <th width="15%">Status</th>
-                                <th width="15%">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendingTableBody">
-                            <!-- JS Populated -->
-                        </tbody>
-                    </table>
-                    <div id="noPendingMsg" style="text-align:center; padding:20px; color:#777; display:none;">
-                        Tidak ada dokumen yang perlu direview saat ini.
-                    </div>
-                </div>
+
 
                 <!-- TABLE -->
                 <div class="table-section">
@@ -748,10 +732,27 @@
                 'id' => $d->id_direktorat,
                 'name' => $d->nama_direktorat
             ]);
+            $departmentsData = $departemens->map(fn($d) => [
+                'id' => $d->id_dept,
+                'dir_id' => $d->id_direktorat,
+                'name' => $d->nama_dept
+            ]);
+            $unitsData = $units->map(fn($u) => [
+                'id' => $u->id_unit,
+                'dept_id' => $u->id_dept,
+                'name' => $u->nama_unit
+            ]);
+            $seksisData = $seksis->map(fn($s) => [
+                'id' => $s->id_seksi,
+                'unit_id' => $s->id_unit,
+                'name' => $s->nama_seksi
+            ]);
+        @endphp
         // MASTER DATA FROM CONTROLLER
-        const directorates = @json($direktorats);
-        const departments = @json($departemens);
-        const units = @json($units);
+        const directorates = @json($directoratesData);
+        const departments = @json($departmentsData);
+        const units = @json($unitsData);
+        const seksis = @json($seksisData);
 
         // REAL DATA FROM CONTROLLER
         const documents = @json($publishedData);
@@ -763,39 +764,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             populateDirectorates();
             filterDepartments();
-            populatePendingTable(); // New Function
         });
 
-        function populatePendingTable() {
-            const tbody = document.getElementById('pendingTableBody');
-            const noMsg = document.getElementById('noPendingMsg');
-            tbody.innerHTML = '';
 
-            if (pendingDocs.length === 0) {
-                document.getElementById('pendingTable').style.display = 'none';
-                noMsg.style.display = 'block';
-                return;
-            }
-
-            if (pendingDocs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Tidak ada dokumen yang perlu disetujui saat ini.</td></tr>';
-                return;
-            }
-
-            pendingDocs.forEach(doc => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${doc.title}</strong></td>
-                    <td>${doc.unit}</td>
-                    <td>${doc.date}</td>
-                    <td><span class="status-pill warning">${doc.status}</span></td>
-                    <td>
-                        <a href="${doc.url}" class="action-btn view-btn"><i class="fas fa-edit"></i> Review</a>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
 
         function populateDirectorates() {
             const select = document.getElementById('filter_directorate');
@@ -846,6 +817,25 @@
                 opt.textContent = u.name;
                 unitSelect.appendChild(opt);
             });
+            filterSeksi();
+        }
+
+        function filterSeksi() {
+            const unitId = document.getElementById('filter_unit').value;
+            const seksiSelect = document.getElementById('filter_seksi');
+            seksiSelect.innerHTML = '<option value="">........</option>';
+
+            let filteredSeksis = seksis;
+            if (unitId) {
+                filteredSeksis = seksis.filter(s => s.unit_id == unitId);
+            }
+
+            filteredSeksis.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name;
+                seksiSelect.appendChild(opt);
+            });
             applyFilters();
         }
 
@@ -864,12 +854,14 @@
             const dirId = document.getElementById('filter_directorate').value;
             const deptId = document.getElementById('filter_department').value;
             const unitId = document.getElementById('filter_unit').value;
+            const seksiId = document.getElementById('filter_seksi').value;
 
             const filtered = documents.filter(doc => {
                 let match = true;
                 if (dirId && doc.dir_id != dirId) match = false;
                 if (deptId && doc.dept_id != deptId) match = false;
                 if (unitId && doc.unit_id != unitId) match = false;
+                if (seksiId && doc.seksi_id != seksiId) match = false;
                 if (activeCategory && doc.category !== activeCategory) match = false;
                 return match;
             });

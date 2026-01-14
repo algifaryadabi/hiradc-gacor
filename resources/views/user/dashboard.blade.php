@@ -747,6 +747,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             populateDirectorates();
             filterDepartments(); // Initialize Departments
+            renderTable(); // Initial render
         });
 
         function populateDirectorates() {
@@ -857,14 +858,25 @@
             const tbody = document.getElementById('tableBody');
             const tableSection = document.querySelector('.table-section');
 
+            // Always show table section
+            tableSection.style.display = 'block';
+
             if (data.length === 0) {
-                // Hide table if empty
-                tableSection.style.display = 'none';
+                let msg = 'Belum ada form yang terpublish.';
+                if (activeCategory) {
+                    msg = `Belum ada form untuk kategori <strong>${activeCategory}</strong>.`;
+                }
+
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px; color: #999;">
+                            <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.5;"><i class="fas fa-folder-open"></i></div>
+                            <div>${msg}</div>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
-
-            // Show table if has data
-            tableSection.style.display = 'block';
 
             tbody.innerHTML = data.map(doc => {
                 const unit = units.find(u => u.id === doc.unit_id);
@@ -875,6 +887,7 @@
                     <td><span class="badge-status" style="background: #eee;">${doc.category}</span></td>
                     <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
                     <td>${doc.date}</td>
+                    <td>${doc.time || '-'}</td>
                     <td>${doc.author}</td>
                     <td><button onclick="openDetailModal(${doc.id})" class="btn-action" style="border:none; cursor:pointer;">Detail</button></td>
                 </tr>

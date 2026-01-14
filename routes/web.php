@@ -81,6 +81,7 @@ Route::middleware('auth')->group(function () {
                 'title' => $doc->kolom2_kegiatan,
                 'category' => $doc->kategori,
                 'date' => $doc->published_at ? $doc->published_at->format('d M Y') : $doc->created_at->format('d M Y'),
+                'time' => $doc->published_at ? $doc->published_at->format('H:i') . ' WIB' : $doc->created_at->format('H:i') . ' WIB',
                 'author' => $doc->user->nama_user ?? 'Unknown',
                 'approver' => $approverName,
                 'dir_id' => $doc->id_direktorat,
@@ -97,20 +98,20 @@ Route::middleware('auth')->group(function () {
         $myPending = \App\Models\Document::where('id_user', $user->id_user)
             ->whereIn('status', ['pending_level1', 'pending_level2', 'pending_level3'])
             ->with([
-                'approvals' => function ($q) {
-                    $q->latest();
-                }
-            ])
+                    'approvals' => function ($q) {
+                        $q->latest();
+                    }
+                ])
             ->orderBy('updated_at', 'desc')
             ->get();
 
         $myRevision = \App\Models\Document::where('id_user', $user->id_user)
             ->where('status', 'revision')
             ->with([
-                'approvals' => function ($q) {
-                    $q->latest();
-                }
-            ])
+                    'approvals' => function ($q) {
+                        $q->latest();
+                    }
+                ])
             ->orderBy('updated_at', 'desc')
             ->get();
 
@@ -245,7 +246,15 @@ Route::middleware('auth')->group(function () {
             return [
                 'id' => $doc->id,
                 'title' => $doc->kolom2_kegiatan,
+                'category' => $doc->kategori,
+                'date' => $doc->published_at ? $doc->published_at->format('d M Y') : $doc->created_at->format('d M Y'),
+                'author' => $doc->user->nama_user ?? 'Unknown',
+                'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
                 'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
+                'dir_id' => $doc->id_direktorat,
+                'dept_id' => $doc->id_dept,
+                'unit_id' => $doc->id_unit,
+                'seksi_id' => $doc->id_seksi,
                 'risk_level' => $doc->risk_level ?? 'High',
                 'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
                 'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
@@ -255,8 +264,9 @@ Route::middleware('auth')->group(function () {
         $direktorats = \App\Models\Direktorat::where('status_aktif', 1)->get();
         $departemens = \App\Models\Departemen::all();
         $units = \App\Models\Unit::all();
+        $seksis = \App\Models\Seksi::all();
 
-        return view('kepala_departemen.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'pendingData', 'publishedData', 'direktorats', 'departemens', 'units'));
+        return view('kepala_departemen.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'pendingData', 'publishedData', 'direktorats', 'departemens', 'units', 'seksis'));
     })->name('kepala_departemen.dashboard');
 
     Route::get('/kepala-departemen/check-documents', function () {

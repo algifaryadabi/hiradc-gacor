@@ -513,8 +513,12 @@
                     <div class="user-avatar">{{ substr(Auth::user()->nama_user, 0, 2) }}</div>
                     <div class="user-details">
                         <div class="user-name">{{ Auth::user()->nama_user }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name ?? ucfirst(str_replace('_', ' ', Auth::user()->role_user)) }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">{{ Auth::user()->unit->nama_unit ?? '' }}</div>
+                        <div class="user-role">
+                            {{ Auth::user()->role_jabatan_name ?? ucfirst(str_replace('_', ' ', Auth::user()->role_user)) }}
+                        </div>
+                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
+                            {{ Auth::user()->unit->nama_unit ?? '' }}
+                        </div>
                     </div>
                 </div>
                 <!-- Logout via Form/Link -->
@@ -544,16 +548,14 @@
                 <!-- Document Header -->
                 <div class="doc-header-section">
                     <div class="doc-title-main">{{ $document->kolom2_kegiatan ?? 'Dokumen Tanpa Judul' }}</div>
-                    <div class="doc-number-main">ID: {{ $document->id_document ?? '-' }}</div>
 
+
+                    <style>
+                        .doc-meta-grid {
+                            grid-template-columns: repeat(5, 1fr);
+                        }
+                    </style>
                     <div class="doc-meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Status</div>
-                            <div class="meta-value">
-                                <span
-                                    class="badge-status {{ $document->status == 'revision' ? 'status-revision' : '' }}">{{ $document->status_label }}</span>
-                            </div>
-                        </div>
                         <div class="meta-item">
                             <div class="meta-label">Kategori</div>
                             <div class="meta-value">{{ $document->kategori }}</div>
@@ -565,6 +567,15 @@
                         <div class="meta-item">
                             <div class="meta-label">Tanggal Dibuat</div>
                             <div class="meta-value">{{ $document->created_at->format('d M Y') }}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Tingkat Risiko</div>
+                            <div class="meta-value">{{ $document->kolom9_risiko ?? 'Sedang' }}</div>
+                            <!-- Using kolom9 based on context or risk_level if available -->
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Waktu Pengisian</div>
+                            <div class="meta-value">{{ $document->created_at->format('H:i') }} WIB</div>
                         </div>
                     </div>
 
@@ -598,39 +609,71 @@
                             <div class="info-value">{{ $document->kolom5_kondisi }}</div>
                         </div>
 
+
+
                         <div class="info-row">
-                            <div class="info-label">Bahaya Identifikasi</div>
+                            <div class="info-label">Kategori</div>
+                            <div class="info-value">{{ $document->kategori ?? '-' }}</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Deskripsi Bahaya</div>
                             <div class="info-value">
-                                @php 
-                                    $bahaya = is_string($document->kolom6_bahaya) ? json_decode($document->kolom6_bahaya, true) : $document->kolom6_bahaya;
-                                @endphp
-                            @if($bahaya)
-                                <div><strong>Type:</strong> {{ $bahaya['type'] ?? '-' }}</div>
-                                    <div><strong>Kategori:</strong> {{ $bahaya['kategori'] ?? '-' }}</div>
-                                <div><strong>Manual:</strong> {{ $bahaya['manual'] ?? '-' }}</div>
-                            @else
-                                    -
-                                @endif
+                                <ul style="padding-left: 20px; margin: 0;">
+                                    @php
+                                        $bahaya = $document->kolom6_bahaya;
+                                        if (!is_array($bahaya)) {
+                                            $bahaya = [$bahaya];
+                                        }
+                                        $descriptions = [];
+                                    @endphp
+                                    @foreach($bahaya as $key => $val)
+                                        @php
+                                            if (in_array($key, ['details', 'manual'])) {
+                                                $cleanVal = str_replace(['[', ']', '"', '{', '}'], '', (is_array($val) ? json_encode($val) : $val));
+                                                if (trim($cleanVal) !== '') {
+                                                    $descriptions[] = $cleanVal;
+                                                }
+                                                continue;
+                                            }
+
+                                            $showLabel = (is_string($key) && !is_numeric($key));
+                                            $label = $showLabel ? ucfirst($key) : '';
+
+                                            if (is_array($val)) {
+                                                $cleanItems = array_map(function ($item) {
+                                                    return str_replace(['[', ']', '"', '{', '}'], '', is_array($item) ? json_encode($item) : $item);
+                                                }, $val);
+                                                $displayVal = implode(', ', $cleanItems);
+                                            } else {
+                                                $displayVal = str_replace(['[', ']', '"', '{', '}'], '', $val);
+                                            }
+                                        @endphp
+
+                                        @if(trim($displayVal) !== '')
+                                            <li>
+                                                @if($showLabel)
+                                                    <strong>{{ $label }}:</strong>
+                                                @endif
+                                                {{ $displayVal }}
+                                            </li>
+                                        @endif
+                                    @endforeach
+
+                                    @foreach(array_unique($descriptions) as $desc)
+                                        <li>{{ $desc }}</li>
+                                    @endforeach
+                                </ul>
                             </div>
                         </div>
 
                         <div class="info-row">
                             <div class="info-label">Dampak</div>
-                            <div class="info-value">{{ $document->kolom7_dampak }}</div>
+                            <div class="info-value">{{ $document->kolom7_dampak ?? '-' }}</div>
                         </div>
                         <div class="info-row">
                             <div class="info-label">Risiko Awal</div>
-                            <div class="info-value">{{ $document->kolom9_risiko }}</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">Kondisi</div>
-                            <div class="info-value">Rutin - Operasional normal</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">Deskripsi Bahaya</div>
-                            <div class="info-value">Limbah cair dari proses produksi mengandung bahan kimia berbahaya
-                                yang dapat mencemari lingkungan jika tidak ditangani dengan benar. Potensi kebocoran
-                                pada sistem pembuangan dapat menyebabkan kontaminasi tanah dan air tanah.</div>
+                            <div class="info-value">{{ $document->kolom9_risiko ?? '-' }}</div>
                         </div>
                     </div>
                 </div>
@@ -642,15 +685,15 @@
                         <div class="info-grid">
                             <div class="info-row">
                                 <div class="info-label">Likelihood (Kemungkinan)</div>
-                                <div class="info-value">4 - Sering</div>
+                                <div class="info-value">{{ $document->kolom12_kemungkinan ?? '-' }}</div>
                             </div>
                             <div class="info-row">
-                                <div class="info-label">Severity (Keparahan)</div>
-                                <div class="info-value">4 - Tinggi</div>
+                                <div class="info-label">(Consequence) Konsekuensi</div>
+                                <div class="info-value">{{ $document->kolom13_konsekuensi ?? '-' }}</div>
                             </div>
                         </div>
                         <div class="risk-result-display risk-extreme">
-                            RISIKO TINGGI (Skor: 16)
+                            SKOR RISIKO: {{ $document->kolom14_score ?? '-' }}
                         </div>
                     </div>
                 </div>
@@ -659,34 +702,72 @@
                 <div class="doc-content-section">
                     <h2 class="section-title">Pengendalian Risiko</h2>
                     <div class="info-grid">
-                        @php
-                            $controls = is_string($document->kolom10_pengendalian) ? json_decode($document->kolom10_pengendalian, true) : $document->kolom10_pengendalian;
-                        @endphp
-                        
-                        @if($controls)
+                        <div class="info-row">
+                            <div class="info-label">Hirarki Pengendalian</div>
+                            <div class="info-value">
+                                @php
+                                    $hirarkiData = $document->kolom10_pengendalian;
+                                    $display = '-';
+                                    if (is_array($hirarkiData) && isset($hirarkiData['hirarki'])) {
+                                        $display = $hirarkiData['hirarki'];
+                                    } elseif (is_array($hirarkiData)) {
+                                        $display = implode(', ', array_map(function ($item) {
+                                            return is_array($item) ? json_encode($item) : $item;
+                                        }, $hirarkiData));
+                                    } else {
+                                        $display = $hirarkiData;
+                                    }
+                                @endphp
+                                {{ str_replace(['[', ']', '"', '{', '}'], '', $display ?? '-') }}
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Tindakan Pengendalian</div>
+                            <div class="info-value">{{ $document->kolom11_existing ?? '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Regulation & Identification -->
+                <div class="doc-content-section">
+                    <h2 class="section-title">Regulasi & Identifikasi Lanjutan</h2>
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <div class="info-label">Peraturan Perundangan Terkait</div>
+                            <div class="info-value">{{ $document->kolom15_regulasi ?? '-' }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Identifikasi Risiko</div>
+                            <div class="info-value">{{ $document->kolom17_risiko ?? '-' }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Identifikasi Peluang</div>
+                            <div class="info-value">{{ $document->kolom17_peluang ?? '-' }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Pengendalian Tindak Lanjut</div>
+                            <div class="info-value">{{ $document->kolom18_tindak_lanjut ?? '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Residual Risk Assessment -->
+                <div class="doc-content-section">
+                    <h2 class="section-title">Penilaian Risiko Residual</h2>
+                    <div class="risk-matrix-display">
+                        <div class="info-grid">
                             <div class="info-row">
-                                <div class="info-label">Hirarki Pengendalian</div>
-                                <div class="info-value">{{ $controls['hirarki'] ?? '-' }}</div>
+                                <div class="info-label">Kemungkinan Ulang</div>
+                                <div class="info-value">{{ $document->residual_kemungkinan ?? '-' }}</div>
                             </div>
                             <div class="info-row">
-                                <div class="info-label">Tindakan Pengendalian</div>
-                                <div class="info-value">{{ $controls['tindakan'] ?? '-' }}</div>
+                                <div class="info-label">Konsekuensi Ulang</div>
+                                <div class="info-value">{{ $document->residual_konsekuensi ?? '-' }}</div>
                             </div>
-                            <div class="info-row">
-                                <div class="info-label">Penanggung Jawab</div>
-                                <div class="info-value">{{ $controls['pic'] ?? '-' }}</div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">Target Penyelesaian</div>
-                                <div class="info-value">{{ $controls['deadline'] ?? '-' }}</div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">Status Implementasi</div>
-                                <div class="info-value">{{ $controls['status'] ?? '-' }}</div>
-                            </div>
-                        @else
-                           <div class="info-row"><div class="info-value">- Belum ada data pengendalian -</div></div>
-                        @endif
+                        </div>
+                        <div class="risk-result-display risk-low" style="background: #e3f2fd; color: #1565c0;">
+                            SKOR RESIDUAL: {{ $document->residual_score ?? '-' }}
+                        </div>
                     </div>
                 </div>
 
@@ -695,39 +776,40 @@
                     <h2 class="section-title">Riwayat Revisi & Komentar</h2>
                     <div class="timeline">
                         @forelse($document->approvals->sortByDesc('created_at') as $approval)
-                        <div class="timeline-item">
-                            <div class="timeline-dot"></div>
-                            <div class="timeline-content">
-                                <div class="timeline-header">
-                                    <div class="timeline-title">
-                                        @if($approval->action == 'approved')
-                                            Disetujui
-                                        @elseif($approval->action == 'revised')
-                                            Permintaan Revisi
-                                        @elseif($approval->action == 'rejected')
-                                            Ditolak
-                                        @else
-                                            {{ ucfirst($approval->action) }}
-                                        @endif
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <div class="timeline-title">
+                                            @if($approval->action == 'approved')
+                                                Disetujui
+                                            @elseif($approval->action == 'revised')
+                                                Permintaan Revisi
+                                            @elseif($approval->action == 'rejected')
+                                                Ditolak
+                                            @else
+                                                {{ ucfirst($approval->action) }}
+                                            @endif
+                                        </div>
+                                        <div class="timeline-date">{{ $approval->created_at->format('d M Y, H:i') }}
+                                        </div>
                                     </div>
-                                    <div class="timeline-date">{{ $approval->created_at->format('d M Y, H:i') }}</div>
-                                </div>
-                                <div class="timeline-message">
-                                    {{ $approval->catatan ?? '-' }}
-                                </div>
-                                <div class="timeline-author">
-                                    <i class="fas fa-user"></i> {{ $approval->approver->nama_user ?? 'Unknown' }}
-                                    ({{ $approval->approver->role_jabatan_name ?? ($approval->approver->role_user ?? '-') }})
+                                    <div class="timeline-message">
+                                        {{ $approval->catatan ?? '-' }}
+                                    </div>
+                                    <div class="timeline-author">
+                                        <i class="fas fa-user"></i> {{ $approval->approver->nama_user ?? 'Unknown' }}
+                                        ({{ $approval->approver->role_jabatan_name ?? ($approval->approver->role_user ?? '-') }})
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         @empty
-                        <div class="timeline-item">
-                            <div class="timeline-dot" style="background: #ccc; border-color: #fff;"></div>
-                            <div class="timeline-content">
-                                <div class="timeline-message">Belum ada riwayat approval/revisi.</div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot" style="background: #ccc; border-color: #fff;"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-message">Belum ada riwayat approval/revisi.</div>
+                                </div>
                             </div>
-                        </div>
                         @endforelse
 
                         <!-- Submission Log -->
@@ -736,7 +818,8 @@
                             <div class="timeline-content">
                                 <div class="timeline-header">
                                     <div class="timeline-title">Dokumen Dibuat</div>
-                                    <div class="timeline-date">{{ $document->created_at->format('d M Y, H:i') }}</div>
+                                    <div class="timeline-date">{{ $document->created_at->format('d M Y, H:i') }}
+                                    </div>
                                 </div>
                                 <div class="timeline-message">
                                     Dokumen risiko dibuat dan disubmit.
