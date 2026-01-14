@@ -409,8 +409,19 @@ class DocumentController extends Controller
 
         $document->approve($user, $request->catatan);
 
-        return redirect()->route('approver.check_documents')
-            ->with('success', 'Dokumen berhasil disetujui.');
+        // Redirect based on user role to ensure they see the flash message on the correct page
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.dashboard')->with('success', 'Dokumen berhasil disetujui.');
+        } // Check Level 3 first (Kepala Departemen)
+        elseif ($document->approvals()->where('level', 3)->where('id_approver', $user->id_user)->exists()) {
+            return redirect()->route('kepala_departemen.check_documents')->with('success', 'Dokumen berhasil disetujui.');
+        } // Check Level 2 (Unit Pengelola)
+        elseif ($document->approvals()->where('level', 2)->where('id_approver', $user->id_user)->exists() || $user->isUnitPengelola()) {
+            return redirect()->route('unit_pengelola.check_documents')->with('success', 'Dokumen berhasil disetujui.');
+        } // Check Level 1 (Kepala Unit/Seksi)
+        else {
+            return redirect()->route('approver.check_documents')->with('success', 'Dokumen berhasil disetujui.');
+        }
     }
 
     /**

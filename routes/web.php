@@ -159,22 +159,43 @@ Route::middleware('auth')->group(function () {
             $categoryFilter = ['Keamanan'];
         }
 
-        $documentsRaw = \App\Models\Document::where('current_level', 2)
+        $documentsPending = \App\Models\Document::where('current_level', 2)
             ->where('status', 'pending_level2')
             ->whereIn('kategori', $categoryFilter)
             ->with(['user', 'unit'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $documentsJson = $documentsRaw->map(function ($doc) {
+        // Also fetch Approved documents (History)
+        // These are docs that have passed Level 2 (so status is pending_level3 or published)
+        // AND were approved by THIS unit pengelola (we can check approvals table or just category + level > 2)
+        $documentsApproved = \App\Models\Document::whereIn('status', ['pending_level3', 'published'])
+            ->whereIn('kategori', $categoryFilter)
+            // Ensure it actually passed level 2
+            ->where(function ($q) {
+                $q->where('current_level', '>', 2)
+                    ->orWhere('status', 'published');
+            })
+            ->with(['user', 'unit'])
+            ->orderBy('updated_at', 'desc')
+            ->limit(50) // Limit history
+            ->get();
+
+        $mergedDocs = $documentsPending->concat($documentsApproved);
+
+        $documentsJson = $mergedDocs->map(function ($doc) {
+            $isApproved = in_array($doc->status, ['pending_level3', 'published']);
+            $statusRaw = $isApproved ? 'approved' : 'waiting';
+            $statusText = $isApproved ? 'Disetujui' : 'Menunggu Verifikasi';
+
             return [
                 'id' => $doc->id,
                 'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
                 'title' => $doc->kolom2_kegiatan,
                 'category' => $doc->kategori,
                 'date' => $doc->created_at->format('d-m-Y'),
-                'status' => 'waiting', // Since we only fetch pending_level2
-                'status_text' => 'Menunggu Verifikasi',
+                'status' => $statusRaw,
+                'status_text' => $statusText,
                 'notes' => '-',
                 'url' => route('unit_pengelola.review', $doc->id)
             ];
@@ -240,17 +261,29 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/kepala-departemen/check-documents', function () {
         $user = Auth::user();
-        $documents = \App\Models\Document::where('current_level', 3)
+        $documentsPending = \App\Models\Document::where('current_level', 3)
             ->where('status', 'pending_level3')
             ->where('id_dept', $user->id_dept)
             ->with(['user', 'unit'])
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Fetch Approved documents for history
+        $documentsApproved = \App\Models\Document::published()
+            ->where('id_dept', $user->id_dept)
+            ->with(['user', 'unit'])
+            ->orderBy('published_at', 'desc')
+            ->limit(50)
+            ->get();
+
+        $mergedDocs = $documentsPending->concat($documentsApproved);
+
         // Transform for View (JSON)
-        $documentsData = $documents->map(function ($doc) {
+        $documentsData = $mergedDocs->map(function ($doc) {
             // Friendly Unit Name
             $unitName = $doc->unit->nama_unit ?? '-';
+            $isApproved = $doc->status === 'published';
+            $statusText = $isApproved ? 'Disetujui' : 'Menunggu';
 
             return [
                 'id' => $doc->id, // Use ID primary key
@@ -258,7 +291,7 @@ Route::middleware('auth')->group(function () {
                 'title' => $doc->kolom2_kegiatan,
                 'category' => $doc->kategori,
                 'date' => $doc->created_at->format('d-m-Y'),
-                'status' => 'Menunggu', // Default for this page
+                'status' => $statusText,
                 'review_url' => route('kepala_departemen.review', $doc->id)
             ];
         });
