@@ -678,7 +678,6 @@
                                         {{ Str::limit($doc->unit->nama_unit ?? '-', 15) }}
                                     </span>
                                 </div>
-                                <i class="fas fa-ellipsis-v doc-menu-btn"></i>
                             </div>
 
                             <div class="doc-title" title="{{ $doc->kolom2_kegiatan }}">
@@ -694,30 +693,71 @@
                                 </div>
                             </div>
 
-                            <div class="status-container">
+                            <div class="status-container" style="display:block; border-top:1px solid #f1f5f9; padding-top:12px; margin-top:12px;">
                                 @php
-                                    $stClass = 'st-draft';
-                                    $stIcon = 'fa-pencil-alt';
-                                    $stText = 'Draft';
+                                    $step = 1;
+                                    $waitingFor = 'Anda';
+                                    $position = 'Submitter';
+                                    
                                     if ($statusKey == 'pending') {
-                                        $stClass = 'st-pending';
-                                        $stIcon = 'fa-clock';
-                                        $stText = 'Menunggu';
+                                        if ($doc->current_level == 2) {
+                                            $position = 'Unit Pengelola';
+                                            $waitingFor = ($doc->kategori == 'Keamanan') ? 'Unit Keamanan' : 'Unit SHE';
+                                            $step = 2;
+                                        } elseif ($doc->current_level == 3) {
+                                            $position = 'Kepala Dept';
+                                            $waitingFor = 'Ka. Dept ' . ($doc->user->departemen->nama_dept ?? ''); 
+                                            $step = 3;
+                                        }
                                     } elseif ($statusKey == 'revision') {
-                                        $stClass = 'st-revision';
-                                        $stIcon = 'fa-exclamation-circle';
-                                        $stText = 'Revisi';
+                                        $position = 'Draft';
+                                        $waitingFor = 'Anda (Revisi)';
+                                        $step = 1;
                                     } elseif ($statusKey == 'approved') {
-                                        $stClass = 'st-approved';
-                                        $stIcon = 'fa-check';
-                                        $stText = 'Disetujui';
+                                        $position = 'Final';
+                                        $waitingFor = '-';
+                                        $step = 4;
                                     }
                                 @endphp
-                                <span class="status-pill {{ $stClass }}">
-                                    <i class="fas {{ $stIcon }}"></i> {{ $stText }}
-                                </span>
-                                <a href="{{ route('documents.show', $doc->id) }}" class="view-link">Lihat <i
-                                        class="fas fa-arrow-right"></i></a>
+
+                                <!-- Minimalist Stepper -->
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                                    @foreach(['Draft', 'Unit', 'Dept', 'Done'] as $index => $label)
+                                        @php $i = $index + 1; $isActive = ($i <= $step); $isCurrent = ($i == $step); @endphp
+                                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; width: 25%;">
+                                            <!-- Line (Left) -->
+                                            @if($i > 1)
+                                                <div style="position: absolute; left: -50%; top: 6px; width: 100%; height: 2px; background: {{ $isActive ? '#c41e3a' : '#f3f4f6' }}; z-index: 0;"></div>
+                                            @endif
+                                            
+                                            <!-- Dot -->
+                                            <div style="width:{{ $isCurrent ? '12px' : '10px' }}; height:{{ $isCurrent ? '12px' : '10px' }}; border-radius: 50%; background: {{ $isActive ? '#c41e3a' : '#e5e7eb' }}; z-index: 1; border: 2px solid white; box-shadow: 0 0 0 1px {{ $isActive ? '#c41e3a' : '#e5e7eb' }};"></div>
+                                            
+                                            <!-- Label -->
+                                            <span style="font-size: 9px; font-weight: {{ $isCurrent ? '700' : '500' }}; color: {{ $isActive ? '#333' : '#9ca3af' }};">{{ $label }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <!-- Informative Status & Action -->
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div style="font-size: 11px; line-height: 1.4;">
+                                        @if($statusKey == 'approved')
+                                            <div style="color:#059669; font-weight:600;"><i class="fas fa-check-circle"></i> Dokumen Final</div>
+                                            <div style="color:#6b7280;">Telah dipublikasi</div>
+                                        @elseif($statusKey == 'revision')
+                                            <div style="color:#dc2626; font-weight:600;"><i class="fas fa-exclamation-circle"></i> Butuh Revisi</div>
+                                            <div style="color:#6b7280;">Menunggu perbaikan Anda</div>
+                                        @else
+                                            <div style="color:#d97706; font-weight:600;"><i class="fas fa-spinner fa-spin"></i> Proses Approval</div>
+                                            <div style="color:#6b7280;">Menunggu: <b>{{ $waitingFor }}</b></div>
+                                        @endif
+                                    </div>
+
+                                    <a href="{{ route('documents.show', $doc->id) }}" style="background: white; border: 1px solid #e5e7eb; color: #374151; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.borderColor='#9ca3af'" onmouseout="this.style.borderColor='#e5e7eb'">
+                                        {{ $statusKey == 'revision' ? 'Perbaiki' : 'Detail' }}
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     @endforeach
