@@ -23,4 +23,9 @@ class Seksi extends Model
     {
         return $this->hasMany(User::class, 'id_seksi', 'id_seksi');
     }
+
+    public function probis()
+    {
+        return $this->belongsTo(BusinessProcess::class, 'id_probis');
+    }
 }

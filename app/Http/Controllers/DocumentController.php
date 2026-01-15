@@ -56,13 +56,24 @@ class DocumentController extends Controller
      */
     public function create()
     {
-        $user = Auth::user()->load(['roleJabatan', 'unit', 'departemen', 'direktorat']);
+        $user = Auth::user();
+
+        // RESTRICTION: Only Band 4 (Supervisor) or Band 5 (Associate) can submit
+        // Based on RoleJabatan level_jabatan: 4=Supervisor, 5=Associate
+        $level = $user->roleJabatan->level_jabatan ?? null;
+        if (!in_array($level, [4, 5])) {
+            return redirect()->route('documents.index')
+                ->with('error', 'Akses Ditolak: Hanya User Band 4 (Supervisor) atau Band 5 (Associate) yang dapat membuat dokumen.');
+        }
+
+        $user->load(['roleJabatan', 'unit', 'departemen', 'direktorat']);
         $direktorats = Direktorat::where('status_aktif', 1)->get();
         $departemens = Departemen::all();
         $units = Unit::all();
         $seksis = Seksi::all();
+        $probis = \App\Models\BusinessProcess::all(); // Fetch all Business Processes
 
-        return view('user.documents.create', compact('user', 'direktorats', 'departemens', 'units', 'seksis'));
+        return view('user.documents.create', compact('user', 'direktorats', 'departemens', 'units', 'seksis', 'probis'));
     }
 
     /**
@@ -78,6 +89,13 @@ class DocumentController extends Controller
         ]);
 
         $user = Auth::user();
+
+        // RESTRICTION: Only Band 4 (Supervisor) or Band 5 (Associate) can submit
+        // Based on RoleJabatan level_jabatan: 4=Supervisor, 5=Associate
+        $level = $user->roleJabatan->level_jabatan ?? null;
+        if (!in_array($level, [4, 5])) {
+            abort(403, 'Akses Ditolak: Hanya User Band 4 (Supervisor) atau Band 5 (Associate) yang dapat membuat dokumen.');
+        }
 
         // 1. Construct Kolom 6 (Bahaya) JSON from various inputs
         $bahayaData = [

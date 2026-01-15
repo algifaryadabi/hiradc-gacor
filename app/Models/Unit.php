@@ -29,4 +29,9 @@ class Unit extends Model
     {
         return $this->hasMany(User::class, 'id_unit', 'id_unit');
     }
+
+    public function probis()
+    {
+        return $this->belongsTo(BusinessProcess::class, 'id_probis');
+    }
 }

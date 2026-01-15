@@ -589,8 +589,32 @@
                             <div class="form-grid-2">
                                 <div class="form-group">
                                     <label class="form-label">Proses Bisnis <span class="required">*</span></label>
-                                    <input type="text" class="form-control" name="kolom2_proses" required
-                                        placeholder="Contoh: Produksi, Maintenance...">
+                                    @php
+                                        $autoProbis = '';
+                                        if (isset($user->seksi->probis)) {
+                                            $autoProbis = $user->seksi->probis->nama_probis;
+                                        } elseif (isset($user->unit->probis)) {
+                                            $autoProbis = $user->unit->probis->nama_probis;
+                                        }
+                                        
+                                        $displayValue = $autoProbis;
+                                    @endphp
+                                    
+                                    @if($displayValue)
+                                        <input type="text" class="form-control" value="{{ $displayValue }}" readonly style="background-color: #f3f4f6; cursor: not-allowed; border: 1px solid #10b981;">
+                                        <input type="hidden" name="kolom2_proses" value="{{ $displayValue }}">
+                                        <small style="color:#059669; font-size:11px; margin-top:5px; display:block;"><i class="fas fa-check-circle"></i> Otomatis terisi sesuai Unit/Seksi Anda</small>
+                                    @else
+                                        <select name="kolom2_proses" class="form-control" required>
+                                            <option value="">-- Pilih Proses Bisnis --</option>
+                                            @foreach($probis as $p)
+                                                <option value="{{ $p->nama_probis }}">
+                                                    {{ $p->nama_probis }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small style="color:#ef4444; font-size:11px;">*Unit Anda belum terhubung. Silakan pilih manual.</small>
+                                    @endif
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Kegiatan <span class="required">*</span></label>
