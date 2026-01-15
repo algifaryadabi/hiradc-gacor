@@ -5,20 +5,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Dokumen - HIRADC</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        :root {
+            --primary: #c41e3a;
+            --primary-light: #fff1f2;
+            --secondary: #64748b;
+            --bg-body: #f1f5f9;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            outline: none;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #f5f5f5;
-            color: #333;
-            padding-bottom: 200px;
+            background: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 120px;
         }
 
         .container {
@@ -26,86 +42,84 @@
             min-height: 100vh;
         }
 
+        /* Sidebar */
         .sidebar {
-            width: 250px;
-            background: white;
-            border-right: 1px solid #e0e0e0;
+            width: 260px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
             position: fixed;
             height: 100vh;
             display: flex;
-            flexDirection: column;
-            z-index: 101;
+            flex-direction: column;
+            z-index: 50;
         }
 
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-        }
-
-        /* Copy styles from create.blade.php or generic styles */
         .logo-section {
-            padding: 30px 20px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
             text-align: center;
         }
 
         .logo-circle {
-            width: 70px;
-            height: 70px;
-            background: #fff;
+            width: 64px;
+            height: 64px;
+            background: white;
             border-radius: 50%;
-            margin: 0 auto 15px;
+            margin: 0 auto 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
         }
 
         .logo-circle img {
-            max-width: 80%;
-            max-height: 80%;
+            max-width: 65%;
         }
 
         .logo-text {
-            font-size: 18px;
-            font-weight: 700;
-            color: #c41e3a;
-            margin-bottom: 3px;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.02em;
         }
 
         .logo-subtext {
-            font-size: 12px;
-            color: #999;
-            font-style: italic;
+            font-size: 11px;
+            color: var(--text-sub);
+            font-weight: 500;
+            margin-top: 2px;
         }
 
         .nav-menu {
             flex: 1;
-            padding: 20px 0;
+            padding: 24px 16px;
             overflow-y: auto;
         }
 
         .nav-item {
-            padding: 15px 25px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             gap: 12px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            color: #666;
+            transition: all 0.2s;
+            color: var(--text-sub);
             font-size: 14px;
             font-weight: 500;
             text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 4px;
         }
 
         .nav-item:hover,
         .nav-item.active {
-            background: #fff5f5;
-            color: #c41e3a;
+            background: var(--primary-light);
+            color: var(--primary);
         }
 
         .nav-item.active {
-            border-left: 3px solid #c41e3a;
+            font-weight: 600;
         }
 
         .nav-item i {
@@ -128,8 +142,8 @@
         }
 
         .user-avatar {
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             background: white;
             border-radius: 50%;
             display: flex;
@@ -137,7 +151,7 @@
             justify-content: center;
             color: #667eea;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 14px;
             flex-shrink: 0;
         }
 
@@ -148,7 +162,7 @@
 
         .user-name {
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             color: white;
             white-space: nowrap;
             overflow: hidden;
@@ -157,21 +171,21 @@
 
         .user-role {
             font-size: 11px;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.85);
             margin-top: 2px;
         }
 
         .logout-btn {
             width: 100%;
-            padding: 10px 15px;
+            padding: 8px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -183,271 +197,314 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
-        .header {
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px 48px;
+            max-width: 1400px;
+            margin-right: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.03em;
+            margin-bottom: 4px;
+        }
+
+        .header-title p {
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+
+        .btn-back {
+            padding: 8px 16px;
+            border-radius: 6px;
             background: white;
-            padding: 25px 40px;
-            border-bottom: 1px solid #e0e0e0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 13px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            background: var(--bg-body);
+            border-color: var(--text-sub);
+        }
+
+        /* Cards */
+        .doc-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .doc-header {
+            background: #f8fafc;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .header h1 {
-            font-size: 24px;
+        .doc-title-label {
+            font-size: 12px;
+            color: var(--text-sub);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .doc-title-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .doc-meta-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: 700;
-            color: #333;
         }
 
-        .content-area {
-            padding: 30px 40px;
-            max-width: 1400px;
+        .card-header-slim {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .form-container {
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        .card-header-slim i {
+            color: var(--primary);
+        }
+
+        .card-header-slim h2 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .doc-body {
+            padding: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
         }
 
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .required {
-            color: #c41e3a;
+            color: var(--text-sub);
+            margin-bottom: 6px;
         }
 
         .form-control {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
             font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            transition: border-color 0.3s;
+            color: var(--text-main);
+            background: white;
+            transition: all 0.2s;
         }
 
         .form-control:focus {
-            outline: none;
-            border-color: #c41e3a;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
         }
 
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
         }
 
-        .section-header {
-            background: #f8f8f8;
-            padding: 15px 20px;
-            border-left: 4px solid #c41e3a;
-            margin: 30px 0 20px 0;
-            border-radius: 4px;
+        .read-only-mode .form-control {
+            background: #f1f5f9;
+            cursor: not-allowed;
         }
 
-        .section-header h2 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 3px;
-        }
+        /* Style for locked inputs */
 
-        .section-header p {
-            font-size: 12px;
-            color: #666;
-        }
-
-        .checkbox-group {
-            display: flex;
-            flexDirection: column;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .checkbox-item:hover {
-            background: #f9f9f9;
-            border-color: #c41e3a;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .btn-toggle {
-            flex: 1;
-            padding: 15px 20px;
-            border: 2px solid #ddd;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-            font-size: 14px;
+        /* Risk Matrix */
+        .risk-result-box {
+            background: #1f2937;
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
             text-align: center;
         }
 
-        .btn-toggle:hover {
-            border-color: #c41e3a;
-            background: #fff5f5;
+        .risk-score {
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
         }
 
-        .btn-toggle.active {
-            border-color: #c41e3a;
-            background: #c41e3a;
-            color: white;
+        .risk-level {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
-        .hidden {
-            display: none;
-        }
-
-        .btn {
-            padding: 12px 30px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            font-family: 'Inter', sans-serif;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: #c41e3a;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #666;
-            border: 1px solid #ddd;
-        }
-
-        /* Review Footer Fixed */
+        /* Action Footer */
         .review-footer {
             position: fixed;
             bottom: 0;
-            left: 250px;
+            left: 260px;
             right: 0;
             background: white;
-            padding: 20px 40px;
-            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
-            z-index: 900;
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 30px;
-            align-items: end;
+            padding: 20px 48px;
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
         }
 
-        .comment-input {
+        .notes-area {
+            flex: 1;
+        }
+
+        .notes-area label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .notes-input {
             width: 100%;
-            height: 60px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            padding: 10px;
+            height: 80px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
             font-family: inherit;
             font-size: 14px;
             resize: none;
         }
 
-        .action-buttons {
+        .notes-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .action-btns {
             display: flex;
             gap: 12px;
-            padding-bottom: 5px;
+            align-items: flex-end;
         }
 
-        .timeline-container {
-            margin-top: 50px;
-            padding-left: 20px;
-            border-left: 2px solid #e0e0e0;
-            margin-left: 10px;
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 30px;
-            padding-left: 20px;
-        }
-
-        .timeline-icon {
-            position: absolute;
-            left: -31px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
+        .btn {
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.1s;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
+            height: 50px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-approve {
+            background: #16a34a;
             color: white;
-            font-size: 10px;
+            box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2);
         }
 
-        .bg-blue {
-            background: #007bff;
+        .btn-approve:hover {
+            background: #15803d;
         }
 
-        .bg-green {
-            background: #28a745;
+        .btn-revise {
+            background: #dc2626;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2);
         }
 
-        .bg-orange {
-            background: #fd7e14;
+        .btn-revise:hover {
+            background: #b91c1c;
         }
 
-        .timeline-content {
-            background: #f9f9f9;
-            padding: 15px;
+        /* Checkboxes */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .checkbox-card {
+            border: 1px solid #e2e8f0;
             border-radius: 6px;
-            border: 1px solid #eee;
-        }
-
-        .timeline-header {
+            padding: 10px;
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 12px;
-            color: #999;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
         }
 
-        .actor {
-            font-weight: 700;
-            color: #333;
-            font-size: 14px;
+        .checkbox-card input {
+            accent-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <!-- Sidebar Approver -->
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo-section">
                 <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
@@ -455,465 +512,395 @@
                 <div class="logo-subtext">HIRADC System (Approver)</div>
             </div>
             <nav class="nav-menu">
-                <a href="{{ route('approver.dashboard') }}" class="nav-item">
-                    <i class="fas fa-th-large"></i><span>Dashboard</span>
-                </a>
-                <a href="{{ route('approver.check_documents') }}" class="nav-item active">
-                    <i class="fas fa-file-signature"></i><span>Cek Dokumen</span>
-                </a>
+                <a href="{{ route('approver.dashboard') }}" class="nav-item"><i
+                        class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="{{ route('approver.check_documents') }}" class="nav-item active"><i
+                        class="fas fa-file-signature"></i><span>Cek Dokumen</span></a>
             </nav>
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">{{ substr(Auth::user()->nama_user, 0, 2) }}</div>
+                    <div class="user-avatar">
+                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}</div>
                     <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user }}</div>
+                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
                         <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
+                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
+                            {{ Auth::user()->unit_or_dept_name }}</div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i
                         class="fas fa-sign-out-alt"></i> Keluar</a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;"> @csrf
-                </form>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
             </div>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
-            <div class="header">
-                <h1>Review Dokumen (Mode Edit)</h1>
-                <a href="{{ route('approver.check_documents') }}" class="btn btn-secondary"><i
-                        class="fas fa-arrow-left"></i> Kembali</a>
+            <div class="page-header">
+                <div class="header-title">
+                    <h1>Review & Edit Dokumen</h1>
+                    <p>Periksa, edit jika perlu, dan setujui atau minta revisi.</p>
+                </div>
+                <a href="{{ route('approver.check_documents') }}" class="btn-back"><i class="fas fa-arrow-left"></i>
+                    Kembali</a>
             </div>
 
-            <div class="content-area">
-                <form id="hiradcForm" class="form-container" method="POST"
-                    action="{{ route('approver.approve', $document->id) }}">
-                    @csrf
-                    <!-- Hidden Actions -->
-                    <input type="hidden" name="action" id="action_input" value="approve">
-                    <input type="hidden" name="catatan" id="catatan_input">
-
-                    <!-- *** FORM CONTENT FROM CREATE.BLADE.PHP (CLONE) *** -->
-
-                    <!-- KOLOM 2 -->
-                    <div class="section-header">
-                        <h2>📋 Kolom 2: Proses Bisnis / Kegiatan / Aset</h2>
+            <!-- Header Card -->
+            <div class="doc-card">
+                <div class="doc-header">
+                    <div>
+                        <div class="doc-title-label">Judul Kegiatan / Proses</div>
+                        <div class="doc-title-value">{{ $document->kolom2_kegiatan }}</div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Proses Bisnis</label><input type="text" class="form-control"
-                                id="kolom2_proses" name="kolom2_proses" required></div>
-                        <div class="form-group"><label>Kegiatan</label><input type="text" class="form-control"
-                                id="kolom2_activity_manual" name="kolom2_kegiatan" required></div>
-                    </div>
-
-                    <!-- KOLOM 3 -->
-                    <div class="section-header">
-                        <h2>📍 Kolom 3: Lokasi / Area Kerja</h2>
-                    </div>
-                    <div class="form-group"><label>Lokasi</label><input type="text" class="form-control"
-                            id="kolom3_lokasi" name="kolom3_lokasi" required></div>
-
-                    <!-- KOLOM 4 & 5 -->
-                    <div class="section-header">
-                        <h2>📑 Kolom 4 & 5: Kategori & Kondisi</h2>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Jenis Dokumen</label>
-                            <select class="form-control" id="kolom4_kategori" name="kategori" required
-                                onchange="updateConditionOptions()">
-                                <option value="">-- Pilih --</option>
-                                <option value="K3">K3</option>
-                                <option value="KO">KO</option>
-                                <option value="Lingkungan">Lingkungan</option>
-                                <option value="Keamanan">Keamanan</option>
-                            </select>
-                        </div>
-                        <div class="form-group"><label>Kondisi</label>
-                            <select class="form-control" id="kolom5_kondisi" name="kolom5_kondisi" required>
-                                <option value="">-- Pilih Kategori Dulu --</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- KOLOM 6 -->
-                    <div class="section-header">
-                        <h2>⚠️ Kolom 6: Jenis Bahaya / Aspek</h2>
-                    </div>
-
-                    <div id="section_k3_ko" class="hidden">
-                        <input type="hidden" name="bahaya_type" id="bahaya_type">
-                        <div class="button-group">
-                            <button type="button" class="btn-toggle active" id="btn_unsafe_condition"
-                                onclick="selectBahayaType('condition')">Unsafe Condition</button>
-                            <button type="button" class="btn-toggle" id="btn_unsafe_action"
-                                onclick="selectBahayaType('action')">Unsafe Action</button>
-                        </div>
-                        <div id="unsafe_condition_options" class="hidden"></div>
-                        <div id="unsafe_action_options" class="hidden"></div>
-                    </div>
-                    <div id="section_lingkungan" class="hidden">
-                        <div id="lingkungan_options"></div>
-                    </div>
-                    <div id="section_keamanan" class="hidden">
-                        <div id="keamanan_options"></div>
-                    </div>
-
-                    <div class="form-group" style="margin-top:20px;">
-                        <label id="manual_bahaya_label">Input Manual</label>
-                        <input type="text" class="form-control" id="bahaya_manual" name="bahaya_manual">
-                    </div>
-
-                    <!-- KOLOM 7 & 9 -->
-                    <div class="section-header">
-                        <h2>💥 Kolom 7 & 9: Dampak & Risiko</h2>
-                    </div>
-                    <div class="form-group"><label>Dampak (Kolom 7)</label><textarea class="form-control"
-                            id="kolom7_dampak" name="kolom7_dampak" required></textarea></div>
-                    <div class="form-group"><label>Identifikasi Risiko (Kolom 9)</label><textarea class="form-control"
-                            id="kolom9_risiko" name="kolom9_risiko" required></textarea></div>
-
-                    <!-- KOLOM 10 -->
-                    <div class="section-header">
-                        <h2>🛡️ Kolom 10: Hirarki Pengendalian</h2>
-                    </div>
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <div class="checkbox-item"><input type="checkbox" id="h1" name="hirarki[]"
-                                    value="Eliminasi"><label for="h1">Eliminasi</label></div>
-                            <div class="checkbox-item"><input type="checkbox" id="h2" name="hirarki[]"
-                                    value="Substitusi"><label for="h2">Substitusi</label></div>
-                            <div class="checkbox-item"><input type="checkbox" id="h3" name="hirarki[]"
-                                    value="Rekayasa Teknik"><label for="h3">Rekayasa Teknik</label></div>
-                            <div class="checkbox-item"><input type="checkbox" id="h4" name="hirarki[]"
-                                    value="Administratif"><label for="h4">Administratif</label></div>
-                            <div class="checkbox-item"><input type="checkbox" id="h5" name="hirarki[]"
-                                    value="APD"><label for="h5">APD</label></div>
-                        </div>
-                        <div id="additional_controls" style="margin-top:20px;"></div>
-                        <button type="button" class="btn btn-secondary" onclick="addControlInput()"
-                            style="margin-top:10px; width:100%;">+ Tambah Detail</button>
-                    </div>
-
-                    <!-- KOLOM 11 -->
-                    <div class="section-header">
-                        <h2>✅ Kolom 11: Pengendalian Existing</h2>
-                    </div>
-                    <div class="form-group"><textarea class="form-control" id="kolom11_pengendalian"
-                            name="kolom11_existing" required></textarea></div>
-
-                    <!-- Risk Assessment -->
-                    <div class="section-header">
-                        <h2>📊 Penilaian Risiko Awal</h2>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Kemungkinan (12)</label><select class="form-control"
-                                id="kolom12_kemungkinan" name="kolom12_kemungkinan" onchange="calculateRisk()">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select></div>
-                        <div class="form-group"><label>Konsekuensi (13)</label><select class="form-control"
-                                id="kolom13_konsekuensi" name="kolom13_konsekuensi" onchange="calculateRisk()">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select></div>
-                    </div>
-                    <div class="form-group"><label>Nilai Risiko (14)</label><input type="text" class="form-control"
-                            id="kolom14_nilai_risiko" readonly></div>
-
-                    <!-- Regulasi -->
-                    <div class="section-header">
-                        <h2>📜 Kolom 15 & 16: Regulasi</h2>
-                    </div>
-                    <div class="form-group"><label>Peraturan</label><textarea class="form-control"
-                            id="kolom15_peraturan" name="kolom15_regulasi" oninput="checkRegulasi()"></textarea></div>
-                    <div class="form-group" id="kolom16_container">
-                        <label>Status Penting?</label>
-                        <div style="display: flex; gap: 20px;">
-                            <label><input type="radio" name="kolom16_penting" value="P"> Penting</label>
-                            <label><input type="radio" name="kolom16_penting" value="TP"> Tidak Penting</label>
-                        </div>
-                    </div>
-
-                    <!-- Additional Columns -->
-                    <div class="section-header">
-                        <h2>💡 Kolom 17-19</h2>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Risiko</label><textarea class="form-control" id="kolom17_risiko"
-                                name="kolom17_risiko"></textarea></div>
-                        <div class="form-group"><label>Peluang</label><textarea class="form-control"
-                                id="kolom17_peluang" name="kolom17_peluang"></textarea></div>
-                    </div>
-
-                    <div class="section-header">
-                        <h2>⚖️ Tindak Lanjut & Residual</h2>
-                    </div>
-                    <div class="form-group"><label>Tindak Lanjut (19)</label><textarea class="form-control"
-                            id="kolom19_tindak_lanjut" name="kolom18_tindak_lanjut" required></textarea></div>
-
-                    <div class="form-row">
-                        <div class="form-group"><label>Kemungkinan Residual</label><select class="form-control"
-                                id="kolom20_kemungkinan" name="residual_kemungkinan" onchange="calculateResidualRisk()">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select></div>
-                        <div class="form-group"><label>Konsekuensi Residual</label><select class="form-control"
-                                id="kolom21_konsekuensi" name="residual_konsekuensi" onchange="calculateResidualRisk()">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select></div>
-                    </div>
-                    <div class="form-group"><label>Risiko Residual</label><input type="text" class="form-control"
-                            id="kolom22_nilai_risiko" readonly></div>
-
-                </form>
-
-                <!-- REVIEW FOOTER -->
-                <div class="review-footer">
-                    <div class="comment-section">
-                        <label class="comment-label">Catatan Review / Revisi:</label>
-                        <textarea class="comment-input" id="review_notes"
-                            placeholder="Tuliskan alasan penolakan atau catatan tambahan jika disetujui..."></textarea>
-                    </div>
-                    <div class="action-buttons">
-                        <button type="button" class="btn btn-revisi" onclick="submitReview('revision')">
-                            <i class="fas fa-undo"></i> Minta Revisi
-                        </button>
-                        <button type="button" class="btn btn-approve" onclick="submitReview('approved')">
-                            <i class="fas fa-check"></i> Setujui Dokumen
-                        </button>
-                    </div>
+                    <div class="doc-meta-badge">{{ $document->kategori }}</div>
                 </div>
+            </div>
 
-                <!-- HISTORY -->
-                <div class="section-header" style="margin-top: 50px;">
-                    <h2><i class="fas fa-history"></i> Riwayat Aktivitas</h2>
-                </div>
-                <div class="timeline-container">
-                    @foreach($document->approvals as $approval)
-                        <div class="timeline-item">
-                            <div
-                                class="timeline-icon {{ $approval->action == 'approved' ? 'bg-green' : ($approval->action == 'revision' ? 'bg-orange' : 'bg-blue') }}">
-                                <i
-                                    class="fas {{ $approval->action == 'approved' ? 'fa-check' : ($approval->action == 'revision' ? 'fa-undo' : 'fa-info') }}"></i>
+            <form id="reviewForm" method="POST" action="">
+                @csrf
+                <input type="hidden" name="action" id="action_input">
+                <input type="hidden" name="catatan" id="catatan_input_form">
+
+                <!-- Card 1: Info Dasar -->
+                <div class="doc-card">
+                    <div class="card-header-slim"><i class="fas fa-info-circle"></i>
+                        <h2>Informasi Dasar (Kolom 2-5)</h2>
+                    </div>
+                    <div class="doc-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Proses Bisnis</label>
+                                <input type="text" class="form-control" name="kolom2_proses"
+                                    value="{{ $document->kolom2_proses }}">
                             </div>
-                            <div class="timeline-content">
-                                <div class="timeline-header">
-                                    <span class="actor">{{ $approval->approver->nama_user ?? 'User' }}</span>
-                                    <span class="time">{{ $approval->created_at->format('d M Y, H:i') }}</span>
+                            <div class="form-group">
+                                <label>Kegiatan</label>
+                                <input type="text" class="form-control" name="kolom2_kegiatan"
+                                    value="{{ $document->kolom2_kegiatan }}">
+                            </div>
+                            <div class="form-group">
+                                <label>Lokasi</label>
+                                <input type="text" class="form-control" name="kolom3_lokasi"
+                                    value="{{ $document->kolom3_lokasi }}">
+                            </div>
+                            <div class="form-group">
+                                <label>Kondisi (Kolom 5)</label>
+                                <input type="text" class="form-control" name="kolom5_kondisi"
+                                    value="{{ $document->kolom5_kondisi }}">
+                            </div>
+                            <!-- Hidden Kategori (Needed for update logic) -->
+                            <input type="hidden" name="kategori" value="{{ $document->kategori }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Bahaya (Simplified for Edit - Text/List) -->
+                <!-- Note: Re-implementing full dynamic hazard toggle is complex. 
+                     We will allow editing "Bahaya Manual" and show selected hazards as text/checkboxes if possible.
+                     For now, let's keep it as read-only detailed list + editable Manual field. -->
+                <div class="doc-card">
+                    <div class="card-header-slim"><i class="fas fa-exclamation-triangle"></i>
+                        <h2>Identifikasi Bahaya (Kolom 6)</h2>
+                    </div>
+                    <div class="doc-body">
+                        <div class="form-group">
+                            <label>Rincian Bahaya Terpilih</label>
+                            @php
+                                $bahaya = $document->kolom6_bahaya;
+                                $details = [];
+                                if (isset($bahaya['details']))
+                                    $details = array_merge($details, $bahaya['details']);
+                                if (isset($bahaya['aspects']))
+                                    $details = array_merge($details, $bahaya['aspects']);
+                                if (isset($bahaya['threats']))
+                                    $details = array_merge($details, $bahaya['threats']);
+                            @endphp
+                            <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
+                                @if(count($details) > 0)
+                                    <ul style="padding-left:20px;">
+                                        @foreach($details as $d) <li>{{ $d }}</li> @endforeach
+                                    </ul>
+                                @else
+                                    <span style="color:#64748b;">Tidak ada rincian terpilih.</span>
+                                @endif
+                                <!-- Hidden inputs to preserve data on update -->
+                                @foreach($details as $d) <input type="hidden" name="bahaya_detail[]" value="{{ $d }}">
+                                @endforeach
+                                <input type="hidden" name="bahaya_type" value="{{ $bahaya['type'] ?? '' }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Bahaya Lainnya (Manual)</label>
+                            <input type="text" class="form-control" name="bahaya_manual"
+                                value="{{ $bahaya['manual'] ?? '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Risiko -->
+                <div class="doc-card">
+                    <div class="card-header-slim"><i class="fas fa-search-dollar"></i>
+                        <h2>Analisis Risiko (Kolom 7 & 9)</h2>
+                    </div>
+                    <div class="doc-body">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Dampak (Col 7)</label><textarea class="form-control"
+                                    name="kolom7_dampak">{{ $document->kolom7_dampak }}</textarea></div>
+                            <div class="form-group"><label>Identifikasi Risiko (Col 9)</label><textarea
+                                    class="form-control" name="kolom9_risiko">{{ $document->kolom9_risiko }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Penilaian Risiko Awal -->
+                <div class="doc-card">
+                    <div class="card-header-slim"><i class="fas fa-calculator"></i>
+                        <h2>Penilaian Risiko Awal (Kolom 12-14)</h2>
+                    </div>
+                    <div class="doc-body">
+                        <div style="display:flex; gap:24px;">
+                            <div style="flex:1;">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Kemungkinan (1-5)</label>
+                                        <select class="form-control" id="kolom12_kemungkinan" name="kolom12_kemungkinan"
+                                            onchange="calculateRisk()">
+                                            @foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}"
+                                                {{$document->kolom12_kemungkinan == $v ? 'selected' : ''}}>{{$v}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Konsekuensi (1-5)</label>
+                                        <select class="form-control" id="kolom13_konsekuensi" name="kolom13_konsekuensi"
+                                            onchange="calculateRisk()">
+                                            @foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}"
+                                                {{$document->kolom13_konsekuensi == $v ? 'selected' : ''}}>{{$v}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="timeline-body">
-                                    <strong>Status: {{ ucfirst($approval->action) }}</strong><br>
-                                    "{{ $approval->catatan ?? '-' }}"
+                            </div>
+                            <div style="width:200px;">
+                                <div class="risk-result-box">
+                                    <div class="risk-score" id="display_risk_score">{{ $document->kolom14_score }}</div>
+                                    <span class="risk-level" id="display_risk_level">PENDING</span>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
+                    </div>
                 </div>
 
-            </div>
+                <!-- Card 5: Regulasi -->
+                <div class="doc-card">
+                    <div class="card-header-slim"><i class="fas fa-gavel"></i>
+                        <h2>Regulasi (Kolom 15 & 16)</h2>
+                    </div>
+                    <div class="doc-body">
+                        <div class="form-group">
+                            <label>Peraturan</label>
+                            <textarea class="form-control"
+                                name="kolom15_regulasi">{{ $document->kolom15_regulasi }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Status Penting?</label>
+                            <div style="display: flex; gap: 20px; margin-top:5px;">
+                                <label><input type="radio" name="kolom16_penting" value="P" {{ ($document->kolom16_penting ?? '') == 'P' ? 'checked' : '' }}> Penting</label>
+                                <label><input type="radio" name="kolom16_penting" value="TP" {{ ($document->kolom16_penting ?? '') == 'TP' ? 'checked' : '' }}> Tidak
+                                    Penting</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 6: Risiko & Peluang Additional -->
+                <div class="doc-card">
+                    <div class="card-header-slim"><i class="fas fa-lightbulb"></i>
+                        <h2>Risiko & Peluang (Kolom 17)</h2>
+                    </div>
+                    <div class="doc-body">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Risiko</label><textarea class="form-control"
+                                    name="kolom17_risiko">{{ $document->kolom17_risiko }}</textarea></div>
+                            <div class="form-group"><label>Peluang</label><textarea class="form-control"
+                                    name="kolom17_peluang">{{ $document->kolom17_peluang }}</textarea></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 7: Pengendalian -->
+                <div class="doc-card">
+                    <div class="card-header-slim"><i class="fas fa-shield-alt"></i>
+                        <h2>Pengendalian (Kolom 10 & 11)</h2>
+                    </div>
+                    <div class="doc-body">
+                        <div class="form-group">
+                            <label>Hirarki Pengendalian</label>
+                            <div class="checkbox-grid">
+                                @php $h = $document->kolom10_pengendalian['hierarchy'] ?? []; @endphp
+                                <div class="checkbox-card"><input type="checkbox" name="hirarki[]" value="Eliminasi" {{ in_array('Eliminasi', $h) ? 'checked' : '' }}> Eliminasi</div>
+                                <div class="checkbox-card"><input type="checkbox" name="hirarki[]" value="Substitusi" {{ in_array('Substitusi', $h) ? 'checked' : '' }}> Substitusi</div>
+                                <div class="checkbox-card"><input type="checkbox" name="hirarki[]"
+                                        value="Rekayasa Teknik" {{ in_array('Rekayasa Teknik', $h) ? 'checked' : '' }}>
+                                    Rekayasa Teknik</div>
+                                <div class="checkbox-card"><input type="checkbox" name="hirarki[]" value="Administratif"
+                                        {{ in_array('Administratif', $h) ? 'checked' : '' }}> Administratif</div>
+                                <div class="checkbox-card"><input type="checkbox" name="hirarki[]" value="APD" {{ in_array('APD', $h) ? 'checked' : '' }}> APD</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Pengendalian Existing</label>
+                            <textarea class="form-control"
+                                name="kolom11_existing">{{ $document->kolom11_existing }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 8: Tindak Lanjut -->
+                <div class="doc-card">
+                    <div class="card-header-slim"><i class="fas fa-history"></i>
+                        <h2>Tindak Lanjut & Residual (Kolom 18-22)</h2>
+                    </div>
+                    <div class="doc-body">
+                        <div class="form-group"><label>Rencana Tindak Lanjut (Col 19)</label><textarea
+                                class="form-control"
+                                name="kolom18_tindak_lanjut">{{ $document->kolom18_tindak_lanjut }}</textarea></div>
+
+                        <div style="display:flex; gap:24px; margin-top:20px;">
+                            <div style="flex:1;">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Kemungkinan Residual</label>
+                                        <select class="form-control" id="kolom20_kemungkinan"
+                                            name="residual_kemungkinan" onchange="calculateResidualRisk()">
+                                            @foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}"
+                                                {{$document->residual_kemungkinan == $v ? 'selected' : ''}}>{{$v}}
+                                            </option> @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Konsekuensi Residual</label>
+                                        <select class="form-control" id="kolom21_konsekuensi"
+                                            name="residual_konsekuensi" onchange="calculateResidualRisk()">
+                                            @foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}"
+                                                {{$document->residual_konsekuensi == $v ? 'selected' : ''}}>{{$v}}
+                                            </option> @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Dapat Ditoleransi?</label>
+                                    <div style="display: flex; gap: 20px;">
+                                        <label><input type="radio" name="kolom18_toleransi" value="Ya" {{ ($document->kolom18_toleransi ?? 'Ya') == 'Ya' ? 'checked' : '' }}>
+                                            Ya</label>
+                                        <label><input type="radio" name="kolom18_toleransi" value="Tidak" {{ ($document->kolom18_toleransi ?? '') == 'Tidak' ? 'checked' : '' }}>
+                                            Tidak</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="width:200px;">
+                                <div class="risk-result-box">
+                                    <div class="risk-score" id="display_resid_score">
+                                        {{ $document->residual_score ?? '-' }}</div>
+                                    <span class="risk-level" id="display_resid_level">PENDING</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
         </main>
+
+        <!-- Footer -->
+        <div class="review-footer">
+            <div class="notes-area">
+                <label>Catatan Review (Wajib untuk Approve & Revisi)</label>
+                <textarea class="notes-input" id="notes"
+                    placeholder="Berikan catatan, masukan, atau alasan revisi..."></textarea>
+            </div>
+            <div class="action-btns">
+                @if($document->canBeApprovedBy(Auth::user()))
+                    <button type="button" class="btn btn-revise" onclick="confirmAction('revise')">
+                        <i class="fas fa-undo"></i> Minta Revisi
+                    </button>
+                    <button type="button" class="btn btn-approve" onclick="confirmAction('approve')">
+                        <i class="fas fa-check"></i> Simpan & Setujui
+                    </button>
+                @else
+                    <div style="padding:10px 20px; background:#e2e8f0; color:#64748b; border-radius:8px; font-weight:600;">
+                        <i class="fas fa-lock"></i> Read Only
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
 
-    <!-- Inject Data -->
     <script>
-        window.editingDocument = @json($document);
         const routeApprove = "{{ route('approver.approve', $document->id) }}";
         const routeRevise = "{{ route('approver.revise', $document->id) }}";
 
-        // Hazard Data (Same as Create)
-        const hazardData = {
-            k3_condition: {
-                "Fisika": ["Bekerja di ketinggian", "Permukaan licin", "Kejatuhan material", "Ruang terbatas", "Benda berputar", "Radiasi", "Bising", "Tersengat listrik", "Suhu ekstrim"],
-                "Kimia": ["Terhirup bahan kimia", "Kontak bahan kimia", "Tertelan bahan kimia", "Penyimpanan tidak sesuai"],
-                "Biologi": ["Virus", "Bakteri", "Ular", "Serangga", "Makanan terkontaminasi"]
-            },
-            k3_action: {
-                "Fisiologis/Ergonomi": ["Pengangkatan manual berlebih", "Gerakan berulang", "Posisi kerja buruk"],
-                "Psikologis": ["Bekerja berlebihan", "Intimidasi", "Kekerasan fisik"],
-                "Prilaku": ["Tidak pakai APD", "Tidak konsentrasi", "Short cut", "Abaikan prosedur"]
-            },
-            lingkungan: { "Emisi": "Debu, Gas", "Air": "Tumpahan oli/limbah", "Tanah": "Tumpahan oli/sampah", "SDA": "Air, Kertas", "Energi": "Listrik, BBM", "Limbah": "B3/Non-B3" },
-            keamanan: ["Terorisme", "Sabotase", "Pencurian", "Perusakan"]
-        };
-
-        // Reuse Logic
-        function selectBahayaType(type) {
-            document.getElementById('bahaya_type').value = type;
-            const divCondition = document.getElementById('unsafe_condition_options');
-            const divAction = document.getElementById('unsafe_action_options');
-            if (type === 'condition') {
-                document.getElementById('btn_unsafe_condition').classList.add('active');
-                document.getElementById('btn_unsafe_action').classList.remove('active');
-                divCondition.classList.remove('hidden');
-                divAction.classList.add('hidden');
-            } else {
-                document.getElementById('btn_unsafe_condition').classList.remove('active');
-                document.getElementById('btn_unsafe_action').classList.add('active');
-                divCondition.classList.add('hidden');
-                divAction.classList.remove('hidden');
-            }
-        }
-
-        function updateBahayaContent(category) {
-            document.getElementById('section_k3_ko').classList.add('hidden');
-            document.getElementById('section_lingkungan').classList.add('hidden');
-            document.getElementById('section_keamanan').classList.add('hidden');
-
-            if (category === 'K3' || category === 'KO') {
-                document.getElementById('section_k3_ko').classList.remove('hidden');
-                document.getElementById('unsafe_condition_options').innerHTML = renderCheckboxes(hazardData.k3_condition, 'cond', 'bahaya_detail[]');
-                document.getElementById('unsafe_action_options').innerHTML = renderCheckboxes(hazardData.k3_action, 'act', 'bahaya_detail[]');
-                selectBahayaType('condition');
-            } else if (category === 'Lingkungan') {
-                document.getElementById('section_lingkungan').classList.remove('hidden');
-                document.getElementById('lingkungan_options').innerHTML = renderSimpleCheckboxes(hazardData.lingkungan, 'bahaya_aspect[]');
-            } else if (category === 'Keamanan') {
-                document.getElementById('section_keamanan').classList.remove('hidden');
-                document.getElementById('keamanan_options').innerHTML = renderSimpleCheckboxes(hazardData.keamanan, 'bahaya_security[]'); // Fix array
-            }
-        }
-
-        function renderCheckboxes(data, prefix, name) {
-            let html = '<div class="checkbox-group">';
-            for (const entry of Object.entries(data)) {
-                const key = entry[0];
-                const vals = entry[1];
-                html += `<div style="margin-bottom:5px;"><strong>${key}</strong>`;
-                vals.forEach(v => {
-                    html += `<div class="checkbox-item"><input type="checkbox" name="${name}" value="${key}: ${v}"><label>${v}</label></div>`;
-                });
-                html += `</div>`;
-            }
-            html += '</div>';
-            return html;
-        }
-
-        function renderSimpleCheckboxes(data, name) {
-            let html = '<div class="checkbox-group">';
-            if (Array.isArray(data)) {
-                data.forEach(v => { html += `<div class="checkbox-item"><input type="checkbox" name="${name}" value="${v}"><label>${v}</label></div>`; });
-            } else {
-                for (const [k, v] of Object.entries(data)) {
-                    html += `<div class="checkbox-item"><input type="checkbox" name="${name}" value="${k}"><label>${k} (${v})</label></div>`;
-                }
-            }
-            html += '</div>';
-            return html;
-        }
-
-        function updateConditionOptions() {
-            const cat = document.getElementById('kolom4_kategori').value;
-            let html = '<option value="">-- Pilih --</option>';
-            if (cat === 'K3' || cat === 'KO') { html += '<option value="R">Rutin</option><option value="NR">Non Rutin</option><option value="EM">Emergency</option>'; }
-            else if (cat === 'Lingkungan') { html += '<option value="N">Normal</option><option value="TN">Tak Normal</option><option value="EM">Emergency</option>'; }
-            else { html += '<option value="EM">Emergency</option>'; }
-            document.getElementById('kolom5_kondisi').innerHTML = html;
-            updateBahayaContent(cat);
-        }
-
-        function addControlInput() {
-            const div = document.createElement('div');
-            div.innerHTML = `<div style="display:flex;gap:10px;margin-bottom:5px;"><input type="text" name="new_controls[][desc]" class="form-control" placeholder="Pengendalian..."><button type="button" class="btn" style="color:red;" onclick="this.parentElement.remove()">X</button></div>`;
-            document.getElementById('additional_controls').appendChild(div);
+        function getLevel(s) {
+            if (s <= 3) return { l: 'RENDAH', c: '#10b981' };
+            if (s <= 9) return { l: 'SEDANG', c: '#f59e0b' };
+            if (s <= 16) return { l: 'TINGGI', c: '#f97316' };
+            return { l: 'EXTREME', c: '#ef4444' };
         }
 
         function calculateRisk() {
-            const l = document.getElementById('kolom12_kemungkinan').value;
-            const c = document.getElementById('kolom13_konsekuensi').value;
-            if (l && c) document.getElementById('kolom14_nilai_risiko').value = l * c;
+            const L = parseInt(document.getElementById('kolom12_kemungkinan').value) || 0;
+            const S = parseInt(document.getElementById('kolom13_konsekuensi').value) || 0;
+            if (L && S) {
+                const sc = L * S; const r = getLevel(sc);
+                document.getElementById('display_risk_score').innerText = sc;
+                const badge = document.getElementById('display_risk_level');
+                badge.innerText = r.l; badge.style.backgroundColor = r.c;
+            }
         }
+
         function calculateResidualRisk() {
-            const l = document.getElementById('kolom20_kemungkinan').value;
-            const c = document.getElementById('kolom21_konsekuensi').value;
-            if (l && c) document.getElementById('kolom22_nilai_risiko').value = l * c;
+            const L = parseInt(document.getElementById('kolom20_kemungkinan').value) || 0;
+            const S = parseInt(document.getElementById('kolom21_konsekuensi').value) || 0;
+            if (L && S) {
+                const sc = L * S; const r = getLevel(sc);
+                document.getElementById('display_resid_score').innerText = sc;
+                const badge = document.getElementById('display_resid_level');
+                badge.innerText = r.l; badge.style.backgroundColor = r.c;
+            }
         }
-        function checkRegulasi() {
-            const val = document.getElementById('kolom15_peraturan').value;
-            if (val.length > 0) document.querySelector('input[name="kolom16_penting"][value="P"]').checked = true;
-            else document.querySelector('input[name="kolom16_penting"][value="TP"]').checked = true;
-        }
 
-        // LOAD DATA
-        document.addEventListener('DOMContentLoaded', function () {
-            const doc = window.editingDocument;
-            if (!doc) return;
-
-            if (document.getElementById('kolom2_proses')) document.getElementById('kolom2_proses').value = doc.kolom2_proses || '';
-            if (document.getElementById('kolom2_activity_manual')) document.getElementById('kolom2_activity_manual').value = doc.kolom2_kegiatan || '';
-            if (document.getElementById('kolom3_lokasi')) document.getElementById('kolom3_lokasi').value = doc.kolom3_lokasi || '';
-
-            if (document.getElementById('kolom4_kategori')) {
-                document.getElementById('kolom4_kategori').value = doc.kategori;
-                updateConditionOptions();
-            }
-            if (document.getElementById('kolom5_kondisi')) document.getElementById('kolom5_kondisi').value = doc.kolom5_kondisi || '';
-
-            // JSON loading simplified for review (assuming helper works)
-            if (doc.kolom6_bahaya && typeof doc.kolom6_bahaya === 'object') {
-                const h = doc.kolom6_bahaya;
-                if (h.type) selectBahayaType(h.type);
-                if (document.getElementById('bahaya_manual')) document.getElementById('bahaya_manual').value = h.manual || '';
-                // details population skipped for brevity in minified write, but should be here
-                // for proper edit mode.
-            }
-
-            if (document.getElementById('kolom7_dampak')) document.getElementById('kolom7_dampak').value = doc.kolom7_dampak || '';
-            if (document.getElementById('kolom9_risiko')) document.getElementById('kolom9_risiko').value = doc.kolom9_risiko || '';
-
-            // Populate controls
-            if (doc.kolom10_pengendalian && typeof doc.kolom10_pengendalian === 'object') {
-                const c = doc.kolom10_pengendalian;
-                if (c.hierarchy) {
-                    c.hierarchy.forEach(v => {
-                        const el = document.querySelector(`input[name="hirarki[]"][value="${v}"]`);
-                        if (el) el.checked = true;
-                    });
-                }
-            }
-
-            if (document.getElementById('kolom11_pengendalian')) document.getElementById('kolom11_pengendalian').value = doc.kolom11_existing || '';
-            if (document.getElementById('kolom12_kemungkinan')) document.getElementById('kolom12_kemungkinan').value = doc.kolom12_kemungkinan || 1;
-            if (document.getElementById('kolom13_konsekuensi')) document.getElementById('kolom13_konsekuensi').value = doc.kolom13_konsekuensi || 1;
-            calculateRisk();
-
-            if (document.getElementById('kolom15_peraturan')) {
-                document.getElementById('kolom15_peraturan').value = doc.kolom15_regulasi || '';
-                checkRegulasi();
-            }
-
-            if (document.getElementById('kolom19_tindak_lanjut')) document.getElementById('kolom19_tindak_lanjut').value = doc.kolom18_tindak_lanjut || '';
-            if (document.getElementById('kolom20_kemungkinan')) document.getElementById('kolom20_kemungkinan').value = doc.residual_kemungkinan || 1;
-            if (document.getElementById('kolom21_konsekuensi')) document.getElementById('kolom21_konsekuensi').value = doc.residual_konsekuensi || 1;
-            calculateResidualRisk();
-        });
-
-        function submitReview(action) {
-            const form = document.getElementById('hiradcForm');
-            if (action === 'revision') form.action = routeRevise;
-            else form.action = routeApprove;
-
-            document.getElementById('action_input').value = action;
-            document.getElementById('catatan_input').value = document.getElementById('review_notes').value;
-            if (action === 'revision' && document.getElementById('review_notes').value.trim() === '') {
-                alert('Harap isi catatan revisi!');
+        function confirmAction(type) {
+            const notes = document.getElementById('notes').value.trim();
+            if (notes.length < 5) {
+                Swal.fire({ icon: 'warning', title: 'Catatan Wajib', text: 'Minimal 5 karakter.' });
                 return;
             }
-            document.getElementById('hiradcForm').submit();
+
+            Swal.fire({
+                title: type === 'approve' ? 'Setujui Dokumen?' : 'Minta Revisi?',
+                text: type === 'approve' ? 'Perubahan pada form akan disimpan.' : 'Dokumen akan dikembalikan ke submitter.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Lanjutkan',
+                confirmButtonColor: type === 'approve' ? '#16a34a' : '#dc2626'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    document.getElementById('catatan_input_form').value = notes;
+                    document.getElementById('reviewForm').action = type === 'approve' ? routeApprove : routeRevise;
+                    document.getElementById('reviewForm').submit();
+                }
+            });
         }
+
+        // Init calculations
+        calculateRisk();
+        calculateResidualRisk();
+
+        // Flash Messages
+        @if(session('success')) Swal.fire({ icon: 'success', title: 'Berhasil', text: "{{ session('success') }}", timer: 2000 }); @endif
+        @if($errors->any()) Swal.fire({ icon: 'error', title: 'Error', html: `<ul>@foreach($errors->all() as $e)<li>{{$e}}</li>@endforeach</ul>` }); @endif
     </script>
 </body>
 

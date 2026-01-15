@@ -127,6 +127,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::get('/documents/create', [DocumentController::class, 'create'])->name('documents.create');
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+    Route::get('/documents/{document}/edit', [DocumentController::class, 'edit'])->name('documents.edit');
+    Route::put('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
     Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
     Route::post('/documents/{document}/submit', [DocumentController::class, 'submit'])->name('documents.submit');
 
@@ -142,87 +144,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/unit-pengelola/dashboard', [DocumentController::class, 'unitPengelolaDashboard'])->name('unit_pengelola.dashboard');
 
-    Route::get('/unit-pengelola/check-documents', function () {
-        $user = Auth::user();
-
-        // Verify user is Kepala Unit from SHE or Security
-        if (!$user->isKepalaUnit() || !in_array($user->id_unit, [55, 56])) {
-            abort(403, 'Akses ditolak. Hanya Kepala Unit SHE/Security yang dapat mengakses halaman ini.');
-        }
-
-        // Filter documents by category based on user's unit
-        $categoryFilter = [];
-        if ($user->id_unit == 56) {
-            // SHE unit: K3, KO, Lingkungan
-            $categoryFilter = ['K3', 'KO', 'Lingkungan'];
-        } elseif ($user->id_unit == 55) {
-            // Security unit: Keamanan
-            $categoryFilter = ['Keamanan'];
-        }
-
-        $documentsPending = \App\Models\Document::where('current_level', 2)
-            ->where('status', 'pending_level2')
-            ->whereIn('kategori', $categoryFilter)
-            ->where('status', 'pending_level2')
-            ->whereIn('kategori', $categoryFilter)
-            ->with(['user', 'unit', 'approvals'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Also fetch Approved documents (History)
-        // These are docs that have passed Level 2 (so status is pending_level3 or published)
-        // AND were approved by THIS unit pengelola (we can check approvals table or just category + level > 2)
-        $documentsApproved = \App\Models\Document::whereIn('status', ['pending_level3', 'published'])
-            ->whereIn('kategori', $categoryFilter)
-            // Ensure it actually passed level 2
-            ->where(function ($q) {
-                $q->where('current_level', '>', 2)
-                    ->orWhere('status', 'published');
-            })
-            ->with(['user', 'unit', 'approvals'])
-            ->orderBy('updated_at', 'desc')
-            ->limit(50) // Limit history
-            ->get();
-
-        $mergedDocs = $documentsPending->concat($documentsApproved);
-
-        $documentsJson = $mergedDocs->map(function ($doc) {
-            $isApproved = in_array($doc->status, ['pending_level3', 'published']);
-            $statusRaw = $isApproved ? 'approved' : 'waiting';
-            $statusText = $isApproved ? 'Disetujui' : 'Menunggu Verifikasi';
-
-            $applicant = $doc->user ? $doc->user->nama_user : '-';
-
-            // Find Level 1 approval (Kepala Unit) to get "received_at"
-            // Start default with created_at
-            $receivedAt = $doc->created_at->format('d-m-Y H:i');
-
-            $level1Approval = $doc->approvals->where('level', 1)->where('action', 'approved')->first();
-            if ($level1Approval) {
-                $receivedAt = $level1Approval->created_at->format('d-m-Y H:i') . ' WIB';
-            } else {
-                $receivedAt = $doc->created_at->format('d-m-Y H:i') . ' WIB';
-            }
-
-            return [
-                'id' => $doc->id,
-                'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
-                'title' => $doc->kolom2_kegiatan,
-                'category' => $doc->kategori,
-                'date' => $doc->created_at->format('d-m-Y'),
-                'status' => $statusRaw,
-                'status_text' => $statusText,
-                'notes' => '-',
-                'url' => route('unit_pengelola.review', $doc->id),
-                'applicant' => $applicant,
-                'received_at' => $receivedAt
-            ];
-        });
-
-        return view('unit_pengelola.documents.index', compact('documentsJson'));
-    })->name('unit_pengelola.check_documents');
-
-    Route::get('/unit-pengelola/documents/{document}/review', [DocumentController::class, 'review'])->name('unit_pengelola.review');
+    Route::get('/unit-pengelola/check-documents', [DocumentController::class, 'unitPengelolaPending'])->name('unit_pengelola.check_documents');
+    Route::get('/unit-pengelola/documents/{document}/review', [DocumentController::class, 'reviewUnit'])->name('unit_pengelola.review');
     Route::post('/unit-pengelola/documents/{document}/approve', [DocumentController::class, 'approve'])->name('unit_pengelola.approve');
     Route::post('/unit-pengelola/documents/{document}/revise', [DocumentController::class, 'revise'])->name('unit_pengelola.revise');
 
@@ -286,65 +209,8 @@ Route::middleware('auth')->group(function () {
         return view('kepala_departemen.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'pendingData', 'publishedData', 'direktorats', 'departemens', 'units', 'seksis'));
     })->name('kepala_departemen.dashboard');
 
-    Route::get('/kepala-departemen/check-documents', function () {
-        $user = Auth::user();
-        $documentsPending = \App\Models\Document::where('current_level', 3)
-            ->where('status', 'pending_level3')
-            ->where('id_dept', $user->id_dept)
-            ->with(['user', 'unit', 'approvals'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Fetch Approved documents for history
-        $documentsApproved = \App\Models\Document::published()
-            ->where('id_dept', $user->id_dept)
-            ->with(['user', 'unit'])
-            ->orderBy('published_at', 'desc')
-            ->limit(50)
-            ->get();
-
-        $mergedDocs = $documentsPending->concat($documentsApproved);
-
-        // Transform for View (JSON)
-        $documentsData = $mergedDocs->map(function ($doc) {
-            // Friendly Unit Name
-            $unitName = $doc->unit->nama_unit ?? '-';
-            $isApproved = $doc->status === 'published';
-            $statusText = $isApproved ? 'Disetujui' : 'Menunggu';
-
-            // Calculate received_at (Time received by Kepala Departemen)
-            // This is when Level 2 (Unit Pengelola) approved it.
-            $receivedAt = '-';
-            $dateDisplay = $doc->created_at->format('d-m-Y'); // Default
-
-            if ($doc->created_at) {
-                $receivedAt = $doc->created_at->format('H:i') . ' WIB';
-            }
-
-            // Find Level 2 Approval
-            $level2Approval = $doc->approvals->where('level', 2)->where('action', 'approved')->first();
-            if ($level2Approval) {
-                $receivedAt = $level2Approval->created_at->format('H:i') . ' WIB';
-                $dateDisplay = $level2Approval->created_at->format('d-m-Y');
-            } else {
-                // Fallback if no level 2 approval found
-                $receivedAt = $doc->created_at->format('H:i') . ' WIB';
-            }
-
-            return [
-                'id' => $doc->id, // Use ID primary key
-                'unit' => $unitName,
-                'title' => $doc->kolom2_kegiatan,
-                'category' => $doc->kategori,
-                'date' => $dateDisplay,
-                'status' => $statusText,
-                'received_at' => $receivedAt,
-                'review_url' => route('kepala_departemen.review', $doc->id)
-            ];
-        });
-
-        return view('kepala_departemen.review', compact('documentsData'));
-    })->name('kepala_departemen.check_documents');
+    Route::get('/kepala-departemen/check-documents', [DocumentController::class, 'kepalaDepartemenPending'])
+        ->name('kepala_departemen.check_documents');
 
     Route::get('/kepala-departemen/documents/{document}/review', [DocumentController::class, 'review'])->name('kepala_departemen.review');
     Route::post('/kepala-departemen/documents/{document}/approve', [DocumentController::class, 'approve'])->name('kepala_departemen.approve');

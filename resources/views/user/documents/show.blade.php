@@ -8,832 +8,391 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary-color: #c41e3a;
+            --primary-light: #fff1f2;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --gray-light: #f1f5f9;
+            --sidebar-width: 260px;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #f5f5f5;
-            color: #333;
+            background: #f8fafc;
+            color: #334155;
         }
 
-        .container {
-            display: flex;
-            min-height: 100vh;
-        }
+        .container { display: flex; min-height: 100vh; }
 
-        /* Sidebar */
+        /* Sidebar (Same as Index) */
         .sidebar {
-            width: 250px;
+            width: var(--sidebar-width);
             background: white;
-            border-right: 1px solid #e0e0e0;
+            border-right: 1px solid #e2e8f0;
             position: fixed;
             height: 100vh;
             display: flex;
             flex-direction: column;
+            z-index: 10;
         }
 
-        .logo-section {
-            padding: 30px 20px;
-            border-bottom: 1px solid #e0e0e0;
-            text-align: center;
-        }
-
+        .logo-section { padding: 24px; text-align: center; border-bottom: 1px solid #f1f5f9; }
         .logo-circle {
-            width: 70px;
-            height: 70px;
-            background: #fff;
-            border-radius: 50%;
-            margin: 0 auto 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 64px; height: 64px; background: white; border-radius: 50%;
+            margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+        .logo-circle img { max-width: 70%; }
+        .logo-text { font-size: 16px; font-weight: 700; color: var(--primary-color); }
+        .logo-subtext { font-size: 11px; color: #64748b; }
 
-        .logo-circle img {
-            max-width: 80%;
-            max-height: 80%;
-        }
-
-        .logo-text {
-            font-size: 18px;
-            font-weight: 700;
-            color: #c41e3a;
-            margin-bottom: 3px;
-        }
-
-        .logo-subtext {
-            font-size: 12px;
-            color: #999;
-            font-style: italic;
-        }
-
-        .nav-menu {
-            flex: 1;
-            padding: 20px 0;
-            overflow-y: auto;
-        }
-
+        .nav-menu { flex: 1; padding: 20px 12px; overflow-y: auto; }
         .nav-item {
-            padding: 15px 25px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: #666;
-            font-size: 14px;
-            font-weight: 500;
-            text-decoration: none;
-            position: relative;
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            margin-bottom: 4px; border-radius: 8px; color: #64748b;
+            text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s;
         }
-
-        .nav-item:hover {
-            background: #fff5f5;
-            color: #c41e3a;
-        }
-
-        .nav-item.active {
-            background: #ffe5e5;
-            color: #c41e3a;
-            border-left: 3px solid #c41e3a;
-        }
-
-        .nav-item i {
-            width: 20px;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        .badge {
-            position: absolute;
-            right: 20px;
-            background: #c41e3a;
-            color: white;
-            font-size: 10px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-
-        /* User Info at Bottom */
+        .nav-item:hover { background-color: #fff1f2; color: var(--primary-color); }
         .user-info-bottom {
-            padding: 20px;
-            border-top: 2px solid #e0e0e0;
+            padding: 20px; border-top: 2px solid #e0e0e0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
+        .user-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
         .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #667eea;
-            font-weight: 700;
-            font-size: 16px;
-            flex-shrink: 0;
+            width: 45px; height: 45px; background: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #667eea; font-weight: 700; font-size: 16px; flex-shrink: 0;
         }
-
-        .user-details {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .user-name {
-            font-weight: 600;
-            font-size: 14px;
-            color: white;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .user-role {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 2px;
-        }
-
+        .user-details { flex: 1; min-width: 0; }
+        .user-name { font-weight: 600; font-size: 14px; color: white; }
+        .user-role { font-size: 11px; color: rgba(255, 255, 255, 0.8); }
         .logout-btn {
-            width: 100%;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            text-decoration: none;
+            width: 100%; padding: 10px 15px; background: rgba(255, 255, 255, 0.2);
+            color: white; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 6px;
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
         }
-
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-        }
+        .logout-btn:hover { background: rgba(255, 255, 255, 0.3); }
 
         /* Main Content */
         .main-content {
-            flex: 1;
-            margin-left: 250px;
+            flex: 1; margin-left: var(--sidebar-width); padding: 32px 48px;
         }
 
-        .header {
-            background: white;
-            padding: 25px 40px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .btn-back { display: inline-flex; align-items: center; gap: 8px; color: #64748b; text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 24px; transition: color 0.2s; }
+        .btn-back:hover { color: var(--primary-color); }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+        /* Process Wizard */
+        .wizard-container {
+            background: white; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0; margin-bottom: 24px;
         }
+        .wizard-steps { display: flex; justify-content: space-between; position: relative; }
+        .wizard-steps::before {
+            content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: #e2e8f0; z-index: 1;
+        }
+        .step-item { position: relative; z-index: 2; text-align: center; flex: 1; }
+        .step-circle {
+            width: 32px; height: 32px; background: white; border: 2px solid #cbd5e1;
+            border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center;
+            justify-content: center; color: #cbd5e1; font-weight: 600; transition: all 0.3s;
+        }
+        .step-label { font-size: 12px; color: #64748b; font-weight: 500; }
+        
+        /* Active/Complete State */
+        .step-item.active .step-circle { border-color: var(--primary-color); background: var(--primary-light); color: var(--primary-color); }
+        .step-item.active .step-label { color: var(--primary-color); font-weight: 700; }
+        .step-item.completed .step-circle { background: var(--primary-color); border-color: var(--primary-color); color: white; }
+        .step-item.completed .step-label { color: var(--primary-color); }
 
-        .btn-back {
-            padding: 8px 12px;
-            background: white;
-            color: #666;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-        }
+        /* Content Layout */
+        .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+        
+        .card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
+        .card-title { font-size: 16px; font-weight: 700; color: #1e293b; }
+        
+        .info-list { display: flex; flex-direction: column; gap: 16px; }
+        .info-item { display: flex; flex-direction: column; gap: 4px; }
+        .info-label { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-value { font-size: 14px; color: #334155; line-height: 1.5; }
 
-        .btn-back:hover {
-            background: #f5f5f5;
+        .risk-matrix-box {
+            background: #f8fafc; border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #e2e8f0;
         }
+        .risk-score { font-size: 32px; font-weight: 800; color: #1e293b; margin: 10px 0; }
+        .risk-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .risk-high { background: #fee2e2; color: #b91c1c; }
+        .risk-medium { background: #ffedd5; color: #c2410c; }
+        .risk-low { background: #dcfce7; color: #15803d; }
 
-        .header h1 {
-            font-size: 20px;
-            font-weight: 700;
-            color: #333;
-        }
+        .timeline-item { position: relative; padding-left: 24px; margin-bottom: 20px; border-left: 2px solid #e2e8f0; }
+        .timeline-item:last-child { margin-bottom: 0; }
+        .timeline-dot { position: absolute; left: -6px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; }
+        .timeline-active .timeline-dot { background: var(--primary-color); border: 2px solid white; box-shadow: 0 0 0 2px var(--primary-color); width: 12px; height: 12px; left: -7px;}
+        .timeline-date { font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+        .timeline-title { font-size: 14px; font-weight: 600; color: #1e293b; }
+        .timeline-desc { font-size: 13px; color: #64748b; margin-top: 4px; background: #f8fafc; padding: 8px; border-radius: 6px;}
 
-        .content-area {
-            padding: 30px 40px;
-            max-width: 1200px;
+        .action-bar {
+            display: flex; gap: 12px; margin-bottom: 24px;
         }
-
-        /* Document Header */
-        .doc-header-section {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 25px;
-        }
-
-        .doc-title-main {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .doc-number-main {
-            font-size: 14px;
-            color: #999;
-            font-family: 'Courier New', monospace;
-            margin-bottom: 20px;
-        }
-
-        .doc-meta-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            padding: 20px 0;
-            border-top: 1px solid #f0f0f0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .meta-item {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .meta-label {
-            font-size: 11px;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .meta-value {
-            font-size: 14px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .badge-status {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            display: inline-block;
-        }
-
-        .status-revision {
-            background: #ffebee;
-            color: #c62828;
-        }
-
-        /* Document Content */
-        .doc-content-section {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 25px;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #c41e3a;
-        }
-
-        .info-grid {
-            display: grid;
-            gap: 20px;
-        }
-
-        .info-row {
-            display: grid;
-            grid-template-columns: 200px 1fr;
-            gap: 15px;
-        }
-
-        .info-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #666;
-        }
-
-        .info-value {
-            font-size: 14px;
-            color: #333;
-        }
-
-        /* Risk Matrix Display */
-        .risk-matrix-display {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-
-        .risk-result-display {
-            padding: 15px 20px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 16px;
-            font-weight: 700;
-            margin-top: 15px;
-        }
-
-        .risk-extreme {
-            background: #f44336;
-            color: white;
-        }
-
-        /* Timeline */
-        .timeline {
-            position: relative;
-            padding-left: 40px;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 15px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #e0e0e0;
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 30px;
-        }
-
-        .timeline-dot {
-            position: absolute;
-            left: -32px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #c41e3a;
-            border: 3px solid white;
-            box-shadow: 0 0 0 2px #c41e3a;
-        }
-
-        .timeline-content {
-            background: #f9f9f9;
-            padding: 15px 20px;
-            border-radius: 8px;
-            border-left: 3px solid #c41e3a;
-        }
-
-        .timeline-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .timeline-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .timeline-date {
-            font-size: 12px;
-            color: #999;
-        }
-
-        .timeline-message {
-            font-size: 13px;
-            color: #666;
-            line-height: 1.6;
-        }
-
-        .timeline-author {
-            font-size: 12px;
-            color: #999;
-            margin-top: 8px;
-        }
-
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: none;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: #c41e3a;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #a01729;
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #666;
-            border: 1px solid #ddd;
-        }
-
-        .btn-secondary:hover {
-            background: #f5f5f5;
-        }
+        .btn { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .btn-primary { background: var(--primary-color); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
+        .btn-outline:hover { background: #f8fafc; }
     </style>
 </head>
 
 <body>
+    <!-- Alerts -->
+    @include('partials.alerts')
+
     <div class="container">
+        <!-- Sidebar -->
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo-section">
-                <div class="logo-circle">
-                    <!-- Placeholder or real logo -->
-                    <img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP">
-                </div>
+                <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
                 <div class="logo-text">PT Semen Padang</div>
                 <div class="logo-subtext">HIRADC System</div>
             </div>
-
             <nav class="nav-menu">
-                <a href="{{ route('user.dashboard') }}" class="nav-item">
-                    <i class="fas fa-th-large"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="{{ route('documents.index') }}" class="nav-item">
-                    <i class="fas fa-folder-open"></i>
-                    <span>Dokumen Saya</span>
-                    @if(isset($revisionCount) && $revisionCount > 0)
-                        <span class="badge">{{ $revisionCount }}</span>
-                    @endif
-                </a>
-                <a href="{{ route('documents.create') }}" class="nav-item">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Buat Dokumen Baru</span>
-                </a>
+                <a href="{{ route('user.dashboard') }}" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="{{ route('documents.index') }}" class="nav-item active"><i class="fas fa-folder-open"></i><span>Dokumen Saya</span></a>
+                <a href="{{ route('documents.create') }}" class="nav-item"><i class="fas fa-plus-circle"></i><span>Buat Dokumen Baru</span></a>
             </nav>
-
-            <!-- User Info at Bottom -->
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">{{ substr(Auth::user()->nama_user, 0, 2) }}</div>
+                    <div class="user-avatar">
+                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
+                    </div>
                     <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user }}</div>
-                        <div class="user-role">
-                            {{ Auth::user()->role_jabatan_name ?? ucfirst(str_replace('_', ' ', Auth::user()->role_user)) }}
-                        </div>
+                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
+                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
                         <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit->nama_unit ?? '' }}
+                            {{ Auth::user()->unit_or_dept_name }}
                         </div>
                     </div>
                 </div>
-                <!-- Logout via Form/Link -->
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Keluar
+                <a href="{{ route('logout') }}" class="logout-btn" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <i class="fas fa-sign-out-alt"></i> Keluar
                 </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
             </div>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
-            <div class="header">
-                <div class="header-left">
-                    <a href="{{ route('documents.index') }}" class="btn-back">
-                        <i class="fas fa-arrow-left"></i>
-                    </a>
-                    <h1>Detail Dokumen Risiko</h1>
-                </div>
+            <a href="{{ route('documents.index') }}" class="btn-back"><i class="fas fa-arrow-left"></i> Kembali ke Dokumen Saya</a>
+
+            <div class="header-section" style="margin-bottom: 24px;">
+                <h1 style="font-size: 24px; font-weight: 700; color: #1e293b;">{{ $document->kolom2_kegiatan }}</h1>
+                <p style="color: #64748b; font-size: 14px;">#{{ $document->id }} • {{ $document->created_at->format('d M Y, H:i') }}</p>
             </div>
 
-            <div class="content-area">
-                <!-- Document Header -->
-                <div class="doc-header-section">
-                    <div class="doc-title-main">{{ $document->kolom2_kegiatan ?? 'Dokumen Tanpa Judul' }}</div>
-
-
-                    <style>
-                        .doc-meta-grid {
-                            grid-template-columns: repeat(5, 1fr);
-                        }
-                    </style>
-                    <div class="doc-meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Kategori</div>
-                            <div class="meta-value">{{ $document->kategori }}</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Unit Kerja</div>
-                            <div class="meta-value">{{ $document->unit->nama_unit ?? '-' }}</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Tanggal Dibuat</div>
-                            <div class="meta-value">{{ $document->created_at->format('d M Y') }}</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Tingkat Risiko</div>
-                            <div class="meta-value">{{ $document->kolom9_risiko ?? 'Sedang' }}</div>
-                            <!-- Using kolom9 based on context or risk_level if available -->
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Waktu Pengisian</div>
-                            <div class="meta-value">{{ $document->created_at->format('H:i') }} WIB</div>
-                        </div>
+            <!-- Process Wizard -->
+            <div class="wizard-container">
+                <div class="wizard-steps">
+                    <!-- Step 1: Draft/Unit -->
+                    <div class="step-item {{ $document->current_level >= 1 ? 'completed' : 'active' }}">
+                        <div class="step-circle"><i class="fas fa-file-signature"></i></div>
+                        <div class="step-label">Draft & Submit</div>
                     </div>
-
-                    <div class="action-buttons">
-                        @if($document->status == 'revision' || $document->status == 'draft')
-                            <a href="{{ route('documents.create', ['mode' => 'edit', 'id' => $document->id_document]) }}"
-                                class="btn btn-primary">
-                                <i class="fas fa-edit"></i> Perbaiki / Edit
-                            </a>
-                        @endif
-                        <button class="btn btn-secondary" onclick="window.print()">
-                            <i class="fas fa-print"></i> Cetak
-                        </button>
+                    <!-- Step 2: Kepala Unit -->
+                    <div class="step-item {{ $document->current_level > 1 ? 'completed' : ($document->current_level == 1 ? 'active' : '') }}">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Kepala Unit</div>
+                    </div>
+                    <!-- Step 3: Unit Pengelola -->
+                    <div class="step-item {{ $document->current_level > 2 ? 'completed' : ($document->current_level == 2 ? 'active' : '') }}">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Unit Pengelola</div>
+                    </div>
+                    <!-- Step 4: Kepala Dept -->
+                    <div class="step-item {{ $document->status == 'approved' ? 'completed' : ($document->current_level == 3 ? 'active' : '') }}">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Kepala Dept.</div>
+                    </div>
+                    <!-- Step 5: Selesai -->
+                    <div class="step-item {{ $document->status == 'approved' ? 'completed active' : '' }}">
+                        <div class="step-circle"><i class="fas fa-check"></i></div>
+                        <div class="step-label">Selesai</div>
                     </div>
                 </div>
+                @if($document->status == 'revision')
+                    <div style="background: #fff7ed; color: #c2410c; padding: 12px; border-radius: 8px; margin-top: 20px; font-size: 14px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Status Revisi: </strong> Dokumen ini dikembalikan untuk perbaikan. Silakan cek komentar di bawah.
+                    </div>
+                @endif
+            </div>
 
-                <!-- Document Content -->
-                <div class="doc-content-section">
-                    <h2 class="section-title">Informasi Dokumen</h2>
-                    <div class="info-grid">
-                        <div class="info-row">
-                            <div class="info-label">Proses Bisnis/Kegiatan</div>
-                            <div class="info-value">{{ $document->kolom2_proses }}</div>
+            <div class="action-bar">
+                @if($document->status == 'revision' || $document->status == 'draft')
+                    <a href="{{ route('documents.edit', $document->id) }}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Dokumen
+                    </a>
+                @endif
+                <button onclick="window.print()" class="btn btn-outline">
+                    <i class="fas fa-print"></i> Cetak / PDF
+                </button>
+            </div>
+
+            <div class="content-grid">
+                <!-- Left Column: Details -->
+                <div class="detail-column">
+                    <!-- Basic Info -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-info-circle" style="color: var(--primary-color);"></i>
+                            <h2 class="card-title">Informasi Dasar</h2>
                         </div>
-                        <div class="info-row">
-                            <div class="info-label">Lokasi/Area Kerja</div>
-                            <div class="info-value">{{ $document->kolom3_lokasi }}</div>
+                        <div class="info-list">
+                            <div class="info-item">
+                                <span class="info-label">Unit Kerja</span>
+                                <span class="info-value">{{ $document->unit->nama_unit ?? '-' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Proses / Kegiatan</span>
+                                <span class="info-value">{{ $document->kolom2_proses }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Lokasi</span>
+                                <span class="info-value">{{ $document->kolom3_lokasi }}</span>
+                            </div>
                         </div>
-                        <div class="info-row">
-                            <div class="info-label">Kondisi</div>
-                            <div class="info-value">{{ $document->kolom5_kondisi }}</div>
+                    </div>
+
+                    <!-- Hazards & Risks -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                            <h2 class="card-title">Identifikasi Bahaya</h2>
                         </div>
-
-
-
-                        <div class="info-row">
-                            <div class="info-label">Kategori</div>
-                            <div class="info-value">{{ $document->kategori ?? '-' }}</div>
-                        </div>
-
-                        <div class="info-row">
-                            <div class="info-label">Deskripsi Bahaya</div>
-                            <div class="info-value">
-                                <ul style="padding-left: 20px; margin: 0;">
-                                    @php
-                                        $bahaya = $document->kolom6_bahaya;
-                                        if (!is_array($bahaya)) {
-                                            $bahaya = [$bahaya];
-                                        }
-                                        $descriptions = [];
-                                    @endphp
-                                    @foreach($bahaya as $key => $val)
+                        <div class="info-list">
+                            <div class="info-item">
+                                <span class="info-label">Bahaya</span>
+                                <div class="info-value">
+                                    <ul style="padding-left: 20px; margin: 0;">
                                         @php
-                                            if (in_array($key, ['details', 'manual'])) {
-                                                $cleanVal = str_replace(['[', ']', '"', '{', '}'], '', (is_array($val) ? json_encode($val) : $val));
-                                                if (trim($cleanVal) !== '') {
-                                                    $descriptions[] = $cleanVal;
-                                                }
-                                                continue;
-                                            }
-
-                                            $showLabel = (is_string($key) && !is_numeric($key));
-                                            $label = $showLabel ? ucfirst($key) : '';
-
-                                            if (is_array($val)) {
-                                                $cleanItems = array_map(function ($item) {
-                                                    return str_replace(['[', ']', '"', '{', '}'], '', is_array($item) ? json_encode($item) : $item);
-                                                }, $val);
-                                                $displayVal = implode(', ', $cleanItems);
-                                            } else {
-                                                $displayVal = str_replace(['[', ']', '"', '{', '}'], '', $val);
-                                            }
+                                            $bahaya = $document->kolom6_bahaya;
+                                            if(!is_array($bahaya)) $bahaya = [$bahaya];
                                         @endphp
-
-                                        @if(trim($displayVal) !== '')
-                                            <li>
-                                                @if($showLabel)
-                                                    <strong>{{ $label }}:</strong>
-                                                @endif
-                                                {{ $displayVal }}
-                                            </li>
-                                        @endif
-                                    @endforeach
-
-                                    @foreach(array_unique($descriptions) as $desc)
-                                        <li>{{ $desc }}</li>
-                                    @endforeach
-                                </ul>
+                                        @foreach($bahaya as $key => $val)
+                                            @if(is_array($val) && !empty($val))
+                                                <li><strong>{{ ucfirst($key) }}:</strong> {{ implode(', ', $val) }}</li>
+                                            @elseif(is_string($val) && !empty($val) && !in_array($key, ['type', 'kategori']))
+                                                <li>{{ $val }}</li>
+                                            @endif
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Dampak / Risiko Awal</span>
+                                <span class="info-value">{{ $document->kolom7_dampak }} / {{ $document->kolom9_risiko }}</span>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="info-row">
-                            <div class="info-label">Dampak</div>
-                            <div class="info-value">{{ $document->kolom7_dampak ?? '-' }}</div>
+                    <!-- Controls -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-shield-alt" style="color: #10b981;"></i>
+                            <h2 class="card-title">Pengendalian Risiko</h2>
                         </div>
-                        <div class="info-row">
-                            <div class="info-label">Risiko Awal</div>
-                            <div class="info-value">{{ $document->kolom9_risiko ?? '-' }}</div>
+                        <div class="info-list">
+                            <div class="info-item">
+                                <span class="info-label">Hirarki Pengendalian</span>
+                                <span class="info-value">
+                                    @php
+                                        $ctrl = $document->kolom10_pengendalian;
+                                        if(is_array($ctrl) && isset($ctrl['hierarchy'])) {
+                                            echo implode(', ', $ctrl['hierarchy']);
+                                        } else {
+                                            echo is_string($ctrl) ? $ctrl : '-';
+                                        }
+                                    @endphp
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Pengendalian Existing</span>
+                                <span class="info-value">{{ $document->kolom11_existing }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Risk Assessment -->
-                <div class="doc-content-section">
-                    <h2 class="section-title">Penilaian Risiko</h2>
-                    <div class="risk-matrix-display">
-                        <div class="info-grid">
-                            <div class="info-row">
-                                <div class="info-label">Likelihood (Kemungkinan)</div>
-                                <div class="info-value">{{ $document->kolom12_kemungkinan ?? '-' }}</div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">(Consequence) Konsekuensi</div>
-                                <div class="info-value">{{ $document->kolom13_konsekuensi ?? '-' }}</div>
-                            </div>
+                <!-- Right Column: Scores & History -->
+                <div class="side-column">
+                    <!-- Risk Matrix -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-bar"></i>
+                            <h2 class="card-title">Penilaian Risiko</h2>
                         </div>
-                        <div class="risk-result-display risk-extreme">
-                            SKOR RISIKO: {{ $document->kolom14_score ?? '-' }}
+                        <div class="risk-matrix-box">
+                            <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">SKOR RISIKO AWAL</div>
+                            <div class="risk-score">{{ $document->kolom14_score }}</div>
+                            @php
+                                $score = $document->kolom14_score;
+                                $badgeClass = 'risk-low'; $label = 'RENDAH';
+                                if($score >= 15) { $badgeClass = 'risk-high'; $label = 'TINGGI (EXTREME)'; }
+                                elseif($score >= 6) { $badgeClass = 'risk-medium'; $label = 'SEDANG'; }
+                            @endphp
+                            <span class="risk-badge {{ $badgeClass }}">{{ $label }}</span>
+                            
+                            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 16px 0;">
+
+                            <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">SKOR RESIDUAL</div>
+                            <div class="risk-score" style="font-size: 24px;">{{ $document->residual_score ?? '-' }}</div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Control Measures -->
-                <div class="doc-content-section">
-                    <h2 class="section-title">Pengendalian Risiko</h2>
-                    <div class="info-grid">
-                        <div class="info-row">
-                            <div class="info-label">Hirarki Pengendalian</div>
-                            <div class="info-value">
-                                @php
-                                    $hirarkiData = $document->kolom10_pengendalian;
-                                    $display = '-';
-                                    if (is_array($hirarkiData) && isset($hirarkiData['hirarki'])) {
-                                        $display = $hirarkiData['hirarki'];
-                                    } elseif (is_array($hirarkiData)) {
-                                        $display = implode(', ', array_map(function ($item) {
-                                            return is_array($item) ? json_encode($item) : $item;
-                                        }, $hirarkiData));
-                                    } else {
-                                        $display = $hirarkiData;
-                                    }
-                                @endphp
-                                {{ str_replace(['[', ']', '"', '{', '}'], '', $display ?? '-') }}
+                    <!-- Appoval History -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-history"></i>
+                            <h2 class="card-title">Riwayat Approval</h2>
+                        </div>
+                        <div class="timeline">
+                            @forelse($document->approvals->sortByDesc('created_at') as $log)
+                            <div class="timeline-item timeline-active">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-date">{{ $log->created_at->format('d M Y, H:i') }}</div>
+                                <div class="timeline-title">
+                                    @if($log->action == 'approved') <span style="color: #15803d;">Disetujui</span>
+                                    @elseif($log->action == 'revised') <span style="color: #b91c1c;">Revisi diminta</span>
+                                    @else {{ ucfirst($log->action) }} @endif
+                                    oleh {{ $log->approver->nama_user ?? 'System' }}
+                                </div>
+                                @if($log->catatan)
+                                <div class="timeline-desc">
+                                    "{{ $log->catatan }}"
+                                </div>
+                                @endif
                             </div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">Tindakan Pengendalian</div>
-                            <div class="info-value">{{ $document->kolom11_existing ?? '-' }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Regulation & Identification -->
-                <div class="doc-content-section">
-                    <h2 class="section-title">Regulasi & Identifikasi Lanjutan</h2>
-                    <div class="info-grid">
-                        <div class="info-row">
-                            <div class="info-label">Peraturan Perundangan Terkait</div>
-                            <div class="info-value">{{ $document->kolom15_regulasi ?? '-' }}</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">Identifikasi Risiko</div>
-                            <div class="info-value">{{ $document->kolom17_risiko ?? '-' }}</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">Identifikasi Peluang</div>
-                            <div class="info-value">{{ $document->kolom17_peluang ?? '-' }}</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">Pengendalian Tindak Lanjut</div>
-                            <div class="info-value">{{ $document->kolom18_tindak_lanjut ?? '-' }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Residual Risk Assessment -->
-                <div class="doc-content-section">
-                    <h2 class="section-title">Penilaian Risiko Residual</h2>
-                    <div class="risk-matrix-display">
-                        <div class="info-grid">
-                            <div class="info-row">
-                                <div class="info-label">Kemungkinan Ulang</div>
-                                <div class="info-value">{{ $document->residual_kemungkinan ?? '-' }}</div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">Konsekuensi Ulang</div>
-                                <div class="info-value">{{ $document->residual_konsekuensi ?? '-' }}</div>
-                            </div>
-                        </div>
-                        <div class="risk-result-display risk-low" style="background: #e3f2fd; color: #1565c0;">
-                            SKOR RESIDUAL: {{ $document->residual_score ?? '-' }}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Revision History -->
-                <div class="doc-content-section">
-                    <h2 class="section-title">Riwayat Revisi & Komentar</h2>
-                    <div class="timeline">
-                        @forelse($document->approvals->sortByDesc('created_at') as $approval)
+                            @empty
                             <div class="timeline-item">
                                 <div class="timeline-dot"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-header">
-                                        <div class="timeline-title">
-                                            @if($approval->action == 'approved')
-                                                Disetujui
-                                            @elseif($approval->action == 'revised')
-                                                Permintaan Revisi
-                                            @elseif($approval->action == 'rejected')
-                                                Ditolak
-                                            @else
-                                                {{ ucfirst($approval->action) }}
-                                            @endif
-                                        </div>
-                                        <div class="timeline-date">{{ $approval->created_at->format('d M Y, H:i') }}
-                                        </div>
-                                    </div>
-                                    <div class="timeline-message">
-                                        {{ $approval->catatan ?? '-' }}
-                                    </div>
-                                    <div class="timeline-author">
-                                        <i class="fas fa-user"></i> {{ $approval->approver->nama_user ?? 'Unknown' }}
-                                        ({{ $approval->approver->role_jabatan_name ?? ($approval->approver->role_user ?? '-') }})
-                                    </div>
-                                </div>
+                                <div class="timeline-title">Belum ada aktivitas approval.</div>
                             </div>
-                        @empty
+                            @endforelse
                             <div class="timeline-item">
-                                <div class="timeline-dot" style="background: #ccc; border-color: #fff;"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-message">Belum ada riwayat approval/revisi.</div>
-                                </div>
-                            </div>
-                        @endforelse
-
-                        <!-- Submission Log -->
-                        <div class="timeline-item">
-                            <div class="timeline-dot"></div>
-                            <div class="timeline-content">
-                                <div class="timeline-header">
-                                    <div class="timeline-title">Dokumen Dibuat</div>
-                                    <div class="timeline-date">{{ $document->created_at->format('d M Y, H:i') }}
-                                    </div>
-                                </div>
-                                <div class="timeline-message">
-                                    Dokumen risiko dibuat dan disubmit.
-                                </div>
-                                <div class="timeline-author">
-                                    <i class="fas fa-user"></i> {{ $document->user->nama_user ?? 'Unknown' }}
-                                </div>
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-date">{{ $document->created_at->format('d M Y, H:i') }}</div>
+                                <div class="timeline-title">Dokumen Dibuat</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
         </main>
     </div>
 </body>
-
 </html>

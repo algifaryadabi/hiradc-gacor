@@ -41,6 +41,7 @@ class Document extends Model
         'residual_score',
         'residual_level',
         'published_at',
+        'compliance_checklist',
     ];
 
     protected $casts = [
@@ -48,6 +49,7 @@ class Document extends Model
         'kolom8_pihak' => 'array', // Will be removed in DB but keep for now or remove
         'kolom10_pengendalian' => 'array',
         'published_at' => 'datetime',
+        'compliance_checklist' => 'array',
     ];
 
     // ==================== RELATIONSHIPS ====================

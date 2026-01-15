@@ -109,6 +109,12 @@ class User extends Authenticatable
         return $this->id_role_jabatan == 4 || $this->role_jabatan == 4;
     }
 
+    public function isUnitPengelola(): bool
+    {
+        // Must be Kepala Unit (Role 3) AND from SHE (56) or Security (55)
+        return $this->isKepalaUnit() && in_array($this->id_unit, [55, 56]);
+    }
+
     /**
      * Get role name based on hierarchy
      */
