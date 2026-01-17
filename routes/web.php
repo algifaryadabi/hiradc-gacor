@@ -98,20 +98,20 @@ Route::middleware('auth')->group(function () {
         $myPending = \App\Models\Document::where('id_user', $user->id_user)
             ->whereIn('status', ['pending_level1', 'pending_level2', 'pending_level3'])
             ->with([
-                    'approvals' => function ($q) {
-                        $q->latest();
-                    }
-                ])
+                'approvals' => function ($q) {
+                    $q->latest();
+                }
+            ])
             ->orderBy('updated_at', 'desc')
             ->get();
 
         $myRevision = \App\Models\Document::where('id_user', $user->id_user)
             ->where('status', 'revision')
             ->with([
-                    'approvals' => function ($q) {
-                        $q->latest();
-                    }
-                ])
+                'approvals' => function ($q) {
+                    $q->latest();
+                }
+            ])
             ->orderBy('updated_at', 'desc')
             ->get();
 
@@ -124,6 +124,7 @@ Route::middleware('auth')->group(function () {
     })->name('user.dashboard');
 
     // Document CRUD for users
+    Route::get('/my-documents/summary', [DocumentController::class, 'summary'])->name('documents.summary');
     Route::get('/my-documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::get('/documents/create', [DocumentController::class, 'create'])->name('documents.create');
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
@@ -148,6 +149,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/unit-pengelola/documents/{document}/review', [DocumentController::class, 'reviewUnit'])->name('unit_pengelola.review');
     Route::post('/unit-pengelola/documents/{document}/approve', [DocumentController::class, 'approve'])->name('unit_pengelola.approve');
     Route::post('/unit-pengelola/documents/{document}/revise', [DocumentController::class, 'revise'])->name('unit_pengelola.revise');
+    Route::post('/unit-pengelola/documents/{document}/disposition', [DocumentController::class, 'disposition'])->name('unit_pengelola.disposition');
+    Route::post('/unit-pengelola/documents/{document}/submit-review', [DocumentController::class, 'submitReviewUnit'])->name('unit_pengelola.submit_review');
+    Route::post('/unit-pengelola/documents/{document}/verify', [DocumentController::class, 'verifyUnit'])->name('unit_pengelola.verify');
 
     // ==================== KEPALA DEPARTEMEN ROUTES ====================
     Route::get('/kepala-departemen/dashboard', function () {

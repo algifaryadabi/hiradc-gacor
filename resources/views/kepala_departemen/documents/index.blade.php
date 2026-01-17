@@ -662,34 +662,45 @@
                     statusIcon = '<i class="fas fa-undo"></i>';
                 }
 
-                // Determine Category Color
-                let catClass = 'cat-k3';
-                if (doc.category === 'KO') catClass = 'cat-ko';
-                else if (doc.category === 'Lingkungan') catClass = 'cat-lingkungan';
-                else if (doc.category === 'Keamanan') catClass = 'cat-keamanan';
-
                 const avatarInitials = doc.submitter.substring(0, 2).toUpperCase();
 
+                // Risk Badge logic
+                let riskColor = '#ef4444'; // High
+                let riskText = 'High Risk';
+                // You can map doc.risk_level here if needed, for now using static or passed value
+                // For demo, let's use a generic 'Info' badge if risk not calculated
+
                 const html = `
-                    <a href="${doc.viewUrl}" class="doc-card">
-                        <div class="dc-top">
-                            <span class="dc-cat ${catClass}">${doc.category}</span>
+                    <a href="${doc.viewUrl}" class="doc-card" style="border-left: 4px solid var(--primary);">
+                        <div class="dc-top" style="margin-bottom:8px;">
+                            <span style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">DOKUMEN HIRADC</span>
                             <span style="font-size:11px; font-weight:600; color:var(--text-sub); background:#f1f5f9; padding:2px 8px; border-radius:12px;">${doc.date_submit} • ${doc.time_submit}</span>
                         </div>
-                        <div class="dc-title" title="${doc.title}">${doc.title}</div>
-                        <div class="dc-meta">
+                        
+                        <div class="dc-title" title="${doc.title}" style="font-size:16px; font-weight:800; min-height:auto; margin-bottom:12px; color:#1e293b;">
+                            ${doc.title}
+                        </div>
+
+                        <div class="dc-meta" style="border-bottom:none; margin-bottom:12px; padding-bottom:0;">
                             <div class="meta-row">
-                                <div style="width:24px; height:24px; background:#e2e8f0; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:12px;"><i class="fas fa-building"></i></div>
-                                <span style="font-weight:500;">${doc.unit}</span>
+                                <div style="width:24px; height:24px; background:#eff6ff; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#3b82f6; font-size:12px;"><i class="fas fa-building"></i></div>
+                                <div style="display:flex; flex-direction:column;">
+                                    <span style="font-size:10px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Unit Kerja</span>
+                                    <span style="font-weight:600; font-size:13px; color:#475569;">${doc.unit}</span>
+                                </div>
                             </div>
-                            <div class="meta-row" style="margin-top:8px;">
-                                <div style="width:24px; height:24px; background:#3b82f6; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:10px; font-weight:700;">${avatarInitials}</div>
-                                <span style="font-weight:500;">${doc.submitter}</span>
+                            <div class="meta-row" style="margin-top:12px;">
+                                <div style="width:24px; height:24px; background:#f0fdf4; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#16a34a; font-size:10px; font-weight:700;">${avatarInitials}</div>
+                                <div style="display:flex; flex-direction:column;">
+                                    <span style="font-size:10px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Disusun Oleh</span>
+                                    <span style="font-weight:600; font-size:13px; color:#475569;">${doc.submitter}</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="dc-footer" style="margin-top:auto; padding-top:16px; border-top:1px solid #f1f5f9;">
-                            <div class="status-pill ${statusClass}">${statusIcon} ${doc.status}</div>
-                            <div class="action-link" style="background:var(--bg-body); padding:6px 12px; border-radius:6px; font-size:12px;">Buka <i class="fas fa-external-link-alt" style="margin-left:4px;"></i></div>
+
+                        <div class="dc-footer" style="margin-top:16px; padding-top:16px; border-top:1px dashed #cbd5e1;">
+                            <div class="status-pill ${statusClass}" style="flex:1; justify-content:center;">${statusIcon} ${doc.status}</div>
+                            <div class="action-link" style="margin-left:12px; color:white; background:var(--primary); padding:6px 16px; border-radius:6px; font-size:12px;">Review <i class="fas fa-arrow-right" style="margin-left:4px;"></i></div>
                         </div>
                     </a>
                 `;

@@ -63,7 +63,7 @@
             justify-content: center;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border);
-            overflow: hidden; /* Ensure content stays inside */
+            overflow: hidden;
         }
 
         .logo-circle img {
@@ -138,6 +138,9 @@
             font-weight: 600;
             font-size: 13px;
             color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .user-role {
@@ -185,6 +188,7 @@
             font-size: 14px;
         }
 
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -249,7 +253,7 @@
             font-weight: 500;
         }
 
-        /* Filters Bar */
+        /* Filters */
         .filters-bar {
             display: flex;
             justify-content: space-between;
@@ -300,75 +304,65 @@
             font-size: 14px;
             outline: none;
             cursor: pointer;
-        }
-
-        .view-toggles {
-            display: flex;
-            background: #e2e8f0;
-            padding: 4px;
-            border-radius: 8px;
-        }
-
-        .view-btn {
-            padding: 6px 12px;
-            border: none;
-            background: transparent;
-            border-radius: 6px;
-            cursor: pointer;
-            color: var(--text-sub);
-        }
-
-        .view-btn.active {
             background: white;
-            color: var(--text-main);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            min-width: 150px;
         }
 
-        /* Document Grid */
-        .documents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 24px;
-        }
-
-        .documents-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .doc-card {
-            background: var(--white);
+        /* Excel-like Table Styles */
+        .table-container {
+            background: white;
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-            cursor: pointer;
-            text-decoration: none;
-            display: block;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
         }
 
-        .doc-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.1);
-            border-color: var(--primary);
+        .excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
         }
 
-        .dc-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
+        .excel-table thead th {
+            background: #f8fafc;
+            color: var(--text-main);
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.05em;
         }
 
-        .dc-cat {
+        .excel-table tbody tr {
+            transition: background 0.1s;
+        }
+
+        .excel-table tbody tr:hover {
+            background: #f1f5f9;
+        }
+
+        .excel-table tbody td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-sub);
+            vertical-align: middle;
+        }
+
+        .excel-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badges */
+        .cat-badge {
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             padding: 4px 10px;
             border-radius: 20px;
             letter-spacing: 0.5px;
+            display: inline-block;
         }
 
         .cat-k3 {
@@ -391,50 +385,14 @@
             color: #0369a1;
         }
 
-        .dc-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 8px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            min-height: 48px;
-            line-height: 1.5;
-        }
-
-        .dc-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            font-size: 12px;
-            color: var(--text-sub);
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .meta-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .dc-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .status-pill {
-            font-size: 12px;
+        .status-badge {
+            font-size: 11px;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 4px 8px;
-            border-radius: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
         }
 
         .status-pending {
@@ -452,29 +410,36 @@
             color: #dc2626;
         }
 
-        .action-link {
-            font-size: 13px;
-            font-weight: 600;
+        .btn-action {
+            text-decoration: none;
             color: var(--primary);
-            display: flex;
+            font-weight: 600;
+            font-size: 12px;
+            padding: 6px 12px;
+            background: #fff1f2;
+            border-radius: 6px;
+            transition: 0.2s;
+            display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
+        }
+
+        .btn-action:hover {
+            background: var(--primary);
+            color: white;
         }
 
         .empty-state {
-            grid-column: 1 / -1;
             padding: 60px;
             text-align: center;
             color: var(--text-sub);
-            background: white;
-            border-radius: 12px;
-            border: 2px dashed var(--border);
         }
     </style>
 </head>
 
 <body>
     <div class="layout-container">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo-section">
                 <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
@@ -502,6 +467,7 @@
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="main-content">
             <div class="header-content">
                 <h1>Review & Verifikasi Dokumen</h1>
@@ -537,21 +503,48 @@
             <div class="filters-bar">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Cari dokumen, subjek, atau unit kerja..."
+                    <input type="text" id="searchInput" placeholder="Cari judul, unit, atau submitter..."
                         onkeyup="renderDocuments()">
                 </div>
                 <div class="filter-group">
+                    <select class="filter-select" id="unitFilter" onchange="renderDocuments()">
+                        <option value="All">Semua Unit</option>
+                        @foreach($units as $u)
+                            <option value="{{ $u->nama_unit }}">{{ $u->nama_unit }}</option>
+                        @endforeach
+                    </select>
                     <select class="filter-select" id="statusFilter" onchange="renderDocuments()">
                         <option value="All">Semua Status</option>
                         <option value="Menunggu">Menunggu</option>
                         <option value="Disetujui">Disetujui</option>
+                        <option value="Publish">Publish</option>
                         <option value="Revisi">Revisi</option>
                     </select>
                 </div>
             </div>
 
-            <div class="documents-grid" id="docList">
-                <!-- Populated by JS -->
+            <!-- Table Container -->
+            <div class="table-container">
+                <table class="excel-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">No</th>
+                            <th>Judul Kegiatan & Unit</th>
+                            <th>Submitter</th>
+                            <th>Status</th>
+                            <th>Tanggal Submit</th>
+                            <th style="text-align: right;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="docList">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div style="font-size:48px; margin-bottom:16px; opacity:0.3;"><i class="fas fa-search"></i></div>
+                    <h3>Tidak ada dokumen ditemukan</h3>
+                    <p>Cobalah kata kunci lain atau ubah filter.</p>
+                </div>
             </div>
         </main>
     </div>
@@ -562,7 +555,7 @@
 
         function initStats() {
             const pending = documentsData.filter(d => d.status === 'Menunggu').length;
-            const approved = documentsData.filter(d => ['Disetujui', 'Approved'].includes(d.status)).length;
+            const approved = documentsData.filter(d => ['Disetujui', 'Approved', 'Publish'].includes(d.status)).length;
             const total = documentsData.length;
 
             document.getElementById('count-pending').innerText = pending;
@@ -580,36 +573,36 @@
         function renderDocuments() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
-            const container = document.getElementById('docList');
+            const unitFilter = document.getElementById('unitFilter').value;
+            const tbody = document.getElementById('docList');
+            const emptyState = document.getElementById('emptyState');
 
-            container.innerHTML = '';
+            tbody.innerHTML = '';
 
             const filtered = documentsData.filter(doc => {
-                const matchSearch = doc.title.toLowerCase().includes(search) ||
-                    doc.unit.toLowerCase().includes(search) ||
-                    doc.submitter.toLowerCase().includes(search);
+                const matchSearch = (doc.title || '').toLowerCase().includes(search) ||
+                    (doc.unit || '').toLowerCase().includes(search) ||
+                    (doc.submitter || '').toLowerCase().includes(search);
 
                 const matchStatus = statusFilter === 'All' || doc.status === statusFilter;
+                const matchUnit = unitFilter === 'All' || doc.unit === unitFilter;
 
-                return matchSearch && matchStatus;
+                return matchSearch && matchStatus && matchUnit;
             });
 
             if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div style="font-size:48px; margin-bottom:16px; opacity:0.3;"><i class="fas fa-search"></i></div>
-                        <h3>Tidak ada dokumen ditemukan</h3>
-                        <p>Cobalah kata kunci lain atau ubah filter status.</p>
-                    </div>`;
+                emptyState.style.display = 'block';
                 return;
+            } else {
+                emptyState.style.display = 'none';
             }
 
-            filtered.forEach(doc => {
+            filtered.forEach((doc, index) => {
                 // Determine Status Color
                 let statusClass = 'status-pending';
                 let statusIcon = '<i class="fas fa-clock"></i>';
 
-                if (doc.status === 'Disetujui' || doc.status === 'Approved') {
+                if (doc.status === 'Disetujui' || doc.status === 'Approved' || doc.status === 'Publish') {
                     statusClass = 'status-approved';
                     statusIcon = '<i class="fas fa-check-circle"></i>';
                 } else if (doc.status === 'Revisi') {
@@ -617,30 +610,29 @@
                     statusIcon = '<i class="fas fa-undo"></i>';
                 }
 
-                // Determine Category Color
-                let catClass = 'cat-k3';
-                if (doc.category === 'KO') catClass = 'cat-ko';
-                else if (doc.category === 'Lingkungan') catClass = 'cat-lingkungan';
-                else if (doc.category === 'Keamanan') catClass = 'cat-keamanan';
+
 
                 const html = `
-                    <a href="${doc.viewUrl}" class="doc-card">
-                        <div class="dc-top">
-                            <span class="dc-cat ${catClass}">${doc.category}</span>
-                            <span style="font-size:11px; color:var(--text-sub);">${doc.date_submit}</span>
-                        </div>
-                        <div class="dc-title">${doc.title}</div>
-                        <div class="dc-meta">
-                            <div class="meta-row"><i class="fas fa-building" style="width:16px;"></i> ${doc.unit}</div>
-                            <div class="meta-row"><i class="fas fa-user" style="width:16px;"></i> ${doc.submitter}</div>
-                        </div>
-                        <div class="dc-footer">
-                            <div class="status-pill ${statusClass}">${statusIcon} ${doc.status}</div>
-                            <div class="action-link">Review <i class="fas fa-arrow-right"></i></div>
-                        </div>
-                    </a>
+                    <tr>
+                        <td style="text-align:center;">${index + 1}</td>
+                        <td>
+                            <div style="font-weight:600; color:var(--text-main); margin-bottom:2px;">${doc.title}</div>
+                            <div style="font-size:12px; color:var(--text-sub);"><i class="fas fa-building" style="margin-right:4px;"></i> ${doc.unit}</div>
+                        </td>
+                         <td>
+                            <div style="font-weight:500;">${doc.submitter}</div>
+                            <div style="font-size:11px; color:var(--text-sub);">${doc.department}</div>
+                        </td>
+                        <td><span class="status-badge ${statusClass}">${statusIcon} ${doc.status}</span></td>
+                        <td style="font-size:12px;">${doc.date_submit || '-'}</td>
+                        <td style="text-align: right;">
+                            <a href="${doc.viewUrl}" class="btn-action">
+                                Review <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </td>
+                    </tr>
                 `;
-                container.insertAdjacentHTML('beforeend', html);
+                tbody.insertAdjacentHTML('beforeend', html);
             });
         }
 

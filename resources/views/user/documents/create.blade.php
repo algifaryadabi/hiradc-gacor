@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -517,7 +517,7 @@
                 <div class="logo-subtext">HIRADC System</div>
             </div>
             <nav class="nav-menu">
-                <a href="{{ route('user.dashboard') }}"
+                <a href="{{ route('dashboard') }}"
                     class="nav-item {{ Request::routeIs('user.dashboard') ? 'active' : '' }}"><i
                         class="fas fa-th-large"></i><span>Dashboard</span></a>
                 <a href="{{ route('documents.index') }}"
@@ -562,6 +562,26 @@
             <div class="content-area">
                 <form id="hiradcForm" action="{{ route('documents.store') }}" method="POST">
                     @csrf
+                    <!-- Hidden Metadata -->
+                    <input type="hidden" id="auto_probis_value"
+                        value="{{ isset($user->seksi->probis) ? $user->seksi->probis->nama_probis : (isset($user->unit->probis) ? $user->unit->probis->nama_probis : '') }}">
+
+                    <!-- Document Title Section -->
+                    <div
+                        style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1e293b;">
+                                Judul Dokumen <span style="color: #ef4444;">*</span>
+                            </label>
+                            <input type="text" name="judul_dokumen" class="form-control" required
+                                placeholder="Contoh: Identifikasi Bahaya Area Produksi Line 1"
+                                style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                            <small style="display: block; margin-top: 6px; color: #64748b;">
+                                Berikan judul yang jelas untuk dokumen HIRADC ini.
+                            </small>
+                        </div>
+                    </div>
+
                     <!-- Messages -->
                     @if(session('success'))
                         <div
@@ -576,155 +596,194 @@
                         </div>
                     @endif
 
-                    <!-- Card 1: Informasi Dasar -->
-                    <div class="doc-card">
-                        <div class="card-header">
-                            <div class="header-icon"><i class="fas fa-info-circle"></i></div>
-                            <div class="header-title">
-                                <h2>Informasi Dasar</h2>
-                                <p>Kolom 2 - 5</p>
-                            </div>
+                    <div id="items-container">
+                        <!-- Items will be injected here by JS -->
+                    </div>
+
+
+                    <div style="text-align: center; margin-bottom: 40px;">
+                        <button type="button" class="btn btn-secondary" onclick="addItem()"
+                            style="border: 2px dashed #cbd5e1; background: white; width: 100%; justify-content: center; padding: 20px;">
+                            <i class="fas fa-plus-circle" style="font-size: 18px; color: var(--primary-color);"></i>
+                            Tambah Kegiatan / Aktivitas Lain
+                        </button>
+                    </div>
+
+                    <!-- Action Bar (Static Position) -->
+                    <div class="action-bar">
+                        <div class="action-info">
+                            <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                            <span>Pastikan semua data sudah terisi dengan benar.</span>
                         </div>
-                        <div class="card-body">
-                            <div class="form-grid-2">
-                                <div class="form-group">
-                                    <label class="form-label">Proses Bisnis <span class="required">*</span></label>
-                                    @php
-                                        $autoProbis = '';
-                                        if (isset($user->seksi->probis)) {
-                                            $autoProbis = $user->seksi->probis->nama_probis;
-                                        } elseif (isset($user->unit->probis)) {
-                                            $autoProbis = $user->unit->probis->nama_probis;
-                                        }
-                                        
-                                        $displayValue = $autoProbis;
-                                    @endphp
-                                    
-                                    @if($displayValue)
-                                        <input type="text" class="form-control" value="{{ $displayValue }}" readonly style="background-color: #f3f4f6; cursor: not-allowed; border: 1px solid #10b981;">
-                                        <input type="hidden" name="kolom2_proses" value="{{ $displayValue }}">
-                                        <small style="color:#059669; font-size:11px; margin-top:5px; display:block;"><i class="fas fa-check-circle"></i> Otomatis terisi sesuai Unit/Seksi Anda</small>
-                                    @else
-                                        <select name="kolom2_proses" class="form-control" required>
-                                            <option value="">-- Pilih Proses Bisnis --</option>
-                                            @foreach($probis as $p)
-                                                <option value="{{ $p->nama_probis }}">
-                                                    {{ $p->nama_probis }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        <small style="color:#ef4444; font-size:11px;">*Unit Anda belum terhubung. Silakan pilih manual.</small>
-                                    @endif
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Kegiatan <span class="required">*</span></label>
-                                    <input type="text" class="form-control" name="kolom2_kegiatan" required
-                                        placeholder="Nama kegiatan spesifik...">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Lokasi / Area Kerja <span
-                                            class="required">*</span></label>
-                                    <input type="text" class="form-control" name="kolom3_lokasi" required
-                                        placeholder="Contoh: Area Kiln 1...">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Kategori <span class="required">*</span></label>
-                                    <select class="form-control" id="kolom4_kategori" name="kategori" required
-                                        onchange="updateConditionOptions()">
-                                        <option value="">-- Pilih --</option>
-                                        <option value="K3">K3 - Kesehatan & Keselamatan</option>
-                                        <option value="KO">KO - Keselamatan Operasional</option>
-                                        <option value="Lingkungan">Lingkungan</option>
-                                        <option value="Keamanan">Keamanan</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Kondisi <span class="required">*</span></label>
-                                    <select class="form-control" id="kolom5_kondisi" name="kolom5_kondisi" required>
-                                        <option value="">-- Pilih Kategori Dulu --</option>
-                                    </select>
-                                </div>
+                        <div class="action-buttons">
+                            <a href="{{ route('documents.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Batal
+                            </a>
+                            <input type="hidden" name="submit_for_approval" value="1">
+                            <button type="button" id="btnSubmit" class="btn btn-primary" onclick="validateForm()">
+                                <i class="fas fa-paper-plane"></i> Kirim Dokumen
+                            </button>
+                        </div>
+                    </div>
+
+
+
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- ITEM TEMPLATE (Hidden) -->
+    <template id="item-template">
+        <div class="doc-item" data-index="{index}" style="margin-bottom: 30px; transition: all 0.3s ease;">
+            <div class="doc-card"
+                style="border-left: 5px solid var(--primary-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border-radius: 12px; overflow: hidden; background: white;">
+
+                <!-- Card Header -->
+                <div class="card-header"
+                    style="justify-content: space-between; background: linear-gradient(to right, #fff1f2, #fff); padding: 15px 25px; border-bottom: 1px solid #fce7f3; cursor: pointer;"
+                    onclick="toggleCollapse(this)">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="header-icon"
+                            style="background: var(--primary-color); color: white; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 2px 4px rgba(196, 30, 58, 0.3);">
+                            <span class="item-number" style="font-weight: 700; font-size: 14px;">#{displayIndex}</span>
+                        </div>
+                        <div class="header-title">
+                            <h2 style="font-size: 16px; margin: 0; color: #881337; font-weight: 700;">Detail Kegiatan
+                            </h2>
+                            <span class="item-summary"
+                                style="font-size: 12px; color: #64748b; font-weight: 500; display: none;">(Klik untuk
+                                expand)</span>
+                        </div>
+                    </div>
+                    <div class="header-actions" style="display: flex; gap: 10px;">
+                        <button type="button" class="btn-collapse"
+                            style="background: transparent; border: none; color: #64748b; cursor: pointer;"
+                            title="Minimize">
+                            <i class="fas fa-chevron-up transition-transform"></i>
+                        </button>
+                        <button type="button" class="btn-remove-item"
+                            onclick="removeItem(this); event.stopPropagation();"
+                            style="background: white; border: 1px solid #fecaca; color: #ef4444; cursor: pointer; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.2s;">
+                            <i class="fas fa-trash-alt"></i> Hapus
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body collapsible-content" style="padding: 25px;">
+
+                    <!-- 1. Basic Info -->
+                    <div style="margin-bottom: 25px;">
+                        <h3
+                            style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                            <i class="fas fa-info-circle" style="color: var(--primary-color); margin-right: 8px;"></i>
+                            1. Informasi Dasar
+                        </h3>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Proses Bisnis</label>
+                                <input type="text" class="form-control probis-input"
+                                    name="items[{index}][kolom2_proses]" readonly
+                                    style="background-color: #f8fafc; color: #64748b; cursor: not-allowed; border-color: #e2e8f0;">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kegiatan <span class="required">*</span></label>
+                                <input type="text" class="form-control item-kegiatan-input"
+                                    name="items[{index}][kolom2_kegiatan]" required
+                                    placeholder="Contoh: Pengelasan Pipa..." oninput="updateSummary(this)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Lokasi <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="items[{index}][kolom3_lokasi]" required
+                                    placeholder="Contoh: Area Workshop...">
+                            </div>
+                            <!-- NEW: Pihak Berkepentingan -->
+                            <div class="form-group">
+                                <label class="form-label">Pihak Berkepentingan (Optional)</label>
+                                <input type="text" class="form-control" name="items[{index}][kolom4_pihak]"
+                                    placeholder="Contoh: Internal, Kontraktor, Tamu...">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kategori <span class="required">*</span></label>
+                                <select class="form-control category-select" name="items[{index}][kategori]" required
+                                    onchange="updateConditions(this)">
+                                    <option value="">-- Pilih --</option>
+                                    <option value="K3">K3 - Kesehatan & Keselamatan</option>
+                                    <option value="KO">KO - Keselamatan Operasional</option>
+                                    <option value="Lingkungan">Lingkungan</option>
+                                    <option value="Keamanan">Keamanan</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kondisi <span class="required">*</span></label>
+                                <select class="form-control condition-select" name="items[{index}][kolom5_kondisi]"
+                                    required>
+                                    <option value="">-- Pilih Kategori Dulu --</option>
+                                </select>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 2: Identifikasi Bahaya (Kolom 6) -->
-                    <div class="doc-card">
-                        <div class="card-header">
-                            <div class="header-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                            <div class="header-title">
-                                <h2>Identifikasi Bahaya (Kolom 6)</h2>
-                                <p>Tentukan potensi bahaya</p>
+                    <!-- 2. Hazard ID -->
+                    <div style="margin-bottom: 25px;">
+                        <h3
+                            style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                            <i class="fas fa-exclamation-triangle" style="color: #f59e0b; margin-right: 8px;"></i> 2.
+                            Identifikasi Bahaya
+                        </h3>
+                        <div class="hazard-section"
+                            style="background: #fffbeb; padding: 20px; border-radius: 8px; border: 1px solid #fcd34d;">
+                            <div class="toggle-group hazard-toggles hidden" style="margin-bottom:15px;">
+                                <button type="button" class="toggle-btn active"
+                                    onclick="toggleBahayaType(this, 'condition')">Unsafe Condition</button>
+                                <button type="button" class="toggle-btn"
+                                    onclick="toggleBahayaType(this, 'action')">Unsafe Action</button>
                             </div>
-                        </div>
-                        <div class="card-body">
-                            <input type="hidden" name="bahaya_type" id="bahaya_type">
-
-                            <div id="section_k3_ko" class="hidden">
-                                <div class="toggle-group" style="margin-bottom:20px;">
-                                    <button type="button" class="toggle-btn active" id="btn_unsafe_condition"
-                                        onclick="selectBahayaType('condition')">Unsafe Condition</button>
-                                    <button type="button" class="toggle-btn" id="btn_unsafe_action"
-                                        onclick="selectBahayaType('action')">Unsafe Action</button>
-                                </div>
-                                <div id="unsafe_condition_options" class="checkbox-grid hidden"></div>
-                                <div id="unsafe_action_options" class="checkbox-grid hidden"></div>
-                            </div>
-
-                            <div id="section_lingkungan" class="checkbox-grid hidden" id="lingkungan_options"></div>
-                            <div id="section_keamanan" class="checkbox-grid hidden" id="keamanan_options"></div>
-
+                            <div class="hazard-options checkbox-grid"></div>
                             <div class="form-group mt-4">
-                                <label class="form-label" id="manual_bahaya_label">Input Bahaya Lainnya (Manual)</label>
-                                <input type="text" class="form-control" name="bahaya_manual"
-                                    placeholder="Deskripsikan jika pilihan diatas tidak sesuai...">
+                                <label class="form-label">Bahaya Lainnya (Manual)</label>
+                                <input type="text" class="form-control" name="items[{index}][bahaya_manual]"
+                                    placeholder="Deskripsi bahaya lain...">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 3: Analisis Risiko (Kolom 7 & 9) -->
-                    <div class="doc-card">
-                        <div class="card-header">
-                            <div class="header-icon"><i class="fas fa-search-dollar"></i></div>
-                            <div class="header-title">
-                                <h2>Analisis Risiko (Col 7 & 9)</h2>
-                                <p>Konsekuensi dan Identifikasi</p>
+                    <!-- 3. Risk Analysis -->
+                    <div style="margin-bottom: 25px;">
+                        <h3
+                            style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                            <i class="fas fa-search-dollar" style="color: #3b82f6; margin-right: 8px;"></i> 3. Analisis
+                            Risiko
+                        </h3>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Dampak / Konsekuensi <span class="required">*</span></label>
+                                <textarea class="form-control" name="items[{index}][kolom7_dampak]" required
+                                    placeholder="Apa dampak yang mungkin terjadi?" rows="3"></textarea>
                             </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-grid-2">
-                                <div class="form-group">
-                                    <label class="form-label">Dampak / Konsekuensi (Col 7) <span
-                                            class="required">*</span></label>
-                                    <textarea class="form-control" name="kolom7_dampak" required
-                                        placeholder="Jelaskan dampak negatif..."></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Identifikasi Risiko (Col 9) <span
-                                            class="required">*</span></label>
-                                    <textarea class="form-control" name="kolom9_risiko" required
-                                        placeholder="Apa risiko spesifiknya?"></textarea>
-                                </div>
+                            <div class="form-group">
+                                <label class="form-label">Identifikasi Risiko <span class="required">*</span></label>
+                                <textarea class="form-control" name="items[{index}][kolom9_risiko]" required
+                                    placeholder="Risiko spesifik..." rows="3"></textarea>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 4: Penilaian Risiko Awal (Kolom 12-14) -->
-                    <div class="doc-card">
-                        <div class="card-header">
-                            <div class="header-icon"><i class="fas fa-calculator"></i></div>
-                            <div class="header-title">
-                                <h2>Penilaian Risiko Awal (Col 12-14)</h2>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div style="display: flex; gap: 30px;">
-                                <div style="flex:1;">
+                    <!-- 4. Risk Assessment (Initial) -->
+                    <div style="margin-bottom: 25px;">
+                        <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #e2e8f0;">
+                            <h4
+                                style="font-size:13px; font-weight:700; margin-bottom:15px; text-transform:uppercase; color:#334155;">
+                                Penilaian Risiko Awal</h4>
+                            <div style="display: flex; gap: 20px; align-items: flex-start;">
+                                <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                                     <div class="form-group">
                                         <label class="form-label">Kemungkinan (Likelihood)</label>
-                                        <select class="form-control" id="kolom12_kemungkinan" name="kolom12_kemungkinan"
-                                            required onchange="calculateRisk()">
-                                            <option value="">-- Pilih (1-5) --</option>
+                                        <select class="form-control likelihood-select"
+                                            name="items[{index}][kolom12_kemungkinan]" required
+                                            onchange="calculateItemRisk(this)">
+                                            <option value="">-- Pilih --</option>
                                             <option value="1">1 - Sangat Jarang</option>
                                             <option value="2">2 - Jarang</option>
                                             <option value="3">3 - Kadang-kadang</option>
@@ -734,9 +793,10 @@
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Konsekuensi (Severity)</label>
-                                        <select class="form-control" id="kolom13_konsekuensi" name="kolom13_konsekuensi"
-                                            required onchange="calculateRisk()">
-                                            <option value="">-- Pilih (1-5) --</option>
+                                        <select class="form-control severity-select"
+                                            name="items[{index}][kolom13_konsekuensi]" required
+                                            onchange="calculateItemRisk(this)">
+                                            <option value="">-- Pilih --</option>
                                             <option value="1">1 - Tidak Signifikan</option>
                                             <option value="2">2 - Minor</option>
                                             <option value="3">3 - Moderate</option>
@@ -745,136 +805,126 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div style="flex: 0 0 250px;">
-                                    <label class="form-label">Hasil Penilaian</label>
-                                    <div class="risk-result-box">
-                                        <div class="risk-score" id="display_risk_score">-</div>
-                                        <span class="risk-level" id="display_risk_level">PENDING</span>
+                                <div style="flex: 0 0 160px; text-align:center;">
+                                    <label class="form-label">Risk Level</label>
+                                    <div class="risk-result-box"
+                                        style="padding:15px; border-radius:8px; transition: background 0.3s; background: #e2e8f0; border: 1px solid #cbd5e1;">
+                                        <div class="risk-score display-score" style="font-size: 24px;">-</div>
+                                        <span class="risk-level display-level" style="font-size: 11px;">PENDING</span>
                                     </div>
-                                    <input type="hidden" id="kolom14_nilai_risiko" name="kolom14_nilai_risiko">
+                                    <input type="hidden" name="items[{index}][kolom14_score]" class="input-score">
+                                    <input type="hidden" name="items[{index}][kolom14_level]" class="input-level">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 5 (NEW): Regulasi & Evaluasi (Kolom 15 & 16) -->
-                    <div class="doc-card">
-                        <div class="card-header">
-                            <div class="header-icon"><i class="fas fa-gavel"></i></div>
-                            <div class="header-title">
-                                <h2>Regulasi & Evaluasi (Col 15 & 16)</h2>
-                                <p>Peraturan dan Prioritas</p>
+                    <!-- 5. Controls -->
+                    <div style="margin-bottom: 25px;">
+                        <h3
+                            style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                            <i class="fas fa-shield-alt" style="color: #10b981; margin-right: 8px;"></i> 4. Pengendalian
+                        </h3>
+                        <div class="form-group">
+                            <label class="form-label">Hirarki Pengendalian</label>
+                            <div class="checkbox-grid"
+                                style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
+                                <label class="checkbox-card"><input type="checkbox"
+                                        name="items[{index}][kolom10_pengendalian][]" value="Eliminasi">
+                                    Eliminasi</label>
+                                <label class="checkbox-card"><input type="checkbox"
+                                        name="items[{index}][kolom10_pengendalian][]" value="Substitusi">
+                                    Substitusi</label>
+                                <label class="checkbox-card"><input type="checkbox"
+                                        name="items[{index}][kolom10_pengendalian][]" value="Rekayasa Teknik"> Rekayasa
+                                    Teknik</label>
+                                <label class="checkbox-card"><input type="checkbox"
+                                        name="items[{index}][kolom10_pengendalian][]" value="Administratif">
+                                    Administratif</label>
+                                <label class="checkbox-card"><input type="checkbox"
+                                        name="items[{index}][kolom10_pengendalian][]" value="APD"> APD</label>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">Pengendalian Existing <span class="required">*</span></label>
+                            <textarea class="form-control" name="items[{index}][kolom11_existing]" required rows="3"
+                                placeholder="SOP, Instruksi Kerja, APD yang sudah ada..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 6. Regulation & Evaluation -->
+                    <div style="margin-bottom: 25px;">
+                        <h3
+                            style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                            <i class="fas fa-gavel" style="color: #8b5cf6; margin-right: 8px;"></i> 5. Regulasi &
+                            Evaluasi
+                        </h3>
+                        <div class="form-grid-2">
                             <div class="form-group">
-                                <label class="form-label">Peraturan Perundangan (Col 15)</label>
-                                <textarea class="form-control" name="kolom15_regulasi" id="kolom15_peraturan"
-                                    oninput="checkRegulasi()" placeholder="Contoh: UU No. 1 Tahun 1970..."></textarea>
+                                <label class="form-label">Peraturan (Col 15)</label>
+                                <textarea class="form-control" name="items[{index}][kolom15_regulasi]"
+                                    rows="2"></textarea>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Aspek Penting / Prioritas (Col 16)</label>
-                                <div style="display: flex; gap: 20px;">
-                                    <label style="display:flex; align-items:center; gap:8px;">
-                                        <input type="radio" name="kolom16_penting" value="P"> <strong>P</strong> -
-                                        Penting
+                                <label class="form-label">Aspek Penting (Col 16)</label>
+                                <div style="display:flex; gap:15px; margin-top:10px;">
+                                    <label class="control-radio">
+                                        <input type="radio" name="items[{index}][kolom16_aspek]" value="P">
+                                        <span>Penting (P)</span>
                                     </label>
-                                    <label style="display:flex; align-items:center; gap:8px;">
-                                        <input type="radio" name="kolom16_penting" value="TP"> <strong>TP</strong> -
-                                        Tidak Penting
+                                    <label class="control-radio">
+                                        <input type="radio" name="items[{index}][kolom16_aspek]" value="TP" checked>
+                                        <span>Tidak Penting (TP)</span>
                                     </label>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Card 6 (NEW): Risiko & Peluang (Kolom 17) -->
-                    <div class="doc-card">
-                        <div class="card-header">
-                            <div class="header-icon"><i class="fas fa-lightbulb"></i></div>
-                            <div class="header-title">
-                                <h2>Risiko & Peluang (Col 17)</h2>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Risiko Negatif (Col 17)</label>
+                                <textarea class="form-control" name="items[{index}][kolom17_risiko]" rows="2"
+                                    placeholder="Jika ada risiko negatif..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Peluang Positif (Col 17)</label>
+                                <textarea class="form-control" name="items[{index}][kolom17_peluang]" rows="2"
+                                    placeholder="Jika ada peluang positif..."></textarea>
                             </div>
                         </div>
-                        <div class="card-body">
+                    </div>
+
+                    <!-- 7. Residual Risk & Follow Up -->
+                    <div>
+                        <div style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
+                            <h4
+                                style="font-size:13px; font-weight:700; margin-bottom:15px; text-transform:uppercase; color:#15803d;">
+                                <i class="fas fa-check-double" style="margin-right:8px;"></i> Tindak Lanjut & Risiko
+                                Residual
+                            </h4>
                             <div class="form-grid-2">
                                 <div class="form-group">
-                                    <label class="form-label">Risiko (Negatif)</label>
-                                    <textarea class="form-control" name="kolom17_risiko"
-                                        placeholder="Risiko tambahan..."></textarea>
+                                    <label class="form-label">Rencana Tindak Lanjut</label>
+                                    <textarea class="form-control" name="items[{index}][kolom18_tindak_lanjut]" required
+                                        rows="2" placeholder="Tindakan perbaikan selanjutnya..."></textarea>
                                 </div>
+                                <!-- NEW: Toleransi -->
                                 <div class="form-group">
-                                    <label class="form-label">Peluang (Positif)</label>
-                                    <textarea class="form-control" name="kolom17_peluang"
-                                        placeholder="Peluang improvement..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 7: Pengendalian Risiko (Kolom 10 & 11) -->
-                    <div class="doc-card">
-                        <div class="card-header">
-                            <div class="header-icon"><i class="fas fa-shield-alt"></i></div>
-                            <div class="header-title">
-                                <h2>Pengendalian Risiko</h2>
-                                <p>Hirarki dan Rencana</p>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label class="form-label">Hirarki Pengendalian (Pilih minimal satu)</label>
-                                <div class="checkbox-grid">
-                                    <div class="checkbox-card"><input type="checkbox" name="hirarki[]"
-                                            value="Eliminasi"> Eliminasi</div>
-                                    <div class="checkbox-card"><input type="checkbox" name="hirarki[]"
-                                            value="Substitusi"> Substitusi</div>
-                                    <div class="checkbox-card"><input type="checkbox" name="hirarki[]"
-                                            value="Rekayasa Teknik"> Rekayasa Teknik</div>
-                                    <div class="checkbox-card"><input type="checkbox" name="hirarki[]"
-                                            value="Administratif"> Administratif</div>
-                                    <div class="checkbox-card"><input type="checkbox" name="hirarki[]" value="APD"> APD
-                                    </div>
+                                    <label class="form-label">Status Toleransi?</label>
+                                    <select class="form-control" name="items[{index}][kolom18_toleransi]" required>
+                                        <option value="Ya" selected>Ya - Dapat Ditoleransi</option>
+                                        <option value="Tidak">Tidak - Perlu Stop Work</option>
+                                    </select>
                                 </div>
                             </div>
 
-                            <!-- Dynamic Additional Controls -->
-                            <div id="additional_controls" style="margin-top: 20px;"></div>
-                            <button type="button" class="btn btn-secondary mt-4"
-                                style="width:100%; border:1px dashed #ccc;" onclick="addControlInput()">
-                                <i class="fas fa-plus"></i> Tambah Detail Pengendalian Baru
-                            </button>
+                            <hr style="border:0; border-top:1px dashed #bbf7d0; margin:15px 0;">
 
-                            <div class="form-group mt-4">
-                                <label class="form-label">Pengendalian Existing (Col 11)</label>
-                                <textarea class="form-control" name="kolom11_existing" required
-                                    placeholder="Jelaskan pengendalian yg sudah ada..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 8: Tindak Lanjut & Residual (Col 18-22) -->
-                    <div class="doc-card">
-                        <div class="card-header">
-                            <div class="header-icon"><i class="fas fa-history"></i></div>
-                            <div class="header-title">
-                                <h2>Tindak Lanjut & Residual Risk</h2>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label class="form-label">Pengendalian Tindak Lanjut (Col 19)</label>
-                                <textarea class="form-control" name="kolom18_tindak_lanjut" required
-                                    placeholder="Rencana kedepan..."></textarea>
-                            </div>
-
-                            <div
-                                style="display:flex; gap:30px; margin-top:30px; padding-top:20px; border-top:1px dashed #eee;">
-                                <div style="flex:1;">
+                            <div style="display: flex; gap: 20px; align-items:flex-start;">
+                                <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                                     <div class="form-group">
-                                        <label class="form-label">Kemungkinan Baru (Col 20)</label>
-                                        <select class="form-control" id="kolom20_kemungkinan"
-                                            name="residual_kemungkinan" required onchange="calculateResidualRisk()">
+                                        <label class="form-label">Kemungkinan (Residual)</label>
+                                        <select class="form-control res-val" name="items[{index}][residual_kemungkinan]"
+                                            required onchange="calculateItemResidual(this)">
                                             <option value="">-- Pilih --</option>
                                             <option value="1">1</option>
                                             <option value="2">2</option>
@@ -884,9 +934,9 @@
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Konsekuensi Baru (Col 21)</label>
-                                        <select class="form-control" id="kolom21_konsekuensi"
-                                            name="residual_konsekuensi" required onchange="calculateResidualRisk()">
+                                        <label class="form-label">Konsekuensi (Residual)</label>
+                                        <select class="form-control res-val" name="items[{index}][residual_konsekuensi]"
+                                            required onchange="calculateItemResidual(this)">
                                             <option value="">-- Pilih --</option>
                                             <option value="1">1</option>
                                             <option value="2">2</option>
@@ -895,180 +945,469 @@
                                             <option value="5">5</option>
                                         </select>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Risiko Dapat Ditoleransi? (Col 18)</label>
-                                        <div style="display:flex; gap:20px;">
-                                            <label style="display:flex; gap:5px;"><input type="radio"
-                                                    name="kolom18_toleransi" value="Ya" checked> Ya</label>
-                                            <label style="display:flex; gap:5px;"><input type="radio"
-                                                    name="kolom18_toleransi" value="Tidak"> Tidak</label>
-                                        </div>
-                                    </div>
                                 </div>
-                                <div style="flex:0 0 250px;">
-                                    <div class="risk-result-box">
-                                        <div class="risk-score" id="display_resid_score">-</div>
-                                        <span class="risk-level" id="display_resid_level">PENDING</span>
+                                <div style="flex: 0 0 160px; text-align:center;">
+                                    <label class="form-label">Residual Level</label>
+                                    <div class="risk-result-box res-box"
+                                        style="padding:15px; border-radius:8px; background:#15803d; color:white;">
+                                        <div class="risk-score res-score" style="font-size:24px;">-</div>
+                                        <span class="risk-level res-level"
+                                            style="font-size:11px; opacity:0.9;">PENDING</span>
                                     </div>
-                                    <input type="hidden" id="kolom22_nilai_risiko" name="kolom22_nilai_risiko">
+                                    <input type="hidden" name="items[{index}][residual_score]" class="input-res-score">
+                                    <input type="hidden" name="items[{index}][residual_level]" class="input-res-level">
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Action Bar -->
-                    <div class="action-bar">
-                        <div class="action-info"><i class="fas fa-info-circle"></i> Lengkapi data sebelum kirim.</div>
-                        <div class="action-buttons">
-                            <a href="{{ route('documents.index') }}" class="btn btn-secondary">Batal</a>
-                            <input type="hidden" name="submit_for_approval" value="1">
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i>
-                                Kirim</button>
-                        </div>
-                    </div>
-                </form>
+                </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </template>
 
-    <!-- Logic Script -->
     <script>
-        const hazardData = {
-            k3_condition: {
-                "Fisika": ["Ketinggian", "Licin", "Material Jatuh", "Ruang Terbatas", "Benda Berputar", "Bising", "Panas/Dingin"],
-                "Kimia": ["Terhirup", "Terkena Kulit", "Tertelan", "Penyimpanan Salah"],
-                "Biologi": ["Virus", "Bakteri", "Hewan Liar"]
-            },
-            k3_action: {
-                "Ergonomi": ["Angkat Berat", "Posisi Salah", "Gerakan Berulang"],
-                "Perilaku": ["Tidak Pakai APD", "Tidak Fokus", "Jalan Pintas", "Langgar Prosedur"]
-            },
-            lingkungan: {
-                "Emisi Udara": "Debu, Asap, Gas", "Limbah Cair": "Oli, Kimia", "Limbah Padat": "B3, Sampah", "Energi": "Boros Listrik/Air"
-            },
-            keamanan: ["Pencurian", "Sabotase", "Kekerasan", "Terorisme"]
+        let itemIndex = 0;
+        const autoProbis = document.getElementById('auto_probis_value').value;
+
+        // Static Options Data
+        const categories = {
+            'K3': { label: 'K3', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
+            'KO': { label: 'KO', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
+            'Lingkungan': { label: 'Lingkungan', conditions: ['Normal', 'Abnormal', 'Emergency'] },
+            'Keamanan': { label: 'Keamanan', conditions: ['Emergency'] }
         };
 
-        function selectBahayaType(type) {
-            document.getElementById('bahaya_type').value = type;
-            if (type === 'condition') {
-                document.getElementById('btn_unsafe_condition').classList.add('active');
-                document.getElementById('btn_unsafe_action').classList.remove('active');
-                document.getElementById('unsafe_condition_options').classList.remove('hidden');
-                document.getElementById('unsafe_action_options').classList.add('hidden');
+        const hazards = {
+            'condition': ['Licin', 'Terjal', 'Panas', 'Bising', 'Gelap', 'Berdebu', 'Sempit'],
+            'action': ['Tidak Pakai APD', 'Bekerja Buru-buru', 'Posisi Salah', 'Mengabaikan Prosedur']
+        };
+
+        function addItem() {
+            // Collapse all existing first
+            document.querySelectorAll('.doc-item').forEach(el => collapseItem(el));
+
+            const template = document.getElementById('item-template').innerHTML;
+            const container = document.getElementById('items-container');
+
+            // Use simple index for name attributes
+            let html = template.replace(/{index}/g, itemIndex);
+
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            const itemNode = div.firstElementChild;
+
+            // Auto fill probis
+            const probisInput = itemNode.querySelector('.probis-input');
+            if (probisInput) probisInput.value = autoProbis;
+
+            container.appendChild(itemNode);
+
+            // Scroll to new item top
+            itemNode.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            itemIndex++;
+            updateItemNumbers();
+        }
+
+        function removeItem(btn) {
+            Swal.fire({
+                title: 'Hapus Item?',
+                text: "Data item ini akan dihapus.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    btn.closest('.doc-item').remove();
+                    updateItemNumbers();
+                }
+            });
+        }
+
+        function toggleCollapse(header) {
+            const item = header.closest('.doc-item');
+            const content = item.querySelector('.collapsible-content');
+            const icon = item.querySelector('.btn-collapse i');
+            const summary = item.querySelector('.item-summary');
+
+            if (content.style.display === 'none') {
+                // EXPAND
+                content.style.display = 'block';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+                summary.style.display = 'none';
+                item.classList.remove('collapsed');
             } else {
-                document.getElementById('btn_unsafe_condition').classList.remove('active');
-                document.getElementById('btn_unsafe_action').classList.add('active');
-                document.getElementById('unsafe_condition_options').classList.add('hidden');
-                document.getElementById('unsafe_action_options').classList.remove('hidden');
+                // COLLAPSE
+                content.style.display = 'none';
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+                summary.style.display = 'inline';
+                item.classList.add('collapsed');
             }
         }
 
-        function updateBahayaContent(cat) {
-            ['section_k3_ko', 'section_lingkungan', 'section_keamanan'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        function collapseItem(item) {
+            const content = item.querySelector('.collapsible-content');
+            const icon = item.querySelector('.btn-collapse i');
+            const summary = item.querySelector('.item-summary');
 
-            if (cat === 'K3' || cat === 'KO') {
-                document.getElementById('section_k3_ko').classList.remove('hidden');
-                document.querySelector('#unsafe_condition_options').innerHTML = renderChecks(hazardData.k3_condition);
-                document.querySelector('#unsafe_action_options').innerHTML = renderChecks(hazardData.k3_action);
-                selectBahayaType('condition');
-            } else if (cat === 'Lingkungan') {
-                document.getElementById('section_lingkungan').classList.remove('hidden');
-                document.getElementById('section_lingkungan').innerHTML = renderChecks(hazardData.lingkungan);
-            } else if (cat === 'Keamanan') {
-                document.getElementById('section_keamanan').classList.remove('hidden');
-                let html = '';
-                hazardData.keamanan.forEach(i => html += `<div class="checkbox-card"><input type="checkbox" name="bahaya_security[]" value="${i}"> ${i}</div>`);
-                document.getElementById('section_keamanan').innerHTML = html;
+            if (content && icon && summary) {
+                content.style.display = 'none';
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+                summary.style.display = 'inline';
+                item.classList.add('collapsed');
             }
         }
 
-        function renderChecks(data) {
-            let html = '';
-            for (const [k, v] of Object.entries(data)) {
-                if (Array.isArray(v)) {
-                    html += `<div style="grid-column:1/-1; font-weight:bold; margin-top:10px;">${k}</div>`;
-                    v.forEach(i => html += `<div class="checkbox-card"><input type="checkbox" name="bahaya_detail[]" value="${k}: ${i}"> ${i}</div>`);
+        function updateSummary(input) {
+            const item = input.closest('.doc-item');
+            const summary = item.querySelector('.item-summary');
+            if (input.value) {
+                const limit = 40;
+                let txt = input.value;
+                if (txt.length > limit) txt = txt.substring(0, limit) + '...';
+                summary.textContent = `(${txt})`;
+            } else {
+                summary.textContent = '(Klik untuk expand)';
+            }
+        }
+
+        function updateItemNumbers() {
+            const items = document.querySelectorAll('.doc-item');
+            items.forEach((item, idx) => {
+                // Update Badge Number
+                const numBadge = item.querySelector('.item-number');
+                if (numBadge) numBadge.textContent = '#' + (idx + 1);
+            });
+            updateRemoveButtons();
+        }
+
+        function updateRemoveButtons() {
+            const buttons = document.querySelectorAll('.btn-remove-item');
+            if (buttons.length === 1) {
+                buttons[0].style.display = 'none';
+            } else {
+                buttons.forEach(b => b.style.display = 'block');
+            }
+        }
+
+        function updateConditions(select) {
+            const item = select.closest('.doc-item');
+            const condSelect = item.querySelector('.condition-select');
+            const cat = select.value;
+            const hazardSection = item.querySelector('.hazard-section');
+            const hazardOptions = item.querySelector('.hazard-options');
+            const toggles = item.querySelector('.hazard-toggles');
+
+            condSelect.innerHTML = '<option value="">-- Pilih --</option>';
+            hazardOptions.innerHTML = '';
+
+            if (categories[cat]) {
+                categories[cat].conditions.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    condSelect.appendChild(opt);
+                });
+
+                if (cat === 'K3' || cat === 'KO') {
+                    toggles.classList.remove('hidden');
+                    loadHazards(item, 'condition');
                 } else {
-                    html += `<div class="checkbox-card"><input type="checkbox" name="bahaya_aspect[]" value="${k}"> ${k} (${v})</div>`;
+                    toggles.classList.add('hidden');
+                    ['Pencemaran Air', 'Pencemaran Udara', 'Kebisingan'].forEach(h => {
+                        addCheckbox(hazardOptions, item.dataset.index, h);
+                    });
                 }
             }
-            return html;
         }
 
-        function updateConditionOptions() {
-            const cat = document.getElementById('kolom4_kategori').value;
-            const sel = document.getElementById('kolom5_kondisi');
-            sel.innerHTML = '<option value="">-- Pilih --</option>';
-            let opts = [];
+        function toggleBahayaType(btn, type) {
+            const group = btn.parentElement;
+            group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
 
-            if (cat === 'K3' || cat === 'KO') opts = ['R - Rutin', 'NR - Non Rutin', 'EM - Emergency'];
-            else if (cat === 'Lingkungan') opts = ['N - Normal', 'TN - Tak Normal', 'EM - Emergency'];
-            else if (cat === 'Keamanan') opts = ['EM - Emergency'];
+            const item = btn.closest('.doc-item');
+            loadHazards(item, type);
+        }
 
-            opts.forEach(o => {
-                let op = document.createElement('option');
-                op.value = o.split(' ')[0]; op.text = o;
-                sel.add(op);
+        function loadHazards(item, type) {
+            const container = item.querySelector('.hazard-options');
+            container.innerHTML = '';
+            const idx = item.dataset.index;
+
+            hazards[type].forEach(h => {
+                addCheckbox(container, idx, h);
             });
-            updateBahayaContent(cat);
         }
 
-        function addControlInput() {
-            const container = document.getElementById('additional_controls');
-            const idx = container.children.length;
-            const div = document.createElement('div');
-            div.style.marginBottom = '10px';
-            div.innerHTML = `
-                <div style="display:flex; gap:10px;">
-                    <select class="form-control" name="new_controls[${idx}][type]" style="width:30%;">
-                        <option>Eliminasi</option><option>Substitusi</option><option>Rekayasa Teknik</option><option>Administratif</option><option>APD</option>
-                    </select>
-                    <input type="text" class="form-control" name="new_controls[${idx}][desc]" placeholder="Deskripsi...">
-                    <button type="button" class="btn btn-secondary" style="color:red;" onclick="this.parentElement.parentElement.remove()">X</button>
-                </div>
+        function addCheckbox(container, idx, label) {
+            const html = `
+                <label class="checkbox-card">
+                    <input type="checkbox" name="items[${idx}][kolom6_bahaya][]" value="${label}"> ${label}
+                </label>
             `;
-            container.appendChild(div);
+            container.insertAdjacentHTML('beforeend', html);
         }
 
-        function checkRegulasi() {
-            const val = document.getElementById('kolom15_peraturan').value;
-            const p = document.querySelector('input[name="kolom16_penting"][value="P"]');
-            const tp = document.querySelector('input[name="kolom16_penting"][value="TP"]');
-            if (val.length > 0) p.checked = true; else tp.checked = true;
+        function calculateItemRisk(el) {
+            const item = el.closest('.doc-item');
+            const likelihood = parseInt(item.querySelector('.likelihood-select').value) || 0;
+            const severity = parseInt(item.querySelector('.severity-select').value) || 0;
+
+            const score = likelihood * severity;
+            const scoreEl = item.querySelector('.display-score');
+            const levelEl = item.querySelector('.display-level');
+            const inputScore = item.querySelector('.input-score');
+            const inputLevel = item.querySelector('.input-level');
+            const riskBox = item.querySelector('.risk-result-box');
+
+            scoreEl.textContent = score || '-';
+            inputScore.value = score;
+
+            let level = 'Rendah';
+            let bg = '#e2e8f0'; // Default gray
+            let textColor = '#64748b';
+
+            if (score > 0) {
+                textColor = '#fff';
+                if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
+                else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; }
+                else { level = 'Rendah'; bg = '#10b981'; }
+            }
+
+            levelEl.textContent = (score > 0) ? level : 'PENDING';
+            inputLevel.value = level;
+            riskBox.style.background = bg;
+            riskBox.style.color = textColor;
         }
 
-        function getLevel(s) {
-            if (s <= 3) return { l: 'RENDAH', c: '#10b981' };
-            if (s <= 9) return { l: 'SEDANG', c: '#f59e0b' };
-            if (s <= 16) return { l: 'TINGGI', c: '#f97316' };
-            return { l: 'EXTREME', c: '#ef4444' };
-        }
+        function calculateItemResidual(el) {
+            const item = el.closest('.doc-item');
+            const likelihood = parseInt(item.querySelector('[name*="residual_kemungkinan"]').value) || 0;
+            const severity = parseInt(item.querySelector('[name*="residual_konsekuensi"]').value) || 0;
 
-        function calculateRisk() {
-            const L = parseInt(document.getElementById('kolom12_kemungkinan').value) || 0;
-            const S = parseInt(document.getElementById('kolom13_konsekuensi').value) || 0;
-            if (L && S) {
-                const sc = L * S; const r = getLevel(sc);
-                document.getElementById('kolom14_nilai_risiko').value = sc;
-                document.getElementById('display_risk_score').innerHTML = sc;
-                const badge = document.getElementById('display_risk_level');
-                badge.innerHTML = r.l; badge.style.backgroundColor = r.c;
+            const score = likelihood * severity;
+            const scoreEl = item.querySelector('.res-score');
+            const levelEl = item.querySelector('.res-level');
+            const resBox = item.querySelector('.res-box');
+
+            scoreEl.textContent = score || '-';
+            item.querySelector('.input-res-score').value = score;
+
+            let level = '-';
+            let bg = '#e2e8f0';
+            let textColor = '#64748b';
+
+            if (score > 0) {
+                textColor = '#fff';
+                if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
+                else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; }
+                else { level = 'Rendah'; bg = '#15803d'; }
+            }
+
+            levelEl.textContent = (score > 0) ? level : 'PENDING';
+            item.querySelector('.input-res-level').value = level;
+            if (resBox) {
+                resBox.style.background = bg;
+                resBox.style.color = textColor;
             }
         }
 
-        function calculateResidualRisk() {
-            const L = parseInt(document.getElementById('kolom20_kemungkinan').value) || 0;
-            const S = parseInt(document.getElementById('kolom21_konsekuensi').value) || 0;
-            if (L && S) {
-                const sc = L * S; const r = getLevel(sc);
-                document.getElementById('kolom22_nilai_risiko').value = sc;
-                document.getElementById('display_resid_score').innerHTML = sc;
-                const badge = document.getElementById('display_resid_level');
-                badge.innerHTML = r.l; badge.style.backgroundColor = r.c;
+        function validateForm() {
+            let valid = true;
+            document.querySelectorAll('.doc-item').forEach(item => {
+                const s = item.querySelector('.input-score').value;
+                if (!s || s == 0) valid = false;
+            });
+
+            if (!valid) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Belum Lengkap',
+                    text: 'Mohon lengkapi penilaian risiko untuk semua item.',
+                });
+                return false;
+            }
+            return true;
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            addItem(); // Add first item
+        });
+    </script>
+
+    <style>
+        /* Action Bar - Static Style */
+        .action-bar {
+            margin-top: 20px;
+            background: #ffffff;
+            padding: 20px 30px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-info {
+            font-size: 14px;
+            color: #475569;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            /* Space between buttons */
+            flex-shrink: 0;
+            /* Prevent shrinking */
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* Ensure content isn't hidden behind bar */
+        .content-area {
+            padding-bottom: 100px;
+        }
+    </style>
+
+    <script>
+        // ... (Existing functions: addItem, removeItem, etc - keeping logic) ...
+
+        function validateForm(event) {
+            // Only prevent default if event is passed (when called from submit listener)
+            if (event && event.type === 'submit') event.preventDefault();
+
+            try {
+                let isValid = true;
+                let errorMsg = '';
+
+                // Check Document Title
+                const titleInput = document.querySelector('input[name="judul_dokumen"]');
+                if (!titleInput || !titleInput.value.trim()) {
+                    isValid = false;
+                    errorMsg = 'Judul Dokumen wajib diisi.';
+                    if (titleInput) titleInput.focus();
+                }
+
+                // 1. Check if at least one item exists
+                const items = document.querySelectorAll('.doc-item');
+                if (isValid && items.length === 0) {
+                    isValid = false;
+                    errorMsg = 'Minimal harus ada 1 kegiatan.';
+                }
+
+                // 2. Check each item for Risk Score
+                if (isValid) {
+                    items.forEach((item, idx) => {
+                        const s = item.querySelector('.input-score').value;
+                        const residualS = item.querySelector('.input-res-score').value;
+
+                        const kegiatan = item.querySelector('.item-kegiatan-input')?.value || 'Item #' + (idx + 1);
+                        const kondisi = item.querySelector('.condition-select')?.value;
+
+                        // Validate Conditions
+                        if (!kondisi) {
+                            isValid = false;
+                            errorMsg = `Kondisi (Rutin/Non-Rutin/dll) belum dipilih untuk: ${kegiatan}`;
+                            const content = item.querySelector('.collapsible-content');
+                            if (content.style.display === 'none') {
+                                toggleCollapse(item.querySelector('.card-header'));
+                            }
+                            item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+
+                        // Validate Initial Risk
+                        if (isValid && (!s || s == 0)) {
+                            isValid = false;
+                            errorMsg = `Penilaian risiko awal belum lengkap untuk: ${kegiatan}`;
+                            const box = item.querySelector('.risk-result-box');
+                            if (box) {
+                                box.style.border = '2px solid #ef4444';
+                                setTimeout(() => box.style.border = '', 3000);
+                            }
+                        }
+
+                        // Validate Residual Risk
+                        if (isValid && (!residualS || residualS == 0)) {
+                            isValid = false;
+                            errorMsg = `Penilaian risiko residual belum lengkap untuk: ${kegiatan}`;
+                            const content = item.querySelector('.collapsible-content');
+                            if (content.style.display === 'none') {
+                                toggleCollapse(item.querySelector('.card-header'));
+                            }
+
+                            const resBox = item.querySelector('.risk-result-box.res-box');
+                            if (resBox) {
+                                resBox.style.border = '2px solid #ef4444';
+                                setTimeout(() => resBox.style.border = '1px solid #15803d', 3000);
+                            }
+                            item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    });
+                }
+
+                // 3. Check Required Fields (Native HTML required might miss hidden tabs)
+                // Adding specific checks if needed, but 'required' attribute handles most.
+
+                if (!isValid) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Validasi Gagal',
+                        text: errorMsg,
+                        confirmButtonColor: '#c41e3a'
+                    });
+                    return false;
+                }
+
+                // Show Loading
+                const btn = document.getElementById('btnSubmit');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+                btn.disabled = true;
+
+                // Submit manually 
+                const form = document.getElementById('hiradcForm');
+                if (form.reportValidity()) {
+                    form.submit();
+                } else {
+                    // Even if custom validation passes, standard HTML validation might fail (e.g. required texts)
+                    // This catches that silently.
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+
+            } catch (e) {
+                console.error(e);
+                Swal.fire('System Error', e.message, 'error');
+                const btn = document.getElementById('btnSubmit');
+                if (btn) btn.disabled = false;
             }
         }
     </script>
+
+
+
+    </form>
+    </div> <!-- End Content-Area -->
+    </main>
+    </div> <!-- End Container -->
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

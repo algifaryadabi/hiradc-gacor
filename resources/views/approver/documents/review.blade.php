@@ -308,196 +308,290 @@
             color: var(--text-main);
         }
 
-        .doc-body {
-            padding: 24px;
+        /* PROFESSIONAL ENTERPRISE HIRADC TABLE */
+        :root {
+            --header-bg: #1e293b;
+            --header-text: #ffffff;
+            --border-color: #cbd5e1;
+            --row-hover: #f1f5f9;
+            --risk-section-bg: #ffffff;
+            --input-bg: #f8fafc;
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-sub);
-            margin-bottom: 6px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            font-size: 14px;
-            color: var(--text-main);
+        .hiradc-wrapper {
+            overflow: auto;
+            max-height: 85vh;
             background: white;
-            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-bottom: 60px;
+            position: relative;
         }
 
-        .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-light);
+        .excel-table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-size: 13px;
+            color: #1e293b;
         }
 
-        textarea.form-control {
-            min-height: 100px;
-            resize: vertical;
+        /* --- HEADERS --- */
+        .excel-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
-        .read-only-mode .form-control {
-            background: #f1f5f9;
-            cursor: not-allowed;
-        }
-
-        /* Style for locked inputs */
-
-        /* Risk Matrix */
-        .risk-result-box {
-            background: #1f2937;
-            color: white;
-            padding: 16px;
-            border-radius: 12px;
+        .excel-table thead th {
+            background: var(--header-bg);
+            color: var(--header-text);
+            padding: 10px 12px;
+            border-right: 1px solid #334155;
+            border-bottom: 1px solid #334155;
             text-align: center;
-        }
-
-        .risk-score {
-            font-size: 32px;
-            font-weight: 800;
-            line-height: 1;
-            margin-bottom: 4px;
-        }
-
-        .risk-level {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            font-size: 11px;
-            font-weight: 700;
+            vertical-align: middle;
+            font-weight: 600;
+            font-size: 12px;
             text-transform: uppercase;
+            letter-spacing: 0.03em;
         }
 
-        /* Action Footer */
+        .excel-table thead tr:first-child th {
+            background: #0f172a;
+            /* Darker Top Header */
+            font-size: 13px;
+            border-bottom: 1px solid #334155;
+        }
+
+        /* Sticky First Column Header */
+        .excel-table thead th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 52;
+            border-right: 2px solid #475569;
+        }
+
+        /* --- BODY --- */
+        .excel-table tbody td {
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            background: white;
+            vertical-align: top;
+            padding: 0;
+            transition: background 0.1s;
+        }
+
+        /* Sticky First Column Body */
+        .excel-table tbody td:first-child {
+            position: sticky;
+            left: 0;
+            background: #f8fafc;
+            z-index: 40;
+            border-right: 2px solid #94a3b8;
+            /* Stronger separation */
+            text-align: center;
+            vertical-align: top;
+            padding-top: 15px;
+            font-weight: 700;
+            color: #64748b;
+        }
+
+        .excel-table tbody td:first-child:hover {
+            background: #f1f5f9;
+        }
+
+        /* --- INPUT STYLING --- */
+        /* Inputs fill the cell but look cleaner */
+        .cell-textarea,
+        .cell-input,
+        .cell-select {
+            width: 100%;
+            min-width: 220px;
+            height: 100%;
+            min-height: 100px;
+            border: none;
+            padding: 12px 14px;
+            /* Comfortable padding */
+            font-family: inherit;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #334155;
+            background: transparent;
+            resize: none;
+            outline: none;
+        }
+
+        .cell-textarea:focus,
+        .cell-input:focus,
+        .cell-select:focus {
+            background: #fce7f3;
+            /* Very subtle highlight on focus */
+            box-shadow: inset 0 0 0 2px #db2777;
+            /* Pink/Red focus ring for visibility */
+            color: #be185d;
+        }
+
+        /* --- SECTIONS & GROUPS --- */
+        /* Alternate Section Backgrounds for readability */
+        .group-risk {
+            background-color: #fdf2f8 !important;
+        }
+
+        /* Pinkish tint for Risk */
+        .group-control {
+            background-color: #f0f9ff !important;
+        }
+
+        /* Blue tint for Control */
+
+        /* Thick Borders between Groups */
+        .excel-table th.section-border-right,
+        .excel-table td.section-border-right {
+            border-right: 3px solid #94a3b8 !important;
+            /* Visible Separation */
+        }
+
+        /* --- RISK COLUMNS (L, S, R) --- */
+        .risk-col {
+            width: 50px;
+            text-align: center;
+            background: #fff;
+            vertical-align: top;
+            padding: 5px !important;
+        }
+
+        .risk-select {
+            width: 100%;
+            padding: 8px 2px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            background-color: #fff;
+            appearance: none;
+            font-size: 14px;
+        }
+
+        .risk-select:focus {
+            border-color: #db2777;
+            box-shadow: 0 0 0 2px rgba(219, 39, 119, 0.2);
+        }
+
+        /* --- WIDGETS --- */
+        .cell-checkbox-group {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 280px;
+        }
+
+        .cell-checkbox-item {
+            display: flex;
+            gap: 10px;
+            font-size: 13px;
+            align-items: flex-start;
+            line-height: 1.4;
+            color: #334155;
+        }
+
+        .cell-checkbox-item input {
+            margin-top: 3px;
+            accent-color: #db2777;
+        }
+
+        /* Footer */
         .review-footer {
             position: fixed;
-            bottom: 0;
-            left: 260px;
-            right: 0;
-            background: white;
-            padding: 20px 48px;
-            border-top: 1px solid var(--border);
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-            z-index: 100;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 900px;
+            background: #1e293b;
+            /* Dark Footer */
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
             display: flex;
-            gap: 20px;
-            align-items: flex-start;
-        }
-
-        .notes-area {
-            flex: 1;
-        }
-
-        .notes-area label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 6px;
-            display: block;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .notes-input {
-            width: 100%;
-            height: 80px;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            font-family: inherit;
-            font-size: 14px;
-            resize: none;
-        }
-
-        .notes-input:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 3px var(--primary-light);
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 12px;
-            align-items: flex-end;
-        }
-
-        .btn {
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: transform 0.1s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            height: 50px;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        .btn-approve {
-            background: #16a34a;
+            background: #334155;
+            border: 1px solid #475569;
             color: white;
-            box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2);
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 6px;
         }
 
-        .btn-approve:hover {
-            background: #15803d;
+        .notes-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .action-btns .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
         }
 
         .btn-revise {
-            background: #dc2626;
+            background: #ef4444;
             color: white;
-            box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2);
+            margin-right: 10px;
         }
 
-        .btn-revise:hover {
-            background: #b91c1c;
+        .btn-approve {
+            background: #22c55e;
+            color: white;
         }
 
-        /* Checkboxes */
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 12px;
-        }
-
-        .checkbox-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 10px;
+        /* Risk Badge */
+        .risk-score-box {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 10px;
-            font-size: 13px;
+            justify-content: center;
+            height: 100px;
         }
 
-        .checkbox-card input {
-            accent-color: var(--primary);
-            transform: scale(1.1);
+        .risk-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1e293b;
         }
 
-        .hidden {
-            display: none;
+        .risk-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 4px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .bg-low {
+            background: #16a34a;
+        }
+
+        .bg-med {
+            background: #ca8a04;
+        }
+
+        .bg-high {
+            background: #dc2626;
         }
     </style>
 </head>
@@ -520,12 +614,14 @@
             <div class="user-info-bottom">
                 <div class="user-profile">
                     <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}</div>
+                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
+                    </div>
                     <div class="user-details">
                         <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
                         <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
                         <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}</div>
+                            {{ Auth::user()->unit_or_dept_name }}
+                        </div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
@@ -546,14 +642,20 @@
                     Kembali</a>
             </div>
 
-            <!-- Header Card -->
+            <!-- Header Card (Summary) -->
             <div class="doc-card">
-                <div class="doc-header">
+                <div class="doc-header" style="justify-content: flex-start; gap: 30px;">
                     <div>
-                        <div class="doc-title-label">Judul Kegiatan / Proses</div>
-                        <div class="doc-title-value">{{ $document->kolom2_kegiatan }}</div>
+                        <div class="doc-title-label">Judul Dokumen</div>
+                        <div class="doc-title-value">{{ $document->judul_dokumen ?? $document->kolom2_kegiatan }}</div>
                     </div>
-                    <div class="doc-meta-badge">{{ $document->kategori }}</div>
+
+                    <div>
+                        <div class="doc-title-label">Unit / Seksi</div>
+                        <div class="doc-title-value" style="font-size:16px;">{{ $document->unit->nama_unit ?? '-' }} /
+                            {{ $document->seksi->nama_seksi ?? '-' }}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -561,254 +663,211 @@
                 @csrf
                 <input type="hidden" name="action" id="action_input">
                 <input type="hidden" name="catatan" id="catatan_input_form">
+                <input type="hidden" name="kategori" value="{{ $document->kategori }}">
 
-                <!-- Card 1: Info Dasar -->
-                <div class="doc-card">
-                    <div class="card-header-slim"><i class="fas fa-info-circle"></i>
-                        <h2>Informasi Dasar (Kolom 2-5)</h2>
-                    </div>
-                    <div class="doc-body">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Proses Bisnis</label>
-                                <input type="text" class="form-control" name="kolom2_proses"
-                                    value="{{ $document->kolom2_proses }}">
-                            </div>
-                            <div class="form-group">
-                                <label>Kegiatan</label>
-                                <input type="text" class="form-control" name="kolom2_kegiatan"
-                                    value="{{ $document->kolom2_kegiatan }}">
-                            </div>
-                            <div class="form-group">
-                                <label>Lokasi</label>
-                                <input type="text" class="form-control" name="kolom3_lokasi"
-                                    value="{{ $document->kolom3_lokasi }}">
-                            </div>
-                            <div class="form-group">
-                                <label>Kondisi (Kolom 5)</label>
-                                <input type="text" class="form-control" name="kolom5_kondisi"
-                                    value="{{ $document->kolom5_kondisi }}">
-                            </div>
-                            <!-- Hidden Kategori (Needed for update logic) -->
-                            <input type="hidden" name="kategori" value="{{ $document->kategori }}">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 2: Bahaya (Simplified for Edit - Text/List) -->
-                <!-- Note: Re-implementing full dynamic hazard toggle is complex. 
-                     We will allow editing "Bahaya Manual" and show selected hazards as text/checkboxes if possible.
-                     For now, let's keep it as read-only detailed list + editable Manual field. -->
-                <div class="doc-card">
-                    <div class="card-header-slim"><i class="fas fa-exclamation-triangle"></i>
-                        <h2>Identifikasi Bahaya (Kolom 6)</h2>
-                    </div>
-                    <div class="doc-body">
-                        <div class="form-group">
-                            <label>Rincian Bahaya Terpilih</label>
-                            @php
-                                $bahaya = $document->kolom6_bahaya;
-                                $details = [];
-                                if (isset($bahaya['details']))
-                                    $details = array_merge($details, $bahaya['details']);
-                                if (isset($bahaya['aspects']))
-                                    $details = array_merge($details, $bahaya['aspects']);
-                                if (isset($bahaya['threats']))
-                                    $details = array_merge($details, $bahaya['threats']);
-                            @endphp
-                            <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
-                                @if(count($details) > 0)
-                                    <ul style="padding-left:20px;">
-                                        @foreach($details as $d) <li>{{ $d }}</li> @endforeach
-                                    </ul>
-                                @else
-                                    <span style="color:#64748b;">Tidak ada rincian terpilih.</span>
-                                @endif
-                                <!-- Hidden inputs to preserve data on update -->
-                                @foreach($details as $d) <input type="hidden" name="bahaya_detail[]" value="{{ $d }}">
-                                @endforeach
-                                <input type="hidden" name="bahaya_type" value="{{ $bahaya['type'] ?? '' }}">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Bahaya Lainnya (Manual)</label>
-                            <input type="text" class="form-control" name="bahaya_manual"
-                                value="{{ $bahaya['manual'] ?? '' }}">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 3: Risiko -->
-                <div class="doc-card">
-                    <div class="card-header-slim"><i class="fas fa-search-dollar"></i>
-                        <h2>Analisis Risiko (Kolom 7 & 9)</h2>
-                    </div>
-                    <div class="doc-body">
-                        <div class="form-grid">
-                            <div class="form-group"><label>Dampak (Col 7)</label><textarea class="form-control"
-                                    name="kolom7_dampak">{{ $document->kolom7_dampak }}</textarea></div>
-                            <div class="form-group"><label>Identifikasi Risiko (Col 9)</label><textarea
-                                    class="form-control" name="kolom9_risiko">{{ $document->kolom9_risiko }}</textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 4: Penilaian Risiko Awal -->
-                <div class="doc-card">
-                    <div class="card-header-slim"><i class="fas fa-calculator"></i>
-                        <h2>Penilaian Risiko Awal (Kolom 12-14)</h2>
-                    </div>
-                    <div class="doc-body">
-                        <div style="display:flex; gap:24px;">
-                            <div style="flex:1;">
-                                <div class="form-grid">
-                                    <div class="form-group">
-                                        <label>Kemungkinan (1-5)</label>
-                                        <select class="form-control" id="kolom12_kemungkinan" name="kolom12_kemungkinan"
-                                            onchange="calculateRisk()">
-                                            @foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}"
-                                                {{$document->kolom12_kemungkinan == $v ? 'selected' : ''}}>{{$v}}</option>
+                <div class="hiradc-wrapper">
+                    <table class="excel-table">
+                        <thead>
+                            <!-- Header Row 1: Groups -->
+                            <tr>
+                                <th rowspan="2" style="width: 50px;">No</th>
+                                <th colspan="4" class="section-border-right">Kegiatan & Situasi</th>
+                                <th colspan="3" class="section-border-right">Identifikasi Bahaya & Risiko</th>
+                                <th colspan="2" class="section-border-right">Pengendalian Risiko</th>
+                                <th colspan="3" class="section-border-right">Penilaian Risiko Awal</th>
+                                <th rowspan="2" style="width: 250px;">Peraturan / Regulasi</th>
+                                <th rowspan="2" style="width: 100px;" class="section-border-right">Penting / TP</th>
+                                <th colspan="5">Penilaian Risiko Sisa & Tindak Lanjut</th>
+                            </tr>
+                            <!-- Header Row 2: Columns -->
+                            <tr>
+                                <th style="width: 200px;">Kegiatan / Proses</th>
+                                <th style="width: 100px;">Kategori</th>
+                                <th style="width: 150px;">Lokasi</th>
+                                <th style="width: 100px;" class="section-border-right">Kondisi</th>
+                                <th style="width: 250px;">Potensi Bahaya</th>
+                                <th style="width: 220px;">Dampak / Konsekuensi</th>
+                                <th style="width: 220px;" class="section-border-right">Risiko & Peluang</th>
+                                <th style="width: 300px;">Hirarki Pengendalian</th>
+                                <th style="width: 250px;" class="section-border-right">Pengendalian Existing</th>
+                                <th style="width: 60px;">L</th>
+                                <th style="width: 60px;">S</th>
+                                <th style="width: 80px;" class="section-border-right">Level</th>
+                                <th style="width: 200px;">Tindak Lanjut</th>
+                                <th style="width: 60px;">L</th>
+                                <th style="width: 60px;">S</th>
+                                <th style="width: 80px;">Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($document->details as $index => $item)
+                                <tr>
+                                    <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
+                                        {{ $index + 1 }}
+                                    </td>
+                                    <!-- Kegiatan -->
+                                    <td>
+                                        <textarea class="cell-textarea auto-grow"
+                                            readonly>{{ $item->kolom2_kegiatan }}</textarea>
+                                    </td>
+                                    <!-- Kategori -->
+                                    <td>
+                                        <div class="cell-input"
+                                            style="display:flex; align-items:center; justify-content:center;">
+                                            <span class="doc-meta-badge" style="background:#e0e7ff; color:#3730a3;">
+                                                {{ $item->kategori }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <!-- Lokasi -->
+                                    <td>
+                                        <textarea class="cell-textarea auto-grow"
+                                            readonly>{{ $item->kolom3_lokasi }}</textarea>
+                                    </td>
+                                    <!-- Kondisi -->
+                                    <td class="section-border-right">
+                                        <div class="cell-input"
+                                            style="display:flex; align-items:center; justify-content:center;">
+                                            <span class="doc-meta-badge" style="background:#f1f5f9; color:#475569;">
+                                                {{ $item->kolom5_kondisi == 'N' ? 'Normal' : ($item->kolom5_kondisi == 'AN' ? 'Abnormal' : 'Emergency') }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <!-- Bahaya -->
+                                    <td>
+                                        <div class="cell-checkbox-group">
+                                            @if(!empty($item->kolom6_bahaya['manual']))
+                                                <div
+                                                    style="font-size:13px; margin-bottom:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                    <strong>Lainnya:</strong> {{ $item->kolom6_bahaya['manual'] }}
+                                                </div>
+                                            @endif
+                                            @php
+                                                $bahayaDetails = [];
+                                                if (!empty($item->kolom6_bahaya['details']))
+                                                    $bahayaDetails = array_merge($bahayaDetails, $item->kolom6_bahaya['details']);
+                                                if (!empty($item->kolom6_bahaya['aspects']))
+                                                    $bahayaDetails = array_merge($bahayaDetails, $item->kolom6_bahaya['aspects']);
+                                                if (!empty($item->kolom6_bahaya['threats']))
+                                                    $bahayaDetails = array_merge($bahayaDetails, $item->kolom6_bahaya['threats']);
+                                            @endphp
+                                            @foreach($bahayaDetails as $detail)
+                                                <div class="cell-checkbox-item">
+                                                    <i class="fas fa-exclamation-triangle"
+                                                        style="color:#ef4444; font-size:10px; margin-top:3px;"></i>
+                                                    <span>{{ $detail }}</span>
+                                                </div>
                                             @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Konsekuensi (1-5)</label>
-                                        <select class="form-control" id="kolom13_konsekuensi" name="kolom13_konsekuensi"
-                                            onchange="calculateRisk()">
-                                            @foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}"
-                                                {{$document->kolom13_konsekuensi == $v ? 'selected' : ''}}>{{$v}}</option>
+                                        </div>
+                                    </td>
+                                    <!-- Dampak -->
+                                    <td>
+                                        <textarea class="cell-textarea auto-grow"
+                                            readonly>{{ $item->kolom7_dampak }}</textarea>
+                                    </td>
+                                    <!-- Risiko & Peluang -->
+                                    <td class="section-border-right">
+                                        <div class="risk-section">
+                                            <div class="risk-label">IDENTIFIKASI:</div>
+                                            <div class="risk-text">{{ $item->kolom9_risiko }}</div>
+                                            <div class="risk-label" style="border-top:1px solid #e2e8f0; margin-top:8px;">
+                                                RISIKO (-):</div>
+                                            <div class="risk-text">{{ $item->kolom17_risiko }}</div>
+                                            <div class="risk-label" style="border-top:1px solid #e2e8f0; margin-top:8px;">
+                                                PELUANG (+):</div>
+                                            <div class="risk-text">{{ $item->kolom17_peluang }}</div>
+                                        </div>
+                                    </td>
+                                    <!-- Pengendalian Hierarchy -->
+                                    <td>
+                                        <div class="cell-checkbox-group">
+                                            @php $hs = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
+                                            @foreach($hs as $h)
+                                                <div class="cell-checkbox-item">
+                                                    <i class="fas fa-check-square" style="color:#10b981;"></i>
+                                                    <span style="font-weight:600;">{{ $h }}</span>
+                                                </div>
                                             @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="width:200px;">
-                                <div class="risk-result-box">
-                                    <div class="risk-score" id="display_risk_score">{{ $document->kolom14_score }}</div>
-                                    <span class="risk-level" id="display_risk_level">PENDING</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 5: Regulasi -->
-                <div class="doc-card">
-                    <div class="card-header-slim"><i class="fas fa-gavel"></i>
-                        <h2>Regulasi (Kolom 15 & 16)</h2>
-                    </div>
-                    <div class="doc-body">
-                        <div class="form-group">
-                            <label>Peraturan</label>
-                            <textarea class="form-control"
-                                name="kolom15_regulasi">{{ $document->kolom15_regulasi }}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Status Penting?</label>
-                            <div style="display: flex; gap: 20px; margin-top:5px;">
-                                <label><input type="radio" name="kolom16_penting" value="P" {{ ($document->kolom16_penting ?? '') == 'P' ? 'checked' : '' }}> Penting</label>
-                                <label><input type="radio" name="kolom16_penting" value="TP" {{ ($document->kolom16_penting ?? '') == 'TP' ? 'checked' : '' }}> Tidak
-                                    Penting</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 6: Risiko & Peluang Additional -->
-                <div class="doc-card">
-                    <div class="card-header-slim"><i class="fas fa-lightbulb"></i>
-                        <h2>Risiko & Peluang (Kolom 17)</h2>
-                    </div>
-                    <div class="doc-body">
-                        <div class="form-grid">
-                            <div class="form-group"><label>Risiko</label><textarea class="form-control"
-                                    name="kolom17_risiko">{{ $document->kolom17_risiko }}</textarea></div>
-                            <div class="form-group"><label>Peluang</label><textarea class="form-control"
-                                    name="kolom17_peluang">{{ $document->kolom17_peluang }}</textarea></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 7: Pengendalian -->
-                <div class="doc-card">
-                    <div class="card-header-slim"><i class="fas fa-shield-alt"></i>
-                        <h2>Pengendalian (Kolom 10 & 11)</h2>
-                    </div>
-                    <div class="doc-body">
-                        <div class="form-group">
-                            <label>Hirarki Pengendalian</label>
-                            <div class="checkbox-grid">
-                                @php $h = $document->kolom10_pengendalian['hierarchy'] ?? []; @endphp
-                                <div class="checkbox-card"><input type="checkbox" name="hirarki[]" value="Eliminasi" {{ in_array('Eliminasi', $h) ? 'checked' : '' }}> Eliminasi</div>
-                                <div class="checkbox-card"><input type="checkbox" name="hirarki[]" value="Substitusi" {{ in_array('Substitusi', $h) ? 'checked' : '' }}> Substitusi</div>
-                                <div class="checkbox-card"><input type="checkbox" name="hirarki[]"
-                                        value="Rekayasa Teknik" {{ in_array('Rekayasa Teknik', $h) ? 'checked' : '' }}>
-                                    Rekayasa Teknik</div>
-                                <div class="checkbox-card"><input type="checkbox" name="hirarki[]" value="Administratif"
-                                        {{ in_array('Administratif', $h) ? 'checked' : '' }}> Administratif</div>
-                                <div class="checkbox-card"><input type="checkbox" name="hirarki[]" value="APD" {{ in_array('APD', $h) ? 'checked' : '' }}> APD</div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Pengendalian Existing</label>
-                            <textarea class="form-control"
-                                name="kolom11_existing">{{ $document->kolom11_existing }}</textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 8: Tindak Lanjut -->
-                <div class="doc-card">
-                    <div class="card-header-slim"><i class="fas fa-history"></i>
-                        <h2>Tindak Lanjut & Residual (Kolom 18-22)</h2>
-                    </div>
-                    <div class="doc-body">
-                        <div class="form-group"><label>Rencana Tindak Lanjut (Col 19)</label><textarea
-                                class="form-control"
-                                name="kolom18_tindak_lanjut">{{ $document->kolom18_tindak_lanjut }}</textarea></div>
-
-                        <div style="display:flex; gap:24px; margin-top:20px;">
-                            <div style="flex:1;">
-                                <div class="form-grid">
-                                    <div class="form-group">
-                                        <label>Kemungkinan Residual</label>
-                                        <select class="form-control" id="kolom20_kemungkinan"
-                                            name="residual_kemungkinan" onchange="calculateResidualRisk()">
-                                            @foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}"
-                                                {{$document->residual_kemungkinan == $v ? 'selected' : ''}}>{{$v}}
-                                            </option> @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Konsekuensi Residual</label>
-                                        <select class="form-control" id="kolom21_konsekuensi"
-                                            name="residual_konsekuensi" onchange="calculateResidualRisk()">
-                                            @foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}"
-                                                {{$document->residual_konsekuensi == $v ? 'selected' : ''}}>{{$v}}
-                                            </option> @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Dapat Ditoleransi?</label>
-                                    <div style="display: flex; gap: 20px;">
-                                        <label><input type="radio" name="kolom18_toleransi" value="Ya" {{ ($document->kolom18_toleransi ?? 'Ya') == 'Ya' ? 'checked' : '' }}>
-                                            Ya</label>
-                                        <label><input type="radio" name="kolom18_toleransi" value="Tidak" {{ ($document->kolom18_toleransi ?? '') == 'Tidak' ? 'checked' : '' }}>
-                                            Tidak</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="width:200px;">
-                                <div class="risk-result-box">
-                                    <div class="risk-score" id="display_resid_score">
-                                        {{ $document->residual_score ?? '-' }}</div>
-                                    <span class="risk-level" id="display_resid_level">PENDING</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                            @if(!empty($item->kolom10_pengendalian['new_controls']))
+                                                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+                                                    <strong style="font-size:11px; color:#c2410c;">DETAIL PENGENDALIAN:</strong>
+                                                    @foreach($item->kolom10_pengendalian['new_controls'] as $ctrl)
+                                                        <div style="font-size:12px; margin-top:4px;">
+                                                            <span
+                                                                style="background:#fff7ed; color:#c2410c; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">{{ $ctrl['type'] ?? 'Tipe?' }}</span>
+                                                            <span style="color:#334155;">{{ $ctrl['desc'] ?? '-' }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <!-- Existing -->
+                                    <td class="section-border-right">
+                                        <textarea class="cell-textarea auto-grow"
+                                            readonly>{{ $item->kolom11_existing }}</textarea>
+                                    </td>
+                                    <!-- RISK INITIAL -->
+                                    <td class="risk-col section-border-right"
+                                        style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom12_kemungkinan }}</div>
+                                    </td>
+                                    <td class="risk-col section-border-right"
+                                        style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom13_konsekuensi }}</div>
+                                    </td>
+                                    <td class="risk-col section-border-right" style="vertical-align:middle;">
+                                        <div class="risk-score-box">
+                                            <div class="risk-val">{{ $item->kolom14_score }}</div>
+                                            <div
+                                                class="risk-badge {{ $item->kolom14_score >= 15 ? 'bg-high' : ($item->kolom14_score >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                {{ $item->risk_level }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <!-- Regulasi -->
+                                    <td class="section-border-right">
+                                        <textarea class="cell-textarea auto-grow"
+                                            readonly>{{ $item->kolom15_regulasi }}</textarea>
+                                    </td>
+                                    <!-- Penting (Col 16) -->
+                                    <td class="section-border-right" style="text-align:center; vertical-align:middle;">
+                                        <div class="doc-meta-badge"
+                                            style="{{ $item->kolom16_aspek == 'P' ? 'background:#dbeafe; color:#1e40af;' : 'background:#f1f5f9; color:#64748b;' }}">
+                                            {{ $item->kolom16_aspek }}
+                                        </div>
+                                    </td>
+                                    <!-- Tindak Lanjut -->
+                                    <td>
+                                        <textarea class="cell-textarea auto-grow"
+                                            readonly>{{ $item->kolom18_tindak_lanjut }}</textarea>
+                                    </td>
+                                    <!-- RISK RESIDUAL -->
+                                    <td class="risk-col section-border-right"
+                                        style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->residual_kemungkinan }}
+                                        </div>
+                                    </td>
+                                    <td class="risk-col section-border-right"
+                                        style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->residual_konsekuensi }}
+                                        </div>
+                                    </td>
+                                    <td class="risk-col" style="vertical-align:middle;">
+                                        <div class="risk-score-box">
+                                            <div class="risk-val">{{ $item->residual_score ?? '-' }}</div>
+                                            @if($item->residual_score)
+                                                <div
+                                                    class="risk-badge {{ $item->residual_score >= 15 ? 'bg-high' : ($item->residual_score >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                    {{ $item->residual_score >= 15 ? 'HIGH' : ($item->residual_score >= 8 ? 'MED' : 'LOW') }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
 
             </form>
@@ -816,23 +875,19 @@
 
         <!-- Footer -->
         <div class="review-footer">
-            <div class="notes-area">
-                <label>Catatan Review (Wajib untuk Approve & Revisi)</label>
-                <textarea class="notes-input" id="notes"
-                    placeholder="Berikan catatan, masukan, atau alasan revisi..."></textarea>
+            <div style="flex:1; margin-right:20px;">
+                <input type="text" class="notes-input" id="notes" placeholder="Catatan Review (Wajib jika Revisi)...">
             </div>
             <div class="action-btns">
                 @if($document->canBeApprovedBy(Auth::user()))
                     <button type="button" class="btn btn-revise" onclick="confirmAction('revise')">
-                        <i class="fas fa-undo"></i> Minta Revisi
+                        <i class="fas fa-undo"></i> Revisi
                     </button>
                     <button type="button" class="btn btn-approve" onclick="confirmAction('approve')">
-                        <i class="fas fa-check"></i> Simpan & Setujui
+                        <i class="fas fa-check"></i> Approve
                     </button>
                 @else
-                    <div style="padding:10px 20px; background:#e2e8f0; color:#64748b; border-radius:8px; font-weight:600;">
-                        <i class="fas fa-lock"></i> Read Only
-                    </div>
+                    <span style="opacity:0.7; font-weight:600; color:#fff;">View Only Mode</span>
                 @endif
             </div>
         </div>
@@ -842,66 +897,55 @@
         const routeApprove = "{{ route('approver.approve', $document->id) }}";
         const routeRevise = "{{ route('approver.revise', $document->id) }}";
 
-        function getLevel(s) {
-            if (s <= 3) return { l: 'RENDAH', c: '#10b981' };
-            if (s <= 9) return { l: 'SEDANG', c: '#f59e0b' };
-            if (s <= 16) return { l: 'TINGGI', c: '#f97316' };
-            return { l: 'EXTREME', c: '#ef4444' };
-        }
-
-        function calculateRisk() {
-            const L = parseInt(document.getElementById('kolom12_kemungkinan').value) || 0;
-            const S = parseInt(document.getElementById('kolom13_konsekuensi').value) || 0;
-            if (L && S) {
-                const sc = L * S; const r = getLevel(sc);
-                document.getElementById('display_risk_score').innerText = sc;
-                const badge = document.getElementById('display_risk_level');
-                badge.innerText = r.l; badge.style.backgroundColor = r.c;
-            }
-        }
-
-        function calculateResidualRisk() {
-            const L = parseInt(document.getElementById('kolom20_kemungkinan').value) || 0;
-            const S = parseInt(document.getElementById('kolom21_konsekuensi').value) || 0;
-            if (L && S) {
-                const sc = L * S; const r = getLevel(sc);
-                document.getElementById('display_resid_score').innerText = sc;
-                const badge = document.getElementById('display_resid_level');
-                badge.innerText = r.l; badge.style.backgroundColor = r.c;
-            }
-        }
+        // Auto-Grow Textareas
+        document.querySelectorAll('.auto-grow').forEach(el => {
+            el.style.height = 'auto'; // Reset 
+            el.style.height = Math.max(el.scrollHeight, 100) + 'px';
+            el.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        });
+        // Trigger once on load
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.auto-grow').forEach(el => {
+                el.style.height = 'auto';
+                el.style.height = (el.scrollHeight) + 'px';
+            });
+        });
 
         function confirmAction(type) {
             const notes = document.getElementById('notes').value.trim();
-            if (notes.length < 5) {
-                Swal.fire({ icon: 'warning', title: 'Catatan Wajib', text: 'Minimal 5 karakter.' });
+            if (type === 'revise' && notes.length < 5) {
+                Swal.fire({ icon: 'warning', title: 'Catatan Wajib', text: 'Untuk revisi, wajib memberikan catatan saran.' });
                 return;
             }
 
             Swal.fire({
-                title: type === 'approve' ? 'Setujui Dokumen?' : 'Minta Revisi?',
-                text: type === 'approve' ? 'Perubahan pada form akan disimpan.' : 'Dokumen akan dikembalikan ke submitter.',
+                title: type === 'approve' ? 'Setujui Dokumen?' : 'Kembalikan Revisi?',
+                text: type === 'approve' ? 'Dokumen akan dilanjutkan ke Approval berikutnya.' : 'Dokumen akan dikembalikan ke pembuat.',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Ya, Lanjutkan',
-                confirmButtonColor: type === 'approve' ? '#16a34a' : '#dc2626'
+                confirmButtonColor: type === 'approve' ? '#0f172a' : '#ef4444'
             }).then((res) => {
                 if (res.isConfirmed) {
                     document.getElementById('catatan_input_form').value = notes;
                     document.getElementById('reviewForm').action = type === 'approve' ? routeApprove : routeRevise;
+                    document.getElementById('action_input').value = type;
                     document.getElementById('reviewForm').submit();
                 }
             });
         }
-
-        // Init calculations
-        calculateRisk();
-        calculateResidualRisk();
-
-        // Flash Messages
-        @if(session('success')) Swal.fire({ icon: 'success', title: 'Berhasil', text: "{{ session('success') }}", timer: 2000 }); @endif
-        @if($errors->any()) Swal.fire({ icon: 'error', title: 'Error', html: `<ul>@foreach($errors->all() as $e)<li>{{$e}}</li>@endforeach</ul>` }); @endif
     </script>
+
+    <!-- Flash Messages -->
+    @if(session('success'))
+        <script>Swal.fire({ icon: 'success', title: 'Berhasil', text: "{{ session('success') }}", timer: 2000 });</script>
+    @endif
+    @if($errors->any())
+        <script>Swal.fire({ icon: 'error', title: 'Error', html: `<ul>@foreach($errors->all() as $e)<li>{{$e}}</li>@endforeach</ul>` });</script>
+    @endif
 </body>
 
 </html>

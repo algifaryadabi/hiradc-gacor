@@ -635,10 +635,7 @@
                             <div class="meta-value"><i class="far fa-user" style="margin-right:4px; color:#94a3b8;"></i>${doc.submitter}</div>
                         </div>
 
-                        <div class="doc-meta">
-                            <div class="meta-label">Kategori</div>
-                            <div class="meta-value">${doc.category}</div>
-                        </div>
+
 
                         <div class="doc-meta">
                             <div class="meta-label">Waktu Submit</div>

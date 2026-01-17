@@ -14,16 +14,20 @@ class Document extends Model
         'id_dept',
         'id_unit',
         'id_seksi',
-        'kategori',
+        'kategori', // Kept for legacy support (Header Category)
+        'judul_dokumen',
         'status',
         'current_level',
+        // 'kolom... fields' will be moved to DocumentDetail logic, 
+        // but for now we keep them in fillable if we want to support legacy or partial migration?
+        // Actually, let's keep the fillable as is until we fully switch the Controller.
+        // I will just ADD the relationship below.
         'kolom2_proses',
         'kolom2_kegiatan',
         'kolom3_lokasi',
         'kolom5_kondisi',
         'kolom6_bahaya',
         'kolom7_dampak',
-        'kolom8_pihak',
         'kolom9_risiko',
         'kolom10_pengendalian',
         'kolom11_existing',
@@ -42,11 +46,14 @@ class Document extends Model
         'residual_level',
         'published_at',
         'compliance_checklist',
+        'level2_status',
+        'level2_reviewer_id',
+        'level2_approver_id',
+        'level2_assignment_date',
     ];
 
     protected $casts = [
         'kolom6_bahaya' => 'array',
-        'kolom8_pihak' => 'array', // Will be removed in DB but keep for now or remove
         'kolom10_pengendalian' => 'array',
         'published_at' => 'datetime',
         'compliance_checklist' => 'array',
@@ -82,6 +89,21 @@ class Document extends Model
     public function approvals(): HasMany
     {
         return $this->hasMany(DocumentApproval::class, 'document_id');
+    }
+
+    public function details(): HasMany
+    {
+        return $this->hasMany(DocumentDetail::class, 'document_id');
+    }
+
+    public function level2Reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'level2_reviewer_id', 'id_user');
+    }
+
+    public function level2Approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'level2_approver_id', 'id_user');
     }
 
     // ==================== HELPER METHODS ====================

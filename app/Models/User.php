@@ -120,13 +120,14 @@ class User extends Authenticatable
      */
     public function getRoleName(): string
     {
-        // 1. Check for Unit Pengelola (Special Case for Level 2 Approver)
-        // Must be Kepala Unit (Role 3) AND from specific units
+        // 1. Check for Unit Pengelola (Head & Staff)
+        // Includes Kepala Unit (Role 3) AND Staff (Role 4,5,6) from SHE/Security
+        if (in_array($this->id_unit, [55, 56])) {
+            return 'unit_pengelola';
+        }
+
         if ($this->isKepalaUnit()) {
-            if (in_array($this->id_unit, [55, 56])) { // 55=Security, 56=SHE
-                return 'unit_pengelola';
-            }
-            return 'approver'; // Standard Kepala Unit
+            return 'approver'; // Other Kepala Unit
         }
 
         // 2. Kepala Departemen

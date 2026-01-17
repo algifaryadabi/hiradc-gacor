@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Dokumen (Kepala Departemen) - HIRADC System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #c41e3a;
+            --primary-light: #fff1f2;
+            --secondary: #64748b;
+            --bg-body: #f1f5f9;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 120px;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+        }
+
+        .logo-section {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .logo-circle {
+            width: 64px;
+            height: 64px;
+            background: white;
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+        }
+
+        .logo-circle img {
+            max-width: 65%;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 24px 16px;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-sub);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            font-weight: 600;
+        }
+
+        .user-info-bottom {
+            padding: 20px;
+            border-top: 2px solid #e0e0e0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: white;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-top: 2px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px 48px;
+            max-width: 1400px;
+            margin-right: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.03em;
+            margin-bottom: 4px;
+        }
+
+        .header-title p {
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+
+        .btn-back {
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 13px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            background: var(--bg-body);
+            border-color: var(--text-sub);
+        }
+
+        /* Cards */
+        .doc-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .doc-header {
+            background: #f8fafc;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .doc-title-label {
+            font-size: 12px;
+            color: var(--text-sub);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .doc-title-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .doc-meta-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .card-header-slim {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-header-slim i {
+            color: var(--primary);
+        }
+
+        .card-header-slim h2 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .doc-body {
+            padding: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text-main);
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .read-only-mode .form-control {
+            background: #f1f5f9;
+            cursor: not-allowed;
+        }
+
+        /* Risk Matrix */
+        .risk-result-box {
+            background: #1f2937;
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .risk-score {
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .risk-level {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* Action Footer */
+        .review-footer {
+            position: fixed;
+            bottom: 0;
+            left: 260px;
+            right: 0;
+            background: white;
+            padding: 20px 48px;
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .notes-area {
+            flex: 1;
+        }
+
+        .notes-area label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .notes-input {
+            width: 100%;
+            height: 80px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+        }
+
+        .notes-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .btn {
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 50px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-approve {
+            background: #16a34a;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2);
+        }
+
+        .btn-approve:hover {
+            background: #15803d;
+        }
+
+        .btn-revise {
+            background: #dc2626;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2);
+        }
+
+        .btn-revise:hover {
+            background: #b91c1c;
+        }
+
+        /* Checkboxes */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .checkbox-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .checkbox-card input {
+            accent-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Metadata Passport */
+        .passport-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .passport-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+
+        .pp-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+        }
+
+        .pp-profile {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .pp-avatar {
+            width: 52px;
+            height: 52px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .pp-info h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .pp-info p {
+            margin: 2px 0 0;
+            opacity: 0.7;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .pp-meta-grid {
+            display: flex;
+            gap: 40px;
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            padding-left: 40px;
+        }
+
+        .pp-stat-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .pp-stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.5;
+            font-weight: 700;
+        }
+
+        .pp-stat-val {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pp-stat-val i {
+            opacity: 0.8;
+            font-size: 12px;
+        }
+
+        .status-badge-lg {
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34d399;
+        }
+
+        .status-badge-lg.pending {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #fbbf24;
+        }
+
+        .status-badge-lg.revision {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        /* TABLE STYLES (Excel-like) */
+        .hiradc-wrapper {
+            overflow-x: auto;
+            background: white;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+
+        .excel-table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+        }
+
+        .excel-table thead th {
+            background: #1e293b;
+            color: #ffffff;
+            padding: 12px;
+            border-right: 1px solid #334155;
+            border-bottom: 1px solid #334155;
+            text-align: center;
+            vertical-align: middle;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .excel-table thead tr:first-child th {
+            background: #0f172a;
+            border-bottom: 1px solid #334155;
+        }
+
+        .excel-table tbody td {
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+            padding: 12px;
+            color: #334155;
+            line-height: 1.5;
+        }
+
+        /* Borders */
+        .section-border-right {
+            border-right: 3px solid #94a3b8 !important;
+        }
+
+        /* Form Controls in Table */
+        .excel-table .form-control {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
+            padding: 8px;
+            min-width: 150px;
+        }
+
+        .excel-table textarea.form-control {
+            min-height: 80px;
+        }
+
+        .excel-table select.form-control {
+            min-width: 100px;
+        }
+
+        /* Risk Logic */
+        .risk-score-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 60px;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .risk-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .risk-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 4px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .bg-low {
+            background: #16a34a;
+        }
+
+        .bg-med {
+            background: #ca8a04;
+        }
+
+        .bg-high {
+            background: #dc2626;
+        }
+
+        </head><body><div class="container">< !-- Sidebar --><aside class="sidebar"><div class="logo-section"><div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div><div class="logo-text">PT Semen Padang</div><div class="logo-subtext">HIRADC System (Dept Head)</div></div><nav class="nav-menu"><a href="{{ route('kepala_departemen.dashboard') }}" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a><a href="{{ route('kepala_departemen.check_documents') }}" class="nav-item active"><i class="fas fa-file-signature"></i><span>Cek Dokumen</span></a></nav><div class="user-info-bottom"><div class="user-profile"><div class="user-avatar">
+        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
+        </div><div class="user-details"><div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div><div class="user-role">{{ Auth::user()->role_jabatan_name }}</div><div class="user-role" style="font-weight: normal; opacity: 0.8;">
+        {{ Auth::user()->unit_or_dept_name }}
+        </div></div></div><a href="{{ route('logout') }}" class="logout-btn"
+        onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i class="fas fa-sign-out-alt"></i>Keluar</a><form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form></div></aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header-action">
+                <a href="{{ route('kepala_departemen.check_documents') }}" class="back-link"><i class="fas fa-arrow-left"></i>Kembali</a>
+                <h1 style="font-size: 20px; font-weight: 700; margin: 0;">Review Dokumen Final</h1>
+            </div>
+
+            <!-- Document Metadata Passport -->
+            <div class="passport-card">
+                <div class="pp-content">
+                    <div class="pp-profile">
+                        <div class="pp-avatar">
+                            {{ optional($document->user)->nama_user ? strtoupper(substr($document->user->nama_user, 0, 2)) : 'NA' }}
+                        </div>
+                        <div class="pp-info">
+                            <h3>{{ optional($document->user)->nama_user ?? 'Unknown User' }}</h3>
+                            <p>{{ optional($document->unit)->nama_unit ?? 'Unit Tidak Diketahui' }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pp-meta-grid">
+                        <div class="pp-stat-block">
+                            <div class="pp-stat-label">Waktu Submit</div>
+                            <div class="pp-stat-val"><i class="far fa-clock"></i> {{ $document->created_at->format('d M Y, H:i') }} WIB</div>
+                        </div>
+                        <div class="pp-stat-block">
+                            <div class="pp-stat-label">Departemen</div>
+                            <div class="pp-stat-val"><i class="far fa-building"></i> {{ optional(optional($document->user)->departemen)->nama_dept ?? '-' }}</div>
+                        </div>
+                        <div class="pp-stat-block">
+                            <div class="pp-stat-label">Status Terkini</div>
+                            <div class="pp-stat-val">
+                                @if($document->status == 'approved' || $document->status == 'published')
+                                    <span class="status-badge-lg">DISETUJUI</span>
+                                @elseif($document->status == 'revision')
+                                    <span class="status-badge-lg revision">REVISI</span>
+                                @else
+                                    <span class="status-badge-lg pending">PENDING REVIEW</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Title & Context -->
+            <div class="doc-card">
+                <div class="doc-header" style="background:white; border-bottom:none; padding-bottom:10px;">
+                    <div>
+                        <div class="doc-title-label">Judul Dokumen</div>
+                        <div class="doc-title-value" style="font-size:24px;">{{ $document->judul_dokumen ?? $document->kolom2_kegiatan }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="reviewForm" method="POST" action="">
+                @csrf
+                <input type="hidden" name="compliance_checklist" id="compliance_checklist_input">
+                <input type="hidden" name="catatan" id="catatan_input_form">
+
+                <!-- Table Layout Implementation (Standardized) -->
+                <div class="hiradc-wrapper">
+                    <table class="excel-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="width: 50px;">No</th>
+                                <th colspan="4" class="section-border-right">Kegiatan & Situasi</th>
+                                <th colspan="3" class="section-border-right">Identifikasi Bahaya & Risiko</th>
+                                <th colspan="2" class="section-border-right">Pengendalian Risiko</th>
+                                <th colspan="3" class="section-border-right">Penilaian Risiko Awal</th>
+                                <th rowspan="2" style="width: 250px;">Peraturan / Regulasi</th>
+                                <th rowspan="2" style="width: 100px;" class="section-border-right">Penting / TP</th>
+                                <th colspan="5">Penilaian Risiko Sisa & Tindak Lanjut</th>
+                            </tr>
+                            <tr>
+                                <th style="width: 200px;">Kegiatan / Proses</th>
+                                <th style="width: 100px;">Kategori</th>
+                                <th style="width: 150px;">Lokasi</th>
+                                <th style="width: 100px;" class="section-border-right">Kondisi</th>
+                                <th style="width: 250px;">Potensi Bahaya</th>
+                                <th style="width: 220px;">Dampak / Konsekuensi</th>
+                                <th style="width: 220px;" class="section-border-right">Risiko & Peluang</th>
+                                <th style="width: 300px;">Hirarki Pengendalian</th>
+                                <th style="width: 250px;" class="section-border-right">Pengendalian Existing</th>
+                                <th style="width: 60px;">L</th>
+                                <th style="width: 60px;">S</th>
+                                <th style="width: 80px;" class="section-border-right">Level</th>
+                                <th style="width: 200px;">Tindak Lanjut</th>
+                                <th style="width: 60px;">L</th>
+                                <th style="width: 60px;">S</th>
+                                <th style="width: 80px;">Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($document->details as $index => $item)
+                                <tr>
+                                    <td style="text-align:center;">{{ $index + 1 }}</td>
+                                    <td>{{ $item->kolom2_kegiatan }}</td>
+                                    <td>{{ $item->kategori }}</td>
+                                    <td>{{ $item->kolom3_lokasi }}</td>
+                                    <td class="section-border-right">{{ $item->kolom5_kondisi }}</td>
+                                    <td>
+                                        <strong>Type:</strong> {{ $item->kolom6_bahaya['type'] ?? '-' }}<br>
+                                        <strong>Detail:</strong><br>
+                                        @if(!empty($item->kolom6_bahaya['details']))
+                                            @foreach($item->kolom6_bahaya['details'] as $d) - {{ $d }}<br> @endforeach
+                                        @endif
+                                    </td>
+                                    <td>{{ $item->kolom7_dampak }}</td>
+                                    <td class="section-border-right">
+                                        <strong>Risiko (-):</strong> {{ $item->kolom17_risiko ?? '-' }}<br>
+                                        <strong>Peluang (+):</strong> {{ $item->kolom17_peluang ?? '-' }}
+                                    </td>
+                                    <td>
+                                        @if(!empty($item->kolom10_pengendalian['hierarchy']))
+                                            @foreach($item->kolom10_pengendalian['hierarchy'] as $h) <span class="badge" style="background:#f1f5f9; color:#475569; padding:2px 6px; border-radius:4px; margin-bottom:2px; display:inline-block;">{{ $h }}</span> @endforeach
+                                        @endif
+                                    </td>
+                                    <td class="section-border-right">{{ $item->kolom11_existing }}</td>
+                                    <!-- Initial Risk -->
+                                    <td>{{ $item->kolom12_kemungkinan }}</td>
+                                    <td>{{ $item->kolom13_konsekuensi }}</td>
+                                    <td class="section-border-right">
+                                        <span class="risk-badge" style="background: 
+                                            {{ ($item->kolom14_score >= 15) ? '#ef4444' : (($item->kolom14_score >= 8) ? '#f59e0b' : '#10b981') }}">
+                                            {{ ($item->kolom14_score >= 15) ? 'HIGH' : (($item->kolom14_score >= 8) ? 'MED' : 'LOW') }} ({{ $item->kolom14_score }})
+                                        </span>
+                                    </td>
+                                    <td>{{ $item->kolom15_regulasi }}</td>
+                                    <td class="section-border-right">{{ $item->kolom16_aspek }}</td>
+                                    <!-- Residual -->
+                                    <td>{{ $item->kolom18_tindak_lanjut }}</td>
+                                    <td>{{ $item->residual_kemungkinan }}</td>
+                                    <td>{{ $item->residual_konsekuensi }}</td>
+                                    <td>
+                                        <span class="risk-badge" style="background: 
+                                            {{ ($item->residual_score >= 15) ? '#ef4444' : (($item->residual_score >= 8) ? '#f59e0b' : '#10b981') }}">
+                                            {{ ($item->residual_score >= 15) ? 'HIGH' : (($item->residual_score >= 8) ? 'MED' : 'LOW') }} ({{ $item->residual_score }})
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ACTION FOOTER -->
+                @if($document->status == 'pending_level3')
+                    <div class="review-footer">
+                        <div class="notes-area">
+                            <label><i class="fas fa-edit"></i> Catatan Persetujuan / Revisi</label>
+                            <input type="text" name="catatan" id="catatan_input_ui" class="notes-input"
+                                placeholder="Tuliskan catatan untuk penyusun (jika revisi) atau catatan publikasi...">
+                        </div>
+                        <div class="action-btns">
+                            <button type="button" class="btn btn-revise" onclick="confirmAction('revise')"><i
+                                    class="fas fa-undo"></i> Minta Revisi</button>
+                            <button type="button" class="btn btn-approve" onclick="confirmAction('approve')"><i
+                                    class="fas fa-check"></i> Publikasikan</button>
+                        </div>
+                    </div>
+                @else
+                    <div class="review-footer" style="justify-content: center;">
+                        <button class="btn" style="background:#e2e8f0; color:#64748b; cursor:default;"><i
+                                class="fas fa-lock"></i> Mode Read-Only (Status: {{ $document->status }})</button>
+                    </div>
+                @endif
+            </form>
+
+        <!-- HISTORY LOG SECTION -->
+        <div class="history-section" style="margin-top:40px; border-top:1px solid #e2e8f0; padding-top:20px; max-width:1400px; margin-left:auto; margin-right:auto; padding-left:48px; padding-right:48px;">
+            <h3 style="font-size:16px; font-weight:700; color:#1e293b; margin-bottom:15px;">Riwayat Persetujuan</h3>
+            <table class="excel-table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th style="width:150px;">Tanggal</th>
+                        <th style="width:200px;">Oleh</th>
+                        <th style="width:100px;">Aksi</th>
+                        <th>Catatan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($document->approvals as $log)
+                        <tr>
+                            <td>{{ $log->created_at->format('d M Y H:i') }}</td>
+                            <td>{{ optional($log->approver)->nama_user ?? 'System' }} ({{ optional($log->approver)->role_jabatan_name ?? '-' }})</td>
+                            <td>
+                                <span class="status-badge-lg {{ $log->action == 'approved' ? '' : ($log->action == 'revised' ? 'revision' : 'pending') }}" style="font-size:11px; padding:4px 10px;">
+                                    {{ ucfirst($log->action) }}
+                                </span>
+                            </td>
+                            <td>{{ $log->catatan ?? '-' }}</td>
+                        </tr>
+                    @endforeach
+
+                </tbody>
+            </table>
+        </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Initialize SweetAlert toast
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+
+        // 1. READ-ONLY MODE Configuration (Run immediately)
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Initializing Read-Only Mode for Kepala Departemen...");
+
+            // Disable all inputs in Table (Level 3 is Check & Decide only)
+            const docBodyInputs = document.querySelectorAll('.hiradc-wrapper input, .hiradc-wrapper select, .hiradc-wrapper textarea, .hiradc-wrapper button, .doc-body input, .doc-body select, .doc-body textarea');
+            
+            docBodyInputs.forEach(input => {
+                input.disabled = true;
+                // Add visual cue
+                if(input.tagName === 'INPUT' || input.tagName === 'TEXTAREA' || input.tagName === 'SELECT') {
+                    input.style.backgroundColor = '#f8fafc';
+                    input.style.cursor = 'not-allowed';
+                }
+            });
+
+            // Ensure Approval Note input remains enabled (It is outside table)
+            const noteInput = document.getElementById('catatan_input_ui');
+            if(noteInput) {
+                noteInput.disabled = false;
+                noteInput.style.backgroundColor = '#ffffff';
+                noteInput.style.cursor = 'text';
+            }
+            
+            // Re-enable Back Button
+            const backLink = document.querySelector('.back-link');
+            if(backLink) backLink.style.pointerEvents = 'auto';
+        });
+
+        // 2. Calculation Helpers (Even if disabled, needed to prevent errors if logic triggered)
+        function calculateRowRisk(input) {
+            // Read-only, do nothing or just calc for display if enabled
+        }
+        function calculateRowResidual(input) {
+            // Read-only
+        }
+
+        // 3. Confirm Action Logic (Approve/Revise)
+        function confirmAction(type) {
+            const form = document.getElementById('reviewForm');
+            const noteUI = document.getElementById('catatan_input_ui');
+            const noteHidden = document.getElementById('catatan_input_form');
+            const notes = noteUI.value;
+
+            // Validation: Catatan is mandatory for both actions for clarity (or at least for Revision)
+            if (!notes || notes.trim().length < 5) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Catatan Wajib Diisi',
+                    text: 'Mohon tuliskan catatan (minimal 5 karakter) sebelum mengambil tindakan.',
+                    confirmButtonColor: '#c41e3a'
+                });
+                return;
+            }
+
+            // Set Form Action Route dynamically
+            let actionUrl = "";
+            let confirmTitle = "";
+            let confirmText = "";
+            let confirmColor = "";
+            let confirmBtnText = "";
+
+            if (type === 'approve') {
+                actionUrl = "{{ route('kepala_departemen.approve', $document->id) }}";
+                confirmTitle = 'Publikasi Dokumen?';
+                confirmText = "Dokumen akan disetujui dan dipublikasikan (Final) ke seluruh user.";
+                confirmColor = '#16a34a'; // Green
+                confirmBtnText = 'Ya, Publikasikan!';
+            } else if (type === 'revise') {
+                actionUrl = "{{ route('kepala_departemen.revise', $document->id) }}";
+                confirmTitle = 'Kembalikan ke Submitter?';
+                confirmText = "Dokumen akan dikembalikan ke Penyusun (Level 1) untuk direvisi dari awal.";
+                confirmColor = '#dc2626'; // Red
+                confirmBtnText = 'Ya, Minta Revisi';
+            }
+
+            // Show Confirmation Dialog
+            Swal.fire({
+                title: confirmTitle,
+                text: confirmText,
+                icon: type === 'approve' ? 'question' : 'warning',
+                showCancelButton: true,
+                confirmButtonColor: confirmColor,
+                cancelButtonColor: '#64748b',
+                confirmButtonText: confirmBtnText,
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    noteHidden.value = notes;
+                    form.action = actionUrl;
+                    form.submit();
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
+```

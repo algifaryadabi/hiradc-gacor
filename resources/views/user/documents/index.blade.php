@@ -546,9 +546,28 @@
             }
         }
 
-        .animate-item {
-            animation: fadeIn 0.3s ease-out forwards;
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #334155;
+            min-width: 140px;
+            outline: none;
+            background: #f8fafc;
         }
+        .filter-select:focus { border-color: var(--primary-color); }
+
+        /* Toggle Switch */
+        .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #2196F3; }
+        input:focus + .slider { box-shadow: 0 0 1px #2196F3; }
+        input:checked + .slider:before { transform: translateX(18px); }
+
+        .animate-item { animation: fadeIn 0.3s ease-out forwards; }
     </style>
 </head>
 
@@ -565,7 +584,7 @@
                 <div class="logo-subtext">HIRADC System</div>
             </div>
             <nav class="nav-menu">
-                <a href="{{ route('user.dashboard') }}" class="nav-item"><i
+                <a href="{{ route('dashboard') }}" class="nav-item"><i
                         class="fas fa-th-large"></i><span>Dashboard</span></a>
                 <a href="{{ route('documents.index') }}" class="nav-item active"><i
                         class="fas fa-folder-open"></i><span>Dokumen Saya</span></a>
@@ -597,9 +616,60 @@
         <main class="main-content">
             <div class="header">
                 <h1>Dokumen Saya</h1>
-                <a href="{{ route('documents.create') }}" class="btn-create-new">
-                    <i class="fas fa-plus"></i> Buat Dokumen
-                </a>
+                <div style="display:flex; gap:10px;">
+                    <a href="{{ route('documents.summary') }}" class="view-btn" style="text-decoration:none; display:flex; align-items:center; gap:8px; border:1px solid #e2e8f0; background:white;">
+                        <i class="fas fa-table"></i> Lihat Rekapitulasi
+                    </a>
+                    <a href="{{ route('documents.create') }}" class="btn-create-new">
+                        <i class="fas fa-plus"></i> Buat Dokumen
+                    </a>
+                </div>
+            </div>
+
+            <!-- New Filter Section -->
+            <div style="padding: 15px 40px; background: white; border-bottom: 1px solid #e0e0e0;">
+                <form action="{{ route('documents.index') }}" method="GET" style="display:flex; gap:15px; align-items:center;">
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <label style="font-size:11px; font-weight:700; color:#64748b;">BULAN</label>
+                        <select name="month" class="filter-select" onchange="this.form.submit()">
+                            <option value="">Semua Bulan</option>
+                            @foreach(range(1, 12) as $m)
+                                <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
+                                    {{ \Carbon\Carbon::create()->month($m)->locale('id')->isoFormat('MMMM') }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <label style="font-size:11px; font-weight:700; color:#64748b;">TAHUN</label>
+                        <select name="year" class="filter-select" onchange="this.form.submit()">
+                            <option value="">Semua Tahun</option>
+                            @foreach($years as $y)
+                                <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <label style="font-size:11px; font-weight:700; color:#64748b;">FILTER KHUSUS</label>
+                        <div style="display:flex; align-items:center; gap:8px; height: 38px;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="status_filter" value="final" onchange="this.form.submit()" {{ request('status_filter') == 'final' ? 'checked' : '' }}>
+                                <span class="slider round"></span>
+                            </label>
+                            <span style="font-size:13px; color:#334155;">Hanya Final / Publish</span>
+                        </div>
+                    </div>
+                    
+                    @if(request()->hasAny(['month', 'year', 'status_filter']))
+                        <div style="display:flex; flex-direction:column; justify-content:end; height:58px;">
+                            <a href="{{ route('documents.index') }}" style="font-size:12px; color:#dc2626; text-decoration:none; font-weight:600; padding-bottom:8px;">
+                                <i class="fas fa-times"></i> Reset
+                            </a>
+                        </div>
+                    @endif
+                </form>
             </div>
 
             <div class="content-area">
@@ -680,8 +750,8 @@
                                 </div>
                             </div>
 
-                            <div class="doc-title" title="{{ $doc->kolom2_kegiatan }}">
-                                {{ $doc->kolom2_kegiatan ?? 'Tanpa Judul' }}</div>
+                            <div class="doc-title" title="{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}">
+                                {{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan ?? 'Tanpa Judul' }}</div>
                             <div class="doc-meta" style="flex-direction: column; align-items: flex-start; gap: 5px;">
                                 <div>
                                     <i class="far fa-calendar-alt"></i> {{ $doc->created_at->format('d M Y') }}
@@ -769,7 +839,7 @@
                         <thead>
                             <tr>
                                 <th>Kategori</th>
-                                <th>Judul Kegiatan</th>
+                                <th>Judul Dokumen</th>
                                 <th>Tanggal</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
@@ -798,7 +868,7 @@
                                     </td>
                                     <td>
                                         <div style="font-weight: 600; color: #333;">
-                                            {{ Str::limit($doc->kolom2_kegiatan, 50) }}</div>
+                                            {{ Str::limit($doc->judul_dokumen ?? $doc->kolom2_kegiatan, 50) }}</div>
                                     </td>
                                     <td>{{ $doc->created_at->format('d M Y') }}</td>
                                     <td>
