@@ -44,82 +44,82 @@
 
         /* Sidebar */
         .sidebar {
-            width: 260px;
-            background: var(--surface);
-            border-right: 1px solid var(--border);
+            width: 250px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
             position: fixed;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            z-index: 50;
+            z-index: 100;
         }
 
         .logo-section {
-            padding: 24px;
-            border-bottom: 1px solid var(--border);
+            padding: 30px 20px;
+            border-bottom: 1px solid #e0e0e0;
             text-align: center;
         }
 
         .logo-circle {
-            width: 64px;
-            height: 64px;
-            background: white;
+            width: 70px;
+            height: 70px;
+            background: #fff;
             border-radius: 50%;
-            margin: 0 auto 12px;
+            margin: 0 auto 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .logo-circle img {
-            max-width: 65%;
+            max-width: 80%;
+            max-height: 80%;
         }
 
         .logo-text {
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--primary);
-            letter-spacing: -0.02em;
+            font-size: 18px;
+            font-weight: 700;
+            color: #c41e3a;
+            margin-bottom: 3px;
         }
 
         .logo-subtext {
-            font-size: 11px;
-            color: var(--text-sub);
-            font-weight: 500;
-            margin-top: 2px;
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
         }
 
         .nav-menu {
             flex: 1;
-            padding: 24px 16px;
+            padding: 20px 0;
             overflow-y: auto;
         }
 
         .nav-item {
-            padding: 12px 16px;
+            padding: 15px 25px;
             display: flex;
             align-items: center;
             gap: 12px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            color: var(--text-sub);
+            transition: all 0.3s ease;
+            color: #666;
             font-size: 14px;
             font-weight: 500;
             text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 4px;
+            position: relative;
         }
 
-        .nav-item:hover,
-        .nav-item.active {
-            background: var(--primary-light);
-            color: var(--primary);
+        .nav-item:hover {
+            background: #fff5f5;
+            color: #c41e3a;
         }
 
         .nav-item.active {
-            font-weight: 600;
+            background: #ffe5e5;
+            color: #c41e3a;
+            border-left: 3px solid #c41e3a;
         }
 
         .nav-item i {
@@ -201,7 +201,7 @@
         /* Main Content */
         .main-content {
             flex: 1;
-            margin-left: 260px;
+            margin-left: 250px;
             padding: 32px 48px;
         }
 
@@ -225,7 +225,7 @@
         /* Summary Cards */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 24px;
             margin-bottom: 40px;
         }
@@ -521,9 +521,35 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <div class="page-header">
-                <h1>Review Dokumen Masuk</h1>
-                <p>Kelola persetujuan dokumen HIRADC dari unit kerja Anda.</p>
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h1>Review Dokumen Masuk</h1>
+                    <p>Kelola persetujuan dokumen HIRADC dari unit kerja Anda.</p>
+                </div>
+
+                <!-- NEW: Staff Delegation Dropdown (Only for Kepala Unit - role_jabatan = 3) -->
+                @if(Auth::user()->role_jabatan == 3 && isset($staffList) && $staffList->count() > 0)
+                    <div style="min-width: 300px;">
+                        <label
+                            style="display: block; font-size: 12px; color: var(--text-sub); margin-bottom: 8px; font-weight: 600;">
+                            <i class="fas fa-user-tag"></i> Delegasikan ke Staff <span
+                                style="color: var(--primary);">*</span>
+                        </label>
+                        <select id="assignStaffDropdown" class="category-select" style="width: 100%;"
+                            onchange="assignStaff(this.value)">
+                            <option value="">-- Pilih Staff --</option>
+                            @foreach($staffList as $staff)
+                                <option value="{{ $staff->id_user }}">
+                                    {{ $staff->nama_user }}
+                                    ({{ $staff->role_jabatan == 4 ? 'Manager' : ($staff->role_jabatan == 5 ? 'Supervisor' : 'Associate') }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <small style="display: block; margin-top: 4px; font-size: 11px; color: var(--text-sub);">
+                            <i class="fas fa-info-circle"></i> Pilih staff yang bertanggung jawab untuk dokumen
+                        </small>
+                    </div>
+                @endif
             </div>
 
             <!-- Stats Grid -->
@@ -549,13 +575,6 @@
                         <p>Perlu Revisi</p>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon icon-blue"><i class="fas fa-cog fa-spin"></i></div>
-                    <div class="stat-info">
-                        <h3 id="count-process">0</h3>
-                        <p>Sedang Diproses</p>
-                    </div>
-                </div>
             </div>
 
             <!-- Filters -->
@@ -565,7 +584,6 @@
                     <button class="tab-btn" onclick="filterData('Menunggu', this)">Menunggu</button>
                     <button class="tab-btn" onclick="filterData('Disetujui', this)">Disetujui</button>
                     <button class="tab-btn" onclick="filterData('Revisi', this)">Revisi</button>
-                    <button class="tab-btn" onclick="filterData('Diproses', this)">Diproses</button>
                 </div>
 
                 <select class="category-select" id="catFilter" onchange="filterByCategory()">
@@ -668,16 +686,31 @@
             renderList();
         }
 
+        // NEW: Handle staff assignment
+        function assignStaff(staffId) {
+            if (!staffId) return;
+
+            // Store selected staff ID in localStorage or session
+            localStorage.setItem('assigned_staff_id', staffId);
+
+            // Get staff name for display
+            const dropdown = document.getElementById('assignStaffDropdown');
+            const staffName = dropdown.options[dropdown.selectedIndex].text;
+
+            // Show confirmation
+            alert(`Staff "${staffName}" telah dipilih.\n\nStaff ini akan menjadi penanggung jawab untuk dokumen-dokumen baru dari unit Anda.`);
+
+            // Optional: You can also send AJAX request to save this assignment to server
+            // fetch('/api/assign-staff', { method: 'POST', body: JSON.stringify({ staff_id: staffId }) })
+        }
+
         function updateCounts() {
             const waiting = documents.filter(d => d.status === 'Menunggu').length;
             const approved = documents.filter(d => d.status === 'Disetujui').length;
             const revision = documents.filter(d => d.status === 'Revisi').length;
-            const processed = documents.filter(d => d.status === 'Diproses').length;
-
             document.getElementById('count-waiting').textContent = waiting;
             document.getElementById('count-approved').textContent = approved;
             document.getElementById('count-revision').textContent = revision;
-            document.getElementById('count-process').textContent = processed;
         }
 
         updateCounts();

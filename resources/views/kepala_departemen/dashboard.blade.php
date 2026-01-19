@@ -891,7 +891,7 @@
                     <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
                     <td>${doc.date}</td>
                     <td>${doc.author}</td>
-                    <td><button onclick="openDetailModal(${doc.id})" class="btn-action" style="border:none; cursor:pointer;">Detail</button></td>
+                    <td><a href="/documents/${doc.id}/published" class="btn-action">Detail</a></td>
                 </tr>
             `}).join('');
         }

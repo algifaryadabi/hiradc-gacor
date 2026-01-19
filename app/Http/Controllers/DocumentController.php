@@ -33,6 +33,11 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
 
+        // PIC Authorization Check
+        if ($user->can_create_documents != 1) {
+            return redirect()->route('dashboard')->with('error', 'Akses Ditolak: Anda bukan PIC dokumen.');
+        }
+
         $query = Document::where('id_user', $user->id_user)
             ->with(['unit', 'approvals.approver']);
 
@@ -128,6 +133,11 @@ class DocumentController extends Controller
                 ->with('error', 'Akses Ditolak: Level Jabatan Anda tidak diizinkan membuat dokumen.');
         }
 
+        // PIC Authorization Check
+        if ($user->can_create_documents != 1) {
+            return redirect()->route('dashboard')->with('error', 'Akses Ditolak: Anda bukan PIC dokumen.');
+        }
+
         $user->load(['roleJabatan', 'unit', 'departemen', 'direktorat']);
         $direktorats = Direktorat::where('status_aktif', 1)->get();
         $departemens = Departemen::all();
@@ -162,6 +172,11 @@ class DocumentController extends Controller
 
         if (!in_array($roleId, [4, 5, 6])) {
             abort(403, 'Akses Ditolak: Level Jabatan Anda tidak diizinkan membuat dokumen.');
+        }
+
+        // PIC Authorization Check
+        if ($user->can_create_documents != 1) {
+            abort(403, 'Akses Ditolak: Anda bukan PIC dokumen.');
         }
 
         \DB::transaction(function () use ($request, $user) {
@@ -289,11 +304,26 @@ class DocumentController extends Controller
      */
     public function edit(Document $document)
     {
-        if ($document->id_user != Auth::user()->id_user)
+        $user = Auth::user();
+
+        // ALLOW: Author OR Approver (Role 3 + Same Unit)
+        $isAuthor = $document->id_user == $user->id_user;
+        $isApprover = ($user->role_jabatan == 3 && $document->id_unit == $user->id_unit);
+
+        if (!$isAuthor && !$isApprover) {
             abort(403);
-        // Only allow edit if draft or revision
-        if (!in_array($document->status, ['draft', 'revision']))
+        }
+
+        // Only allow edit if draft or revision (For Author), but maybe Approver can edit in Pending?
+        // Let's assume Approver can edit anytime they can view it in "Review" state (pending_level1).
+        if ($isAuthor && !in_array($document->status, ['draft', 'revision'])) {
             return redirect()->route('documents.show', $document->id);
+        }
+
+        // If Approver, they usually edit while it matches their approval level (pending_level1)
+        if ($isApprover && $document->status != 'pending_level1') {
+            // Maybe allow restrictions? For now let's allow content correction.
+        }
 
         return view('user.documents.edit', compact('document'));
     }
@@ -303,8 +333,13 @@ class DocumentController extends Controller
      */
     public function update(Request $request, Document $document)
     {
-        if ($document->id_user != Auth::user()->id_user)
+        $user = Auth::user();
+        $isAuthor = $document->id_user == $user->id_user;
+        $isApprover = ($user->role_jabatan == 3 && $document->id_unit == $user->id_unit);
+
+        if (!$isAuthor && !$isApprover) {
             abort(403);
+        }
 
         $request->validate([
             'items' => 'required|array|min:1',
@@ -423,6 +458,14 @@ class DocumentController extends Controller
             }
         });
 
+
+
+        // Redirect based on role
+        if ($isApprover) {
+            return redirect()->route('approver.check_documents')
+                ->with('success', 'Dokumen berhasil diperbarui.');
+        }
+
         return redirect()->route('documents.index')
             ->with('success', 'Revisi berhasil disubmit ulang.')
             ->with('open_tab', 'tab_pending');
@@ -476,7 +519,13 @@ class DocumentController extends Controller
         // assuming Monitor Unit Documents mode.
 
         $documents = Document::where('id_unit', $user->id_unit)
-            ->with(['user', 'unit'])
+            ->with([
+                'user',
+                'unit',
+                'approvals' => function ($q) {
+                    $q->orderBy('created_at', 'desc');
+                }
+            ])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -484,11 +533,25 @@ class DocumentController extends Controller
         $documentsData = $documents->map(function ($doc) use ($user) {
             $status = 'Disetujui'; // Default fallback (History/Done)
 
-            // Logic Status
-            if ($doc->canBeApprovedBy($user)) {
+            // Check if this is a revision
+            if ($doc->status === 'revision') {
+                // Get the last approval to determine who sent it back
+                $lastApproval = $doc->approvals->first(); // Already ordered by desc
+
+                // Only show as "Revisi" if it came from Unit Pengelola (Level 2)
+                // Hide if it came from Kepala Unit Kerja themselves (Level 1)
+                if ($lastApproval && $lastApproval->level == 2 && $lastApproval->action == 'revised') {
+                    // This is a revision from Unit Pengelola - SHOW IT
+                    $status = 'Revisi';
+                } elseif ($lastApproval && $lastApproval->level == 1 && $lastApproval->action == 'revised') {
+                    // This is a revision from Kepala Unit Kerja themselves - HIDE IT
+                    return null;
+                } else {
+                    // Fallback for revisions without clear approval history
+                    $status = 'Revisi';
+                }
+            } elseif ($doc->canBeApprovedBy($user)) {
                 $status = 'Menunggu';
-            } elseif ($doc->status === 'revision') {
-                $status = 'Revisi';
             } elseif ($doc->status === 'approved') {
                 $status = 'Disetujui';
             } elseif ($doc->current_level > 1) {
@@ -512,7 +575,7 @@ class DocumentController extends Controller
                 'status' => $status,
                 'viewUrl' => route('approver.review', ['document' => $doc->id])
             ];
-        });
+        })->filter()->values(); // Remove null values and re-index
 
         return view('approver.documents.index', compact('documentsData'));
     }
@@ -545,7 +608,22 @@ class DocumentController extends Controller
         $units = Unit::all();
         $seksis = Seksi::all();
 
-        return view('approver.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units', 'seksis'));
+        // Fetch current PIC (staff dengan can_create_document = 1)
+        $currentPIC = null;
+        $staffList = collect([]);
+
+        if ($user->role_jabatan == 3) { // Kepala Unit
+            $currentPIC = \App\Models\User::where('id_unit', $user->id_unit)
+                ->where('can_create_documents', 1)
+                ->first();
+
+            $staffList = \App\Models\User::where('id_unit', $user->id_unit)
+                ->whereIn('role_jabatan', [4, 5, 6])
+                ->orderBy('nama_user', 'asc')
+                ->get(['id_user', 'nama_user', 'role_jabatan', 'can_create_documents']);
+        }
+
+        return view('approver.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units', 'seksis', 'currentPIC', 'staffList'));
     }
 
     /**
@@ -694,11 +772,24 @@ class DocumentController extends Controller
     {
         $document->load(['user', 'approvals.approver', 'direktorat', 'departemen', 'unit', 'seksi']);
 
+        $staffReviewers = [];
+        $staffApprovers = [];
+
+        if (auth()->user()->getRoleName() == 'unit_pengelola') {
+            $staffReviewers = \App\Models\User::where('id_unit', auth()->user()->id_unit)
+                ->whereIn('role_jabatan', [5, 6]) // Band IV, V
+                ->get();
+
+            $staffApprovers = \App\Models\User::where('id_unit', auth()->user()->id_unit)
+                ->where('role_jabatan', 4) // Band III
+                ->get();
+        }
+
         return view(match (auth()->user()->getRoleName()) {
             'unit_pengelola' => 'unit_pengelola.documents.review',
             'kepala_departemen' => 'kepala_departemen.documents.review',
             default => 'approver.documents.review',
-        }, compact('document'));
+        }, compact('document', 'staffReviewers', 'staffApprovers'));
     }
 
     /**
@@ -853,76 +944,6 @@ class DocumentController extends Controller
     /**
      * Send document for revision
      */
-    /**
-     * List documents pending approval for Unit Pengelola
-     */
-    public function unitPengelolaPending()
-    {
-        $user = Auth::user();
-
-        // Verify user is Kepala Unit from SHE or Security
-        if (!$user->isKepalaUnit() || !in_array($user->id_unit, [55, 56])) {
-            abort(403, 'Akses ditolak. Hanya Kepala Unit SHE/Security yang dapat mengakses halaman ini.');
-        }
-
-        // Filter documents by category based on user's unit
-        $categoryFilter = [];
-        if ($user->id_unit == 56) { // SHE
-            $categoryFilter = ['K3', 'KO', 'Lingkungan'];
-        } elseif ($user->id_unit == 55) { // Security
-            $categoryFilter = ['Keamanan'];
-        }
-
-        // Fetch All Documents (Pending & History) relevant to this Unit Pengelola
-        // Requirement: "Semua list nya yang ada, disetujui revisi maupun sdg diproses"
-        // But specifically for Check Documents we usually prioritize Pending.
-        // Let's fetch ALL that pass the Category Filter + Level >= 2
-
-        $documents = Document::whereIn('kategori', $categoryFilter)
-            ->where('current_level', '>=', 2)
-            ->with(['user', 'unit'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $documentsData = $documents->map(function ($doc) use ($user) {
-            $status = 'Disetujui'; // Default fallback
-
-            // Logic Status
-            // Logic Status
-            if ($doc->status === 'published' || $doc->status === 'approved') {
-                $status = 'Publish';
-            } elseif ($doc->status === 'revision') {
-                $status = 'Revisi';
-            } elseif ($doc->current_level > 2 || $doc->status === 'pending_level3') {
-                $status = 'Disetujui';
-            } elseif ($doc->canBeApprovedBy($user)) {
-                $status = 'Menunggu';
-            } else {
-                $status = 'Menunggu';
-            }
-
-            // Friendly Unit Name & Department
-            $unitName = $doc->unit->nama_unit ?? '-';
-            $submitterName = $doc->user->nama_user ?? $doc->user->username ?? 'Unknown';
-
-            return [
-                'id' => $doc->id,
-                'unit' => $unitName,
-                'department' => $doc->user && $doc->user->departemen ? $doc->user->departemen->nama_dept : '-',
-                'submitter' => $submitterName,
-                'title' => $doc->judul_dokumen ?? $doc->kolom2_kegiatan, // Added Title
-                'category' => $doc->kategori,
-                'date_submit' => $doc->created_at->format('d M Y'),
-                'time_submit' => $doc->created_at->format('H:i') . ' WIB',
-                'status' => $status,
-                'viewUrl' => route('unit_pengelola.review', ['document' => $doc->id])
-            ];
-        });
-
-        $units = \App\Models\Unit::all();
-
-        return view('unit_pengelola.documents.index', compact('documentsData', 'units'));
-    }
 
     /**
      * List documents pending approval for Kepala Departemen (Level 3)
@@ -980,24 +1001,7 @@ class DocumentController extends Controller
 
         return view('kepala_departemen.documents.index', compact('documentsData'));
     }
-    public function reviewUnit(Document $document)
-    {
-        $document->load(['user', 'approvals.approver', 'direktorat', 'departemen', 'unit']);
 
-        $user = Auth::user();
-
-        // Fetch Staff for Disposition Forms
-        // Fetch Staff for Disposition Forms
-        $staffReviewers = \App\Models\User::where('id_unit', $user->id_unit)
-            ->whereIn('role_jabatan', [5, 6]) // Band IV, V
-            ->get();
-
-        $staffApprovers = \App\Models\User::where('id_unit', $user->id_unit)
-            ->where('role_jabatan', 4) // Band III
-            ->get();
-
-        return view('unit_pengelola.documents.review', compact('document', 'staffReviewers', 'staffApprovers'));
-    }
 
     public function revise(Request $request, Document $document)
     {
@@ -1060,6 +1064,42 @@ class DocumentController extends Controller
             ->with('success', 'Dokumen telah dikembalikan untuk revisi.');
     }
 
+    /**
+     * Publish document (Kepala Departemen Level 3)
+     */
+    public function publish(Request $request, Document $document)
+    {
+        $user = Auth::user();
+
+        // Authorization: Must be Kepala Departemen (role 2) and same department
+        if (!$user->isKepalaDepartemen() || $user->id_dept != $document->id_dept) {
+            abort(403, 'Unauthorized to publish this document.');
+        }
+
+        // Verify document is at level 3 and pending
+        if ($document->current_level != 3 || $document->status != 'pending_level3') {
+            return back()->with('error', 'Dokumen tidak dalam status yang tepat untuk dipublikasi.');
+        }
+
+        // Log approval history
+        $document->approvals()->create([
+            'approver_id' => $user->id_user,
+            'level' => 3,
+            'action' => 'approved',
+            'catatan' => $request->catatan ?? 'Dokumen dipublikasikan oleh Kepala Departemen',
+            'ip_address' => $request->ip()
+        ]);
+
+        // Update document status to published
+        $document->update([
+            'status' => 'published',
+            'published_at' => now()
+        ]);
+
+        return redirect()->route('kepala_departemen.dashboard')
+            ->with('success', 'Dokumen berhasil dipublikasikan dan dapat dilihat oleh semua user.');
+    }
+
 
     // ==================== DISPOSITION WORKFLOW ====================
 
@@ -1085,6 +1125,15 @@ class DocumentController extends Controller
             'level2_reviewer_id' => $request->reviewer_id,
             'level2_approver_id' => $request->approver_id,
             'level2_assignment_date' => now(),
+        ]);
+
+        // Log History for Disposition
+        $document->approvals()->create([
+            'approver_id' => $user->id_user,
+            'level' => 2,
+            'action' => 'disposition',
+            'catatan' => 'Disposisi ke Reviewer & Approver',
+            'ip_address' => $request->ip()
         ]);
 
         return back()->with('success', 'Dokumen berhasil didisposisikan kepada staff.');
@@ -1127,7 +1176,7 @@ class DocumentController extends Controller
             'level2_status' => 'assigned_approval', // Move to Approver (Band III)
         ]);
 
-        return redirect()->route('unit_pengelola.dashboard')->with('success', 'Review selesai. Dokumen diteruskan ke Verifikator.');
+        return redirect()->route('unit_pengelola.check_documents')->with('success', 'Review selesai. Dokumen diteruskan ke Verifikator.');
     }
 
     /**
@@ -1152,10 +1201,11 @@ class DocumentController extends Controller
         ]);
 
         $document->update([
-            'level2_status' => 'returned_to_head', // Back to Kepala Unit
+            'level2_status' => 'staff_verified',
+            'status' => 'staff_verified', // Update main status so it appears on Kepala Unit dashboard
         ]);
 
-        return redirect()->route('unit_pengelola.dashboard')->with('success', 'Verifikasi selesai. Dokumen dikembalikan ke Kepala Unit.');
+        return redirect()->route('unit_pengelola.check_documents')->with('success', 'Verifikasi selesai. Dokumen dikembalikan ke Kepala Unit.');
     }
 
     /**
@@ -1163,6 +1213,13 @@ class DocumentController extends Controller
      */
     private function updateDocumentContent(Request $request, Document $document)
     {
+        // Save Compliance Checklist if present
+        if ($request->has('compliance_checklist')) {
+            $document->update([
+                'compliance_checklist' => $request->compliance_checklist
+            ]);
+        }
+
         // Check if 'items' is present (Multi-item submission)
         if ($request->has('items') && is_array($request->items)) {
 
@@ -1233,4 +1290,257 @@ class DocumentController extends Controller
             }
         }
     }
+
+    public function updatePIC(Request $request)
+    {
+        try {
+            $request->validate([
+                'staff_id' => 'required|exists:users,id_user'
+            ]);
+
+            $user = Auth::user();
+
+            // Only Kepala Unit can update PIC
+            if ($user->role_jabatan != 3) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            $staffId = $request->staff_id;
+
+            // Verify staff is from same unit
+            $staff = \App\Models\User::where('id_user', $staffId)
+                ->where('id_unit', $user->id_unit)
+                ->whereIn('role_jabatan', [4, 5, 6])
+                ->first();
+
+            if (!$staff) {
+                return response()->json(['success' => false, 'message' => 'Staff not found'], 404);
+            }
+
+            // Update: Set all staff in unit to can_create_documents = 0
+            \App\Models\User::where('id_unit', $user->id_unit)
+                ->update(['can_create_documents' => 0]);
+
+            // Set selected staff to can_create_documents = 1
+            $staff->can_create_documents = 1;
+            $staff->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'PIC berhasil diupdate',
+                'staff_name' => $staff->nama_user
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating PIC: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update specific detail item (AJAX for Approver)
+     */
+    public function updateDetail(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            $detail = \App\Models\DocumentDetail::findOrFail($id);
+            $document = $detail->document;
+
+            // Auth Check: Author OR Approver (Role 3 + Same Unit)
+            $isAuthor = $document->id_user == $user->id_user;
+            $isApprover = ($user->role_jabatan == 3 && $document->id_unit == $user->id_unit);
+
+            if (!$isAuthor && !$isApprover) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            // Update Logic
+            // We need to reconstruct JSON fields like kolom6_bahaya & kolom10_pengendalian
+
+            // 1. Bahaya Data
+            $currentBahaya = $detail->kolom6_bahaya ?? [];
+            if ($request->has('kategori'))
+                $currentBahaya['kategori'] = $request->kategori; // sync category
+            // Note: For full edit, we might need more inputs. 
+            // Assuming the modal sends 'kolom2_kegiatan', 'kolom3_lokasi', etc.
+
+            $updateData = $request->only([
+                'kolom2_kegiatan',
+                'kolom3_lokasi',
+                'kolom5_kondisi',
+                'kolom11_existing',
+                'kolom12_kemungkinan',
+                'kolom13_konsekuensi',
+                'kolom16_aspek',
+                'kolom18_tindak_lanjut',
+                'residual_kemungkinan',
+                'residual_konsekuensi'
+            ]);
+
+            // Calc Scores
+            if (isset($updateData['kolom12_kemungkinan']) && isset($updateData['kolom13_konsekuensi'])) {
+                $updateData['kolom14_score'] = $updateData['kolom12_kemungkinan'] * $updateData['kolom13_konsekuensi'];
+                // Update Level logic can be added here or via Accessor/Observer
+            }
+            if (isset($updateData['residual_kemungkinan']) && isset($updateData['residual_konsekuensi'])) {
+                $updateData['residual_score'] = $updateData['residual_kemungkinan'] * $updateData['residual_konsekuensi'];
+            }
+
+            $detail->update($updateData);
+
+            // Optionally update risk levels (simple logic)
+            // ...
+
+            return response()->json(['success' => true, 'message' => 'Data berhasil diupdate']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get HTML Form for specific detail item (AJAX for Approver)
+     */
+    public function getEditItemHtml($id)
+    {
+        try {
+            $user = Auth::user();
+            $detail = \App\Models\DocumentDetail::findOrFail($id);
+            $document = $detail->document;
+
+            // Auth Check
+            if ($document->id_user != $user->id_user && !($user->role_jabatan == 3 && $document->id_unit == $user->id_unit)) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            // Render view component
+            $html = view('components.hiradc-item-form', [
+                'item' => $detail,
+                'index' => $detail->id, // Use ID as index to be unique
+                'prefix' => 'edit_item' // Flat logic: inputs will be named edit_item[ID][field]
+            ])->render();
+
+            return response()->json(['success' => true, 'html' => $html]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
+
+    /**
+     * Show published document detail (Read-only)
+     */
+    public function showPublished(Document $document)
+    {
+        $document->load(['user', 'details', 'approvals.approver', 'direktorat', 'departemen', 'unit', 'seksi']);
+        return view('documents.published_detail', compact('document'));
+    }
+
+    /**
+     * Show review page for Unit Pengelola
+     */
+    public function reviewUnit($id)
+    {
+        $document = Document::with(['user.unit', 'details', 'approvals'])->findOrFail($id);
+
+        $user = Auth::user();
+
+        // Fetch Staff for Disposition Forms
+        $staffReviewers = \App\Models\User::where('id_unit', $user->id_unit)
+            ->whereIn('role_jabatan', [5, 6]) // Band IV, V
+            ->get();
+
+        $staffApprovers = \App\Models\User::where('id_unit', $user->id_unit)
+            ->where('role_jabatan', 4) // Band III
+            ->get();
+
+        return view('unit_pengelola.documents.review', compact('document', 'staffReviewers', 'staffApprovers'));
+    }
+
+    /**
+     * Show documents approved by Kepala Unit Kerja (Level 1)
+     * Filtered by category based on Unit Pengelola type:
+     * - Unit of SHE (id 55): K3, KO, Lingkungan
+     * - Unit Security (id 56): Keamanan
+     */
+    public function unitPengelolaPending()
+    {
+        $user = Auth::user();
+        if (!in_array($user->id_unit, [55, 56]))
+            abort(403);
+
+        // Check if user is Staff (role_jabatan 4, 5, or 6)
+        // If yes, redirect to staff inbox
+        if (in_array($user->role_jabatan, [4, 5, 6])) {
+            return redirect()->route('unit_pengelola.staff.index');
+        }
+
+        // If Kepala Unit Pengelola, show disposition page
+        // Determine allowed categories based on unit
+        $allowedCategories = [];
+        if ($user->id_unit == 55) {
+            // Unit Security receives Keamanan
+            $allowedCategories = ['Keamanan'];
+        } elseif ($user->id_unit == 56) {
+            // Unit of SHE receives K3, KO, Lingkungan
+            $allowedCategories = ['K3', 'KO', 'Lingkungan'];
+        }
+
+        // Load documents that have been approved by Level 1 (Kepala Unit Kerja)
+        // and are now pending for Level 2 (Unit Pengelola) review
+        // Include both: pending disposition AND staff verified (ready for Kepala approval)
+        $documents = Document::where('current_level', 2)
+            ->whereIn('status', ['pending_level2', 'staff_verified'])
+            ->whereIn('kategori', $allowedCategories)
+            ->with(['user', 'unit', 'approvals.approver'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('unit_pengelola.documents.index', compact('documents'));
+    }
+
+    public function staffIndex()
+    {
+        $user = Auth::user();
+
+        // Check if user is Staff (role_jabatan 4, 5, or 6)
+        if (!in_array($user->role_jabatan, [4, 5, 6])) {
+            abort(403, 'Unauthorized. Only Unit Pengelola staff can access this page.');
+        }
+
+        // Check if user is from Unit Pengelola (id_unit 55 or 56)
+        if (!in_array($user->id_unit, [55, 56])) {
+            abort(403, 'Unauthorized. Only Unit Pengelola staff can access this page.');
+        }
+
+        // Load documents assigned to this staff (either as reviewer or approver)
+        $query = Document::where(function ($q) use ($user) {
+            $q->where('level2_reviewer_id', $user->id_user)
+                ->orWhere('level2_approver_id', $user->id_user);
+        });
+
+        // Filter by role: Verifikator (role_jabatan 4) only sees documents for verification
+        // Reviewer (role_jabatan 5, 6) sees all assigned documents
+        if ($user->role_jabatan == 4) {
+            // Verifikator only sees: assigned_approval (documents that need verification)
+            $query->whereIn('level2_status', ['assigned_approval']);
+        } else {
+            // Reviewer only sees: assigned_review (documents that need review)
+            // Documents that have been processed (assigned_approval, approved, etc) are hidden
+            $query->whereIn('level2_status', ['assigned_review']);
+        }
+
+        $documents = $query->with(['user', 'unit', 'approvals.approver'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('unit_pengelola.documents.staff_index', compact('documents'));
+    }
+
+
 }

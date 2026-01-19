@@ -549,17 +549,19 @@
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('documents.index') }}" class="nav-item">
-                    <i class="fas fa-folder-open"></i>
-                    <span>Dokumen Saya</span>
-                    @if(isset($revisionCount) && $revisionCount > 0)
-                        <span class="badge">{{ $revisionCount }}</span>
-                    @endif
-                </a>
-                <a href="{{ route('documents.create') }}" class="nav-item">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Buat Dokumen Baru</span>
-                </a>
+                @if(Auth::user()->can_create_documents == 1)
+                    <a href="{{ route('documents.index') }}" class="nav-item">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Dokumen Saya</span>
+                        @if(isset($revisionCount) && $revisionCount > 0)
+                            <span class="badge">{{ $revisionCount }}</span>
+                        @endif
+                    </a>
+                    <a href="{{ route('documents.create') }}" class="nav-item">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Buat Dokumen Baru</span>
+                    </a>
+                @endif
             </nav>
 
             <div class="user-info-bottom">
@@ -752,7 +754,7 @@
 
         function populateDirectorates() {
             const select = document.getElementById('filter_directorate');
-            select.innerHTML = '<option value="">........</option>';
+            select.innerHTML = '<option value="">-- Pilih Direktorat --</option>';
             directorates.forEach(d => {
                 const opt = document.createElement('option');
                 opt.value = d.id;
@@ -767,7 +769,7 @@
             // Reset is handled by re-populating. If logic was appending, we'd need to clear. 
             // innerHTML assignment clears it.
 
-            deptSelect.innerHTML = '<option value="">........</option>';
+            deptSelect.innerHTML = '<option value="">-- Pilih Departemen --</option>';
 
             // Should units be reset here? Yes, because department list changes/resets
             // But we will call filterUnits right after to re-populate them based on empty dept (Show All) or selected dept
@@ -792,7 +794,7 @@
             const deptId = document.getElementById('filter_department').value;
             const unitSelect = document.getElementById('filter_unit');
 
-            unitSelect.innerHTML = '<option value="">........</option>';
+            unitSelect.innerHTML = '<option value="">-- Pilih Unit --</option>';
 
             let filteredUnits = units;
             if (deptId) {
@@ -862,16 +864,25 @@
             tableSection.style.display = 'block';
 
             if (data.length === 0) {
-                let msg = 'Belum ada form yang terpublish.';
+                let mainText = 'Belum Ada Laporan Terpublikasi';
+                let subText = 'Belum ada dokumen yang dipublikasikan.';
+
                 if (activeCategory) {
-                    msg = `Belum ada form untuk kategori <strong>${activeCategory}</strong>.`;
+                    subText = `Tidak ada dokumen ditemukan untuk kategori <strong>${activeCategory}</strong>.`;
                 }
 
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 30px; color: #999;">
-                            <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.5;"><i class="fas fa-folder-open"></i></div>
-                            <div>${msg}</div>
+                        <td colspan="7" style="text-align: center; padding: 60px 20px;">
+                            <div style="margin-bottom: 20px;">
+                                <i class="fas fa-folder-open" style="font-size: 64px; color: #ddd;"></i>
+                            </div>
+                            <h3 style="font-size: 18px; color: #666; margin-bottom: 10px; font-weight: 600;">
+                                ${mainText}
+                            </h3>
+                            <p style="font-size: 14px; color: #999; margin: 0;">
+                                ${subText}
+                            </p>
                         </td>
                     </tr>
                 `;
@@ -889,7 +900,7 @@
                     <td>${doc.date}</td>
                     <td>${doc.time || '-'}</td>
                     <td>${doc.author}</td>
-                    <td><button onclick="openDetailModal(${doc.id})" class="btn-action" style="border:none; cursor:pointer;">Detail</button></td>
+                    <td><a href="/documents/${doc.id}/published" class="btn-action">Detail</a></td>
                 </tr>
             `}).join('');
         }

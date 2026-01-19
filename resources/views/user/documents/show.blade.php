@@ -706,7 +706,7 @@
                         <!-- Header Row 1: Groups -->
                         <tr>
                             <th rowspan="2" style="width: 50px;">No</th>
-                            <th colspan="4" class="section-border-right">Kegiatan & Situasi</th>
+                            <th colspan="5" class="section-border-right">Kegiatan & Situasi</th>
                             <th colspan="3" class="section-border-right">Identifikasi Bahaya & Risiko</th>
                             <th colspan="2" class="section-border-right">Pengendalian Risiko</th>
                             <th colspan="3" class="section-border-right">Penilaian Risiko Awal</th>
@@ -719,6 +719,7 @@
                             <th style="width: 200px;">Kegiatan / Proses</th>
                             <th style="width: 100px;">Kategori</th>
                             <th style="width: 150px;">Lokasi</th>
+                            <th style="width: 150px;">Pihak Berkepentingan</th>
                             <th style="width: 100px;" class="section-border-right">Kondisi</th>
                             <th style="width: 250px;">Potensi Bahaya</th>
                             <th style="width: 220px;">Dampak / Konsekuensi</th>
@@ -756,6 +757,10 @@
                                 <!-- Lokasi -->
                                 <td>
                                     <div class="cell-text">{{ $item->kolom3_lokasi }}</div>
+                                </td>
+                                <!-- Pihak -->
+                                <td>
+                                    <div class="cell-text">{{ $item->kolom4_pihak }}</div>
                                 </td>
                                 <!-- Kondisi -->
                                 <td class="section-border-right">

@@ -102,6 +102,7 @@
             <nav class="nav-menu">
                 <a href="{{ route('dashboard') }}" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
                 <a href="{{ route('documents.index') }}" class="nav-item active"><i class="fas fa-folder-open"></i><span>Dokumen Saya</span></a>
+                <a href="{{ route('documents.create') }}" class="nav-item"><i class="fas fa-plus-circle"></i><span>Buat Dokumen Baru</span></a>
             </nav>
             <div class="user-info-bottom">
                  <div class="user-profile">

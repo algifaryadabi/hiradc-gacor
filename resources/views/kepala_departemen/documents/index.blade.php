@@ -4,103 +4,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cek Dokumen Kepala Departemen - HIRADC System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    <title>Review Dokumen - Kepala Departemen</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         :root {
             --primary: #c41e3a;
-            --primary-hover: #a01729;
-            --bg-body: #f1f5f9;
+            --primary-light: #fff1f2;
+            --primary-hover: #a01830;
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
             --text-main: #1e293b;
             --text-sub: #64748b;
             --border: #e2e8f0;
-            --white: #ffffff;
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-body);
-            color: var(--text-main);
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
-        .layout-container {
-            display: flex;
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
             min-height: 100vh;
         }
 
-        /* Sidebar Styles */
+        /* Sidebar */
         .sidebar {
-            width: 260px;
-            background: var(--white);
-            border-right: 1px solid var(--border);
+            width: 250px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
             position: fixed;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            z-index: 50;
+            font-family: 'Inter', sans-serif;
         }
 
         .logo-section {
-            padding: 24px;
-            border-bottom: 1px solid var(--border);
+            padding: 30px 20px;
+            border-bottom: 1px solid #e0e0e0;
             text-align: center;
         }
 
         .logo-circle {
-            width: 64px;
-            height: 64px;
-            background: var(--white);
+            width: 70px;
+            height: 70px;
+            background: #fff;
             border-radius: 50%;
-            margin: 0 auto 12px;
+            margin: 0 auto 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border);
             overflow: hidden;
-            /* Ensure content stays inside */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .logo-circle img {
-            max-width: 65%;
-            height: auto;
+            max-width: 80%;
+            max-height: 80%;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #c41e3a;
+            margin-bottom: 3px;
+        }
+
+        .logo-subtext {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
         }
 
         .nav-menu {
             flex: 1;
-            padding: 24px 16px;
+            padding: 20px 0;
             overflow-y: auto;
         }
 
         .nav-item {
-            padding: 12px 16px;
+            padding: 15px 25px;
             display: flex;
             align-items: center;
             gap: 12px;
             cursor: pointer;
-            color: var(--text-sub);
+            transition: all 0.3s ease;
+            color: #666;
             font-size: 14px;
             font-weight: 500;
             text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 4px;
-            transition: all 0.2s;
+            position: relative;
         }
 
-        .nav-item:hover,
-        .nav-item.active {
-            background: #fff1f2;
-            color: var(--primary);
+        .nav-item:hover {
+            background: #fff5f5;
+            color: #c41e3a;
         }
 
         .nav-item.active {
-            font-weight: 600;
+            background: #ffe5e5;
+            color: #c41e3a;
+            border-left: 3px solid #c41e3a;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
         }
 
         .user-info-bottom {
@@ -113,12 +132,12 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             background: white;
             border-radius: 50%;
             display: flex;
@@ -126,7 +145,7 @@
             justify-content: center;
             color: #667eea;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 16px;
             flex-shrink: 0;
         }
 
@@ -137,25 +156,30 @@
 
         .user-name {
             font-weight: 600;
-            font-size: 13px;
+            font-size: 14px;
             color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .user-role {
             font-size: 11px;
-            color: rgba(255, 255, 255, 0.85);
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 2px;
         }
 
         .logout-btn {
             width: 100%;
-            padding: 8px;
+            padding: 10px 15px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -163,11 +187,15 @@
             text-decoration: none;
         }
 
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
         /* Main Content */
         .main-content {
-            margin-left: 260px;
-            flex: 1;
-            padding: 32px 48px;
+            margin-left: 250px;
+            padding: 40px 48px;
         }
 
         .header-content {
@@ -179,6 +207,7 @@
             font-weight: 800;
             color: var(--text-main);
             margin-bottom: 8px;
+            letter-spacing: -0.03em;
         }
 
         .header-content p {
@@ -186,29 +215,31 @@
             font-size: 14px;
         }
 
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
+            gap: 20px;
             margin-bottom: 32px;
         }
 
-        .sc-revision .stat-icon {
-            background: #fef2f2;
-            color: #dc2626;
+        .stat-card {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
         }
 
-        /* ... existing styles ... */
-
-        < !-- Stats --><div class="stats-grid"><div class="stat-card sc-pending" onclick="filterByStat('Menunggu')"><div class="stat-icon"><i class="fas fa-clock"></i></div><div><div class="stat-val" id="count-pending">0</div><div class="stat-label">Menunggu Verifikasi</div></div></div><div class="stat-card sc-approved" onclick="filterByStat('Disetujui')"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div><div class="stat-val" id="count-approved">0</div><div class="stat-label">Telah Disetujui</div></div></div>< !-- ADDED: Revision Card --><div class="stat-card sc-revision" onclick="filterByStat('Revisi')"><div class="stat-icon"><i class="fas fa-undo"></i></div><div><div class="stat-val" id="count-revision">0</div><div class="stat-label">Dikembalikan</div></div></div><div class="stat-card sc-total" onclick="filterByStat('Semua')"><div class="stat-icon"><i class="fas fa-file-alt"></i></div><div><div class="stat-val" id="count-total">0</div><div class="stat-label">Total Dokumen</div></div></div></div><script> // ... inside initStats ...
-        document.getElementById('count-pending').innerText=pending;
-        document.getElementById('count-approved').innerText=approved;
-        document.getElementById('count-revision').innerText=revision; // Populate new card
-        document.getElementById('count-total').innerText=total;
-
-        </script>.stat-card:hover {
-            transform: translateY(-3px);
+        .stat-card:hover {
+            transform: translateY(-4px);
             box-shadow: var(--shadow-md);
+            border-color: #cbd5e1;
         }
 
         .stat-icon {
@@ -221,6 +252,7 @@
             font-size: 20px;
         }
 
+        /* Stat Variants */
         .sc-pending .stat-icon {
             background: #fff7ed;
             color: #ea580c;
@@ -231,22 +263,21 @@
             color: #16a34a;
         }
 
-        .sc-total .stat-icon {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-
         .sc-revision .stat-icon {
             background: #fef2f2;
             color: #dc2626;
         }
 
+        .sc-total .stat-icon {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
         .stat-val {
             font-size: 24px;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--text-main);
-            line-height: 1;
-            margin-bottom: 4px;
+            line-height: 1.2;
         }
 
         .stat-label {
@@ -262,28 +293,29 @@
             align-items: center;
             margin-bottom: 24px;
             gap: 16px;
-            flex-wrap: wrap;
         }
 
         .search-box {
             position: relative;
             flex: 1;
-            max-width: 400px;
+            max-width: 380px;
         }
 
         .search-box input {
             width: 100%;
-            padding: 10px 16px 10px 40px;
-            border-radius: 10px;
+            padding: 12px 16px 12px 42px;
+            border-radius: 12px;
             border: 1px solid var(--border);
             font-size: 14px;
-            outline: none;
-            transition: 0.2s;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: var(--surface);
         }
 
         .search-box input:focus {
+            outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px #fff1f2;
+            box-shadow: 0 0 0 3px var(--primary-light);
         }
 
         .search-box i {
@@ -292,226 +324,288 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-sub);
-        }
-
-        .filter-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .filter-select {
-            padding: 10px 16px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
             font-size: 14px;
-            outline: none;
-            cursor: pointer;
         }
 
         .view-toggles {
             display: flex;
-            background: #e2e8f0;
+            background: #f1f5f9;
             padding: 4px;
-            border-radius: 8px;
+            border-radius: 10px;
+            gap: 4px;
         }
 
         .view-btn {
-            padding: 6px 12px;
+            padding: 8px 16px;
             border: none;
             background: transparent;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             color: var(--text-sub);
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-family: inherit;
         }
 
         .view-btn.active {
-            background: white;
+            background: var(--surface);
             color: var(--text-main);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-sm);
         }
 
-        /* Document Grid */
-        .documents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 24px;
+        .view-btn:hover:not(.active) {
+            color: var(--text-main);
         }
 
-        .documents-list {
+        /* Modern Document List */
+        .doc-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
         }
 
-        .doc-card {
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 12px;
+        .doc-item {
+            background: var(--surface);
+            border-radius: 16px;
             padding: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-            cursor: pointer;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            align-items: center;
+            gap: 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
             text-decoration: none;
-            display: block;
         }
 
-        .doc-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.1);
-            border-color: var(--primary);
+        .doc-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: #cbd5e1;
         }
 
-        .dc-top {
+        .doc-date-box {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            color: var(--text-main);
         }
 
-        .dc-cat {
+        .doc-day {
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .doc-month {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-sub);
+            text-transform: uppercase;
+        }
+
+        .doc-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .doc-header-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2px;
+        }
+
+        .doc-unit-badge {
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            padding: 4px 10px;
-            border-radius: 20px;
-            letter-spacing: 0.5px;
-        }
-
-        .cat-k3 {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .cat-ko {
-            background: #ffedd5;
-            color: #c2410c;
-        }
-
-        .cat-lingkungan {
-            background: #dcfce7;
-            color: #15803d;
-        }
-
-        .cat-keamanan {
-            background: #e0f2fe;
-            color: #0369a1;
-        }
-
-        .dc-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 8px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            min-height: 48px;
-            line-height: 1.5;
-        }
-
-        .dc-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            font-size: 12px;
-            color: var(--text-sub);
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .meta-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .dc-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .status-pill {
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            color: #3b82f6;
+            background: #eff6ff;
             padding: 4px 8px;
             border-radius: 6px;
         }
 
-        .status-pending {
+        .doc-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .doc-submitter {
+            font-size: 13px;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Risk Badges */
+        .risk-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .risk-high {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fee2e2;
+        }
+
+        .risk-med {
             background: #fff7ed;
             color: #ea580c;
+            border: 1px solid #ffedd5;
+        }
+
+        .risk-low {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #dcfce7;
+        }
+
+        /* Status Pills */
+        .status-pill {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-pending {
+            background: #fff7ed;
+            color: #d97706;
+            border: 1px solid #ffedd5;
         }
 
         .status-approved {
             background: #f0fdf4;
             color: #16a34a;
+            border: 1px solid #dcfce7;
         }
 
         .status-revision {
             background: #fef2f2;
             color: #dc2626;
+            border: 1px solid #fee2e2;
         }
 
-        .action-link {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--primary);
+        .btn-action {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            /** Square with rounded corners like mobile view button? Or pill? Keeping it clean icon button or review button */
             display: flex;
             align-items: center;
-            gap: 4px;
+            justify-content: center;
+            color: var(--text-sub);
+            background: transparent;
+            border: 1px solid transparent;
+            transition: all 0.2s;
         }
 
+        .btn-review {
+            padding: 10px 20px;
+            background: var(--text-main);
+            color: white;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-review:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Empty State */
         .empty-state {
-            grid-column: 1 / -1;
-            padding: 60px;
+            padding: 60px 20px;
             text-align: center;
-            color: var(--text-sub);
-            background: white;
-            border-radius: 12px;
+            background: var(--surface);
+            border-radius: 16px;
             border: 2px dashed var(--border);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            color: #cbd5e1;
+            margin-bottom: 16px;
         }
     </style>
 </head>
 
 <body>
-    <div class="layout-container">
+    <div class="layout-container" style="display:flex;">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo-section">
                 <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
                 <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System (Dept Head)</div>
+                <div class="logo-subtext">HIRADC System</div>
             </div>
             <nav class="nav-menu">
-                <a href="{{ route('kepala_departemen.dashboard') }}" class="nav-item"><i
-                        class="fas fa-th-large"></i><span>Dashboard</span></a>
-                <a href="{{ route('kepala_departemen.check_documents') }}" class="nav-item active"><i
-                        class="fas fa-file-signature"></i><span>Cek Dokumen</span></a>
+                <a href="{{ route('kepala_departemen.dashboard') }}" class="nav-item">
+                    <i class="fas fa-th-large"></i><span>Dashboard</span>
+                </a>
+                <a href="{{ route('kepala_departemen.check_documents') }}" class="nav-item active">
+                    <i class="fas fa-file-signature"></i><span>Review Dokumen</span>
+                </a>
             </nav>
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">{{ strtoupper(substr(Auth::user()->nama_user, 0, 2)) }}</div>
+                    <div class="user-avatar">{{ substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2) }}</div>
                     <div class="user-details">
                         <div class="user-name">{{ Auth::user()->nama_user }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
+                        <div class="user-role">{{ Auth::user()->departemen->nama_dept ?? 'Kepala Departemen' }}</div>
+                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
+                            {{ Auth::user()->unit_or_dept_name }}
+                        </div>
                     </div>
                 </div>
                 <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i
-                        class="fas fa-sign-out-alt"></i> Keluar</a>
-                <form id="logout-form" style="display:none;" action="{{ route('logout') }}" method="POST">@csrf</form>
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Keluar
+                </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
             </div>
         </aside>
 
         <main class="main-content">
             <div class="header-content">
-                <h1>Review & Verifikasi Dokumen</h1>
-                <p>Verifikasi dokumen HIRADC yang masuk dari seluruh Unit Kerja.</p>
+                <h1>Tinjauan & Validasi Dokumen</h1>
+                <p>Verifikasi draft HIRADC yang masuk dari Unit Kerja di bawah Departemen Anda.</p>
             </div>
 
             <!-- Stats -->
@@ -550,33 +644,27 @@
             <div class="filters-bar">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Cari dokumen, subjek, atau unit kerja..."
-                        onkeyup="renderDocuments()">
+                    <input type="text" id="searchInput"
+                        placeholder="Cari berdasarkan judul, unit kerja, atau penyusun..." onkeyup="renderDocuments()">
                 </div>
-                <div class="filter-group">
-                    <!-- Converted to Tabs for better UX -->
-                    <div class="view-toggles"
-                        style="background: white; border: 1px solid var(--border); padding: 4px; gap: 4px;">
-                        <button class="view-btn active" onclick="setFilter('All', this)">Semua</button>
-                        <button class="view-btn" onclick="setFilter('Menunggu', this)">Menunggu</button>
-                        <button class="view-btn" onclick="setFilter('Disetujui', this)">Disetujui</button>
-                        <button class="view-btn" onclick="setFilter('Revisi', this)"
-                            style="color:#dc2626;">Revisi</button>
-                    </div>
+                <div class="view-toggles">
+                    <button class="view-btn active" onclick="setFilter('All', this)">Semua</button>
+                    <button class="view-btn" onclick="setFilter('Menunggu', this)">Menunggu</button>
+                    <button class="view-btn" onclick="setFilter('Disetujui', this)">Disetujui</button>
+                    <button class="view-btn" onclick="setFilter('Revisi', this)" style="color:#ef4444;">Revisi</button>
                 </div>
                 <input type="hidden" id="statusFilter" value="All">
             </div>
 
-            <div class="documents-grid" id="docList">
+            <div class="doc-list" id="docList">
                 <!-- Populated by JS -->
             </div>
         </main>
     </div>
 
-    <!-- Data from Controller -->
+    <!-- SweetAlert & Logic -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Check for Session Success Message
         @if(session('success'))
             Swal.fire({
                 icon: 'success',
@@ -588,12 +676,12 @@
         @endif
 
         const documentsData = @json($documentsData);
-        // ... (rest of the script)
 
         function initStats() {
             const pending = documentsData.filter(d => d.status === 'Menunggu').length;
+            // Includes both 'Disetujui' and 'Approved' as safe check
             const approved = documentsData.filter(d => ['Disetujui', 'Approved'].includes(d.status)).length;
-            const revision = documentsData.filter(d => d.status === 'Revisi').length; // Added count
+            const revision = documentsData.filter(d => d.status === 'Revisi').length;
             const total = documentsData.length;
 
             document.getElementById('count-pending').innerText = pending;
@@ -603,20 +691,17 @@
         }
 
         function setFilter(status, btn) {
-            // Update Active State
-            document.querySelectorAll('.view-toggles .view-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
             if (btn) btn.classList.add('active');
-
-            // Set Value
             document.getElementById('statusFilter').value = status;
             renderDocuments();
         }
 
         function filterByStat(status) {
-            // Map status text to buttons
-            const btns = document.querySelectorAll('.view-toggles .view-btn');
+            const btns = document.querySelectorAll('.view-btn');
             btns.forEach(b => {
-                if (b.innerText === status || (status === 'All' && b.innerText === 'Semua')) {
+                const btnText = b.innerText;
+                if (btnText === status || (status === 'All' && btnText === 'Semua')) {
                     setFilter(status === 'Semua' ? 'All' : status, b);
                 }
             });
@@ -630,85 +715,79 @@
             container.innerHTML = '';
 
             const filtered = documentsData.filter(doc => {
-                const matchSearch = doc.title.toLowerCase().includes(search) ||
-                    doc.unit.toLowerCase().includes(search) ||
-                    doc.submitter.toLowerCase().includes(search);
+                const matchSearch = (doc.title || '').toLowerCase().includes(search) ||
+                    (doc.unit || '').toLowerCase().includes(search) ||
+                    (doc.submitter || '').toLowerCase().includes(search);
 
                 const matchStatus = statusFilter === 'All' || doc.status === statusFilter;
-
                 return matchSearch && matchStatus;
             });
 
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div style="font-size:48px; margin-bottom:16px; opacity:0.3;"><i class="fas fa-search"></i></div>
-                        <h3>Tidak ada dokumen ditemukan</h3>
-                        <p>Cobalah kata kunci lain atau ubah filter status.</p>
+                        <div class="empty-icon"><i class="fas fa-folder-open"></i></div>
+                        <h3 style="font-weight:700; color:#334155;">Tidak ada dokumen ditemukan</h3>
+                        <p style="color:#64748b; font-size:14px;">Coba ubah filter atau kata kunci pencarian Anda.</p>
                     </div>`;
                 return;
             }
 
             filtered.forEach(doc => {
-                // Determine Status Color
+                // Status Logic
                 let statusClass = 'status-pending';
                 let statusIcon = '<i class="fas fa-clock"></i>';
+                let statusLabel = 'Menunggu';
 
-                if (doc.status === 'Disetujui' || doc.status === 'Approved') {
+                if (['Disetujui', 'Approved'].includes(doc.status)) {
                     statusClass = 'status-approved';
                     statusIcon = '<i class="fas fa-check-circle"></i>';
+                    statusLabel = 'Disetujui';
                 } else if (doc.status === 'Revisi') {
                     statusClass = 'status-revision';
-                    statusIcon = '<i class="fas fa-undo"></i>';
+                    statusIcon = '<i class="fas fa-exclamation-circle"></i>';
+                    statusLabel = 'Revisi';
                 }
 
-                const avatarInitials = doc.submitter.substring(0, 2).toUpperCase();
-
-                // Risk Badge logic
-                let riskColor = '#ef4444'; // High
-                let riskText = 'High Risk';
-                // You can map doc.risk_level here if needed, for now using static or passed value
-                // For demo, let's use a generic 'Info' badge if risk not calculated
+                // Parse Date for Badge (assuming format DD MMM YYYY)
+                // If doc.date_submit is string e.g., "17 Jan 2026"
+                const dateParts = doc.date_submit.split(' ');
+                const day = dateParts[0] || '-';
+                const month = dateParts[1] || '-';
 
                 const html = `
-                    <a href="${doc.viewUrl}" class="doc-card" style="border-left: 4px solid var(--primary);">
-                        <div class="dc-top" style="margin-bottom:8px;">
-                            <span style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">DOKUMEN HIRADC</span>
-                            <span style="font-size:11px; font-weight:600; color:var(--text-sub); background:#f1f5f9; padding:2px 8px; border-radius:12px;">${doc.date_submit} • ${doc.time_submit}</span>
-                        </div>
-                        
-                        <div class="dc-title" title="${doc.title}" style="font-size:16px; font-weight:800; min-height:auto; margin-bottom:12px; color:#1e293b;">
-                            ${doc.title}
+                    <a href="${doc.viewUrl}" class="doc-item">
+                        <!-- Date Badge -->
+                        <div class="doc-date-box">
+                            <span class="doc-day">${day}</span>
+                            <span class="doc-month">${month}</span>
                         </div>
 
-                        <div class="dc-meta" style="border-bottom:none; margin-bottom:12px; padding-bottom:0;">
-                            <div class="meta-row">
-                                <div style="width:24px; height:24px; background:#eff6ff; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#3b82f6; font-size:12px;"><i class="fas fa-building"></i></div>
-                                <div style="display:flex; flex-direction:column;">
-                                    <span style="font-size:10px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Unit Kerja</span>
-                                    <span style="font-weight:600; font-size:13px; color:#475569;">${doc.unit}</span>
-                                </div>
+                        <!-- Info -->
+                        <div class="doc-info">
+                            <div class="doc-header-row">
+                                <span class="doc-unit-badge"><i class="fas fa-building"></i> ${doc.unit}</span>
+                                <span style="font-size:12px; color:#94a3b8;">• ${doc.time_submit} WIB</span>
                             </div>
-                            <div class="meta-row" style="margin-top:12px;">
-                                <div style="width:24px; height:24px; background:#f0fdf4; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#16a34a; font-size:10px; font-weight:700;">${avatarInitials}</div>
-                                <div style="display:flex; flex-direction:column;">
-                                    <span style="font-size:10px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Disusun Oleh</span>
-                                    <span style="font-weight:600; font-size:13px; color:#475569;">${doc.submitter}</span>
-                                </div>
-                            </div>
+                            <div class="doc-title">${doc.title}</div>
+                            <div class="doc-submitter"><i class="fas fa-user-edit"></i> ${doc.submitter}</div>
                         </div>
 
-                        <div class="dc-footer" style="margin-top:16px; padding-top:16px; border-top:1px dashed #cbd5e1;">
-                            <div class="status-pill ${statusClass}" style="flex:1; justify-content:center;">${statusIcon} ${doc.status}</div>
-                            <div class="action-link" style="margin-left:12px; color:white; background:var(--primary); padding:6px 16px; border-radius:6px; font-size:12px;">Review <i class="fas fa-arrow-right" style="margin-left:4px;"></i></div>
+                        <!-- Status Badge -->
+                        <div class="status-pill ${statusClass}">
+                            ${statusIcon} ${statusLabel}
                         </div>
+
+                        <!-- Action Button -->
+                        <button class="btn-review">
+                            Review <i class="fas fa-arrow-right"></i>
+                        </button>
                     </a>
                 `;
                 container.insertAdjacentHTML('beforeend', html);
             });
         }
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             initStats();
             renderDocuments();

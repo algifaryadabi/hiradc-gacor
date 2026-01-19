@@ -139,7 +139,7 @@ class Document extends Model
             $this->current_level = 3;
             $this->status = 'pending_level3';
         } elseif ($this->current_level == 3) {
-            $this->status = 'approved';
+            $this->status = 'published';
             $this->published_at = now();
         }
 
@@ -237,6 +237,7 @@ class Document extends Model
             'pending_level2' => 'Menunggu Approval Unit Pengelola',
             'pending_level3' => 'Menunggu Approval Kepala Departemen',
             'approved' => 'Disetujui',
+            'published' => 'Terpublikasi',
             'rejected' => 'Ditolak',
             'revision' => 'Perlu Revisi',
             default => $this->status,
@@ -248,7 +249,7 @@ class Document extends Model
      */
     public function scopePublished($query)
     {
-        return $query->where('status', 'approved')->whereNotNull('published_at');
+        return $query->where('status', 'published')->whereNotNull('published_at');
     }
 
     /**

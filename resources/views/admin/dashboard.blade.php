@@ -293,6 +293,7 @@
                         <th>Unit</th>
                         <th>Tanggal Publikasi</th>
                         <th>Status</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -304,10 +305,13 @@
                             <td>{{ $doc->unit->nama_unit ?? '-' }}</td>
                             <td>{{ $doc->published_at ? $doc->published_at->format('d M Y') : '-' }}</td>
                             <td><span class="badge-status badge-approved">Dipublikasi</span></td>
+                            <td><a href="/documents/{{ $doc->id }}/published"
+                                    style="color:#c41e3a; font-weight:600; text-decoration:none; font-size:12px;">Detail</a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
+                            <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
                                 Belum ada dokumen yang dipublikasi
                             </td>
                         </tr>

@@ -225,7 +225,7 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             margin-bottom: 30px;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
         }
 
@@ -529,57 +529,6 @@
             align-items: center;
             gap: 8px;
         }
-
-        /* TABS */
-        .tab-nav {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-            padding-bottom: 0;
-        }
-
-        .tab-btn {
-            padding: 10px 20px;
-            background: none;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            color: #888;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .tab-btn:hover {
-            color: #c41e3a;
-            background: #fff5f5;
-        }
-
-        .tab-btn.active {
-            color: #c41e3a;
-            border-bottom-color: #c41e3a;
-            background: white;
-        }
-
-        .tab-pane {
-            display: none;
-        }
-
-        .tab-pane.active {
-            display: block;
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
     </style>
 </head>
 
@@ -600,38 +549,25 @@
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item">
-                    <i class="fas fa-folder-open"></i>
-                    <span>Cek Dokumen</span>
-                    @if(isset($pendingCount) && $pendingCount > 0)
-                        <span class="badge">{{ $pendingCount }}</span>
-                    @endif
-                </a>
-                
-                @if(!$user->isKepalaUnit())
-                <a href="{{ route('documents.create') }}" class="nav-item">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Buat Dokumen</span>
-                </a>
-
-                <a href="{{ route('documents.index') }}" class="nav-item">
+                <a href="{{ route('unit_pengelola.documents.index') }}" class="nav-item">
                     <i class="fas fa-file-alt"></i>
-                    <span>Dokumen Saya</span>
+                    <span>Inbox Dokumen</span>
                 </a>
-                @endif
             </nav>
 
             <div class="user-info-bottom">
                 <div class="user-profile">
-                    <div class="user-avatar">UP</div>
+                    <div class="user-avatar">
+                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
+                    </div>
                     <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user }}</div>
-                        <div class="user-role">{{ Auth::user()->unit->nama_unit ?? 'Unit Pengelola' }}</div>
+                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
+                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
+                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
+                            {{ Auth::user()->unit_or_dept_name }}
+                        </div>
                     </div>
                 </div>
-
-                <!-- Role Check: {{ $user->isKepalaUnit() ? 'Kepala Unit' : 'Staff' }} -->
-
                 <a href="{{ route('logout') }}" class="logout-btn"
                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="fas fa-sign-out-alt"></i>
@@ -646,372 +582,89 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="header">
-                <h1>Dashboard Utama</h1>
+                <h1>Dashboard Unit Pengelola</h1>
             </div>
 
             <div class="content-area">
-                <!-- TABS NAVIGATION -->
-                <div class="tab-nav">
-                    @if($user->isKepalaUnit())
-                        <button class="tab-btn active" onclick="openTab(event, 'tab-pending')">
-                            <i class="fas fa-inbox"></i> Dokumen Masuk
-                            @if($pendingCount > 0) <span class="badge"
-                            style="position:static; margin-left:5px;">{{ $pendingCount }}</span> @endif
-                        </button>
-                    @endif
 
-                    <!-- Staff Reviewer Tab -->
-                    @if(isset($myReviews) && $myReviews->count() > 0)
-                        <button class="tab-btn {{ !$user->isKepalaUnit() ? 'active' : '' }}"
-                            onclick="openTab(event, 'tab-review')">
-                            <i class="fas fa-edit"></i> Tugas Review
-                            <span class="badge"
-                                style="position:static; margin-left:5px; background:#f59e0b;">{{ $myReviews->count() }}</span>
-                        </button>
-                    @endif
-
-
-
-                    <!-- History Review Tab -->
-                    @if(isset($historyReviews) && $historyReviews->count() > 0)
-                        <button class="tab-btn" onclick="openTab(event, 'tab-history-review')">
-                            <i class="fas fa-history"></i> Riwayat Review
-                        </button>
-                    @endif
-
-                    <!-- Staff Verificator Tab -->
-                    @if(isset($myVerifications) && $myVerifications->count() > 0)
-                        <button
-                            class="tab-btn {{ (!$user->isKepalaUnit() && (!isset($myReviews) || $myReviews->count() == 0)) ? 'active' : '' }}"
-                            onclick="openTab(event, 'tab-verify')">
-                            <i class="fas fa-check-double"></i> Tugas Verifikasi
-                            <span class="badge"
-                                style="position:static; margin-left:5px; background:#166534;">{{ $myVerifications->count() }}</span>
-                        </button>
-                    @endif
-
-                    <!-- History Verification Tab -->
-                    @if(isset($historyVerifications) && $historyVerifications->count() > 0)
-                        <button class="tab-btn" onclick="openTab(event, 'tab-history-verify')">
-                            <i class="fas fa-history"></i> Riwayat Verifikasi
-                        </button>
-                    @endif
-
-                    <!-- Published Tab -->
-                    <button
-                        class="tab-btn {{ (!$user->isKepalaUnit() && (!isset($myReviews) || $myReviews->count() == 0) && (!isset($myVerifications) || $myVerifications->count() == 0)) ? 'active' : '' }}"
-                        onclick="openTab(event, 'tab-published')">
-                        <i class="fas fa-globe"></i> Laporan Terpublikasi
-                    </button>
-                </div>
-
-                <!-- TAB 1: PENDING (HEAD ONLY) -->
-                @if($user->isKepalaUnit())
-                    <div id="tab-pending" class="tab-pane active JS_tab_content">
-                        <div class="table-section">
-                            <div class="table-header">
-                                <h2>Menunggu Persetujuan / Disposisi</h2>
-                            </div>
-                            <table class="custom-table">
-                                <thead>
-                                    <tr>
-                                        <th>Tgl Masuk</th>
-                                        <th>Judul Dokumen</th>
-                                        <th>Unit Penginput</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($pendingDocuments as $doc)
-                                        <tr>
-                                            <td>{{ $doc->created_at->format('d M Y') }}</td>
-                                            <td>{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}</td>
-                                            <td>{{ $doc->unit->nama_unit ?? '-' }}</td>
-                                            <td>
-                                                @if(!$doc->level2_status)
-                                                    <span class="status-pill" style="background:#e0f2fe; color:#0369a1;">Baru
-                                                        Masuk</span>
-                                                @elseif($doc->level2_status == 'assigned_review')
-                                                    <span class="status-pill" style="background:#fff7ed; color:#c2410c;">Sedang
-                                                        Direview</span>
-                                                    <div style="font-size:10px; color:#666;">
-                                                        {{ $doc->level2Reviewer->nama_user ?? '' }}</div>
-                                                @elseif($doc->level2_status == 'assigned_approval')
-                                                    <span class="status-pill" style="background:#f0fdf4; color:#15803d;">Sedang
-                                                        Diverifikasi</span>
-                                                    <div style="font-size:10px; color:#666;">
-                                                        {{ $doc->level2Approver->nama_user ?? '' }}</div>
-                                                @elseif($doc->level2_status == 'returned_to_head')
-                                                    <span class="status-pill" style="background:#dbeafe; color:#1e40af;">Siap
-                                                        Approval</span>
-                                                    <div style="font-size:10px; color:#666;">Verified by:
-                                                        {{ $doc->level2Approver->nama_user ?? 'Staff' }}</div>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-action">
-                                                    {{ $doc->level2_status == 'returned_to_head' ? 'Approve' : 'Detail' }}
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" style="text-align:center; padding:30px; color:#999;">Tidak ada
-                                                dokumen masuk.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                <!-- 4 FILTERS -->
+                <div class="filters-container" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="filter-group">
+                        <label>Direktorat</label>
+                        <select id="filter_directorate" onchange="filterDepartments()">
+                            <option value="">-- Pilih Direktorat --</option>
+                            @foreach($direktorats as $dir)
+                                <option value="{{ $dir->id_direktorat }}">{{ $dir->nama_direktorat }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                @endif
-
-                <!-- TAB 2: STAFF REVIEWS -->
-                <div id="tab-review"
-                    class="tab-pane {{ !$user->isKepalaUnit() && (isset($myReviews) && $myReviews->count() > 0) ? 'active' : '' }} JS_tab_content">
-                    <div class="table-section">
-                        <div class="table-header">
-                            <h2>Daftar Tugas Review</h2>
-                        </div>
-                        <table class="custom-table">
-                            <thead>
-                                <tr>
-                                    <th>Tgl Assign</th>
-                                    <th>Judul Dokumen</th>
-                                    <th>Dari Unit</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if(isset($myReviews))
-                                    @forelse($myReviews as $doc)
-                                        <tr>
-                                            <td>{{ $doc->level2_assignment_date ? \Carbon\Carbon::parse($doc->level2_assignment_date)->format('d M Y') : '-' }}
-                                            </td>
-                                            <td>{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}</td>
-                                            <td>{{ $doc->unit->nama_unit ?? '-' }}</td>
-                                            <td>
-                                                <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-action"
-                                                    style="background:#f59e0b;">Mulai Review</a>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" style="text-align:center;">Tidak ada tugas review.</td>
-                                        </tr>
-                                    @endforelse
-                                @endif
-                            </tbody>
-                        </table>
+                    <div class="filter-group">
+                        <label>Departemen</label>
+                        <select id="filter_department" onchange="filterUnits()">
+                            <option value="">-- Pilih Departemen --</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Unit Kerja</label>
+                        <select id="filter_unit" onchange="filterSeksi()">
+                            <option value="">-- Pilih Unit --</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Seksi</label>
+                        <select id="filter_seksi" onchange="applyFilters()">
+                            <option value="">-- Pilih Seksi --</option>
+                            @foreach($seksis as $seksi)
+                                <option value="{{ $seksi->id_seksi }}" data-unit-id="{{ $seksi->id_unit }}">
+                                    {{ $seksi->nama_seksi }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
-                <!-- TAB 3: STAFF VERIFICATIONS -->
-                <div id="tab-verify"
-                    class="tab-pane {{ (!$user->isKepalaUnit() && (isset($myVerifications) && $myVerifications->count() > 0) && (!isset($myReviews) || $myReviews->count() == 0)) ? 'active' : '' }} JS_tab_content">
-                    <div class="table-section">
-                        <div class="table-header">
-                            <h2>Daftar Tugas Verifikasi</h2>
-                        </div>
-                        <table class="custom-table">
-                            <thead>
-                                <tr>
-                                    <th>Tgl Assign</th>
-                                    <th>Judul Dokumen</th>
-                                    <th>Reviewer Sebelumnya</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if(isset($myVerifications))
-                                    @forelse($myVerifications as $doc)
-                                        <tr>
-                                            <td>{{ $doc->updated_at->format('d M Y') }}</td>
-                                            <td>{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}</td>
-                                            <td>{{ $doc->level2Reviewer->nama_user ?? '-' }}</td>
-                                            <td>
-                                                <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-action"
-                                                    style="background:#166534;">Verifikasi</a>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" style="text-align:center;">Tidak ada tugas verifikasi.</td>
-                                        </tr>
-                                    @endforelse
-                                @endif
-                            </tbody>
-                        </table>
+                <!-- 4 SUMMARY CARDS -->
+                <div class="category-grid">
+                    <div class="cat-card" onclick="selectCategory('K3', this)">
+                        <h3>Dokumen</h3>
+                        <h2>K3</h2>
+                    </div>
+                    <div class="cat-card" onclick="selectCategory('KO', this)">
+                        <h3>Dokumen</h3>
+                        <h2>KO</h2>
+                    </div>
+                    <div class="cat-card" onclick="selectCategory('Lingkungan', this)">
+                        <h3>Dokumen</h3>
+                        <h2>Lingkungan</h2>
+                    </div>
+                    <div class="cat-card" onclick="selectCategory('Keamanan', this)">
+                        <h3>Dokumen</h3>
+                        <h2>Keamanan</h2>
                     </div>
                 </div>
 
-                <!-- TAB: HISTORY REVIEW -->
-                <div id="tab-history-review" class="tab-pane JS_tab_content">
-                    <div class="table-section">
-                        <div class="table-header">
-                            <h2>Riwayat Dokumen yang Direview</h2>
-                        </div>
-                        <table class="custom-table">
-                            <thead>
-                                <tr>
-                                    <th>Tgl Review</th>
-                                    <th>Judul Dokumen</th>
-                                    <th>Status Saat Ini</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if(isset($historyReviews))
-                                    @foreach($historyReviews as $doc)
-                                        <tr>
-                                            <td>{{ $doc->updated_at->format('d M Y') }}</td>
-                                            <td>{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}</td>
-                                            <td>
-                                                <span class="status-pill" style="background:#f1f5f9; color:#475569;">
-                                                    {{ $doc->status == 'published' ? 'Published' : ($doc->level2_status ?? 'Processed') }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-action" style="background:#94a3b8;">Lihat</a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @endif
-                            </tbody>
-                        </table>
+                <!-- TABLE -->
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2>Dokumen Terpublikasi</h2>
                     </div>
+
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th width="30%">Unit Penginput</th>
+                                <th width="15%">Kategori</th>
+                                <th width="20%">Disetujui Oleh</th>
+                                <th width="15%">Tanggal Publish</th>
+                                <th width="15%">Penulis</th>
+                                <th width="5%">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- JS Populated -->
+                        </tbody>
+                    </table>
                 </div>
-
-                <!-- TAB: HISTORY VERIFICATION -->
-                <div id="tab-history-verify" class="tab-pane JS_tab_content">
-                    <div class="table-section">
-                        <div class="table-header">
-                            <h2>Riwayat Dokumen yang Diverifikasi</h2>
-                        </div>
-                        <table class="custom-table">
-                            <thead>
-                                <tr>
-                                    <th>Tgl Verifikasi</th>
-                                    <th>Judul Dokumen</th>
-                                    <th>Status Saat Ini</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if(isset($historyVerifications))
-                                    @foreach($historyVerifications as $doc)
-                                        <tr>
-                                            <td>{{ $doc->updated_at->format('d M Y') }}</td>
-                                            <td>{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}</td>
-                                            <td>
-                                                <span class="status-pill" style="background:#f1f5f9; color:#475569;">
-                                                     {{ $doc->status == 'published' ? 'Published' : ($doc->level2_status ?? 'Processed') }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-action" style="background:#94a3b8;">Lihat</a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @endif
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- TAB 4: PUBLISHED (EXISTING FILTERS & TABLE) -->
-                <div id="tab-published"
-                    class="tab-pane {{ (!$user->isKepalaUnit() && (!isset($myReviews) || $myReviews->count() == 0) && (!isset($myVerifications) || $myVerifications->count() == 0)) ? 'active' : '' }} JS_tab_content">
-
-                    <!-- 3 FILTERS -->
-                    <div class="filters-container">
-                        <div class="filter-group">
-                            <label>Direktorat</label>
-                            <select id="filter_directorate" onchange="filterDepartments()">
-                                <option value="">........</option>
-                                <!-- JS Populated -->
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Departemen</label>
-                            <select id="filter_department" onchange="filterUnits()">
-                                <option value="">........</option>
-                                <!-- JS Populated -->
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Kepala Unit Kerja</label>
-                            <select id="filter_unit" onchange="applyFilters()">
-                                <option value="">........</option>
-                                <!-- JS Populated -->
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- 4 SUMMARY CARDS -->
-                    <div class="category-grid">
-                        <div class="cat-card" onclick="selectCategory('K3', this)">
-                            <h3>Dokumen</h3>
-                            <h2>K3</h2>
-                        </div>
-                        <div class="cat-card" onclick="selectCategory('KO', this)">
-                            <h3>Dokumen</h3>
-                            <h2>KO</h2>
-                        </div>
-                        <div class="cat-card" onclick="selectCategory('Lingkungan', this)">
-                            <h3>Dokumen</h3>
-                            <h2>Lingkungan</h2>
-                        </div>
-                        <div class="cat-card" onclick="selectCategory('Keamanan', this)">
-                            <h3>Dokumen</h3>
-                            <h2>Keamanan</h2>
-                        </div>
-                    </div>
-
-                    <div class="table-section">
-                        <div class="table-header">
-                            <h2>Laporan Terpublikasi</h2>
-                        </div>
-
-                        <table class="custom-table">
-                            <thead>
-                                <tr>
-                                    <th width="30%">Unit Penginput</th>
-                                    <th width="15%">Kategori</th>
-                                    <th width="20%">Disetujui Oleh</th>
-                                    <th width="15%">Tanggal Publish</th>
-                                    <th width="15%">Penulis</th>
-                                    <th width="5%">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableBody">
-                                <!-- JS Populated -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <script>
-                    function openTab(evt, tabName) {
-                        var i, tabcontent, tablinks;
-                        tabcontent = document.getElementsByClassName("JS_tab_content");
-                        for (i = 0; i < tabcontent.length; i++) {
-                            tabcontent[i].style.display = "none";
-                            tabcontent[i].classList.remove("active");
-                        }
-                        tablinks = document.getElementsByClassName("tab-btn");
-                        for (i = 0; i < tablinks.length; i++) {
-                            tablinks[i].className = tablinks[i].className.replace(" active", "");
-                        }
-                        const target = document.getElementById(tabName);
-                        if (target) {
-                            target.style.display = "block";
-                            target.classList.add("active");
-                        }
-                        evt.currentTarget.className += " active";
-                    }
-                </script>
             </div>
         </main>
     </div>
@@ -1076,127 +729,125 @@
     </div>
 
     <script>
-        // MASTER CONFIG
-        // Read from Auth
-        const currentUserRole = "{{ Auth::user()->unit->nama_unit ?? 'Unit Pengelola' }}"; // Or use unit ID logic logic
-        // But better is to rely on backend filtering.
-        // For UI purposes:
-        const isSHE = {{ in_array(Auth::user()->id_unit, [56]) ? 'true' : 'false' }};
-        const isSecurity = {{ in_array(Auth::user()->id_unit, [55]) ? 'true' : 'false' }};
-        const activeRoleName = isSHE ? 'SHE' : (isSecurity ? 'Keamanan' : 'Other');
-
-        // MASTER DATA
+        // MASTER DATA FROM DATABASE
         const directorates = @json($direktorats->map(fn($d) => ['id' => $d->id_direktorat, 'name' => $d->nama_direktorat]));
 
         const departments = @json($departemens->map(fn($d) => ['id' => $d->id_dept, 'dir_id' => $d->id_direktorat, 'name' => $d->nama_dept]));
 
         const units = @json($units->map(fn($u) => ['id' => $u->id_unit, 'dept_id' => $u->id_dept, 'name' => $u->nama_unit]));
 
-        const documents = @json($publishedData);
+        const seksis = @json($seksis->map(fn($s) => ['id' => $s->id_seksi, 'unit_id' => $s->id_unit, 'name' => $s->nama_seksi]));
 
-        const pendingDocs = @json($pendingData);
+        const documents = @json($documents);
 
-        let selectedCategory = 'All';
+        let activeCategory = '';
+
+        // Debug logging
+        console.log('Seksis data:', seksis);
+        console.log('Total seksis:', seksis.length);
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Set Switcher Value - Removed
-            // const switcher = document.getElementById('roleSwitcher');
-            // if (switcher) switcher.value = currentUserRole;
-
-            // updateUserProfile(); // Removed to keep server rendered text
-            updateCategoryCards();
-            updateCategoryCards();
             populateDirectorates();
-            // populatePendingTable(); // Removed
-            // Simulate initial filter
-            applyFilters();
+            filterDepartments(); // Initialize Departments
+            renderTable(); // Initial render
         });
-
-        /* populatePendingTable Removed */
-
-
-
-        function updateCategoryCards() {
-            const cards = document.querySelectorAll('.cat-card');
-            cards.forEach(card => {
-                const catName = card.querySelector('h2').textContent.trim();
-                let shouldShow = false;
-
-                if (activeRoleName === 'SHE') {
-                    if (['K3', 'KO', 'Lingkungan'].includes(catName)) shouldShow = true;
-                } else {
-                    if (['Keamanan'].includes(catName)) shouldShow = true;
-                }
-
-                if (!shouldShow) {
-                    card.style.display = 'none';
-                } else {
-                    card.style.display = 'flex'; // Reset display
-                }
-            });
-        }
-
-
 
         function populateDirectorates() {
             const select = document.getElementById('filter_directorate');
-            select.innerHTML = '<option value="">Semua Direktorat</option>';
+            select.innerHTML = '<option value="">-- Pilih Direktorat --</option>';
             directorates.forEach(d => {
-                const option = document.createElement('option');
-                option.value = d.id;
-                option.textContent = d.name;
-                select.appendChild(option);
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = d.name;
+                select.appendChild(opt);
             });
         }
 
         function filterDepartments() {
             const dirId = document.getElementById('filter_directorate').value;
             const deptSelect = document.getElementById('filter_department');
-            const unitSelect = document.getElementById('filter_unit');
+            // Reset is handled by re-populating. If logic was appending, we'd need to clear. 
+            // innerHTML assignment clears it.
 
-            deptSelect.innerHTML = '<option value="">Semua Departemen</option>';
-            unitSelect.innerHTML = '<option value="">Semua Unit</option>';
+            deptSelect.innerHTML = '<option value="">-- Pilih Departemen --</option>';
 
-            if (!dirId) return;
+            // Should units be reset here? Yes, because department list changes/resets
+            // But we will call filterUnits right after to re-populate them based on empty dept (Show All) or selected dept
+            // Just clearing it here might cause blink if filterUnits isn't fast, but it's JS so it's blocking/fast.
 
-            const filteredDepts = departments.filter(d => d.dir_id == dirId);
+            let filteredDepts = departments;
+            if (dirId) {
+                filteredDepts = departments.filter(d => d.dir_id == dirId);
+            }
+
             filteredDepts.forEach(d => {
-                const option = document.createElement('option');
-                option.value = d.id;
-                option.textContent = d.name;
-                deptSelect.appendChild(option);
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = d.name;
+                deptSelect.appendChild(opt);
             });
-            applyFilters();
+
+            filterUnits();
         }
 
         function filterUnits() {
             const deptId = document.getElementById('filter_department').value;
             const unitSelect = document.getElementById('filter_unit');
 
-            unitSelect.innerHTML = '<option value="">Semua Unit</option>';
+            unitSelect.innerHTML = '<option value="">-- Pilih Unit --</option>';
 
-            if (!deptId) return;
+            let filteredUnits = units;
+            if (deptId) {
+                filteredUnits = units.filter(u => u.dept_id == deptId);
+            }
 
-            const filteredUnits = units.filter(u => u.dept_id == deptId);
             filteredUnits.forEach(u => {
-                const option = document.createElement('option');
-                option.value = u.id;
-                option.textContent = u.name;
-                unitSelect.appendChild(option);
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.textContent = u.name;
+                unitSelect.appendChild(opt);
             });
+            // Reset seksi dropdown
+            const seksiSelect = document.getElementById('filter_seksi');
+            seksiSelect.innerHTML = '<option value="">-- Pilih Seksi --</option>';
+        }
+
+        function filterSeksi() {
+            const unitId = document.getElementById('filter_unit').value;
+            const seksiSelect = document.getElementById('filter_seksi');
+
+            console.log('filterSeksi called, unitId:', unitId);
+
+            // Reset to first option (-- Pilih Seksi --)
+            seksiSelect.selectedIndex = 0;
+
+            // Show/hide options based on selected unit
+            const options = seksiSelect.querySelectorAll('option');
+            options.forEach((option, index) => {
+                if (index === 0) {
+                    // Always show the placeholder
+                    option.style.display = '';
+                    return;
+                }
+
+                const optionUnitId = option.getAttribute('data-unit-id');
+                if (!unitId || optionUnitId == unitId) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+
             applyFilters();
         }
 
-        function selectCategory(cat, card) {
-            // Remove active class from all cards
+        function selectCategory(cat, el) {
             document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
-
-            // Toggle selection
-            if (selectedCategory === cat) {
-                selectedCategory = 'All'; // Deselect
+            if (activeCategory === cat) {
+                activeCategory = '';
             } else {
-                selectedCategory = cat;
-                card.classList.add('active');
+                activeCategory = cat;
+                el.classList.add('active');
             }
             applyFilters();
         }
@@ -1206,72 +857,98 @@
             const deptId = document.getElementById('filter_department').value;
             const unitId = document.getElementById('filter_unit').value;
 
-            // 1. Filter by Role & Category (including selected card)
             const filtered = documents.filter(doc => {
-                // Role Filter
-                let roleMatch = false;
-                if (activeRoleName === 'SHE') {
-                    if (['K3', 'KO', 'Lingkungan'].includes(doc.category)) roleMatch = true;
-                } else {
-                    // Security
-                    if (['Keamanan', 'Pengamanan'].includes(doc.category)) roleMatch = true;
-                }
-                if (!roleMatch) return false;
-
-                // UI Filters
-                if (dirId && doc.dir_id != dirId) return false;
-                if (deptId && doc.dept_id != deptId) return false;
-                if (unitId && doc.unit_id != unitId) return false;
-                if (selectedCategory !== 'All' && doc.category !== selectedCategory) return false;
-
-                return true;
+                let match = true;
+                if (dirId && doc.dir_id != dirId) match = false;
+                if (deptId && doc.dept_id != deptId) match = false;
+                if (unitId && doc.unit_id != unitId) match = false;
+                if (activeCategory && doc.category !== activeCategory) match = false;
+                return match;
             });
 
             renderTable(filtered);
         }
 
-        function renderTable(data) {
+        function renderTable(data = documents) {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
+            const tableSection = document.querySelector('.table-section');
+
+            // Always show table section
+            tableSection.style.display = 'block';
 
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">Tidak ada dokumen ditemukan.</td></tr>';
+                let mainText = 'Belum Ada Laporan Terpublikasi';
+                let subText = 'Belum ada dokumen yang dipublikasikan.';
+
+                if (activeCategory) {
+                    subText = `Tidak ada dokumen ditemukan untuk kategori <strong>${activeCategory}</strong>.`;
+                }
+
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 60px 20px;">
+                            <div style="margin-bottom: 20px;">
+                                <i class="fas fa-folder-open" style="font-size: 64px; color: #ddd;"></i>
+                            </div>
+                            <h3 style="font-size: 18px; color: #666; margin-bottom: 10px; font-weight: 600;">
+                                ${mainText}
+                            </h3>
+                            <p style="font-size: 14px; color: #999; margin: 0;">
+                                ${subText}
+                            </p>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
 
-            data.forEach(doc => {
-                const unitName = units.find(u => u.id === doc.unit_id)?.name || 'Unknown Unit';
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${unitName}</strong><br><small style="color:#888;">${doc.title}</small></td>
-                    <td><span style="font-weight:600;">${doc.category}</span></td>
-                    <td>${doc.approver}</td>
-                    <td>${doc.approval_date}</td>
+            tbody.innerHTML = data.map(doc => {
+                const unit = units.find(u => u.id === doc.unit_id);
+                const unitName = unit ? unit.name : '-';
+                return `
+                <tr>
+                    <td><strong>${unitName}</strong></td>
+                    <td><span class="badge-status" style="background: #eee;">${doc.category}</span></td>
+                    <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
+                    <td>${doc.date}</td>
+                    <td>${doc.time || '-'}</td>
                     <td>${doc.author}</td>
-                    <td><button onclick="openDetailModal(${doc.id})" class="btn-action">Detail</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
+                    <td><a href="/documents/${doc.id}/published" class="btn-action">Detail</a></td>
+                </tr>
+            `}).join('');
         }
 
-        // Modal Functions
+        // MODAL FUNCTIONS
         function openDetailModal(id) {
             const doc = documents.find(d => d.id === id);
             if (!doc) return;
 
-            const unitName = units.find(u => u.id === doc.unit_id)?.name || '-';
+            const unit = units.find(u => u.id === doc.unit_id);
+            const unitName = unit ? unit.name : '-';
 
-            document.getElementById('m_title').textContent = doc.title;
-            document.getElementById('m_status').textContent = doc.status;
-            document.getElementById('m_category').textContent = doc.category;
-            document.getElementById('m_unit').textContent = unitName;
-            document.getElementById('m_date').textContent = doc.date;
-            document.getElementById('m_author').textContent = doc.author;
-            document.getElementById('m_risk').textContent = doc.risk_level;
+            document.getElementById('m_title').innerText = doc.title;
+            document.getElementById('m_status').innerText = doc.status;
+            document.getElementById('m_category').innerText = doc.category;
+            document.getElementById('m_unit').innerText = unitName; // Show Unit Name
+            document.getElementById('m_date').innerText = doc.date;
+            document.getElementById('m_author').innerText = doc.author;
 
-            document.getElementById('m_approval_header').textContent = "Disetujui oleh " + doc.approver + " pada " + doc.approval_date;
-            document.getElementById('m_approval_note').textContent = doc.approval_note;
+            // Risk Level Styling
+            const riskEl = document.getElementById('m_risk');
+            riskEl.innerText = doc.risk_level;
+            riskEl.className = 'info-value'; // Reset
+            if (doc.risk_level === 'Tinggi') riskEl.classList.add('risk-high');
+
+            // Approval Info
+            // Extract the Approver Name part before the () if needed, or use full string. 
+            // The image says: "Disetujui oleh Kepala Departemen pada [Date]"
+            // But our data has "approver" containing name. Let's format it nicely.
+            // Assumption: The approver string "Bpk. Ahmad (Ka. Dept Produksi)" implies role is in parens.
+            // For now, let's just use "Kepala Departemen" generic text + date as requested in image, or use the real data.
+            // The image text is: "Disetujui oleh Kepala Departemen pada 14 Des 2025"
+
+            document.getElementById('m_approval_header').innerText = `Disetujui oleh Kepala Departemen pada ${doc.approval_date}`;
+            document.getElementById('m_approval_note').innerText = doc.approval_note;
 
             document.getElementById('detailModal').style.display = 'block';
         }
@@ -1280,13 +957,14 @@
             document.getElementById('detailModal').style.display = 'none';
         }
 
-        // Close modal when clicking outside
+        // Close modal if clicked outside
         window.onclick = function (event) {
             const modal = document.getElementById('detailModal');
             if (event.target == modal) {
-                modal.style.display = "none";
+                modal.style.display = 'none';
             }
         }
+
     </script>
 </body>
 

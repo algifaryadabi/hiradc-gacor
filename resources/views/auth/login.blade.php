@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - PT Semen Padang</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary-color: #d32f2f;
@@ -207,6 +208,12 @@
             transition: color 0.3s;
         }
 
+        .input-icon-right {
+            left: auto;
+            right: 18px;
+            cursor: pointer;
+        }
+
         .form-control:focus+.input-icon,
         .form-control:focus~.input-icon {
             color: var(--primary-color);
@@ -367,15 +374,14 @@
                         <label for="password">Password</label>
                         <div class="input-wrapper">
                             <input type="password" id="password" name="password" class="form-control"
-                                placeholder="Masukkan password" required>
-                            <span class="input-icon">🔒</span>
+                                placeholder="Masukkan password" required style="padding-right: 50px;">
+                            <span class="input-icon input-icon-right" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </span>
                         </div>
                     </div>
 
-                    <div class="extra-links">
-                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                            <input type="checkbox" name="remember"> Ingat Saya
-                        </label>
+                    <div class="extra-links" style="justify-content: flex-end;">
                         <a href="{{ route('password.request') }}" class="forgot-pass">Lupa Password?</a>
                     </div>
 
@@ -386,33 +392,24 @@
     </div>
 
     <script>
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
         document.getElementById('loginForm').addEventListener('submit', function (e) {
-            // Simulasi Validasi Frontend untuk tujuan demonstrasi
-            // Jika backend belum siap, kita bisa uncomment bagian ini untuk tes UI error
-
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorElement = document.getElementById('custom-error');
-
-            /* 
-               LOGIKA DEMO:
-               Jika username bukan 'admin' atau password bukan 'admin', kita akan 
-               menampilkan pesan error yang diminta user.
-               
-               Hapus block ini jika ingin menggunakan validasi backend sepenuhnya.
-            */
-            // e.preventDefault(); // Mencegah submit asli sementara untuk demo
-
-            // if (username === 'admin' && password === 'admin') {
-            //     // Simulasi Sukses -> Redirect Dashboard
-            //     window.location.href = '/dashboard'; 
-            // } else {
-            //     // Tampilkan Error
-            //     errorElement.style.display = 'flex';
-            //     // Reset password agar user mengetik ulang
-            //     document.getElementById('password').value = '';
-            //     document.getElementById('username').focus();
-            // }
+            // Optional: Add custom validation logic here if needed
+            // e.preventDefault(); 
         });
 
         // Cek jika ada error dari Laravel Session (Backend Real)

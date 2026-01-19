@@ -253,6 +253,32 @@
             border-color: #c41e3a;
         }
 
+        .filter-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f1f1;
+            transition: transform 0.2s;
+        }
+        
+        .filter-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        .no-data-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #94a3b8;
+        }
+
+        .no-data-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #cbd5e1;
+        }
+
         /* CARDS */
         .category-grid {
             display: grid;
@@ -588,33 +614,33 @@
 
             <div class="content-area">
 
-                <!-- 4 FILTERS -->
-                <div class="filters-container" style="grid-template-columns: repeat(4, 1fr);">
-                    <div class="filter-group">
+                <!-- 4 FILTERS (CARDS) -->
+                <div class="filters-container" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; background: transparent; padding: 0; box-shadow: none;">
+                    <div class="filter-group filter-card">
                         <label>Direktorat</label>
                         <select id="filter_directorate" onchange="filterDepartments()">
-                            <option value="">........</option>
+                            <option value="">-- Pilih Direktorat --</option>
                             <!-- JS Populated -->
                         </select>
                     </div>
-                    <div class="filter-group">
+                    <div class="filter-group filter-card">
                         <label>Departemen</label>
                         <select id="filter_department" onchange="filterUnits()">
-                            <option value="">........</option>
+                            <option value="">-- Pilih Departemen --</option>
                             <!-- JS Populated -->
                         </select>
                     </div>
-                    <div class="filter-group">
+                    <div class="filter-group filter-card">
                         <label>Kepala Unit Kerja</label>
                         <select id="filter_unit" onchange="filterSeksi()">
-                            <option value="">........</option>
+                            <option value="">-- Pilih Unit Kerja --</option>
                             <!-- JS Populated -->
                         </select>
                     </div>
-                    <div class="filter-group">
+                    <div class="filter-group filter-card">
                         <label>Seksi</label>
                         <select id="filter_seksi" onchange="applyFilters()">
-                            <option value="">........</option>
+                            <option value="">-- Pilih Seksi --</option>
                             <!-- JS Populated -->
                         </select>
                     </div>
@@ -640,30 +666,45 @@
                     </div>
                 </div>
 
-                <!-- PENDING TABLE -->
-                <div class="table-section pending-section"
-                    style="margin-bottom: 30px; border-left: 4px solid #ff9800; background: #fff3e026;">
-                    <div class="table-header">
-                        <h2 style="color: #ef6c00;">⚠️ Perlu Validasi / Review</h2>
+                <!-- CARD PIC (Only for Kepala Unit) -->
+                @if(isset($currentPIC) || isset($staffList))
+                @if(Auth::user()->role_jabatan == 3)
+                <div class="pic-card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 30px;">
+                    <h3 style="font-size: 16px; font-weight: 700; color: #333; margin-bottom: 20px;">
+                        <i class="fas fa-user-check" style="color: #c41e3a; margin-right: 8px;"></i>
+                        Akses Pembuatan Dokumen (PIC)
+                    </h3>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #666;">PIC Saat Ini:</strong>
+                        <span id="currentPICName" style="color: #c41e3a; font-weight: 600; margin-left: 8px;">
+                            {{ $currentPIC ? $currentPIC->nama_user : 'Belum ada PIC yang ditugaskan' }}
+                        </span>
                     </div>
-                    <table class="custom-table" id="pendingTable">
-                        <thead>
-                            <tr>
-                                <th width="35%">Judul / Kegiatan</th>
-                                <th width="20%">Unit Penginput</th>
-                                <th width="15%">Tanggal</th>
-                                <th width="15%">Status</th>
-                                <th width="15%">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendingTableBody">
-                            <!-- JS Populated -->
-                        </tbody>
-                    </table>
-                    <div id="noPendingMsg" style="text-align:center; padding:20px; color:#777; display:none;">
-                        Tidak ada dokumen yang perlu direview saat ini.
+                    
+                    <div style="display: flex; gap: 15px; align-items: flex-end;">
+                        <div style="flex: 1;">
+                            <label style="display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px;">
+                                Pilih Staff
+                            </label>
+                            <select id="picDropdown" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                                <option value="">-- Pilih Staff --</option>
+                                @foreach($staffList as $staff)
+                                    <option value="{{ $staff->id_user }}" {{ $currentPIC && $currentPIC->id_user == $staff->id_user ? 'selected' : '' }}>
+                                        {{ $staff->nama_user }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button onclick="updatePIC(event)" style="padding: 10px 24px; background: #c41e3a; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                            Update
+                        </button>
                     </div>
                 </div>
+                @endif
+                @endif
+
+
 
                 <!-- TABLE -->
                 <div class="table-section">
@@ -759,15 +800,15 @@
             ]);
 
             $departmentsData = $departemens->map(fn($d) => [
-                'id' => $d->id_dept,
-                'dir_id' => $d->id_direktorat,
-                'name' => $d->nama_dept
+                'id' => is_array($d) ? $d['id_dept'] : $d->id_dept,
+                'dir_id' => is_array($d) ? $d['id_direktorat'] : $d->id_direktorat,
+                'name' => is_array($d) ? $d['nama_dept'] : $d->nama_dept
             ]);
 
             $unitsData = $units->map(fn($u) => [
-                'id' => $u->id_unit,
-                'dept_id' => $u->id_dept,
-                'name' => $u->nama_unit
+                'id' => is_array($u) ? $u['id_unit'] : $u->id_unit,
+                'dept_id' => is_array($u) ? $u['id_dept'] : $u->id_dept,
+                'name' => is_array($u) ? $u['nama_unit'] : $u->nama_unit
             ]);
 
             $documentsData = $publishedDocuments->map(function ($doc) {
@@ -790,18 +831,7 @@
                 ];
             });
 
-            $pendingDocsData = $pendingDocuments->filter(function ($doc) {
-                return $doc && $doc->id;
-            })->map(function ($doc) {
-                return [
-                    'id' => $doc->id,
-                    'title' => $doc->kolom2_kegiatan ?? 'Untitled',
-                    'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
-                    'date' => $doc->created_at->format('d M Y'),
-                    'status' => 'Pending Review',
-                    'url' => route('approver.review', ['document' => $doc->id])
-                ];
-            })->values();
+
 
             $seksisData = $seksis->map(fn($s) => [
                 'id' => $s->id_seksi,
@@ -822,44 +852,16 @@
 
         const documents = @json($documentsData);
 
-        const pendingDocs = @json($pendingDocsData);
-
         let activeCategory = '';
 
         document.addEventListener('DOMContentLoaded', () => {
             populateDirectorates();
             filterDepartments();
-            populatePendingTable();
         });
-
-        function populatePendingTable() {
-            const tbody = document.getElementById('pendingTableBody');
-            const noMsg = document.getElementById('noPendingMsg');
-            tbody.innerHTML = '';
-              if(pendingDocs.length === 0) {
-                document.getElementById('pendingTable').style.display = 'none';
-                noMsg.style.display = 'block';
-                return;
-            }
-
-            pendingDocs.forEach(doc => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${doc.title}</strong></td>
-                    <td>${doc.unit}</td>
-                    <td>${doc.date}</td>
-                    <td><span class="status-pill warning">${doc.status}</span></td>
-                    <td>
-                        <a href="${doc.url}" class="action-btn view-btn"><i class="fas fa-edit"></i> Review</a>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
 
         function populateDirectorates() {
             const select = document.getElementById('filter_directorate');
-            select.innerHTML = '<option value="">........</option>';
+            select.innerHTML = '<option value="">-- Pilih Direktorat --</option>';
             directorates.forEach(d => {
                 const opt = document.createElement('option');
                 opt.value = d.id;
@@ -872,7 +874,7 @@
             const dirId = document.getElementById('filter_directorate').value;
             const deptSelect = document.getElementById('filter_department');
 
-            deptSelect.innerHTML = '<option value="">........</option>';
+            deptSelect.innerHTML = '<option value="">-- Pilih Departemen --</option>';
 
             let filteredDepts = departments;
             if (dirId) {
@@ -893,7 +895,7 @@
             const deptId = document.getElementById('filter_department').value;
             const unitSelect = document.getElementById('filter_unit');
 
-            unitSelect.innerHTML = '<option value="">........</option>';
+            unitSelect.innerHTML = '<option value="">-- Pilih Unit Kerja --</option>';
 
             let filteredUnits = units;
             if (deptId) {
@@ -912,7 +914,7 @@
         function filterSeksi() {
             const unitId = document.getElementById('filter_unit').value;
             const seksiSelect = document.getElementById('filter_seksi');
-            seksiSelect.innerHTML = '<option value="">........</option>';
+            seksiSelect.innerHTML = '<option value="">-- Pilih Seksi --</option>';
 
             let filteredSeksis = seksis;
             if (unitId) {
@@ -963,8 +965,19 @@
             const tableSection = document.querySelector('.table-section');
 
             if (data.length === 0) {
-                // Keep table header, empty body or hide
-                tableSection.style.display = 'none';
+                // Show Empty State
+                tableSection.style.display = 'block';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="no-data-state">
+                                <i class="fas fa-folder-open no-data-icon"></i>
+                                <h3 style="font-size:16px; font-weight:700; color:#333;">Belum Ada Laporan Terpublikasi</h3>
+                                <p style="font-size:13px; color:#64748b;">Belum ada dokumen yang dipublikasikan saat ini.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
 
@@ -980,7 +993,7 @@
                 <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
                 <td>${doc.date}</td>
                 <td>${doc.author}</td>
-                <td><button onclick="openDetailModal(${doc.id})" class="btn-action" style="border:none; cursor:pointer;">Detail</button></td>
+                <td><a href="/documents/${doc.id}/published" class="btn-action">Detail</a></td>
             </tr>
             `}).join('');
         }
@@ -1022,6 +1035,52 @@
             if (event.target == modal) {
                 modal.style.display = 'none';
             }
+        }
+
+        function updatePIC(e) {
+            const staffId = document.getElementById('picDropdown').value;
+            
+            if (!staffId) {
+                alert('Silakan pilih staff terlebih dahulu');
+                return;
+            }
+
+            // Disable button
+            if(e && e.target) {
+                e.target.disabled = true;
+                e.target.textContent = 'Updating...';
+            }
+
+            fetch('{{ route("approver.update_pic") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ staff_id: staffId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(e && e.target) {
+                    e.target.disabled = false;
+                    e.target.textContent = 'Update';
+                }
+                
+                if (data.success) {
+                    document.getElementById('currentPICName').textContent = data.staff_name;
+                    alert(`✅ PIC berhasil diupdate!\n\n${data.staff_name} sekarang memiliki akses pembuatan dokumen.`);
+                } else {
+                    alert(`❌ Gagal update PIC: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                if(e && e.target) {
+                    e.target.disabled = false;
+                    e.target.textContent = 'Update';
+                }
+                console.error('Error:', error);
+                alert('❌ Terjadi kesalahan. Silakan coba lagi.');
+            });
         }
     </script>
 </body>

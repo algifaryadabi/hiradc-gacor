@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password - PT Semen Padang</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary-color: #d32f2f;
@@ -191,6 +192,12 @@
             transition: color 0.3s;
         }
 
+        .input-icon-right {
+            left: auto;
+            right: 18px;
+            cursor: pointer;
+        }
+
         .form-control:focus+.input-icon,
         .form-control:focus~.input-icon {
             color: var(--primary-color);
@@ -271,11 +278,22 @@
                     @csrf
 
                     <div class="input-group">
+                        <label for="username">Username</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="username" name="username" class="form-control"
+                                placeholder="Masukkan username anda" required autofocus>
+                            <span class="input-icon">👤</span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
                         <label for="password">Password Baru</label>
                         <div class="input-wrapper">
                             <input type="password" id="password" name="password" class="form-control"
-                                placeholder="Masukkan password baru" required autofocus>
-                            <span class="input-icon">🔒</span>
+                                placeholder="Masukkan password baru" required autofocus style="padding-right: 50px;">
+                            <span class="input-icon input-icon-right" id="togglePass1">
+                                <i class="fas fa-eye"></i>
+                            </span>
                         </div>
                     </div>
 
@@ -283,8 +301,11 @@
                         <label for="password_confirmation">Konfirmasi Password Baru</label>
                         <div class="input-wrapper">
                             <input type="password" id="password_confirmation" name="password_confirmation"
-                                class="form-control" placeholder="Konfirmasi password baru" required>
-                            <span class="input-icon">🔐</span>
+                                class="form-control" placeholder="Konfirmasi password baru" required
+                                style="padding-right: 50px;">
+                            <span class="input-icon input-icon-right" id="togglePass2">
+                                <i class="fas fa-eye"></i>
+                            </span>
                         </div>
                     </div>
 
@@ -295,6 +316,29 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function setupToggle(toggleId, inputId) {
+            const toggleBtn = document.getElementById(toggleId);
+            const inputField = document.getElementById(inputId);
+
+            toggleBtn.addEventListener('click', function () {
+                const icon = this.querySelector('i');
+                if (inputField.type === 'password') {
+                    inputField.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    inputField.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        }
+
+        setupToggle('togglePass1', 'password');
+        setupToggle('togglePass2', 'password_confirmation');
+    </script>
 </body>
 
 </html>
