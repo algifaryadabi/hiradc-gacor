@@ -46,9 +46,9 @@
 
         /* Sidebar */
         .sidebar {
-            width: 260px;
-            background: var(--surface);
-            border-right: 1px solid var(--border);
+            width: 250px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
             position: fixed;
             height: 100vh;
             display: flex;
@@ -57,67 +57,88 @@
         }
 
         .logo-section {
-            padding: 24px;
+            padding: 30px 20px;
+            border-bottom: 1px solid #e0e0e0;
             text-align: center;
-            border-bottom: 1px solid var(--border);
         }
 
         .logo-circle {
-            width: 64px;
-            height: 64px;
-            background: white;
+            width: 70px;
+            height: 70px;
+            background: #fff;
             border-radius: 50%;
-            margin: 0 auto 12px;
+            margin: 0 auto 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .logo-circle img {
-            max-width: 65%;
+            max-width: 80%;
+            max-height: 80%;
         }
 
         .logo-text {
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--primary);
+            font-size: 18px;
+            font-weight: 700;
+            color: #c41e3a;
+            margin-bottom: 3px;
         }
 
         .logo-subtext {
-            font-size: 11px;
-            color: var(--text-sub);
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
         }
 
         .nav-menu {
             flex: 1;
-            padding: 24px 16px;
+            padding: 20px 0;
             overflow-y: auto;
         }
 
         .nav-item {
-            padding: 12px 16px;
+            padding: 15px 25px;
             display: flex;
             align-items: center;
             gap: 12px;
             cursor: pointer;
-            transition: all 0.2s;
-            color: var(--text-sub);
+            transition: all 0.3s ease;
+            color: #666;
             font-size: 14px;
             font-weight: 500;
             text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 4px;
+            position: relative;
         }
 
-        .nav-item:hover,
-        .nav-item.active {
-            background: var(--primary-light);
-            color: var(--primary);
+        .nav-item:hover {
+            background: #fff5f5;
+            color: #c41e3a;
         }
 
         .nav-item.active {
+            background: #ffe5e5;
+            color: #c41e3a;
+            border-left: 3px solid #c41e3a;
+            font-weight: 500;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .badge {
+            position: absolute;
+            right: 20px;
+            background: #c41e3a;
+            color: white;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
             font-weight: 600;
         }
 
@@ -135,8 +156,8 @@
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             background: white;
             border-radius: 50%;
             display: flex;
@@ -144,7 +165,7 @@
             justify-content: center;
             color: #667eea;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 16px;
             flex-shrink: 0;
         }
 
@@ -155,25 +176,30 @@
 
         .user-name {
             font-weight: 600;
-            font-size: 13px;
+            font-size: 14px;
             color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .user-role {
             font-size: 11px;
-            color: rgba(255, 255, 255, 0.85);
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 2px;
         }
 
         .logout-btn {
             width: 100%;
-            padding: 8px;
+            padding: 10px 15px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -181,10 +207,15 @@
             text-decoration: none;
         }
 
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
         /* Main Content */
         .main-content {
             flex: 1;
-            margin-left: 260px;
+            margin-left: 250px;
             padding: 32px 48px;
             max-width: 1600px;
         }
@@ -593,45 +624,13 @@
 <body>
     <div class="container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System</div>
-            </div>
-            <nav class="nav-menu">
-                <a href="{{ route('dashboard') }}" class="nav-item"><i
-                        class="fas fa-th-large"></i><span>Dashboard</span></a>
-                <a href="{{ route('documents.index') }}" class="nav-item active"><i
-                        class="fas fa-folder-open"></i><span>Dokumen Saya</span></a>
-                <a href="{{ route('documents.create') }}" class="nav-item"><i class="fas fa-plus-circle"></i><span>Buat
-                        Dokumen Baru</span></a>
-            </nav>
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt"></i> Keluar
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
-            </div>
-        </aside>
+        <!-- Sidebar -->
+        @include('user.partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
             <a href="{{ route('documents.index') }}" class="btn-back"><i class="fas fa-arrow-left"></i> Kembali ke
-                Dokumen Saya</a>
+                Form Saya</a>
 
             <!-- Doc Header Banner -->
             <div class="doc-banner">
@@ -649,7 +648,7 @@
                     @if($document->status == 'revision' || $document->status == 'draft')
                         <a href="{{ route('documents.edit', $document->id) }}" class="btn-print"
                             style="background:var(--primary); color:white; border-color:var(--primary);">
-                            <i class="fas fa-edit"></i> Edit Dokumen
+                            <i class="fas fa-edit"></i> Edit Form
                         </a>
                     @endif
                     <button onclick="window.print()" class="btn-print">
@@ -676,11 +675,11 @@
                         <div class="step-label">Unit Pengelola</div>
                     </div>
                     <div
-                        class="step-item {{ $document->status == 'approved' ? 'completed' : ($document->current_level == 3 ? 'active' : '') }}">
+                        class="step-item {{ ($document->status == 'approved' || $document->status == 'published') ? 'completed' : ($document->current_level == 3 ? 'active' : '') }}">
                         <div class="step-circle">3</div>
                         <div class="step-label">Kepala Dept.</div>
                     </div>
-                    <div class="step-item {{ $document->status == 'approved' ? 'completed active' : '' }}">
+                    <div class="step-item {{ ($document->status == 'approved' || $document->status == 'published') ? 'completed active' : '' }}">
                         <div class="step-circle"><i class="fas fa-check"></i></div>
                         <div class="step-label">Selesai</div>
                     </div>
@@ -690,8 +689,8 @@
                         style="background: #fff7ed; color: #c2410c; padding: 15px; border-radius: 8px; margin-top: 25px; font-size: 14px; border:1px solid #fdba74; display: flex; align-items: start; gap: 12px;">
                         <i class="fas fa-exclamation-triangle" style="margin-top: 2px;"></i>
                         <div>
-                            <strong>Dokumen Perlu Revisi</strong>
-                            <p style="margin-top: 4px; opacity: 0.9;">Approver telah mengembalikan dokumen ini dengan
+                            <strong>Form Perlu Revisi</strong>
+                            <p style="margin-top: 4px; opacity: 0.9;">Approver telah mengembalikan form ini dengan
                                 catatan tertentu. Silakan cek bagian "Riwayat Approval" di bawah, lalu klik tombol Edit
                                 untuk memperbaiki.</p>
                         </div>
@@ -1014,7 +1013,7 @@
                     <div class="timeline-item">
                         <div class="timeline-dot"></div>
                         <div class="timeline-date">{{ $document->created_at->format('d M Y, H:i') }}</div>
-                        <div class="timeline-title">Dokumen Dibuat</div>
+                        <div class="timeline-title">Form Dibuat</div>
                     </div>
                 </div>
             </div>

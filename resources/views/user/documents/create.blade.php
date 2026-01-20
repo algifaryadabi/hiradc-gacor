@@ -37,9 +37,9 @@
 
         /* Sidebar */
         .sidebar {
-            width: var(--sidebar-width);
+            width: 250px;
             background: white;
-            border-right: 1px solid #e5e7eb;
+            border-right: 1px solid #e0e0e0;
             position: fixed;
             height: 100vh;
             display: flex;
@@ -49,7 +49,7 @@
 
         .logo-section {
             padding: 30px 20px;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e0e0e0;
             text-align: center;
         }
 
@@ -62,64 +62,74 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            border: 1px solid #f3f4f6;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .logo-circle img {
             max-width: 80%;
+            max-height: 80%;
         }
 
         .logo-text {
             font-size: 18px;
-            font-weight: 800;
-            color: var(--primary-color);
-            letter-spacing: -0.5px;
+            font-weight: 700;
+            color: #c41e3a;
             margin-bottom: 3px;
         }
 
         .logo-subtext {
             font-size: 12px;
-            color: #9ca3af;
-            font-weight: 500;
+            color: #999;
+            font-style: italic;
         }
 
         .nav-menu {
             flex: 1;
-            padding: 20px 15px;
+            padding: 20px 0;
             overflow-y: auto;
         }
 
         .nav-item {
-            padding: 12px 20px;
+            padding: 15px 25px;
             display: flex;
             align-items: center;
             gap: 12px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            color: #4b5563;
+            transition: all 0.3s ease;
+            color: #666;
             font-size: 14px;
             font-weight: 500;
             text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 5px;
+            position: relative;
         }
 
         .nav-item:hover {
-            background: #fee2e2;
-            color: var(--primary-color);
+            background: #fff5f5;
+            color: #c41e3a;
         }
 
         .nav-item.active {
-            background: #fee2e2;
-            color: var(--primary-color);
-            font-weight: 600;
+            background: #ffe5e5;
+            color: #c41e3a;
+            border-left: 3px solid #c41e3a;
         }
 
         .nav-item i {
             width: 20px;
             text-align: center;
             font-size: 16px;
+        }
+        
+        .badge {
+            position: absolute;
+            right: 20px;
+            background: #c41e3a;
+            color: white;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
         }
 
         .user-info-bottom {
@@ -158,11 +168,15 @@
             font-weight: 600;
             font-size: 14px;
             color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .user-role {
             font-size: 11px;
             color: rgba(255, 255, 255, 0.8);
+            margin-top: 2px;
         }
 
         .logout-btn {
@@ -185,12 +199,13 @@
 
         .logout-btn:hover {
             background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         /* Main Content */
         .main-content {
             flex: 1;
-            margin-left: var(--sidebar-width);
+            margin-left: 250px;
         }
 
         .header {
@@ -510,43 +525,8 @@
 <body>
     <div class="container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System</div>
-            </div>
-            <nav class="nav-menu">
-                <a href="{{ route('dashboard') }}"
-                    class="nav-item {{ Request::routeIs('user.dashboard') ? 'active' : '' }}"><i
-                        class="fas fa-th-large"></i><span>Dashboard</span></a>
-                <a href="{{ route('documents.index') }}"
-                    class="nav-item {{ Request::routeIs('documents.index') ? 'active' : '' }}"><i
-                        class="fas fa-folder-open"></i><span>Form Saya</span></a>
-                <a href="{{ route('documents.create') }}"
-                    class="nav-item {{ Request::routeIs('documents.create') ? 'active' : '' }}"><i
-                        class="fas fa-plus-circle"></i><span>Buat Form Baru</span></a>
-            </nav>
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt"></i> Keluar
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
-            </div>
-        </aside>
+        <!-- Sidebar -->
+        @include('user.partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
@@ -571,13 +551,13 @@
                         style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1e293b;">
-                                Judul Dokumen <span style="color: #ef4444;">*</span>
+                                Judul Form <span style="color: #ef4444;">*</span>
                             </label>
                             <input type="text" name="judul_dokumen" class="form-control" required
                                 placeholder="Contoh: Identifikasi Bahaya Area Produksi Line 1"
                                 style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
                             <small style="display: block; margin-top: 6px; color: #64748b;">
-                                Berikan judul yang jelas untuk dokumen HIRADC ini.
+                                Berikan judul yang jelas untuk form HIRADC ini.
                             </small>
                         </div>
                     </div>
@@ -621,7 +601,7 @@
                             </a>
                             <input type="hidden" name="submit_for_approval" value="1">
                             <button type="button" id="btnSubmit" class="btn btn-primary" onclick="validateForm()">
-                                <i class="fas fa-paper-plane"></i> Kirim Dokumen
+                                <i class="fas fa-paper-plane"></i> Kirim Form
                             </button>
                         </div>
                     </div>
@@ -1300,7 +1280,7 @@
                 const titleInput = document.querySelector('input[name="judul_dokumen"]');
                 if (!titleInput || !titleInput.value.trim()) {
                     isValid = false;
-                    errorMsg = 'Judul Dokumen wajib diisi.';
+                    errorMsg = 'Judul Form wajib diisi.';
                     if (titleInput) titleInput.focus();
                 }
 

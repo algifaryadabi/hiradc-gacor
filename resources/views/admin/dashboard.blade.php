@@ -108,8 +108,8 @@
 
         .cards {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
             margin-bottom: 30px;
         }
 
@@ -210,36 +210,38 @@
             background: #fff3e0;
             color: #f57c00;
         }
+
+        .btn-detail {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn-detail:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+        }
+
+        .btn-detail i {
+            font-size: 11px;
+        }
     </style>
 </head>
 
 <body>
 
     <aside class="sidebar">
-        <div class="logo-section">
-            <img src="{{ asset('images/logo-semen-padang.png') }}" alt="Logo">
-            <div style="font-weight: 700; color: #c41e3a;">PT Semen Padang</div>
-            <div style="font-size: 12px; color: #888;">Admin System</div>
-        </div>
-        <nav class="nav-menu">
-            <a href="{{ route('admin.dashboard') }}" class="nav-item active">
-                <i class="fas fa-th-large"></i> Dashboard
-            </a>
-            <a href="{{ route('admin.users') }}" class="nav-item">
-                <i class="fas fa-users"></i> Manajemen User
-            </a>
-            <a href="{{ route('admin.master') }}" class="nav-item">
-                <i class="fas fa-database"></i> Data Master
-            </a>
-        </nav>
-        <div class="user-section">
-            <div style="font-weight: 600; font-size: 14px;">{{ Auth::user()->nama_user ?? Auth::user()->username }}
-            </div>
-            <div style="font-size: 12px; opacity: 0.8;">{{ Auth::user()->role_jabatan_name }}</div>
-            <a href="{{ route('logout') }}" class="logout-btn"
-                onclick="event.preventDefault(); document.getElementById('logout').submit();">Keluar</a>
-            <form id="logout" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
-        </div>
+        @include('admin.partials.sidebar')
     </aside>
 
     <main class="main-content">
@@ -253,13 +255,13 @@
                 <div class="card-icon"><i class="fas fa-users"></i></div>
                 <div class="card-info">
                     <h3>Total Users</h3>
-                    <h2>{{ \App\Models\User::count() }}</h2>
+                    <h2>{{ \App\Models\User::where('user_aktif', 1)->count() }}</h2>
                 </div>
             </div>
             <div class="card">
                 <div class="card-icon"><i class="fas fa-file-contract"></i></div>
                 <div class="card-info">
-                    <h3>Total Dokumen</h3>
+                    <h3>Total Form</h3>
                     <h2>{{ $totalDocuments ?? 0 }}</h2>
                 </div>
             </div>
@@ -278,11 +280,18 @@
                     <h2>{{ $pendingDocuments ?? 0 }}</h2>
                 </div>
             </div>
+            <div class="card">
+                <div class="card-icon" style="background: #ffebee; color: #c62828;"><i class="fas fa-edit"></i></div>
+                <div class="card-info">
+                    <h3>Perlu Revisi</h3>
+                    <h2>{{ $revisionDocuments ?? 0 }}</h2>
+                </div>
+            </div>
         </div>
 
         <div class="documents-table">
             <div class="table-header">
-                <h2>Dokumen Terbaru yang Dipublikasi</h2>
+                <h2>Form Terbaru yang Dipublikasi</h2>
             </div>
             <table>
                 <thead>
@@ -299,20 +308,22 @@
                 <tbody>
                     @forelse($documents ?? [] as $doc)
                         <tr>
-                            <td>{{ $doc->kolom2_kegiatan ?? 'Dokumen HIRADC' }}</td>
+                            <td>{{ $doc->kolom2_kegiatan ?? 'Form HIRADC' }}</td>
                             <td>{{ $doc->kategori }}</td>
                             <td>{{ $doc->user->nama_user ?? $doc->user->username ?? '-' }}</td>
                             <td>{{ $doc->unit->nama_unit ?? '-' }}</td>
                             <td>{{ $doc->published_at ? $doc->published_at->format('d M Y') : '-' }}</td>
                             <td><span class="badge-status badge-approved">Dipublikasi</span></td>
-                            <td><a href="/documents/{{ $doc->id }}/published"
-                                    style="color:#c41e3a; font-weight:600; text-decoration:none; font-size:12px;">Detail</a>
+                            <td>
+                                <a href="{{ route('documents.published', $doc->id) }}" class="btn-detail">
+                                    <i class="fas fa-eye"></i> Detail
+                                </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
-                                Belum ada dokumen yang dipublikasi
+                                Belum ada form yang dipublikasi
                             </td>
                         </tr>
                     @endforelse

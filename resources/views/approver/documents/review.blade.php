@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review Dokumen - HIRADC</title>
+    <title>Review Form - HIRADC</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -371,6 +371,7 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.03em;
+            white-space: nowrap;
         }
 
         .excel-table thead tr:first-child th {
@@ -381,7 +382,7 @@
         }
 
         /* Sticky First Column Header */
-        .excel-table thead th:first-child {
+        .excel-table thead tr:first-child th:first-child {
             position: sticky;
             left: 0;
             z-index: 52;
@@ -959,26 +960,26 @@
 
         /* Active State */
         .step-item.active .step-circle {
-            border-color: var(--primary-color);
+            border-color: var(--primary);
             background: #fff1f2;
-            color: var(--primary-color);
+            color: var(--primary);
             box-shadow: 0 0 0 4px rgba(196, 30, 58, 0.1);
         }
 
         .step-item.active .step-label {
-            color: var(--primary-color);
+            color: var(--primary);
             font-weight: 700;
         }
 
         /* Completed State */
         .step-item.completed .step-circle {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
+            background: var(--primary);
+            border-color: var(--primary);
             color: white;
         }
 
         .step-item.completed .step-label {
-            color: var(--primary-color);
+            color: var(--primary);
         }
     </style>
 </head>
@@ -986,43 +987,13 @@
 <body>
     <div class="container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System (Approver)</div>
-            </div>
-            <nav class="nav-menu">
-                <a href="{{ route('approver.dashboard') }}" class="nav-item"><i
-                        class="fas fa-th-large"></i><span>Dashboard</span></a>
-                <a href="{{ route('approver.check_documents') }}" class="nav-item active"><i
-                        class="fas fa-file-signature"></i><span>Cek Dokumen</span></a>
-            </nav>
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i
-                        class="fas fa-sign-out-alt"></i> Keluar</a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
-            </div>
-        </aside>
+        @include('approver.partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
             <div class="page-header">
                 <div class="header-title">
-                    <h1>Review & Edit Dokumen</h1>
+                    <h1>Review & Edit Form</h1>
                     <p>Periksa, edit jika perlu, dan setujui atau minta revisi.</p>
                 </div>
                 <a href="{{ route('approver.check_documents') }}" class="btn-back"><i class="fas fa-arrow-left"></i>
@@ -1033,7 +1004,7 @@
             <div class="doc-card">
                 <div class="doc-header" style="justify-content: flex-start; gap: 30px;">
                     <div>
-                        <div class="doc-title-label">Judul Dokumen</div>
+                        <div class="doc-title-label">Judul Form</div>
                         <div class="doc-title-value">{{ $document->judul_dokumen ?? $document->kolom2_kegiatan }}</div>
                     </div>
 
@@ -1064,11 +1035,11 @@
                         <div class="step-label">Unit Pengelola</div>
                     </div>
                     <div
-                        class="step-item {{ $document->status == 'approved' ? 'completed' : ($document->current_level == 3 ? 'active' : '') }}">
+                        class="step-item {{ ($document->status == 'approved' || $document->status == 'published') ? 'completed' : ($document->current_level == 3 ? 'active' : '') }}">
                         <div class="step-circle">3</div>
                         <div class="step-label">Kepala Dept.</div>
                     </div>
-                    <div class="step-item {{ $document->status == 'approved' ? 'completed active' : '' }}">
+                    <div class="step-item {{ ($document->status == 'approved' || $document->status == 'published') ? 'completed active' : '' }}">
                         <div class="step-circle"><i class="fas fa-check"></i></div>
                         <div class="step-label">Selesai</div>
                     </div>
@@ -1078,8 +1049,8 @@
                         style="background: #fff7ed; color: #c2410c; padding: 15px; border-radius: 8px; margin-top: 25px; font-size: 14px; border:1px solid #fdba74; display: flex; align-items: start; gap: 12px;">
                         <i class="fas fa-exclamation-triangle" style="margin-top: 2px;"></i>
                         <div>
-                            <strong>Dokumen Perlu Revisi</strong>
-                            <p style="margin-top: 4px; opacity: 0.9;">Dokumen ini dikembalikan dengan catatan tertentu.
+                            <strong>Form Perlu Revisi</strong>
+                            <p style="margin-top: 4px; opacity: 0.9;">Form ini dikembalikan dengan catatan tertentu.
                                 Silakan cek bagian "Riwayat Approval" di bawah untuk detail.</p>
                         </div>
                     </div>
@@ -1645,8 +1616,8 @@
             }
 
             Swal.fire({
-                title: type === 'approve' ? 'Setujui Dokumen?' : 'Kembalikan Revisi?',
-                text: type === 'approve' ? 'Dokumen akan dilanjutkan ke Approval berikutnya.' : 'Dokumen akan dikembalikan ke pembuat.',
+                title: type === 'approve' ? 'Setujui Form?' : 'Kembalikan Revisi?',
+                text: type === 'approve' ? 'Form akan dilanjutkan ke Approval berikutnya.' : 'Form akan dikembalikan ke pembuat.',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Ya, Lanjutkan',
@@ -1669,6 +1640,50 @@
     @if($errors->any())
         <script>Swal.fire({ icon: 'error', title: 'Error', html: `<ul>@foreach($errors->all() as $e)<li>{{$e}}</li>@endforeach</ul>` });</script>
     @endif
+
+    <script>
+        // Realtime Tracking Polling
+        const docId = "{{ $document->id }}";
+        const statusRoute = "{{ route('approver.get_status', $document->id) }}";
+
+        setInterval(() => {
+            fetch(statusRoute)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        updateWizard(data.current_level, data.status);
+                    }
+                })
+                .catch(err => console.error('Polling error:', err));
+        }, 5000); // Poll every 5 seconds
+
+        function updateWizard(level, status) {
+            const steps = document.querySelectorAll('.step-item');
+            const isFinished = (status === 'approved' || status === 'published');
+            
+            // Reset all
+            steps.forEach(s => s.classList.remove('active', 'completed'));
+
+            // Step 1: Draft (Index 0)
+            if (level >= 1) steps[0].classList.add('completed');
+            else steps[0].classList.add('active');
+
+            // Step 2: Kepala Unit (Index 1)
+            if (level > 1) steps[1].classList.add('completed');
+            else if (level == 1) steps[1].classList.add('active');
+
+            // Step 3: Unit Pengelola (Index 2)
+            if (level > 2) steps[2].classList.add('completed');
+            else if (level == 2) steps[2].classList.add('active');
+
+            // Step 4: Kepala Dept (Index 3)
+            if (isFinished) steps[3].classList.add('completed');
+            else if (level == 3) steps[3].classList.add('active');
+
+            // Step 5: Selesai (Index 4)
+            if (isFinished) steps[4].classList.add('completed', 'active');
+        }
+    </script>
 </body>
 
 </html>

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cek Dokumen - HIRADC System</title>
+    <title>Cek Form - HIRADC System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -486,45 +486,14 @@
 <body>
     <div class="container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System (Approver)</div>
-            </div>
-            <nav class="nav-menu">
-                <a href="{{ route('approver.dashboard') }}" class="nav-item"><i
-                        class="fas fa-th-large"></i><span>Dashboard</span></a>
-                <a href="{{ route('approver.check_documents') }}" class="nav-item active"><i
-                        class="fas fa-file-signature"></i><span>Cek Dokumen</span></a>
-            </nav>
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt"></i> Keluar
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
-            </div>
-        </aside>
+        @include('approver.partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
             <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
-                    <h1>Review Dokumen Masuk</h1>
-                    <p>Kelola persetujuan dokumen HIRADC dari unit kerja Anda.</p>
+                    <h1>Review Form Masuk</h1>
+                    <p>Kelola persetujuan form HIRADC dari unit kerja Anda.</p>
                 </div>
 
                 <!-- NEW: Staff Delegation Dropdown (Only for Kepala Unit - role_jabatan = 3) -->
@@ -546,7 +515,7 @@
                             @endforeach
                         </select>
                         <small style="display: block; margin-top: 4px; font-size: 11px; color: var(--text-sub);">
-                            <i class="fas fa-info-circle"></i> Pilih staff yang bertanggung jawab untuk dokumen
+                            <i class="fas fa-info-circle"></i> Pilih staff yang bertanggung jawab untuk form
                         </small>
                     </div>
                 @endif
@@ -626,7 +595,7 @@
                 html = `
                     <div class="empty-state">
                         <div class="empty-icon"><i class="far fa-folder-open"></i></div>
-                        <div class="empty-text">Tidak ada dokumen yang ditemukan untuk filter ini.</div>
+                        <div class="empty-text">Tidak ada form yang ditemukan untuk filter ini.</div>
                     </div>
                 `;
             } else {
@@ -698,7 +667,7 @@
             const staffName = dropdown.options[dropdown.selectedIndex].text;
 
             // Show confirmation
-            alert(`Staff "${staffName}" telah dipilih.\n\nStaff ini akan menjadi penanggung jawab untuk dokumen-dokumen baru dari unit Anda.`);
+            alert(`Staff "${staffName}" telah dipilih.\n\nStaff ini akan menjadi penanggung jawab untuk form-form baru dari unit Anda.`);
 
             // Optional: You can also send AJAX request to save this assignment to server
             // fetch('/api/assign-staff', { method: 'POST', body: JSON.stringify({ staff_id: staffId }) })

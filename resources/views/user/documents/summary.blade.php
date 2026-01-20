@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekapitulasi Dokumen - HIRADC System</title>
+    <title>Rekapitulasi Form - HIRADC System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,6 +27,192 @@
         }
 
         .container {
+            display: flex;
+            min-height: 100vh;
+            max-width: none;
+            margin: 0;
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+        }
+
+        .logo-section {
+            padding: 30px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .logo-circle {
+            width: 70px;
+            height: 70px;
+            background: #fff;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-circle img {
+            max-width: 80%;
+            max-height: 80%;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #c41e3a;
+            margin-bottom: 3px;
+        }
+
+        .logo-subtext {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: #fff5f5;
+            color: #c41e3a;
+        }
+
+        .nav-item.active {
+            background: #ffe5e5;
+            color: #c41e3a;
+            border-left: 3px solid #c41e3a;
+            font-weight: 500;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .badge {
+            position: absolute;
+            right: 20px;
+            background: #c41e3a;
+            color: white;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .user-info-bottom {
+            padding: 20px;
+            border-top: 2px solid #e0e0e0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 2px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 30px;
+            width: calc(100% - 250px);
+        }
+
+        .summary-card {
             max-width: 1800px;
             margin: 0 auto;
             background: var(--surface);
@@ -313,6 +499,24 @@
                 margin: 0.5cm;
             }
 
+            .sidebar { display: none !important; }
+
+            .main-content {
+                margin-left: 0 !important; 
+                padding: 0 !important; 
+                width: 100% !important; 
+                flex: none !important;
+            }
+            
+            .summary-card { 
+                box-shadow: none !important; 
+                border: none !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                max-width: 100% !important;
+                background: white !important;
+            }
+
             body {
                 background: white;
                 padding: 0;
@@ -326,6 +530,7 @@
             }
 
             .container {
+                display: block !important; /* Reset flex */
                 box-shadow: none;
                 border: none;
                 padding: 0;
@@ -355,7 +560,6 @@
                 border: 1px solid #000 !important;
                 padding: 4px;
                 position: static;
-                /* Remove sticky for print */
             }
 
             .excel-table td {
@@ -367,9 +571,6 @@
             .section-border-right {
                 border-right: 2px solid #000 !important;
             }
-
-            /* Hide status/id for space saving if needed, but requested 'summary' usually needs details. */
-            /* We will optimize column widths instead */
 
             .risk-badge {
                 border: 1px solid #000;
@@ -387,13 +588,19 @@
 
 <body>
     <div class="container">
-        <!-- Print Header -->
+        <!-- Sidebar -->
+        @include('user.partials.sidebar')
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="summary-card">
+                <!-- Print Header -->
         <div class="print-header">
             <div class="print-logo-container">
                 <img src="{{ asset('images/logo-semen-padang.png') }}" class="print-logo" alt="Logo">
                 <div class="print-info">
                     <h2>PT SEMEN PADANG</h2>
-                    <h3>REKAPITULASI DOKUMEN HIRADC</h3>
+                    <h3>REKAPITULASI FORM HIRADC</h3>
                     <p style="text-transform:uppercase; font-weight:bold; font-size:11px; margin-top:4px;">PROSES
                         BISNIS: {{ $unitProbis }}</p>
                     <p>Unit Kerja: {{ Auth::user()->unit_or_dept_name }} • Dicetak: {{ now()->format('d M Y H:i') }}</p>
@@ -416,8 +623,8 @@
                     <div
                         style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">
                         PROSES BISNIS: {{ $unitProbis }}</div>
-                    <h1>Rekapitulasi Dokumen HIRADC</h1>
-                    <p>Tabel Master Seluruh Dokumen • {{ Auth::user()->unit_or_dept_name }}</p>
+                    <h1>Rekapitulasi Form HIRADC</h1>
+                    <p>Tabel Master Seluruh Form • {{ Auth::user()->unit_or_dept_name }}</p>
                 </div>
                 <div class="actions">
                     <a href="javascript:window.print()" class="btn btn-primary"><i class="fas fa-print"></i> Cetak /
@@ -461,7 +668,7 @@
                 <thead>
                     <tr>
                         <th rowspan="2" style="width: 30px;">No</th>
-                        <th colspan="5" class="section-border-right">Informasi Dokumen</th>
+                        <th colspan="5" class="section-border-right">Informasi Form</th>
                         <th colspan="3" class="section-border-right">Kegiatan & Situasi</th>
                         <th colspan="3" class="section-border-right">Identifikasi Bahaya & Risiko</th>
                         <th colspan="2" class="section-border-right">Pengendalian</th>
@@ -473,7 +680,7 @@
                     <tr>
                         <th style="width: 70px;">Status</th>
                         <th style="width: 60px;">Tgl</th>
-                        <th style="width: 150px;">Judul Dokumen</th>
+                        <th style="width: 150px;">Judul Form</th>
                         <th style="width: 50px;">Kat</th>
                         <th style="width: 80px;" class="section-border-right">Unit</th>
 
@@ -625,7 +832,7 @@
                     @empty
                         <tr>
                             <td colspan="16" style="text-align:center; padding: 40px; color: #94a3b8;">
-                                Tidak ada dokumen ditemukan dengan filter ini.
+                                Tidak ada form ditemukan dengan filter ini.
                             </td>
                         </tr>
                     @endforelse
@@ -642,6 +849,9 @@
                 <li><strong>SC (Score)</strong>: Nilai Risiko (L × S)</li>
             </ul>
         </div>
+    </div>
+        </div>
+    </main>
     </div>
 </body>
 

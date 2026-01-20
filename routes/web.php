@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Auth;
 
 /*
@@ -94,7 +95,7 @@ Route::middleware('auth')->group(function () {
 
             return [
                 'id' => $doc->id,
-                'title' => $doc->kolom2_kegiatan,
+                'title' => $doc->judul_dokumen ?? $doc->kolom2_kegiatan,
                 'category' => $doc->kategori,
                 'date' => $doc->published_at ? $doc->published_at->format('d M Y') : $doc->created_at->format('d M Y'),
                 'time' => $doc->published_at ? $doc->published_at->format('H:i') . ' WIB' : $doc->created_at->format('H:i') . ' WIB',
@@ -151,6 +152,7 @@ Route::middleware('auth')->group(function () {
 
     // ==================== APPROVER (KEPALA UNIT) ROUTES ====================
     Route::get('/approver/dashboard', [DocumentController::class, 'approverDashboard'])->name('approver.dashboard');
+    Route::get('/approver/dashboard/data', [DocumentController::class, 'getApproverDashboardData'])->name('approver.dashboard.data');
 
     Route::get('/approver/check-documents', [DocumentController::class, 'pendingApproval'])->name('approver.check_documents');
     Route::get('/approver/documents/{document}/review', [DocumentController::class, 'review'])->name('approver.review');
@@ -159,6 +161,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/approver/update-pic', [DocumentController::class, 'updatePIC'])->name('approver.update_pic');
     Route::post('/approver/documents/update-detail/{id}', [DocumentController::class, 'updateDetail'])->name('approver.update_detail');
     Route::get('/approver/documents/get-item-html/{id}', [DocumentController::class, 'getEditItemHtml'])->name('approver.get_edit_item');
+    Route::get('/approver/documents/{id}/status', [DocumentController::class, 'getStatus'])->name('approver.get_status');
 
 
     // ==================== UNIT PENGELOLA (SHE/KEAMANAN) ROUTES ====================
@@ -172,77 +175,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/unit-pengelola/documents/{document}/verify', [DocumentController::class, 'verifyUnit'])->name('unit_pengelola.verify');
 
     // ==================== UNIT PENGELOLA DASHBOARD ====================
-    Route::get('/unit-pengelola/dashboard', function () {
-        $user = Auth::user();
-
-        // Determine allowed categories based on unit
-        $allowedCategories = [];
-        if ($user->id_unit == 55) {
-            // Unit Security receives Keamanan
-            $allowedCategories = ['Keamanan'];
-        } elseif ($user->id_unit == 56) {
-            // Unit of SHE receives K3, KO, Lingkungan
-            $allowedCategories = ['K3', 'KO', 'Lingkungan'];
-        }
-
-        // Debug logging
-        \Log::info('Unit Pengelola Dashboard Access', [
-            'user' => $user->nama_user,
-            'id_unit' => $user->id_unit,
-            'allowed_categories' => $allowedCategories
-        ]);
-
-        // Load dropdown data from database
-        $direktorats = \App\Models\Direktorat::where('status_aktif', 1)->get();
-        $departemens = \App\Models\Departemen::all();
-        $units = \App\Models\Unit::all();
-        $seksis = \App\Models\Seksi::all();
-
-        // Load published documents (filtered by category based on unit type)
-        $rawDocuments = \App\Models\Document::published()
-            ->whereIn('kategori', $allowedCategories)
-            ->with(['user', 'unit', 'approvals.approver'])
-            ->orderBy('published_at', 'desc')
-            ->get();
-
-        // Debug: Log filtered documents
-        \Log::info('Filtered Documents Count', [
-            'total' => $rawDocuments->count(),
-            'categories' => $rawDocuments->pluck('kategori')->unique()->toArray()
-        ]);
-
-        $documents = $rawDocuments->map(function ($doc) {
-            // Find Last Approver (Kepala Departemen)
-            $approverName = '-';
-            $approvalNote = '-';
-            $approvalDate = $doc->published_at ? $doc->published_at->format('d M Y') : '-';
-
-            $lastApproval = $doc->approvals->sortByDesc('created_at')->first();
-            if ($lastApproval) {
-                $approverName = $lastApproval->approver->nama_user ?? 'Unknown';
-                $approvalNote = $lastApproval->catatan ?? '-';
-            }
-
-            return [
-                'id' => $doc->id,
-                'title' => $doc->kolom2_kegiatan,
-                'category' => $doc->kategori,
-                'date' => $doc->published_at ? $doc->published_at->format('d M Y') : $doc->created_at->format('d M Y'),
-                'time' => $doc->published_at ? $doc->published_at->format('H:i') . ' WIB' : $doc->created_at->format('H:i') . ' WIB',
-                'author' => $doc->user->nama_user ?? 'Unknown',
-                'approver' => $approverName,
-                'dir_id' => $doc->id_direktorat,
-                'dept_id' => $doc->id_dept,
-                'unit_id' => $doc->id_unit,
-                'status' => 'DISETUJUI',
-                'risk_level' => $doc->risk_level ?? 'Normal',
-                'approval_date' => $approvalDate,
-                'approval_note' => $approvalNote
-            ];
-        });
-
-        return view('unit_pengelola.dashboard', compact('user', 'direktorats', 'departemens', 'units', 'seksis', 'documents'));
-    })->name('unit_pengelola.dashboard');
+    Route::get('/unit-pengelola/dashboard', [DocumentController::class, 'unitPengelolaDashboard'])->name('unit_pengelola.dashboard');
 
     Route::get('/unit-pengelola/documents', [DocumentController::class, 'unitPengelolaPending'])->name('unit_pengelola.documents.index');
     Route::get('/unit-pengelola/check-documents', [DocumentController::class, 'unitPengelolaPending'])->name('unit_pengelola.check_documents');
@@ -325,23 +258,77 @@ Route::middleware('auth')->group(function () {
     // ==================== ADMIN ROUTES ====================
     Route::get('/admin/dashboard', function () {
         $user = Auth::user();
-        $totalDocuments = \App\Models\Document::count();
-        $publishedDocuments = \App\Models\Document::published()->count();
-        $pendingDocuments = \App\Models\Document::whereIn('status', ['pending_level1', 'pending_level2', 'pending_level3'])->count();
+        
+        // Total Documents (exclude draft - only count submitted documents)
+        $totalDocuments = \App\Models\Document::whereNotIn('status', ['draft'])->count();
+        
+        // Published Documents
+        $publishedDocuments = \App\Models\Document::where('status', 'published')
+            ->whereNotNull('published_at')
+            ->count();
+        
+        // Pending Approval (all levels)
+        $pendingDocuments = \App\Models\Document::whereIn('status', [
+            'pending_level1', 
+            'pending_level2', 
+            'pending_level3'
+        ])->count();
+        
+        // Revision Documents
+        $revisionDocuments = \App\Models\Document::where('status', 'revision')->count();
 
-        $documents = \App\Models\Document::published()
+        // Get published documents for table
+        $documents = \App\Models\Document::where('status', 'published')
+            ->whereNotNull('published_at')
             ->with(['user', 'unit'])
             ->orderBy('published_at', 'desc')
             ->limit(20)
             ->get();
 
-        return view('admin.dashboard', compact('user', 'totalDocuments', 'publishedDocuments', 'pendingDocuments', 'documents'));
+        return view('admin.dashboard', compact(
+            'user', 
+            'totalDocuments', 
+            'publishedDocuments', 
+            'pendingDocuments', 
+            'revisionDocuments',
+            'documents'
+        ));
     })->name('admin.dashboard');
 
-    Route::get('/admin/users', function () {
-        $users = \App\Models\User::all();
-        return view('admin.users.index', compact('users'));
-    })->name('admin.users');
+    // User Management Routes
+    Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users');
+    Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');
+    Route::put('/admin/users/{id}', [UserManagementController::class, 'update'])->name('admin.users.update');
+    Route::put('/admin/users/{id}/pic', [UserManagementController::class, 'updatePIC'])->name('admin.users.updatePIC');
+    Route::delete('/admin/users/{id}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+
+    // API Helper Routes for Cascade
+    Route::get('/api/dept/{id_direktorat}', [UserManagementController::class, 'getDepartemen']);
+    Route::get('/api/unit/{id_dept}', [UserManagementController::class, 'getUnit']);
+    Route::get('/api/seksi/{id_unit}', [UserManagementController::class, 'getSeksi']);
+
+    // Master Data Management Routes
+    Route::get('/admin/master-data', [\App\Http\Controllers\MasterDataController::class, 'index'])->name('admin.master_data');
+    
+    // Direktorat
+    Route::post('/admin/direktorat', [\App\Http\Controllers\MasterDataController::class, 'storeDirektorat'])->name('admin.direktorat.store');
+    Route::put('/admin/direktorat/{id}', [\App\Http\Controllers\MasterDataController::class, 'updateDirektorat'])->name('admin.direktorat.update');
+    Route::delete('/admin/direktorat/{id}', [\App\Http\Controllers\MasterDataController::class, 'destroyDirektorat'])->name('admin.direktorat.destroy');
+    
+    // Departemen
+    Route::post('/admin/departemen', [\App\Http\Controllers\MasterDataController::class, 'storeDepartemen'])->name('admin.departemen.store');
+    Route::put('/admin/departemen/{id}', [\App\Http\Controllers\MasterDataController::class, 'updateDepartemen'])->name('admin.departemen.update');
+    Route::delete('/admin/departemen/{id}', [\App\Http\Controllers\MasterDataController::class, 'destroyDepartemen'])->name('admin.departemen.destroy');
+    
+    // Unit
+    Route::post('/admin/unit', [\App\Http\Controllers\MasterDataController::class, 'storeUnit'])->name('admin.unit.store');
+    Route::put('/admin/unit/{id}', [\App\Http\Controllers\MasterDataController::class, 'updateUnit'])->name('admin.unit.update');
+    Route::delete('/admin/unit/{id}', [\App\Http\Controllers\MasterDataController::class, 'destroyUnit'])->name('admin.unit.destroy');
+    
+    // Seksi
+    Route::post('/admin/seksi', [\App\Http\Controllers\MasterDataController::class, 'storeSeksi'])->name('admin.seksi.store');
+    Route::put('/admin/seksi/{id}', [\App\Http\Controllers\MasterDataController::class, 'updateSeksi'])->name('admin.seksi.update');
+    Route::delete('/admin/seksi/{id}', [\App\Http\Controllers\MasterDataController::class, 'destroySeksi'])->name('admin.seksi.destroy');
 
     Route::get('/admin/master', function () {
         return view('admin.master');

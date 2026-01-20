@@ -652,12 +652,13 @@
                     <table class="custom-table">
                         <thead>
                             <tr>
-                                <th width="30%">Unit Penginput</th>
-                                <th width="15%">Kategori</th>
+                                <th width="20%">Unit Penginput</th>
+                                <th width="10%">Kategori</th>
                                 <th width="20%">Disetujui Oleh</th>
                                 <th width="15%">Tanggal Publish</th>
+                                <th width="10%">Waktu</th>
                                 <th width="15%">Penulis</th>
-                                <th width="5%">Aksi</th>
+                                <th width="10%">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -738,7 +739,7 @@
 
         const seksis = @json($seksis->map(fn($s) => ['id' => $s->id_seksi, 'unit_id' => $s->id_unit, 'name' => $s->nama_seksi]));
 
-        const documents = @json($documents);
+        const documents = @json($publishedData);
 
         let activeCategory = '';
 
@@ -856,12 +857,14 @@
             const dirId = document.getElementById('filter_directorate').value;
             const deptId = document.getElementById('filter_department').value;
             const unitId = document.getElementById('filter_unit').value;
+            const seksiId = document.getElementById('filter_seksi').value;
 
             const filtered = documents.filter(doc => {
                 let match = true;
                 if (dirId && doc.dir_id != dirId) match = false;
                 if (deptId && doc.dept_id != deptId) match = false;
                 if (unitId && doc.unit_id != unitId) match = false;
+                if (seksiId && doc.seksi_id != seksiId) match = false;
                 if (activeCategory && doc.category !== activeCategory) match = false;
                 return match;
             });
@@ -910,8 +913,8 @@
                     <td><strong>${unitName}</strong></td>
                     <td><span class="badge-status" style="background: #eee;">${doc.category}</span></td>
                     <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
-                    <td>${doc.date}</td>
-                    <td>${doc.time || '-'}</td>
+                    <td>${doc.approval_date}</td>
+                    <td><span style="font-weight: 600; color: #64748b;">${doc.publish_time || '-'}</span></td>
                     <td>${doc.author}</td>
                     <td><a href="/documents/${doc.id}/published" class="btn-action">Detail</a></td>
                 </tr>

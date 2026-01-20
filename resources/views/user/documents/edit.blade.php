@@ -3,38 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Dokumen Revisi - HIRADC System</title>
+    <title>Edit Form Revisi - HIRADC System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Reusing styles from create.blade.php to ensure consistency */
-        :root { --primary-color: #c41e3a; --primary-hover: #a01729; --bg-color: #f5f5f5; --sidebar-width: 250px; --card-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); --border-radius: 12px; }
+        :root { --primary-color: #c41e3a; --primary-hover: #a01729; --bg-color: #f5f5f5; --card-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); --border-radius: 12px; }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family: 'Inter', sans-serif; background: var(--bg-color); color: #1f2937; -webkit-font-smoothing: antialiased; }
         .container { display:flex; min-height:100vh; }
         
         /* Sidebar */
-        .sidebar { width:var(--sidebar-width); background:white; border-right:1px solid #e5e7eb; position:fixed; height:100vh; display:flex; flex-direction:column; z-index:50; }
-        .logo-section { padding:30px 20px; border-bottom:1px solid #e5e7eb; text-align:center; }
-        .logo-circle { width:70px; height:70px; background:#fff; border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.05); border:1px solid #f3f4f6; }
-        .logo-circle img { max-width:80%; }
-        .logo-text { font-size:18px; font-weight:800; color:var(--primary-color); letter-spacing:-0.5px; margin-bottom:3px; }
-        .logo-subtext { font-size:12px; color:#9ca3af; font-weight:500; }
-        .nav-menu { flex:1; padding:20px 15px; overflow-y:auto; }
-        .nav-item { padding:12px 20px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:all 0.2s ease; color:#4b5563; font-size:14px; font-weight:500; text-decoration:none; border-radius:8px; margin-bottom:5px; }
-        .nav-item:hover, .nav-item.active { background:#fee2e2; color:var(--primary-color); font-weight:600; }
-        .nav-item i { width:20px; text-align:center; font-size:16px; }
-        .user-info-bottom { padding:20px; border-top:2px solid #e0e0e0; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .user-profile { display:flex; align-items:center; gap:12px; margin-bottom:15px; }
-        .user-avatar { width:45px; height:45px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#667eea; font-weight:700; font-size:16px; flex-shrink:0; }
-        .user-details { flex:1; min-width:0; }
-        .user-name { font-weight:600; font-size:14px; color:white; }
-        .user-role { font-size:11px; color:rgba(255,255,255,0.8); }
-        .logout-btn { width:100%; padding:10px 15px; background:rgba(255,255,255,0.2); color:white; border:1px solid rgba(255,255,255,0.3); border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; }
-        .logout-btn:hover { background:rgba(255,255,255,0.3); }
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+        }
+
+        .logo-section {
+            padding: 30px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .logo-circle {
+            width: 70px;
+            height: 70px;
+            background: #fff;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-circle img {
+            max-width: 80%;
+            max-height: 80%;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #c41e3a;
+            margin-bottom: 3px;
+        }
+
+        .logo-subtext {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: #fff5f5;
+            color: #c41e3a;
+        }
+
+        .nav-item.active {
+            background: #ffe5e5;
+            color: #c41e3a;
+            border-left: 3px solid #c41e3a;
+            font-weight: 500;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .badge {
+            position: absolute;
+            right: 20px;
+            background: #c41e3a;
+            color: white;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .user-info-bottom {
+            padding: 20px;
+            border-top: 2px solid #e0e0e0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 2px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
 
         /* Main Content */
-        .main-content { flex:1; margin-left:var(--sidebar-width); }
+        .main-content { flex:1; margin-left:250px; }
         .header { background:white; padding:20px 40px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:40; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02); }
         .header h1 { font-size:22px; font-weight:800; color:#111827; letter-spacing:-0.5px; }
         .btn-back { display:inline-flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:#6b7280; text-decoration:none; transition:0.2s; }
@@ -93,26 +241,8 @@
 <body>
     <div class="container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System</div>
-            </div>
-            <nav class="nav-menu">
-                <a href="{{ route('dashboard') }}" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
-                <a href="{{ route('documents.index') }}" class="nav-item active"><i class="fas fa-folder-open"></i><span>Dokumen Saya</span></a>
-                <a href="{{ route('documents.create') }}" class="nav-item"><i class="fas fa-plus-circle"></i><span>Buat Dokumen Baru</span></a>
-            </nav>
-            <div class="user-info-bottom">
-                 <div class="user-profile">
-                    <div class="user-avatar">{{ strtoupper(substr(Auth::user()->nama_user, 0, 2)) }}</div>
-                    <div class="user-details"><div class="user-name">{{ Auth::user()->nama_user }}</div><div class="user-role">{{ Auth::user()->role_jabatan_name }}</div></div>
-                </div>
-                <a href="{{ route('logout') }}" class="logout-btn" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i class="fas fa-sign-out-alt"></i> Keluar</a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
-            </div>
-        </aside>
+        <!-- Sidebar -->
+        @include('user.partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
@@ -120,7 +250,7 @@
                  <div style="display:flex; align-items:center; gap:20px;">
                     <a href="{{ route('documents.index') }}" class="btn-back"><i class="fas fa-arrow-left"></i> Kembali</a>
                     <div style="height:24px; width:1px; background:#e5e7eb;"></div>
-                    <h1>Edit Dokumen Revisi</h1>
+                    <h1>Edit Form Revisi</h1>
                 </div>
             </div>
 

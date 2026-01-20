@@ -561,50 +561,7 @@
 <body>
     <div class="container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle">
-                    <img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP">
-                </div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System</div>
-            </div>
-
-            <nav class="nav-menu">
-                <a href="{{ route('approver.dashboard') }}" class="nav-item active">
-                    <i class="fas fa-th-large"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="{{ route('approver.check_documents') }}" class="nav-item">
-                    <i class="fas fa-file-contract"></i>
-                    <span>Cek Dokumen</span>
-                    @if(isset($pendingCount) && $pendingCount > 0)
-                        <span class="badge">{{ $pendingCount }}</span>
-                    @endif
-                </a>
-            </nav>
-
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">{{ substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2) }}</div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Keluar
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
-            </div>
-        </aside>
+        @include('approver.partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
@@ -646,25 +603,7 @@
                     </div>
                 </div>
 
-                <!-- 4 SUMMARY CARDS -->
-                <div class="category-grid">
-                    <div class="cat-card" onclick="selectCategory('K3', this)">
-                        <h3>Dokumen</h3>
-                        <h2>K3</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('KO', this)">
-                        <h3>Dokumen</h3>
-                        <h2>KO</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('Lingkungan', this)">
-                        <h3>Dokumen</h3>
-                        <h2>Lingkungan</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('Keamanan', this)">
-                        <h3>Dokumen</h3>
-                        <h2>Keamanan</h2>
-                    </div>
-                </div>
+
 
                 <!-- CARD PIC (Only for Kepala Unit) -->
                 @if(isset($currentPIC) || isset($staffList))
@@ -672,7 +611,7 @@
                 <div class="pic-card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 30px;">
                     <h3 style="font-size: 16px; font-weight: 700; color: #333; margin-bottom: 20px;">
                         <i class="fas fa-user-check" style="color: #c41e3a; margin-right: 8px;"></i>
-                        Akses Pembuatan Dokumen (PIC)
+                        Akses Pembuatan Form (PIC)
                     </h3>
                     
                     <div style="margin-bottom: 15px;">
@@ -709,16 +648,21 @@
                 <!-- TABLE -->
                 <div class="table-section">
                     <div class="table-header">
-                        <h2>Laporan Terpublikasi</h2>
+                        <h2>Form Terpublikasi</h2>
+                        <div class="search-box" style="position: relative; width: 250px;">
+                            <input type="text" id="tableSearch" placeholder="Cari form..." onkeyup="handleSearch(this.value)" 
+                                style="width: 100%; padding: 8px 10px 8px 35px; border: 1px solid #ddd; border-radius: 6px; outline: none;">
+                        </div>
                     </div>
 
                     <table class="custom-table">
                         <thead>
                             <tr>
                                 <th width="30%">Unit Penginput</th>
-                                <th width="15%">Kategori</th>
+                                <th width="25%">Judul Form</th>
                                 <th width="20%">Disetujui Oleh</th>
                                 <th width="15%">Tanggal Publish</th>
+                                <th width="10%">Waktu</th>
                                 <th width="15%">Penulis</th>
                                 <th width="5%">Aksi</th>
                             </tr>
@@ -736,17 +680,17 @@
     <div id="detailModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Detail Dokumen</h2>
+                <h2>Detail Form</h2>
                 <span class="close-btn" onclick="closeModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <!-- Section 1 -->
                 <div class="section-title">
-                    <i class="fas fa-file-alt"></i> Informasi Dokumen
+                    <i class="fas fa-file-alt"></i> Informasi Form
                 </div>
 
                 <div class="info-row">
-                    <div class="info-label">Judul Dokumen:</div>
+                    <div class="info-label">Judul Form:</div>
                     <div class="info-value" id="m_title"></div>
                 </div>
                 <div class="info-row">
@@ -814,8 +758,9 @@
             $documentsData = $publishedDocuments->map(function ($doc) {
                 $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
                 return [
-                    'id' => $doc->id_document,
+                    'id' => $doc->id,
                     'title' => $doc->kolom2_kegiatan,
+                    'document_title' => $doc->judul_dokumen,
                     'category' => $doc->kategori,
                     'date' => $doc->created_at->format('d M Y'),
                     'author' => $doc->user->nama_user ?? '-',
@@ -827,6 +772,7 @@
                     'status' => 'DISETUJUI',
                     'risk_level' => $doc->risk_level,
                     'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
+                    'publish_time' => $doc->published_at ? $doc->published_at->format('H:i') . ' WIB' : '-',
                     'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
                 ];
             });
@@ -853,6 +799,7 @@
         const documents = @json($documentsData);
 
         let activeCategory = '';
+        let searchTerm = '';
 
         document.addEventListener('DOMContentLoaded', () => {
             populateDirectorates();
@@ -941,6 +888,11 @@
             applyFilters();
         }
 
+        function handleSearch(value) {
+            searchTerm = value;
+            applyFilters();
+        }
+
         function applyFilters() {
             const dirId = document.getElementById('filter_directorate').value;
             const deptId = document.getElementById('filter_department').value;
@@ -954,6 +906,23 @@
                 if (unitId && doc.unit_id != unitId) match = false;
                 if (seksiId && doc.seksi_id != seksiId) match = false;
                 if (activeCategory && doc.category !== activeCategory) match = false;
+                
+                if (searchTerm) {
+                    const term = searchTerm.toLowerCase();
+                    const unit = units.find(u => u.id === doc.unit_id);
+                    const unitName = unit ? unit.name.toLowerCase() : '';
+                    
+                    const searchableText = [
+                        doc.title, 
+                        doc.author, 
+                        doc.approver,
+                        unitName,
+                        doc.category
+                    ].map(s => s ? s.toLowerCase() : '').join(' ');
+                    
+                    if (!searchableText.includes(term)) match = false;
+                }
+
                 return match;
             });
 
@@ -972,8 +941,8 @@
                         <td colspan="6">
                             <div class="no-data-state">
                                 <i class="fas fa-folder-open no-data-icon"></i>
-                                <h3 style="font-size:16px; font-weight:700; color:#333;">Belum Ada Laporan Terpublikasi</h3>
-                                <p style="font-size:13px; color:#64748b;">Belum ada dokumen yang dipublikasikan saat ini.</p>
+                                <h3 style="font-size:16px; font-weight:700; color:#333;">Belum Ada Form Terpublikasi</h3>
+                                <p style="font-size:13px; color:#64748b;">Belum ada form yang dipublikasikan saat ini.</p>
                             </div>
                         </td>
                     </tr>
@@ -989,9 +958,10 @@
                 return `
             <tr>
                 <td><strong>${unitName}</strong></td>
-                <td><span class="badge-status" style="background: #eee;">${doc.category}</span></td>
+                <td><span style="font-weight: 500; color: #333;">${doc.document_title || '-'}</span></td>
                 <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
-                <td>${doc.date}</td>
+                <td>${doc.approval_date}</td>
+                <td><span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px; font-weight:600; color:#475569;">${doc.publish_time}</span></td>
                 <td>${doc.author}</td>
                 <td><a href="/documents/${doc.id}/published" class="btn-action">Detail</a></td>
             </tr>
@@ -1068,7 +1038,7 @@
                 
                 if (data.success) {
                     document.getElementById('currentPICName').textContent = data.staff_name;
-                    alert(`✅ PIC berhasil diupdate!\n\n${data.staff_name} sekarang memiliki akses pembuatan dokumen.`);
+                    alert(`✅ PIC berhasil diupdate!\n\n${data.staff_name} sekarang memiliki akses pembuatan form.`);
                 } else {
                     alert(`❌ Gagal update PIC: ${data.message}`);
                 }
@@ -1082,6 +1052,23 @@
                 alert('❌ Terjadi kesalahan. Silakan coba lagi.');
             });
         }
+    </script>
+    </script>
+    <script>
+        // Realtime Dashboard Polling
+        const dashboardDataRoute = "{{ route('approver.dashboard.data') }}";
+
+        setInterval(() => {
+            fetch(dashboardDataRoute)
+                .then(res => res.json())
+                .then(data => {
+                    // Update Global Data
+                    documents = data;
+                    // Re-apply filters to refresh table view without losing search/filter state
+                    applyFilters();
+                })
+                .catch(err => console.error('Dashboard polling error:', err));
+        }, 5000); // Update every 5 seconds
     </script>
 </body>
 

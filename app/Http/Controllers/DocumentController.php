@@ -598,7 +598,7 @@ class DocumentController extends Controller
         $pendingCount = $pendingDocuments->count();
 
         $publishedDocuments = Document::published()
-            ->with(['user', 'unit'])
+            ->with(['user', 'unit', 'approvals.approver'])
             ->orderBy('published_at', 'desc')
             ->limit(10)
             ->get();
@@ -624,6 +624,40 @@ class DocumentController extends Controller
         }
 
         return view('approver.dashboard', compact('user', 'pendingCount', 'pendingDocuments', 'publishedDocuments', 'direktorats', 'departemens', 'units', 'seksis', 'currentPIC', 'staffList'));
+    }
+
+    // NEW: Realtime Data for Dashboard Table
+    public function getApproverDashboardData()
+    {
+        $publishedDocuments = Document::published()
+            ->with(['user', 'unit', 'approvals.approver'])
+            ->orderBy('published_at', 'desc')
+            ->limit(20) // Limit to 20 for performance
+            ->get();
+
+        $data = $publishedDocuments->map(function ($doc) {
+            $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
+            return [
+                'id' => $doc->id,
+                'title' => $doc->kolom2_kegiatan,
+                'document_title' => $doc->judul_dokumen,
+                'category' => $doc->kategori,
+                'date' => $doc->created_at->format('d M Y'),
+                'author' => $doc->user->nama_user ?? '-',
+                'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
+                'dir_id' => $doc->id_direktorat,
+                'dept_id' => $doc->id_dept,
+                'unit_id' => $doc->id_unit,
+                'seksi_id' => $doc->id_seksi,
+                'status' => 'DISETUJUI',
+                'risk_level' => $doc->risk_level,
+                'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
+                'publish_time' => $doc->published_at ? $doc->published_at->format('H:i') . ' WIB' : '-',
+                'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
+            ];
+        });
+
+        return response()->json($data);
     }
 
     /**
@@ -690,9 +724,10 @@ class DocumentController extends Controller
 
 
         $publishedDocuments = Document::published()
-            ->with(['user', 'unit'])
+            ->whereIn('kategori', $categoryFilter)
+            ->with(['user', 'unit', 'approvals.approver'])
             ->orderBy('published_at', 'desc')
-            ->limit(10)
+            ->limit(20)
             ->get();
 
         // Transform Pending Documents for JS (HEAD VIEW)
@@ -720,9 +755,11 @@ class DocumentController extends Controller
                 'dir_id' => $doc->id_direktorat,
                 'dept_id' => $doc->id_dept,
                 'unit_id' => $doc->id_unit,
+                'seksi_id' => $doc->id_seksi,
                 'status' => 'DISETUJUI',
                 'risk_level' => $doc->risk_level ?? 'High',
                 'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
+                'publish_time' => $doc->published_at ? $doc->published_at->format('H:i') . ' WIB' : '-',
                 'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
             ];
         });
@@ -745,6 +782,7 @@ class DocumentController extends Controller
         $direktorats = Direktorat::where('status_aktif', 1)->get();
         $departemens = Departemen::all();
         $units = Unit::all();
+        $seksis = Seksi::all();
 
         return view('unit_pengelola.dashboard', compact(
             'user',
@@ -758,6 +796,7 @@ class DocumentController extends Controller
             'direktorats',
             'departemens',
             'units',
+            'seksis',
             'staffReviewers',
             'staffApprovers',
             'historyReviews',
@@ -1543,4 +1582,21 @@ class DocumentController extends Controller
     }
 
 
+
+    // NEW: Realtime Status Check for Polling
+    public function getStatus($id)
+    {
+        $document = Document::findOrFail($id);
+        
+        $statusLabel = 'Menunggu';
+        if ($document->status == 'approved') $statusLabel = 'Disetujui';
+        if ($document->status == 'revision') $statusLabel = 'Perlu Revisi';
+
+        return response()->json([
+            'success' => true,
+            'current_level' => $document->current_level,
+            'status' => $document->status,
+            'status_label' => $statusLabel
+        ]);
+    }
 }

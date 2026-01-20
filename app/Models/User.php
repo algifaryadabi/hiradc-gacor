@@ -29,6 +29,7 @@ class User extends Authenticatable
         'role_user',
         'id_role_user',
         'user_aktif',
+        'can_create_documents',
     ];
 
     protected $hidden = [
@@ -68,6 +69,14 @@ class User extends Authenticatable
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'id_unit', 'id_unit');
+    }
+
+    /**
+     * Get the seksi for the user
+     */
+    public function seksi()
+    {
+        return $this->belongsTo(Seksi::class, 'id_seksi', 'id_seksi');
     }
 
     // ==================== HELPER METHODS ====================
@@ -120,30 +129,31 @@ class User extends Authenticatable
      */
     public function getRoleName(): string
     {
-        // 1. Check for Unit Pengelola (Head & Staff)
+        // 1. Check for Admin FIRST (highest priority)
+        if (($this->role_user ?? $this->id_role_user) == 1) {
+            return 'admin';
+        }
+
+        // 2. Check for Unit Pengelola (Head & Staff)
         // Includes Kepala Unit (Role 3) AND Staff (Role 4,5,6) from SHE/Security
         if (in_array($this->id_unit, [55, 56])) {
             return 'unit_pengelola';
         }
 
+        // 3. Kepala Unit (Approver)
         if ($this->isKepalaUnit()) {
             return 'approver'; // Other Kepala Unit
         }
 
-        // 2. Kepala Departemen
+        // 4. Kepala Departemen
         if ($this->isKepalaDepartemen()) {
             return 'kepala_departemen';
         }
 
-        // 3. User (Role 4, 5, 6)
+        // 5. User (Role 4, 5, 6)
         // Role 4 (Manager) could be Kepala Seksi, but they act as Users in this workflow unless we add Level 0
         if (in_array($this->role_jabatan ?? $this->id_role_jabatan, [4, 5, 6])) {
             return 'user';
-        }
-
-        // 4. Admin
-        if (($this->role_user ?? $this->id_role_user) == 1) {
-            return 'admin';
         }
 
         return 'user';

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dokumen Saya - HIRADC System</title>
+    <title>Form Saya - HIRADC System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -34,14 +34,14 @@
 
         /* Sidebar */
         .sidebar {
-            width: var(--sidebar-width);
+            width: 250px;
             background: white;
             border-right: 1px solid #e0e0e0;
             position: fixed;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            z-index: 10;
+            z-index: 50;
         }
 
         .logo-section {
@@ -59,17 +59,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .logo-circle img {
             max-width: 80%;
+            max-height: 80%;
         }
 
         .logo-text {
             font-size: 18px;
             font-weight: 700;
-            color: var(--primary-color);
+            color: #c41e3a;
             margin-bottom: 3px;
         }
 
@@ -101,13 +103,14 @@
 
         .nav-item:hover {
             background: #fff5f5;
-            color: var(--primary-color);
+            color: #c41e3a;
         }
 
         .nav-item.active {
             background: #ffe5e5;
-            color: var(--primary-color);
-            border-left: 3px solid var(--primary-color);
+            color: #c41e3a;
+            border-left: 3px solid #c41e3a;
+            font-weight: 500;
         }
 
         .nav-item i {
@@ -115,8 +118,18 @@
             text-align: center;
             font-size: 16px;
         }
+        
+        .badge {
+            position: absolute;
+            right: 20px;
+            background: #c41e3a;
+            color: white;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
 
-        /* User Info */
         .user-info-bottom {
             padding: 20px;
             border-top: 2px solid #e0e0e0;
@@ -153,6 +166,44 @@
             font-weight: 600;
             font-size: 14px;
             color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 2px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: white;
         }
 
         .user-role {
@@ -183,9 +234,10 @@
         }
 
         /* Main Content */
+        /* Main Content */
         .main-content {
             flex: 1;
-            margin-left: var(--sidebar-width);
+            margin-left: 250px;
         }
 
         .header {
@@ -577,51 +629,19 @@
 
     <div class="container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System</div>
-            </div>
-            <nav class="nav-menu">
-                <a href="{{ route('dashboard') }}" class="nav-item"><i
-                        class="fas fa-th-large"></i><span>Dashboard</span></a>
-                <a href="{{ route('documents.index') }}" class="nav-item active"><i
-                        class="fas fa-folder-open"></i><span>Dokumen Saya</span></a>
-                <a href="{{ route('documents.create') }}" class="nav-item"><i class="fas fa-plus-circle"></i><span>Buat
-                        Dokumen Baru</span></a>
-            </nav>
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt"></i> Keluar
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
-            </div>
-        </aside>
+        <!-- Sidebar -->
+        @include('user.partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
             <div class="header">
-                <h1>Dokumen Saya</h1>
+                <h1>Form Saya</h1>
                 <div style="display:flex; gap:10px;">
                     <a href="{{ route('documents.summary') }}" class="view-btn" style="text-decoration:none; display:flex; align-items:center; gap:8px; border:1px solid #e2e8f0; background:white;">
                         <i class="fas fa-table"></i> Lihat Rekapitulasi
                     </a>
                     <a href="{{ route('documents.create') }}" class="btn-create-new">
-                        <i class="fas fa-plus"></i> Buat Dokumen
+                        <i class="fas fa-plus"></i> Buat Form
                     </a>
                 </div>
             </div>
@@ -678,7 +698,7 @@
                 <div class="stats-grid">
                     <div class="stat-card active" onclick="filterByStatus('all', this)">
                         <div class="stat-icon icon-blue"><i class="fas fa-file-alt"></i></div>
-                        <div class="stat-info"><span class="stat-label">Total Dokumen</span><span
+                        <div class="stat-info"><span class="stat-label">Total Form</span><span
                                 class="stat-value">{{ $documents->count() }}</span></div>
                     </div>
                     <div class="stat-card" onclick="filterByStatus('pending', this)">
@@ -703,7 +723,7 @@
                 <div class="toolbar">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="Cari judul dokumen..."
+                        <input type="text" id="searchInput" placeholder="Cari judul form..."
                             onkeyup="filterContent()">
                     </div>
                     <div class="view-toggles">
@@ -724,7 +744,7 @@
                                 $statusKey = 'pending';
                             } elseif ($doc->status == 'revision') {
                                 $statusKey = 'revision';
-                            } elseif ($doc->status == 'approved') {
+                            } elseif ($doc->status == 'approved' || $doc->status == 'published') {
                                 $statusKey = 'approved';
                             }
                         @endphp
@@ -770,10 +790,18 @@
                                     $position = 'Submitter';
                                     
                                     if ($statusKey == 'pending') {
-                                        if ($doc->current_level == 2) {
+                                        if ($doc->current_level == 1) {
+                                            $position = 'Kepala Unit';
+                                            $waitingFor = 'Ka. Unit ' . ($doc->unit->nama_unit ?? '');
+                                            $step = 2;
+                                        } elseif ($doc->current_level == 2) {
                                             $position = 'Unit Pengelola';
                                             $waitingFor = ($doc->kategori == 'Keamanan') ? 'Unit Keamanan' : 'Unit SHE';
-                                            $step = 2;
+                                            $step = 2; // Still in Unit/Pengelola phase, maybe visually distinctive? 
+                                            // The labels are Draft, Unit, Dept, Done. 
+                                            // Level 1 (Ka Unit) -> Unit Step.
+                                            // Level 2 (Pengelola) -> Still Unit Step or maybe between?
+                                            // Let's keep it at Step 2 to indicate "Unit/Pengelola Phase" before Dept Head.
                                         } elseif ($doc->current_level == 3) {
                                             $position = 'Kepala Dept';
                                             $waitingFor = 'Ka. Dept ' . ($doc->user->departemen->nama_dept ?? ''); 
@@ -813,7 +841,7 @@
                                 <div style="display:flex; justify-content:space-between; align-items:center;">
                                     <div style="font-size: 11px; line-height: 1.4;">
                                         @if($statusKey == 'approved')
-                                            <div style="color:#059669; font-weight:600;"><i class="fas fa-check-circle"></i> Dokumen Final</div>
+                                            <div style="color:#059669; font-weight:600;"><i class="fas fa-check-circle"></i> Form Final</div>
                                             <div style="color:#6b7280;">Telah dipublikasi</div>
                                         @elseif($statusKey == 'revision')
                                             <div style="color:#dc2626; font-weight:600;"><i class="fas fa-exclamation-circle"></i> Butuh Revisi</div>
@@ -839,7 +867,7 @@
                         <thead>
                             <tr>
                                 <th>Kategori</th>
-                                <th>Judul Dokumen</th>
+                                <th>Judul Form</th>
                                 <th>Tanggal</th>
                                 <th>Status</th>
                                 <th>Aksi</th>

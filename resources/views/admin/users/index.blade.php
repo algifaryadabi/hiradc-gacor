@@ -4,11 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Manajemen User - Admin HIRADC</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Inter', sans-serif;
             background: #f4f6f9;
@@ -140,11 +144,13 @@
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             overflow: hidden;
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 1000px;
         }
 
         th {
@@ -234,9 +240,45 @@
             background: #27ae60;
         }
 
+        .btn-cancel {
+            background: #95a5a6;
+        }
+
         /* Hidden File Input */
         #fileInput {
             display: none;
+        }
+
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            padding-left: 0;
+            list-style: none;
+            border-radius: 0.25rem;
+        }
+        .page-item .page-link {
+            position: relative;
+            display: block;
+            padding: 0.5rem 0.75rem;
+            margin-left: -1px;
+            line-height: 1.25;
+            color: #c41e3a;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            text-decoration: none;
+        }
+        .page-item.active .page-link {
+            z-index: 3;
+            color: #fff;
+            background-color: #c41e3a;
+            border-color: #c41e3a;
+        }
+        .page-item.disabled .page-link {
+            color: #6c757d;
+            pointer-events: none;
+            cursor: auto;
+            background-color: #fff;
+            border-color: #dee2e6;
         }
     </style>
 </head>
@@ -244,35 +286,58 @@
 <body>
 
     <aside class="sidebar">
-        <div class="logo-section">
-            <img src="{{ asset('images/logo-semen-padang.png') }}" alt="Logo">
-            <div style="font-weight: 700; color: #c41e3a;">PT Semen Padang</div>
-            <div style="font-size: 12px; color: #888;">Admin System</div>
-        </div>
-        <nav class="nav-menu">
-            <a href="{{ route('admin.dashboard') }}" class="nav-item">
-                <i class="fas fa-th-large"></i> Dashboard
-            </a>
-            <a href="{{ route('admin.users') }}" class="nav-item active">
-                <i class="fas fa-users"></i> Manajemen User
-            </a>
-            <a href="{{ route('admin.master') }}" class="nav-item">
-                <i class="fas fa-database"></i> Data Master
-            </a>
-        </nav>
+        @include('admin.partials.sidebar')
     </aside>
 
     <main class="main-content">
         <div class="header">
-            <h1>Manajemen User</h1>
+            <div>
+                <h1>Manajemen User</h1>
+                <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                    Total User: <strong>{{ number_format($users->total()) }}</strong>
+                </div>
+            </div>
             <div class="controls">
                 <button class="btn btn-primary" onclick="addUserRow()">
                     <i class="fas fa-plus"></i> Tambah User
                 </button>
-                <button class="btn btn-success" onclick="document.getElementById('fileInput').click()">
-                    <i class="fas fa-file-csv"></i> Upload CSV/XL
-                </button>
-                <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" onchange="handleFileUpload(this)">
+            </div>
+        </div>
+
+        <!-- Filter & Search Section -->
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <!-- Search Box -->
+            <div style="flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
+                    <i class="fas fa-search"></i> Cari User
+                </label>
+                <input type="text" id="searchInput" placeholder="Cari username, email, atau nama..." 
+                       style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;"
+                       oninput="handleSearch()">
+            </div>
+
+            <!-- Filter Box -->
+            <div style="flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
+                            <i class="fas fa-filter"></i> Filter Unit
+                        </label>
+                        <select id="unitFilter" 
+                                style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white;"
+                                onchange="handleUnitFilter()">
+                            <option value="">-- Semua Unit --</option>
+                            @foreach($units as $unit)
+                                <option value="{{ $unit->id_unit }}">{{ $unit->nama_unit }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <button class="btn btn-secondary" onclick="resetFilters()" title="Reset Filter" style="height: 42px;">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -280,14 +345,16 @@
             <table>
                 <thead>
                     <tr>
-                        <th width="12%">Username</th>
-                        <th width="15%">Email</th>
-                        <th width="12%">Direktorat</th>
-                        <th width="12%">Departemen</th>
-                        <th width="12%">Unit</th>
-                        <th width="12%">Seksi</th>
-                        <th width="10%">Role User</th>
-                        <th width="8%">Aktif</th>
+                        <th width="10%">Username</th>
+                        <th width="13%">Email</th>
+                        <th width="11%">Direktorat</th>
+                        <th width="11%">Departemen</th>
+                        <th width="11%">Unit</th>
+                        <th width="11%">Seksi</th>
+                        <th width="6%">PIC</th>
+                        <th width="8%">Role Jabatan</th>
+                        <th width="7%">Role User</th>
+                        <th width="5%">Aktif</th>
                         <th width="7%">Aksi</th>
                     </tr>
                 </thead>
@@ -296,35 +363,56 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination Links -->
+        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+            {{ $users->links('pagination::bootstrap-4') }}
+        </div>
     </main>
 
     <script>
-        // MOCK DATA
-        let users = [
-            { id: 1, username: 'ahmad.rizki', email: 'ahmad@semenpadang.co.id', dir: 'Operasi', dept: 'Produksi', unit: 'Produksi IV', seksi: '-', role: 'User', active: true },
-            { id: 2, username: 'budi.santoso', email: 'budi@semenpadang.co.id', dir: 'Keuangan', dept: 'Akuntansi', unit: '-', seksi: '-', role: 'Approver', active: true },
-            { id: 3, username: 'admin.she', email: 'she@semenpadang.co.id', dir: '-', dept: '-', unit: '-', seksi: '-', role: 'Unit Pengelola', active: true },
-        ];
-
-        // MOCK OPTIONS
-        const opts = {
-            roles: ['User', 'Approver', 'Unit Pengelola', 'Kepala Departemen', 'Admin'],
-            dirs: ['Operasi', 'Keuangan', 'SDM', 'Pemasaran'],
-            depts: ['Produksi', 'Akuntansi', 'HC', 'Sales'],
-            units: ['Produksi IV', 'Gudang', 'Rekrutmen', 'Area Barat'],
-            seksi: ['-', 'Shift A', 'Shift B']
+        // INIT DATA FROM SERVER (Fix for Pagination: use items())
+        let users = {!! json_encode($users->items()) !!};
+        let allUsers = [...users]; // Simpan semua users untuk filtering
+        
+        // MASTER DATA FOR DROPDOWNS
+        const masterData = {
+            roles: @json($roleUsers), // Array of role_user objects with id_role_user
+            direktorats: {!! json_encode($direktorats) !!},
+            departemens: {!! json_encode($departemens) !!},
+            units: {!! json_encode($units) !!},
+            seksis: {!! json_encode($seksis) !!},
+            roleJabatans: @json($roleJabatans)
         };
 
+        // Filter state
+        let currentSearch = '';
+        let currentUnitFilter = '';
+
+        // DEBUG: Log data untuk troubleshooting
+        console.log('=== MASTER DATA DEBUG ===');
+        console.log('Direktorats:', masterData.direktorats);
+        console.log('Departemens:', masterData.departemens);
+        console.log('Units:', masterData.units);
+        console.log('Seksis:', masterData.seksis);
+        console.log('Role Users:', masterData.roles);
+        console.log('Role Jabatans:', masterData.roleJabatans);
+        console.log('Total Direktorat:', masterData.direktorats ? masterData.direktorats.length : 0);
+        console.log('========================');
+
         const tbody = document.getElementById('userTableBody');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         function renderTable() {
             tbody.innerHTML = '';
             users.forEach(user => {
                 const tr = document.createElement('tr');
-                tr.dataset.id = user.id;
+                tr.dataset.id = user.id_user || user.id || 'NEW';
 
                 if (user.isEditing) {
                     tr.innerHTML = renderEditRow(user);
+                    // initCascade tidak diperlukan karena dropdown sudah ter-populate di renderEditRow
+                    // setTimeout(() => initCascade(user), 0);
                 } else {
                     tr.innerHTML = renderViewRow(user);
                 }
@@ -333,168 +421,528 @@
         }
 
         function renderViewRow(user) {
+            const dirName = user.direktorat ? user.direktorat.nama_direktorat : '-';
+            const deptName = user.departemen ? user.departemen.nama_dept : '-';
+            const unitName = user.unit ? user.unit.nama_unit : '-';
+            const seksiName = user.seksi ? user.seksi.nama_seksi : '-';
+            const active = (user.user_aktif == 1 || user.user_aktif == 'aktif');
+            
+            // Get role_user name from masterData
+            const roleObj = masterData.roles.find(r => r.id_role_user == user.role_user);
+            const roleDisplay = roleObj ? (roleObj.nama_role || roleObj.name || 'ID:' + user.role_user) : (user.role_user || '-');
+            
+            // Get role_jabatan name from relasi atau masterData
+            let roleJabatanName = '-';
+            
+            // Debug: log user object untuk cek struktur data
+            if (user.id_user === users[0]?.id_user) {
+                console.log('Sample User data:', user);
+                console.log('role_jabatan value:', user.role_jabatan);
+                console.log('role_jabatan type:', typeof user.role_jabatan);
+            }
+            
+            // Cek apakah ada relasi role_jabatan yang ter-load
+            if (user.role_jabatan && typeof user.role_jabatan === 'object' && user.role_jabatan.nama_role_jabatan) {
+                // Relasi ter-load sebagai object
+                roleJabatanName = user.role_jabatan.nama_role_jabatan;
+            } else if (user.role_jabatan && typeof user.role_jabatan === 'number') {
+                // role_jabatan adalah ID, cari di masterData
+                const roleJabatanObj = masterData.roleJabatans.find(r => r.id_role_jabatan == user.role_jabatan);
+                roleJabatanName = roleJabatanObj ? roleJabatanObj.nama_role_jabatan : '-';
+            }
+
             return `
                 <td>${user.username}</td>
-                <td>${user.email}</td>
-                <td>${user.dir}</td>
-                <td>${user.dept}</td>
-                <td>${user.unit}</td>
-                <td>${user.seksi}</td>
-                <td><span style="font-weight:600; color:#444;">${user.role}</span></td>
-                <td><span class="${user.active ? 'badge-active' : 'badge-inactive'}">${user.active ? 'Ya' : 'Tidak'}</span></td>
+                <td>${user.email_user || user.email || '-'}</td>
+                <td>${dirName}</td>
+                <td>${deptName}</td>
+                <td>${unitName}</td>
+                <td>${seksiName}</td>
+                <td><span class="${user.can_create_documents == 1 ? 'badge-active' : 'badge-inactive'}">${user.can_create_documents == 1 ? 'Ya' : 'Tidak'}</span></td>
+                <td>${roleJabatanName}</td>
+                <td><span style="font-weight:600; color:#444;">${roleDisplay}</span></td>
+                <td><span class="${active ? 'badge-active' : 'badge-inactive'}">${active ? 'Ya' : 'Tidak'}</span></td>
                 <td>
                     <div class="action-btns">
-                        <button class="btn-icon btn-edit" onclick="toggleEdit(${user.id})"><i class="fas fa-pencil-alt"></i></button>
-                        <button class="btn-icon btn-delete" onclick="confirmDelete(${user.id})"><i class="fas fa-trash"></i></button>
+                        <button class="btn-icon btn-edit" onclick="toggleEdit(${user.id_user})"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="btn-icon btn-delete" onclick="confirmDelete(${user.id_user})"><i class="fas fa-trash"></i></button>
                     </div>
                 </td>
             `;
         }
 
         function renderEditRow(user) {
+            const id = user.id_user || 'NEW';
+            
+            // Direktorat options
+            const dirOpts = masterData.direktorats.map(d => 
+                `<option value="${d.id_direktorat}" ${user.id_direktorat == d.id_direktorat ? 'selected' : ''}>${d.nama_direktorat}</option>`
+            ).join('');
+            
+            // Departemen options - filter berdasarkan direktorat user
+            let deptOptsArr = [];
+            if (user.id_direktorat) {
+                deptOptsArr = masterData.departemens.filter(d => d.id_direktorat == user.id_direktorat);
+            }
+            // Fix: Ensure current value is included even if it mismatches directorate
+            if (user.id_dept) {
+                const current = masterData.departemens.find(d => d.id_dept == user.id_dept);
+                if (current && !deptOptsArr.some(d => d.id_dept == current.id_dept)) {
+                    deptOptsArr.push(current);
+                }
+            }
+            const deptOpts = deptOptsArr.map(d => 
+                `<option value="${d.id_dept}" ${user.id_dept == d.id_dept ? 'selected' : ''}>${d.nama_dept}</option>`
+            ).join('');
+            
+            // Unit options - filter berdasarkan departemen user
+            let unitOptsArr = [];
+            if (user.id_dept) {
+                unitOptsArr = masterData.units.filter(u => u.id_dept == user.id_dept);
+            }
+            // Fix: Ensure current value is included
+            if (user.id_unit) {
+                const current = masterData.units.find(u => u.id_unit == user.id_unit);
+                if (current && !unitOptsArr.some(u => u.id_unit == current.id_unit)) {
+                    unitOptsArr.push(current);
+                }
+            }
+            const unitOpts = unitOptsArr.map(u => 
+                `<option value="${u.id_unit}" ${user.id_unit == u.id_unit ? 'selected' : ''}>${u.nama_unit}</option>`
+            ).join('');
+            
+            // Seksi options - filter berdasarkan unit user
+            let seksiOptsArr = [];
+            if (user.id_unit) {
+                seksiOptsArr = masterData.seksis.filter(s => s.id_unit == user.id_unit);
+            }
+            // Fix: Ensure current value is included
+            if (user.id_seksi) {
+                 const current = masterData.seksis.find(s => s.id_seksi == user.id_seksi);
+                 if (current && !seksiOptsArr.some(s => s.id_seksi == current.id_seksi)) {
+                     seksiOptsArr.push(current);
+                 }
+            }
+            const seksiOpts = seksiOptsArr.map(s => 
+                `<option value="${s.id_seksi}" ${user.id_seksi == s.id_seksi ? 'selected' : ''}>${s.nama_seksi}</option>`
+            ).join('');
+            
+            // Extract role_jabatan ID (bisa object atau integer)
+            let roleJabatanId = null;
+            if (user.role_jabatan) {
+                if (typeof user.role_jabatan === 'object' && user.role_jabatan.id_role_jabatan) {
+                    roleJabatanId = user.role_jabatan.id_role_jabatan;
+                } else if (typeof user.role_jabatan === 'number' || typeof user.role_jabatan === 'string') {
+                    roleJabatanId = user.role_jabatan;
+                }
+            }
+            
+            // Role Jabatan options
+            const roleJabatanOpts = masterData.roleJabatans.map(r => 
+                `<option value="${r.id_role_jabatan}" ${roleJabatanId == r.id_role_jabatan ? 'selected' : ''}>${r.nama_role_jabatan}</option>`
+            ).join('');
+            
+            // Role User options (ID integer)
+            const roleOpts = masterData.roles.map(r => 
+                `<option value="${r.id_role_user}" ${user.role_user == r.id_role_user ? 'selected' : ''}>${r.nama_role || r.name || 'Role ' + r.id_role_user}</option>`
+            ).join('');
+
             return `
-                <td><input type="text" class="input-text" id="edit_username_${user.id}" value="${user.username}"></td>
-                <td><input type="email" class="input-text" id="edit_email_${user.id}" value="${user.email}"></td>
-                <td>${makeSelect(opts.dirs, user.dir, `edit_dir_${user.id}`)}</td>
-                <td>${makeSelect(opts.depts, user.dept, `edit_dept_${user.id}`)}</td>
-                <td>${makeSelect(opts.units, user.unit, `edit_unit_${user.id}`)}</td>
-                <td>${makeSelect(opts.seksi, user.seksi, `edit_seksi_${user.id}`)}</td>
-                <td>${makeSelect(opts.roles, user.role, `edit_role_${user.id}`)}</td>
+                <td><input type="text" class="input-text" id="e_username_${id}" value="${user.username || ''}" placeholder="Username" autocomplete="off">
+                    ${id === 'NEW' ? '<div style="font-size:11px; color:#666; margin-top:5px">Default Pass: 123456</div>' : ''}
+                </td>
+                <td><input type="email" class="input-text" id="e_email_${id}" value="${user.email_user || user.email || ''}" placeholder="Email" autocomplete="off"></td>
+                
+                <td><select class="input-select" id="e_dir_${id}" onchange="handleDirChange('${id}')"><option value="">- Pilih -</option>${dirOpts}</select></td>
+                <td><select class="input-select" id="e_dept_${id}" onchange="handleDeptChange('${id}')"><option value="">- Pilih -</option>${deptOpts}</select></td>
+                <td><select class="input-select" id="e_unit_${id}" onchange="handleUnitChange('${id}')"><option value="">- Pilih -</option>${unitOpts}</select></td>
+                <td><select class="input-select" id="e_seksi_${id}"><option value="">- Pilih -</option>${seksiOpts}</select></td>
+                
                 <td>
-                    <select class="input-select" id="edit_active_${user.id}">
-                        <option value="true" ${user.active ? 'selected' : ''}>Ya</option>
-                        <option value="false" ${!user.active ? 'selected' : ''}>Tidak</option>
+                    <select class="input-select" id="e_pic_${id}">
+                        <option value="0" ${user.can_create_documents != 1 ? 'selected' : ''}>Tidak</option>
+                        <option value="1" ${user.can_create_documents == 1 ? 'selected' : ''}>Ya</option>
+                    </select>
+                </td>
+                
+                <td><select class="input-select" id="e_role_jabatan_${id}" onchange="handleRoleJabatanChange('${id}')"><option value="">- Pilih -</option>${roleJabatanOpts}</select></td>
+                <td><select class="input-select" id="e_role_${id}">${roleOpts}</select></td>
+                <td>
+                    <select class="input-select" id="e_active_${id}">
+                        <option value="1" ${user.user_aktif == 1 ? 'selected' : ''}>Ya</option>
+                        <option value="0" ${user.user_aktif == 0 ? 'selected' : ''}>Tidak</option>
                     </select>
                 </td>
                 <td>
                     <div class="action-btns">
-                        <button class="btn-icon btn-save" onclick="saveUser(${user.id})"><i class="fas fa-save"></i></button>
+                        <button class="btn-icon btn-save" onclick="saveUser('${id}')"><i class="fas fa-save"></i></button>
+                        <button class="btn-icon btn-cancel" onclick="cancelEdit('${id}')"><i class="fas fa-times"></i></button>
                     </div>
                 </td>
             `;
         }
 
-        function makeSelect(options, current, id) {
-            let html = `<select class="input-select" id="${id}">`;
-            options.forEach(opt => {
-                const sel = opt === current ? 'selected' : '';
-                html += `<option value="${opt}" ${sel}>${opt}</option>`;
-            });
-            html += `</select>`;
-            return html;
-        }
-
-        // --- ACTIONS ---
-
         function addUserRow() {
-            // Check if already adding
-            if (users.find(u => u.id === 'NEW')) return;
+            if (users.find(u => u.isEditing && (u.id_user === 'NEW' || !u.id_user))) return;
 
             const newUser = {
-                id: 'NEW',
+                id_user: null,
                 username: '',
-                email: '',
-                dir: opts.dirs[0],
-                dept: opts.depts[0],
-                unit: opts.units[0],
-                seksi: opts.seksi[0],
-                role: 'User',
-                active: true,
+                email_user: '',
+                role_user: 2, // Default to user (2)
+                user_aktif: 1,
                 isEditing: true
             };
-
+            
             users.unshift(newUser);
+            allUsers.unshift(newUser); // Tambahkan ke allUsers juga
             renderTable();
         }
 
         function toggleEdit(id) {
-            const user = users.find(u => u.id === id);
+            const user = users.find(u => u.id_user == id);
             if (user) {
                 user.isEditing = true;
                 renderTable();
             }
         }
 
-        function saveUser(id) {
-            const user = users.find(u => u.id === id);
-            if (!user) return;
-
-            // Collect Data
-            user.username = document.getElementById(`edit_username_${id}`).value;
-            user.email = document.getElementById(`edit_email_${id}`).value;
-            user.dir = document.getElementById(`edit_dir_${id}`).value;
-            user.dept = document.getElementById(`edit_dept_${id}`).value;
-            user.unit = document.getElementById(`edit_unit_${id}`).value;
-            user.seksi = document.getElementById(`edit_seksi_${id}`).value;
-            user.role = document.getElementById(`edit_role_${id}`).value;
-            user.active = document.getElementById(`edit_active_${id}`).value === 'true';
-            user.isEditing = false;
-
-            if (user.id === 'NEW') {
-                user.id = Date.now(); // Generate Real ID
-                Swal.fire('Berhasil', 'User baru berhasil ditambahkan!', 'success');
+        function cancelEdit(id) {
+            if (id === 'NEW' || !id || id === 'null') {
+                users.shift();
+                allUsers.shift(); // Hapus dari allUsers juga
             } else {
-                Swal.fire('Terupdate', 'Data user berhasil diperbarui.', 'success');
+                 const user = users.find(u => u.id_user == id);
+                 if (user) user.isEditing = false;
+            }
+            renderTable();
+        }
+
+        async function saveUser(id) {
+            const isNew = (id === 'NEW' || !id || id === 'null');
+            const prefix = isNew ? 'NEW' : id;
+
+            const payload = {
+                username: document.getElementById(`e_username_${prefix}`).value,
+                email_user: document.getElementById(`e_email_${prefix}`).value,
+                role_user: document.getElementById(`e_role_${prefix}`).value,
+                role_jabatan: document.getElementById(`e_role_jabatan_${prefix}`).value || 6, // Default: Associate
+                id_direktorat: document.getElementById(`e_dir_${prefix}`).value || null,
+                id_dept: document.getElementById(`e_dept_${prefix}`).value || null,
+                id_unit: document.getElementById(`e_unit_${prefix}`).value || null,
+                id_seksi: document.getElementById(`e_seksi_${prefix}`).value || null,
+                can_create_documents: document.getElementById(`e_pic_${prefix}`).value || 0,
+                user_aktif: document.getElementById(`e_active_${prefix}`).value,
+            };
+
+            if (isNew) {
+                // Password handled in backend (default 123456)
+                // const pwd = document.getElementById(`e_password_NEW`).value;
+                // if (!pwd) {
+                //    Swal.fire('Error', 'Password wajib diisi untuk user baru', 'error');
+                //    return;
+                // }
+                // payload.password = pwd;
             }
 
-            renderTable();
+            try {
+                Swal.showLoading();
+                const url = isNew ? "{{ route('admin.users.store') }}" : `/admin/users/${id}`;
+                const method = isNew ? 'POST' : 'PUT';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const text = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('Server response was not JSON: ' + text.substring(0, 100));
+                }
+
+                if (response.ok) {
+                    Swal.fire('Berhasil', result.message, 'success');
+                    if (isNew) {
+                        users.shift();
+                        users.unshift(result.user);
+                        allUsers.shift();
+                        allUsers.unshift(result.user); // Update allUsers juga
+                    } else {
+                        const idx = users.findIndex(u => u.id_user == id);
+                        users[idx] = result.user;
+                        const allIdx = allUsers.findIndex(u => u.id_user == id);
+                        if (allIdx !== -1) allUsers[allIdx] = result.user; // Update allUsers juga
+                    }
+                    renderTable();
+                } else {
+                    let msg = result.message || 'Terjadi kesalahan';
+                    if (result.errors) {
+                        msg = Object.values(result.errors).flat().join('<br>');
+                    }
+                    Swal.fire('Gagal', msg, 'error');
+                }
+
+            } catch (error) {
+                console.error('Save User Error:', error);
+                Swal.fire('Error', 'Gagal: ' + error.message, 'error');
+            }
         }
 
         function confirmDelete(id) {
             Swal.fire({
                 title: 'Hapus User?',
-                text: "Apakah anda yakin menghapus user ini untuk selamanya?",
+                text: "Data tidak dapat dikembalikan!",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#e74c3c',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    users = users.filter(u => u.id !== id);
-                    renderTable();
-                    Swal.fire(
-                        'Terhapus!',
-                        'User telah dihapus dari sistem.',
-                        'success'
-                    )
+                    try {
+                        const response = await fetch(`/admin/users/${id}`, {
+                             method: 'DELETE',
+                             headers: {
+                                'X-CSRF-TOKEN': csrfToken
+                             }
+                        });
+                        if (response.ok) {
+                             users = users.filter(u => u.id_user != id);
+                             allUsers = allUsers.filter(u => u.id_user != id); // Hapus dari allUsers juga
+                             renderTable();
+                             Swal.fire('Terhapus!', 'User telah dihapus.', 'success');
+                        } else {
+                             Swal.fire('Gagal', 'Server error', 'error');
+                        }
+                    } catch (e) {
+                        Swal.fire('Error', 'Network Error', 'error');
+                    }
                 }
             })
         }
 
-        function handleFileUpload(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-
-                // Show Loading
-                Swal.fire({
-                    title: 'Mengupload...',
-                    text: `Memproses file ${file.name}`,
-                    didOpen: () => {
-                        Swal.showLoading()
-                    },
-                    timer: 1500
-                }).then(() => {
-                    // Mock Success
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Import Berhasil!',
-                        text: 'Data dari CSV/XL telah berhasil disimpan ke database.'
-                    });
-
-                    // Add mock bulk data
-                    users.push({ id: 88, username: 'import.user1', email: 'imp1@semenpadang.co.id', dir: 'Impor', dept: 'Impor', unit: '-', seksi: '-', role: 'User', active: true });
-                    users.push({ id: 89, username: 'import.user2', email: 'imp2@semenpadang.co.id', dir: 'Impor', dept: 'Impor', unit: '-', seksi: '-', role: 'User', active: true });
-                    renderTable();
-                });
-
-                // Reset input
-                input.value = '';
+        function initCascade(user) {
+            const id = user.id_user || 'NEW';
+            
+            // Debug log
+            console.log('initCascade called for user:', id, user);
+            console.log('User data:', {
+                id_direktorat: user.id_direktorat,
+                id_dept: user.id_dept,
+                id_unit: user.id_unit,
+                id_seksi: user.id_seksi
+            });
+            
+            // Populate dropdowns dengan data user
+            if (user.id_direktorat) {
+                handleDirChange(id, user.id_dept);
+            }
+            if (user.id_dept) {
+                handleDeptChange(id, user.id_unit);
+            }
+            if (user.id_unit) {
+                handleUnitChange(id, user.id_seksi);
             }
         }
 
-        // Initialize
+        function handleDirChange(rowId, selectedDeptId = null) {
+            const dirId = document.getElementById(`e_dir_${rowId}`).value;
+            const deptSelect = document.getElementById(`e_dept_${rowId}`);
+            const unitSelect = document.getElementById(`e_unit_${rowId}`);
+            const seksiSelect = document.getElementById(`e_seksi_${rowId}`);
+            
+            // Preserve current values if not explicitly provided
+            if (selectedDeptId === null) {
+                selectedDeptId = deptSelect.value;
+            }
+            const currentUnitId = unitSelect.value;
+            const currentSeksiId = seksiSelect.value;
+            
+            const filteredDepts = masterData.departemens.filter(d => d.id_direktorat == dirId);
+            
+            // Check if the preserved dept value is still valid
+            const isDeptValid = filteredDepts.some(d => d.id_dept == selectedDeptId);
+            const finalDeptId = isDeptValid ? selectedDeptId : '';
+            
+            deptSelect.innerHTML = '<option value="">- Pilih -</option>' + 
+                filteredDepts.map(d => `<option value="${d.id_dept}" ${d.id_dept == finalDeptId ? 'selected' : ''}>${d.nama_dept}</option>`).join('');
+                
+            // Cascade to child dropdowns with preserved values
+            handleDeptChange(rowId, currentUnitId);
+        }
+
+        function handleDeptChange(rowId, selectedUnitId = null) {
+            const deptId = document.getElementById(`e_dept_${rowId}`).value;
+            const unitSelect = document.getElementById(`e_unit_${rowId}`);
+            const seksiSelect = document.getElementById(`e_seksi_${rowId}`);
+            
+            // Preserve current values if not explicitly provided
+            if (selectedUnitId === null) {
+                selectedUnitId = unitSelect.value;
+            }
+            const currentSeksiId = seksiSelect.value;
+            
+            const filteredUnits = masterData.units.filter(u => u.id_dept == deptId);
+            
+            // Check if the preserved unit value is still valid
+            const isUnitValid = filteredUnits.some(u => u.id_unit == selectedUnitId);
+            const finalUnitId = isUnitValid ? selectedUnitId : '';
+            
+            unitSelect.innerHTML = '<option value="">- Pilih -</option>' + 
+                filteredUnits.map(u => `<option value="${u.id_unit}" ${u.id_unit == finalUnitId ? 'selected' : ''}>${u.nama_unit}</option>`).join('');
+
+            // Cascade to child dropdown with preserved value
+            handleUnitChange(rowId, currentSeksiId);
+        }
+
+        function handleUnitChange(rowId, selectedSeksiId = null) {
+            const unitId = document.getElementById(`e_unit_${rowId}`).value;
+            const seksiSelect = document.getElementById(`e_seksi_${rowId}`);
+            
+            // Preserve current value if not explicitly provided
+            if (selectedSeksiId === null) {
+                selectedSeksiId = seksiSelect.value;
+            }
+            
+            const filteredSeksi = masterData.seksis.filter(s => s.id_unit == unitId);
+            
+            // Check if the preserved seksi value is still valid
+            const isSeksiValid = filteredSeksi.some(s => s.id_seksi == selectedSeksiId);
+            const finalSeksiId = isSeksiValid ? selectedSeksiId : '';
+            
+            seksiSelect.innerHTML = '<option value="">- Pilih -</option>' + 
+                filteredSeksi.map(s => `<option value="${s.id_seksi}" ${s.id_seksi == finalSeksiId ? 'selected' : ''}>${s.nama_seksi}</option>`).join('');
+        }
+
+
+        function handleRoleJabatanChange(rowId) {
+            // Role User can be selected manually by admin for all role jabatan
+            // No auto-assignment or locking
+        }
+
+        // ==================== FILTER & SEARCH FUNCTIONS ====================
+        
+        function handleSearch() {
+            currentSearch = document.getElementById('searchInput').value.toLowerCase();
+            applyFilters();
+        }
+
+        function handleUnitFilter() {
+            currentUnitFilter = document.getElementById('unitFilter').value;
+            applyFilters();
+        }
+
+        function resetFilters() {
+            currentSearch = '';
+            currentUnitFilter = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('unitFilter').value = '';
+            applyFilters();
+        }
+
+        function applyFilters() {
+            // Filter dari allUsers
+            users = allUsers.filter(user => {
+                // Skip user yang sedang di-edit
+                if (user.isEditing && (user.id_user === 'NEW' || !user.id_user)) {
+                    return true;
+                }
+
+                // Filter by search
+                if (currentSearch) {
+                    const searchMatch = 
+                        (user.username && user.username.toLowerCase().includes(currentSearch)) ||
+                        (user.email_user && user.email_user.toLowerCase().includes(currentSearch)) ||
+                        (user.email && user.email.toLowerCase().includes(currentSearch)) ||
+                        (user.nama_user && user.nama_user.toLowerCase().includes(currentSearch));
+                    
+                    if (!searchMatch) return false;
+                }
+
+                // Filter by unit
+                if (currentUnitFilter) {
+                    if (user.id_unit != currentUnitFilter) return false;
+                }
+
+                return true;
+            });
+
+            renderTable();
+        }
+        
+        async function togglePIC(userId, newValue) {
+            const user = allUsers.find(u => u.id_user == userId);
+            if (!user) return;
+            
+            const isPIC = newValue == 1;
+            const action = isPIC ? 'menandai' : 'menghapus penandaan';
+            
+            const result = await Swal.fire({
+                title: `${isPIC ? 'Tandai' : 'Hapus'} sebagai PIC?`,
+                html: `Apakah Anda yakin ingin ${action} <strong>${user.username}</strong> sebagai PIC (Person In Charge) untuk form HIRADC?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Lanjutkan',
+                cancelButtonText: 'Batal'
+            });
+            
+            if (!result.isConfirmed) {
+                // Revert dropdown
+                event.target.value = user.can_create_documents == 1 ? '1' : '0';
+                return;
+            }
+            
+            try {
+                Swal.showLoading();
+                
+                // Update can_create_documents via API
+                const response = await fetch(`/admin/users/${userId}/pic`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        can_create_documents: isPIC ? 1 : 0
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Update local data
+                    user.can_create_documents = isPIC ? 1 : 0;
+                    const allUserIndex = allUsers.findIndex(u => u.id_user == userId);
+                    if (allUserIndex !== -1) allUsers[allUserIndex].can_create_documents = isPIC ? 1 : 0;
+                    
+                    Swal.fire('Berhasil!', result.message, 'success');
+                } else {
+                    // Handle error (PIC duplikat)
+                    Swal.fire('Gagal', result.message, 'error');
+                    // Revert dropdown
+                    event.target.value = user.can_create_documents == 1 ? '1' : '0';
+                }
+            } catch (error) {
+                Swal.fire('Gagal', 'Terjadi kesalahan saat mengupdate status PIC', 'error');
+                // Revert dropdown
+                event.target.value = user.can_create_documents == 1 ? '1' : '0';
+            }
+        }
+
+        function handleFileUpload(input) {
+             Swal.fire('Info', 'Fitur upload CSV belum diimplementasikan di backend ini.', 'info');
+        }
+
         renderTable();
     </script>
 </body>

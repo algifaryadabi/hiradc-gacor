@@ -535,58 +535,7 @@
 <body>
     <div class="container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle">
-                    <img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP">
-                </div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System</div>
-            </div>
-
-            <nav class="nav-menu">
-                <a href="{{ route('user.dashboard') }}" class="nav-item active">
-                    <i class="fas fa-th-large"></i>
-                    <span>Dashboard</span>
-                </a>
-                @if(Auth::user()->can_create_documents == 1)
-                    <a href="{{ route('documents.index') }}" class="nav-item">
-                        <i class="fas fa-folder-open"></i>
-                        <span>Dokumen Saya</span>
-                        @if(isset($revisionCount) && $revisionCount > 0)
-                            <span class="badge">{{ $revisionCount }}</span>
-                        @endif
-                    </a>
-                    <a href="{{ route('documents.create') }}" class="nav-item">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Buat Dokumen Baru</span>
-                    </a>
-                @endif
-            </nav>
-
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Keluar
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
-            </div>
-        </aside>
+        @include('user.partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
@@ -627,41 +576,29 @@
                     </div>
                 </div>
 
-                <!-- 4 SUMMARY CARDS -->
-                <div class="category-grid">
-                    <div class="cat-card" onclick="selectCategory('K3', this)">
-                        <h3>Dokumen</h3>
-                        <h2>K3</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('KO', this)">
-                        <h3>Dokumen</h3>
-                        <h2>KO</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('Lingkungan', this)">
-                        <h3>Dokumen</h3>
-                        <h2>Lingkungan</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('Keamanan', this)">
-                        <h3>Dokumen</h3>
-                        <h2>Keamanan</h2>
-                    </div>
-                </div>
+
 
                 <!-- TABLE -->
                 <div class="table-section">
                     <div class="table-header">
-                        <h2>Laporan Terpublikasi</h2>
+                        <h2>Form Terpublikasi</h2>
+                        <div class="search-box" style="position: relative; width: 250px;">
+                            <i class="fas fa-search" style="position: absolute; left: 10px; top: 10px; color: #999;"></i>
+                            <input type="text" id="tableSearch" placeholder="Cari form..." onkeyup="handleSearch(this.value)" 
+                                style="width: 100%; padding: 8px 10px 8px 35px; border: 1px solid #ddd; border-radius: 6px; outline: none;">
+                        </div>
                     </div>
 
                     <table class="custom-table">
                         <thead>
                             <tr>
-                                <th width="30%">Unit Penginput</th>
-                                <th width="15%">Kategori</th>
+                                <th width="20%">Unit Penginput</th>
+                                <th width="25%">Judul Form</th>
                                 <th width="20%">Disetujui Oleh</th>
                                 <th width="15%">Tanggal Publish</th>
-                                <th width="15%">Penulis</th>
-                                <th width="5%">Aksi</th>
+                                <th width="10%">Waktu</th>
+                                <th width="20%">Penulis</th>
+                                <th width="10%">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -677,17 +614,17 @@
     <div id="detailModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Detail Dokumen</h2>
+                <h2>Detail Form</h2>
                 <span class="close-btn" onclick="closeModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <!-- Section 1 -->
                 <div class="section-title">
-                    <i class="fas fa-file-alt"></i> Informasi Dokumen
+                    <i class="fas fa-file-alt"></i> Informasi Form
                 </div>
 
                 <div class="info-row">
-                    <div class="info-label">Judul Dokumen:</div>
+                    <div class="info-label">Judul Form:</div>
                     <div class="info-value" id="m_title"></div>
                 </div>
                 <div class="info-row">
@@ -745,6 +682,7 @@
         const documents = @json($documents);
 
         let activeCategory = '';
+        let searchTerm = '';
 
         document.addEventListener('DOMContentLoaded', () => {
             populateDirectorates();
@@ -807,9 +745,8 @@
                 opt.textContent = u.name;
                 unitSelect.appendChild(opt);
             });
-            // Reset seksi dropdown
-            const seksiSelect = document.getElementById('filter_seksi');
-            seksiSelect.innerHTML = '<option value="">-- Pilih Seksi --</option>';
+            // Reset seksi dropdown and populate
+            filterSeksi();
         }
 
         function filterSeksi() {
@@ -817,9 +754,12 @@
             const seksiSelect = document.getElementById('filter_seksi');
             seksiSelect.innerHTML = '<option value="">-- Pilih Seksi --</option>';
 
-            if (!unitId) return;
+            let filteredSeksis = seksis;
+            if (unitId) {
+                filteredSeksis = seksis.filter(s => s.unit_id == unitId);
+            }
 
-            seksis.filter(s => s.unit_id == unitId).forEach(s => {
+            filteredSeksis.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s.id;
                 opt.textContent = s.name;
@@ -850,6 +790,23 @@
                 if (deptId && doc.dept_id != deptId) match = false;
                 if (unitId && doc.unit_id != unitId) match = false;
                 if (activeCategory && doc.category !== activeCategory) match = false;
+                
+                if (searchTerm) {
+                    const term = searchTerm.toLowerCase();
+                    const unit = units.find(u => u.id === doc.unit_id);
+                    const unitName = unit ? unit.name.toLowerCase() : '';
+                    
+                    const searchableText = [
+                        doc.title, 
+                        doc.author, 
+                        doc.approver, 
+                        unitName,
+                        doc.risk_level
+                    ].join(' ').toLowerCase();
+
+                    if (!searchableText.includes(term)) match = false;
+                }
+
                 return match;
             });
 
@@ -864,11 +821,11 @@
             tableSection.style.display = 'block';
 
             if (data.length === 0) {
-                let mainText = 'Belum Ada Laporan Terpublikasi';
-                let subText = 'Belum ada dokumen yang dipublikasikan.';
+                let mainText = 'Belum Ada Form Terpublikasi';
+                let subText = 'Belum ada form yang dipublikasikan.';
 
                 if (activeCategory) {
-                    subText = `Tidak ada dokumen ditemukan untuk kategori <strong>${activeCategory}</strong>.`;
+                    subText = `Tidak ada form ditemukan untuk kategori <strong>${activeCategory}</strong>.`;
                 }
 
                 tbody.innerHTML = `
@@ -893,19 +850,22 @@
                 const unit = units.find(u => u.id === doc.unit_id);
                 const unitName = unit ? unit.name : '-';
                 return `
-                <tr>
                     <td><strong>${unitName}</strong></td>
-                    <td><span class="badge-status" style="background: #eee;">${doc.category}</span></td>
+                    <td style="font-weight: 500; color: #333;">${doc.title}</td>
                     <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
                     <td>${doc.date}</td>
                     <td>${doc.time || '-'}</td>
                     <td>${doc.author}</td>
                     <td><a href="/documents/${doc.id}/published" class="btn-action">Detail</a></td>
-                </tr>
             `}).join('');
         }
 
         // MODAL FUNCTIONS
+        function handleSearch(val) {
+            searchTerm = val;
+            applyFilters();
+        }
+
         function openDetailModal(id) {
             const doc = documents.find(d => d.id === id);
             if (!doc) return;
