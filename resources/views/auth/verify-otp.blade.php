@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password - PT Semen Padang</title>
+    <title>Verifikasi OTP - PT Semen Padang</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -51,18 +51,21 @@
             font-size: 14px;
         }
 
-        .form-control {
+        .otp-input {
             width: 100%;
-            padding: 12px 15px;
+            padding: 15px;
             margin-bottom: 20px;
             border: 2px solid #e2e8f0;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 10px;
+            font-weight: bold;
             box-sizing: border-box;
             transition: all 0.3s;
         }
 
-        .form-control:focus {
+        .otp-input:focus {
             outline: none;
             border-color: var(--primary-color);
         }
@@ -84,6 +87,16 @@
             background: var(--primary-dark);
         }
 
+        .alert-success {
+            background-color: #f0fff4;
+            color: #2f855a;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #68d391;
+            font-size: 14px;
+        }
+
         .alert-error {
             background-color: #fff5f5;
             color: #c53030;
@@ -100,10 +113,16 @@
 
     <div class="auth-card">
         <div class="auth-icon">
-            <i class="fas fa-lock"></i>
+            <i class="fas fa-shield-alt"></i>
         </div>
-        <h2>Buat Password Baru</h2>
-        <p>Silakan masukkan password baru untuk akun Anda.</p>
+        <h2>Masukkan Kode OTP</h2>
+        <p>Kode OTP telah dikirim ke: <strong>{{ session('reset_email') }}</strong></p>
+
+        @if(session('success'))
+            <div class="alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
 
         @if(session('error'))
             <div class="alert-error">
@@ -111,24 +130,21 @@
             </div>
         @endif
 
-        @if ($errors->any())
-            <div class="alert-error">
-                <ul style="margin: 0; padding-left: 20px;">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <form action="{{ route('password.update') }}" method="POST">
+        <form action="{{ route('password.verify_otp.submit') }}" method="POST">
             @csrf
 
-            <input type="password" name="password" class="form-control" placeholder="Password Baru" required autofocus>
-            <input type="password" name="password_confirmation" class="form-control" placeholder="Konfirmasi Password"
-                required>
+            <input type="text" name="otp" class="otp-input" placeholder="000000" maxlength="6" pattern="\d{6}" required
+                autofocus autocomplete="off">
 
-            <button type="submit" class="btn-submit">Simpan Password</button>
+            <button type="submit" class="btn-submit">Verifikasi OTP</button>
+        </form>
+
+        <form action="{{ route('password.email') }}" method="POST" style="margin-top: 20px;">
+            @csrf
+            <input type="hidden" name="email" value="{{ session('reset_email') }}">
+            <button type="submit"
+                style="background: none; border: none; color: #666; cursor: pointer; text-decoration: underline;">Kirim
+                Ulang Kode</button>
         </form>
     </div>
 

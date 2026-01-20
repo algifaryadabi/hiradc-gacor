@@ -362,11 +362,11 @@
                     @csrf
 
                     <div class="input-group">
-                        <label for="username">Username</label>
+                        <label for="email">Email</label>
                         <div class="input-wrapper">
-                            <input type="text" id="username" name="username" class="form-control"
-                                placeholder="Masukkan username" required autofocus>
-                            <span class="input-icon">👤</span>
+                            <input type="email" id="email" name="email" class="form-control"
+                                placeholder="Masukkan email" required autofocus>
+                            <span class="input-icon">✉️</span>
                         </div>
                     </div>
 

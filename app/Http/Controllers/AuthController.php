@@ -27,19 +27,20 @@ class AuthController extends Controller
     public function authenticate(Request $request)
     {
         $request->validate([
-            'username' => ['required', 'string'],
+            'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ]);
 
-        $username = $request->input('username');
+        $email = $request->input('email');
         $password = $request->input('password');
         $remember = $request->has('remember');
 
-        // Find user by username
-        $user = User::where('username', $username)->first();
+        // Find user by email (case-insensitive)
+        // We use whereRaw to ensure it works even if DB has Uppercase and input is Lowercase
+        $user = User::whereRaw('LOWER(email_user) = ?', [strtolower($email)])->first();
 
         if (!$user) {
-            return back()->with('error', 'Username tidak ditemukan.');
+            return back()->with('error', 'Email tidak ditemukan.');
         }
 
         // Check if user is active

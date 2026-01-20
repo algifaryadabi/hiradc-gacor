@@ -21,27 +21,15 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/login', [AuthController::class, 'authenticate'])->name('login.submit');
 
-    Route::get('/forgot-password', function () {
-        return view('auth.reset-password');
-    })->name('password.request');
+    // OTP Password Reset Routes
+    Route::get('/forgot-password', [App\Http\Controllers\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('/forgot-password', [App\Http\Controllers\ForgotPasswordController::class, 'sendOtp'])->name('password.email');
 
-    Route::post('/forgot-password', function (\Illuminate\Http\Request $request) {
-        $request->validate([
-            'username' => 'required|exists:users,username',
-            'password' => 'required|min:5|confirmed'
-        ], [
-            'username.exists' => 'Username tidak ditemukan.',
-            'password.confirmed' => 'Konfirmasi password tidak cocok.',
-            'password.min' => 'Password minimal 5 karakter.'
-        ]);
+    Route::get('/verify-otp', [App\Http\Controllers\ForgotPasswordController::class, 'showVerifyOtpForm'])->name('password.verify_otp');
+    Route::post('/verify-otp', [App\Http\Controllers\ForgotPasswordController::class, 'verifyOtp'])->name('password.verify_otp.submit');
 
-        $user = \App\Models\User::where('username', $request->username)->first();
-        $user->update([
-            'password' => \Illuminate\Support\Facades\Hash::make($request->password)
-        ]);
-
-        return redirect()->route('login')->with('success', 'Password berhasil diperbarui. Silakan login dengan password baru.');
-    })->name('password.update');
+    Route::get('/reset-password', [App\Http\Controllers\ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [App\Http\Controllers\ForgotPasswordController::class, 'reset'])->name('password.update');
 });
 
 // Protected Routes (Auth required)
@@ -258,22 +246,22 @@ Route::middleware('auth')->group(function () {
     // ==================== ADMIN ROUTES ====================
     Route::get('/admin/dashboard', function () {
         $user = Auth::user();
-        
+
         // Total Documents (exclude draft - only count submitted documents)
         $totalDocuments = \App\Models\Document::whereNotIn('status', ['draft'])->count();
-        
+
         // Published Documents
         $publishedDocuments = \App\Models\Document::where('status', 'published')
             ->whereNotNull('published_at')
             ->count();
-        
+
         // Pending Approval (all levels)
         $pendingDocuments = \App\Models\Document::whereIn('status', [
-            'pending_level1', 
-            'pending_level2', 
+            'pending_level1',
+            'pending_level2',
             'pending_level3'
         ])->count();
-        
+
         // Revision Documents
         $revisionDocuments = \App\Models\Document::where('status', 'revision')->count();
 
@@ -286,10 +274,10 @@ Route::middleware('auth')->group(function () {
             ->get();
 
         return view('admin.dashboard', compact(
-            'user', 
-            'totalDocuments', 
-            'publishedDocuments', 
-            'pendingDocuments', 
+            'user',
+            'totalDocuments',
+            'publishedDocuments',
+            'pendingDocuments',
             'revisionDocuments',
             'documents'
         ));
@@ -309,22 +297,22 @@ Route::middleware('auth')->group(function () {
 
     // Master Data Management Routes
     Route::get('/admin/master-data', [\App\Http\Controllers\MasterDataController::class, 'index'])->name('admin.master_data');
-    
+
     // Direktorat
     Route::post('/admin/direktorat', [\App\Http\Controllers\MasterDataController::class, 'storeDirektorat'])->name('admin.direktorat.store');
     Route::put('/admin/direktorat/{id}', [\App\Http\Controllers\MasterDataController::class, 'updateDirektorat'])->name('admin.direktorat.update');
     Route::delete('/admin/direktorat/{id}', [\App\Http\Controllers\MasterDataController::class, 'destroyDirektorat'])->name('admin.direktorat.destroy');
-    
+
     // Departemen
     Route::post('/admin/departemen', [\App\Http\Controllers\MasterDataController::class, 'storeDepartemen'])->name('admin.departemen.store');
     Route::put('/admin/departemen/{id}', [\App\Http\Controllers\MasterDataController::class, 'updateDepartemen'])->name('admin.departemen.update');
     Route::delete('/admin/departemen/{id}', [\App\Http\Controllers\MasterDataController::class, 'destroyDepartemen'])->name('admin.departemen.destroy');
-    
+
     // Unit
     Route::post('/admin/unit', [\App\Http\Controllers\MasterDataController::class, 'storeUnit'])->name('admin.unit.store');
     Route::put('/admin/unit/{id}', [\App\Http\Controllers\MasterDataController::class, 'updateUnit'])->name('admin.unit.update');
     Route::delete('/admin/unit/{id}', [\App\Http\Controllers\MasterDataController::class, 'destroyUnit'])->name('admin.unit.destroy');
-    
+
     // Seksi
     Route::post('/admin/seksi', [\App\Http\Controllers\MasterDataController::class, 'storeSeksi'])->name('admin.seksi.store');
     Route::put('/admin/seksi/{id}', [\App\Http\Controllers\MasterDataController::class, 'updateSeksi'])->name('admin.seksi.update');
