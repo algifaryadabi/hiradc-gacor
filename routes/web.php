@@ -211,7 +211,7 @@ Route::middleware('auth')->group(function () {
             $lastApproval = $doc->approvals()->latest()->first();
             return [
                 'id' => $doc->id,
-                'title' => $doc->kolom2_kegiatan,
+                'title' => $doc->judul_dokumen ?? '-',
                 'category' => $doc->kategori,
                 'date' => $doc->published_at ? $doc->published_at->format('d M Y') : $doc->created_at->format('d M Y'),
                 'author' => $doc->user->nama_user ?? 'Unknown',

@@ -747,7 +747,7 @@ class DocumentController extends Controller
             $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
             return [
                 'id' => $doc->id,
-                'title' => $doc->judul_dokumen ?? $doc->kolom2_kegiatan,
+                'title' => $doc->judul_dokumen ?? '-',
                 'category' => $doc->kategori,
                 'date' => $doc->created_at->format('d M Y'),
                 'author' => $doc->user->nama_user ?? '-',
@@ -1587,10 +1587,12 @@ class DocumentController extends Controller
     public function getStatus($id)
     {
         $document = Document::findOrFail($id);
-        
+
         $statusLabel = 'Menunggu';
-        if ($document->status == 'approved') $statusLabel = 'Disetujui';
-        if ($document->status == 'revision') $statusLabel = 'Perlu Revisi';
+        if ($document->status == 'approved')
+            $statusLabel = 'Disetujui';
+        if ($document->status == 'revision')
+            $statusLabel = 'Perlu Revisi';
 
         return response()->json([
             'success' => true,

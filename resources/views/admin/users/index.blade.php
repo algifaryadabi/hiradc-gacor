@@ -13,6 +13,7 @@
         * {
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Inter', sans-serif;
             background: #f4f6f9;
@@ -69,6 +70,29 @@
             background: #fee2e2;
             color: #c41e3a;
             border-left: 4px solid #c41e3a;
+        }
+
+        .user-section {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .logout-btn {
+            display: block;
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .main-content {
@@ -256,6 +280,7 @@
             list-style: none;
             border-radius: 0.25rem;
         }
+
         .page-item .page-link {
             position: relative;
             display: block;
@@ -267,12 +292,14 @@
             border: 1px solid #dee2e6;
             text-decoration: none;
         }
+
         .page-item.active .page-link {
             z-index: 3;
             color: #fff;
             background-color: #c41e3a;
             border-color: #c41e3a;
         }
+
         .page-item.disabled .page-link {
             color: #6c757d;
             pointer-events: none;
@@ -307,25 +334,28 @@
         <!-- Filter & Search Section -->
         <div style="display: flex; gap: 20px; margin-bottom: 20px;">
             <!-- Search Box -->
-            <div style="flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <div
+                style="flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
                 <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
                     <i class="fas fa-search"></i> Cari User
                 </label>
-                <input type="text" id="searchInput" placeholder="Cari username, email, atau nama..." 
-                       style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;"
-                       oninput="handleSearch()">
+                <input type="text" id="searchInput" placeholder="Cari username, email, atau nama..."
+                    style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;"
+                    oninput="handleSearch()">
             </div>
 
             <!-- Filter Box -->
-            <div style="flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <div
+                style="flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
                 <div style="display: flex; gap: 10px; align-items: flex-end;">
                     <div style="flex: 1;">
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
+                        <label
+                            style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
                             <i class="fas fa-filter"></i> Filter Unit
                         </label>
-                        <select id="unitFilter" 
-                                style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white;"
-                                onchange="handleUnitFilter()">
+                        <select id="unitFilter"
+                            style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white;"
+                            onchange="handleUnitFilter()">
                             <option value="">-- Semua Unit --</option>
                             @foreach($units as $unit)
                                 <option value="{{ $unit->id_unit }}">{{ $unit->nama_unit }}</option>
@@ -333,7 +363,8 @@
                         </select>
                     </div>
                     <div>
-                        <button class="btn btn-secondary" onclick="resetFilters()" title="Reset Filter" style="height: 42px;">
+                        <button class="btn btn-secondary" onclick="resetFilters()" title="Reset Filter"
+                            style="height: 42px;">
                             <i class="fas fa-redo"></i> Reset
                         </button>
                     </div>
@@ -363,7 +394,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination Links -->
         <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
             {{ $users->links('pagination::bootstrap-4') }}
@@ -374,7 +405,7 @@
         // INIT DATA FROM SERVER (Fix for Pagination: use items())
         let users = {!! json_encode($users->items()) !!};
         let allUsers = [...users]; // Simpan semua users untuk filtering
-        
+
         // MASTER DATA FOR DROPDOWNS
         const masterData = {
             roles: @json($roleUsers), // Array of role_user objects with id_role_user
@@ -386,8 +417,8 @@
         };
 
         // Filter state
-        let currentSearch = '';
-        let currentUnitFilter = '';
+        // Server-side filtering is now used
+
 
         // DEBUG: Log data untuk troubleshooting
         console.log('=== MASTER DATA DEBUG ===');
@@ -426,21 +457,21 @@
             const unitName = user.unit ? user.unit.nama_unit : '-';
             const seksiName = user.seksi ? user.seksi.nama_seksi : '-';
             const active = (user.user_aktif == 1 || user.user_aktif == 'aktif');
-            
+
             // Get role_user name from masterData
             const roleObj = masterData.roles.find(r => r.id_role_user == user.role_user);
             const roleDisplay = roleObj ? (roleObj.nama_role || roleObj.name || 'ID:' + user.role_user) : (user.role_user || '-');
-            
+
             // Get role_jabatan name from relasi atau masterData
             let roleJabatanName = '-';
-            
+
             // Debug: log user object untuk cek struktur data
             if (user.id_user === users[0]?.id_user) {
                 console.log('Sample User data:', user);
                 console.log('role_jabatan value:', user.role_jabatan);
                 console.log('role_jabatan type:', typeof user.role_jabatan);
             }
-            
+
             // Cek apakah ada relasi role_jabatan yang ter-load
             if (user.role_jabatan && typeof user.role_jabatan === 'object' && user.role_jabatan.nama_role_jabatan) {
                 // Relasi ter-load sebagai object
@@ -473,12 +504,12 @@
 
         function renderEditRow(user) {
             const id = user.id_user || 'NEW';
-            
+
             // Direktorat options
-            const dirOpts = masterData.direktorats.map(d => 
+            const dirOpts = masterData.direktorats.map(d =>
                 `<option value="${d.id_direktorat}" ${user.id_direktorat == d.id_direktorat ? 'selected' : ''}>${d.nama_direktorat}</option>`
             ).join('');
-            
+
             // Departemen options - filter berdasarkan direktorat user
             let deptOptsArr = [];
             if (user.id_direktorat) {
@@ -491,10 +522,10 @@
                     deptOptsArr.push(current);
                 }
             }
-            const deptOpts = deptOptsArr.map(d => 
+            const deptOpts = deptOptsArr.map(d =>
                 `<option value="${d.id_dept}" ${user.id_dept == d.id_dept ? 'selected' : ''}>${d.nama_dept}</option>`
             ).join('');
-            
+
             // Unit options - filter berdasarkan departemen user
             let unitOptsArr = [];
             if (user.id_dept) {
@@ -507,10 +538,10 @@
                     unitOptsArr.push(current);
                 }
             }
-            const unitOpts = unitOptsArr.map(u => 
+            const unitOpts = unitOptsArr.map(u =>
                 `<option value="${u.id_unit}" ${user.id_unit == u.id_unit ? 'selected' : ''}>${u.nama_unit}</option>`
             ).join('');
-            
+
             // Seksi options - filter berdasarkan unit user
             let seksiOptsArr = [];
             if (user.id_unit) {
@@ -518,15 +549,15 @@
             }
             // Fix: Ensure current value is included
             if (user.id_seksi) {
-                 const current = masterData.seksis.find(s => s.id_seksi == user.id_seksi);
-                 if (current && !seksiOptsArr.some(s => s.id_seksi == current.id_seksi)) {
-                     seksiOptsArr.push(current);
-                 }
+                const current = masterData.seksis.find(s => s.id_seksi == user.id_seksi);
+                if (current && !seksiOptsArr.some(s => s.id_seksi == current.id_seksi)) {
+                    seksiOptsArr.push(current);
+                }
             }
-            const seksiOpts = seksiOptsArr.map(s => 
+            const seksiOpts = seksiOptsArr.map(s =>
                 `<option value="${s.id_seksi}" ${user.id_seksi == s.id_seksi ? 'selected' : ''}>${s.nama_seksi}</option>`
             ).join('');
-            
+
             // Extract role_jabatan ID (bisa object atau integer)
             let roleJabatanId = null;
             if (user.role_jabatan) {
@@ -536,14 +567,14 @@
                     roleJabatanId = user.role_jabatan;
                 }
             }
-            
+
             // Role Jabatan options
-            const roleJabatanOpts = masterData.roleJabatans.map(r => 
+            const roleJabatanOpts = masterData.roleJabatans.map(r =>
                 `<option value="${r.id_role_jabatan}" ${roleJabatanId == r.id_role_jabatan ? 'selected' : ''}>${r.nama_role_jabatan}</option>`
             ).join('');
-            
+
             // Role User options (ID integer)
-            const roleOpts = masterData.roles.map(r => 
+            const roleOpts = masterData.roles.map(r =>
                 `<option value="${r.id_role_user}" ${user.role_user == r.id_role_user ? 'selected' : ''}>${r.nama_role || r.name || 'Role ' + r.id_role_user}</option>`
             ).join('');
 
@@ -593,7 +624,7 @@
                 user_aktif: 1,
                 isEditing: true
             };
-            
+
             users.unshift(newUser);
             allUsers.unshift(newUser); // Tambahkan ke allUsers juga
             renderTable();
@@ -612,8 +643,8 @@
                 users.shift();
                 allUsers.shift(); // Hapus dari allUsers juga
             } else {
-                 const user = users.find(u => u.id_user == id);
-                 if (user) user.isEditing = false;
+                const user = users.find(u => u.id_user == id);
+                if (user) user.isEditing = false;
             }
             renderTable();
         }
@@ -708,18 +739,18 @@
                 if (result.isConfirmed) {
                     try {
                         const response = await fetch(`/admin/users/${id}`, {
-                             method: 'DELETE',
-                             headers: {
+                            method: 'DELETE',
+                            headers: {
                                 'X-CSRF-TOKEN': csrfToken
-                             }
+                            }
                         });
                         if (response.ok) {
-                             users = users.filter(u => u.id_user != id);
-                             allUsers = allUsers.filter(u => u.id_user != id); // Hapus dari allUsers juga
-                             renderTable();
-                             Swal.fire('Terhapus!', 'User telah dihapus.', 'success');
+                            users = users.filter(u => u.id_user != id);
+                            allUsers = allUsers.filter(u => u.id_user != id); // Hapus dari allUsers juga
+                            renderTable();
+                            Swal.fire('Terhapus!', 'User telah dihapus.', 'success');
                         } else {
-                             Swal.fire('Gagal', 'Server error', 'error');
+                            Swal.fire('Gagal', 'Server error', 'error');
                         }
                     } catch (e) {
                         Swal.fire('Error', 'Network Error', 'error');
@@ -730,7 +761,7 @@
 
         function initCascade(user) {
             const id = user.id_user || 'NEW';
-            
+
             // Debug log
             console.log('initCascade called for user:', id, user);
             console.log('User data:', {
@@ -739,7 +770,7 @@
                 id_unit: user.id_unit,
                 id_seksi: user.id_seksi
             });
-            
+
             // Populate dropdowns dengan data user
             if (user.id_direktorat) {
                 handleDirChange(id, user.id_dept);
@@ -757,23 +788,23 @@
             const deptSelect = document.getElementById(`e_dept_${rowId}`);
             const unitSelect = document.getElementById(`e_unit_${rowId}`);
             const seksiSelect = document.getElementById(`e_seksi_${rowId}`);
-            
+
             // Preserve current values if not explicitly provided
             if (selectedDeptId === null) {
                 selectedDeptId = deptSelect.value;
             }
             const currentUnitId = unitSelect.value;
             const currentSeksiId = seksiSelect.value;
-            
+
             const filteredDepts = masterData.departemens.filter(d => d.id_direktorat == dirId);
-            
+
             // Check if the preserved dept value is still valid
             const isDeptValid = filteredDepts.some(d => d.id_dept == selectedDeptId);
             const finalDeptId = isDeptValid ? selectedDeptId : '';
-            
-            deptSelect.innerHTML = '<option value="">- Pilih -</option>' + 
+
+            deptSelect.innerHTML = '<option value="">- Pilih -</option>' +
                 filteredDepts.map(d => `<option value="${d.id_dept}" ${d.id_dept == finalDeptId ? 'selected' : ''}>${d.nama_dept}</option>`).join('');
-                
+
             // Cascade to child dropdowns with preserved values
             handleDeptChange(rowId, currentUnitId);
         }
@@ -782,20 +813,20 @@
             const deptId = document.getElementById(`e_dept_${rowId}`).value;
             const unitSelect = document.getElementById(`e_unit_${rowId}`);
             const seksiSelect = document.getElementById(`e_seksi_${rowId}`);
-            
+
             // Preserve current values if not explicitly provided
             if (selectedUnitId === null) {
                 selectedUnitId = unitSelect.value;
             }
             const currentSeksiId = seksiSelect.value;
-            
+
             const filteredUnits = masterData.units.filter(u => u.id_dept == deptId);
-            
+
             // Check if the preserved unit value is still valid
             const isUnitValid = filteredUnits.some(u => u.id_unit == selectedUnitId);
             const finalUnitId = isUnitValid ? selectedUnitId : '';
-            
-            unitSelect.innerHTML = '<option value="">- Pilih -</option>' + 
+
+            unitSelect.innerHTML = '<option value="">- Pilih -</option>' +
                 filteredUnits.map(u => `<option value="${u.id_unit}" ${u.id_unit == finalUnitId ? 'selected' : ''}>${u.nama_unit}</option>`).join('');
 
             // Cascade to child dropdown with preserved value
@@ -805,19 +836,19 @@
         function handleUnitChange(rowId, selectedSeksiId = null) {
             const unitId = document.getElementById(`e_unit_${rowId}`).value;
             const seksiSelect = document.getElementById(`e_seksi_${rowId}`);
-            
+
             // Preserve current value if not explicitly provided
             if (selectedSeksiId === null) {
                 selectedSeksiId = seksiSelect.value;
             }
-            
+
             const filteredSeksi = masterData.seksis.filter(s => s.id_unit == unitId);
-            
+
             // Check if the preserved seksi value is still valid
             const isSeksiValid = filteredSeksi.some(s => s.id_seksi == selectedSeksiId);
             const finalSeksiId = isSeksiValid ? selectedSeksiId : '';
-            
-            seksiSelect.innerHTML = '<option value="">- Pilih -</option>' + 
+
+            seksiSelect.innerHTML = '<option value="">- Pilih -</option>' +
                 filteredSeksi.map(s => `<option value="${s.id_seksi}" ${s.id_seksi == finalSeksiId ? 'selected' : ''}>${s.nama_seksi}</option>`).join('');
         }
 
@@ -828,62 +859,85 @@
         }
 
         // ==================== FILTER & SEARCH FUNCTIONS ====================
-        
+
+        let debounceTimer;
+
+        async function fetchUsers() {
+            const search = document.getElementById('searchInput').value;
+            const unit = document.getElementById('unitFilter').value;
+
+            // If both empty, reload page to restore pagination state
+            if (!search && !unit) {
+                window.location.href = window.location.pathname;
+                return;
+            }
+
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (unit) params.append('unit_filter', unit);
+
+            try {
+                // Show loading state if needed on table? 
+                // tbody.innerHTML = '<tr><td colspan="11" class="text-center">Loading...</td></tr>';
+
+                const response = await fetch(`${window.location.pathname}?${params.toString()}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    users = data;
+                    allUsers = [...data]; // Sync allUsers with the new dataset
+                    renderTable();
+
+                    // Hide pagination if in search mode (optional, but usually searching returns a flat list here)
+                    const pagination = document.querySelector('.pagination');
+                    if (pagination) {
+                        // If we are searching, we have a flat list, pagination links from Laravel might not be relevant 
+                        // unless we update them too (which is hard via JSON). 
+                        // The controller returns ALL rows for search, so no pagination needed.
+                        if (search || unit) {
+                            pagination.style.display = 'none';
+                        } else {
+                            // If we are back to empty (handled by reload above), it would show.
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Fetch Error:', e);
+                Swal.fire('Error', 'Gagal memuat data pencarian', 'error');
+            }
+        }
+
         function handleSearch() {
-            currentSearch = document.getElementById('searchInput').value.toLowerCase();
-            applyFilters();
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                fetchUsers();
+            }, 500);
         }
 
         function handleUnitFilter() {
-            currentUnitFilter = document.getElementById('unitFilter').value;
-            applyFilters();
+            fetchUsers();
         }
 
         function resetFilters() {
-            currentSearch = '';
-            currentUnitFilter = '';
             document.getElementById('searchInput').value = '';
             document.getElementById('unitFilter').value = '';
-            applyFilters();
+            window.location.href = window.location.pathname;
         }
 
-        function applyFilters() {
-            // Filter dari allUsers
-            users = allUsers.filter(user => {
-                // Skip user yang sedang di-edit
-                if (user.isEditing && (user.id_user === 'NEW' || !user.id_user)) {
-                    return true;
-                }
+        // function applyFilters() was removed as we use server-side fetching now
 
-                // Filter by search
-                if (currentSearch) {
-                    const searchMatch = 
-                        (user.username && user.username.toLowerCase().includes(currentSearch)) ||
-                        (user.email_user && user.email_user.toLowerCase().includes(currentSearch)) ||
-                        (user.email && user.email.toLowerCase().includes(currentSearch)) ||
-                        (user.nama_user && user.nama_user.toLowerCase().includes(currentSearch));
-                    
-                    if (!searchMatch) return false;
-                }
-
-                // Filter by unit
-                if (currentUnitFilter) {
-                    if (user.id_unit != currentUnitFilter) return false;
-                }
-
-                return true;
-            });
-
-            renderTable();
-        }
-        
         async function togglePIC(userId, newValue) {
             const user = allUsers.find(u => u.id_user == userId);
             if (!user) return;
-            
+
             const isPIC = newValue == 1;
             const action = isPIC ? 'menandai' : 'menghapus penandaan';
-            
+
             const result = await Swal.fire({
                 title: `${isPIC ? 'Tandai' : 'Hapus'} sebagai PIC?`,
                 html: `Apakah Anda yakin ingin ${action} <strong>${user.username}</strong> sebagai PIC (Person In Charge) untuk form HIRADC?`,
@@ -894,16 +948,16 @@
                 confirmButtonText: 'Ya, Lanjutkan',
                 cancelButtonText: 'Batal'
             });
-            
+
             if (!result.isConfirmed) {
                 // Revert dropdown
                 event.target.value = user.can_create_documents == 1 ? '1' : '0';
                 return;
             }
-            
+
             try {
                 Swal.showLoading();
-                
+
                 // Update can_create_documents via API
                 const response = await fetch(`/admin/users/${userId}/pic`, {
                     method: 'PUT',
@@ -916,15 +970,15 @@
                         can_create_documents: isPIC ? 1 : 0
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (response.ok) {
                     // Update local data
                     user.can_create_documents = isPIC ? 1 : 0;
                     const allUserIndex = allUsers.findIndex(u => u.id_user == userId);
                     if (allUserIndex !== -1) allUsers[allUserIndex].can_create_documents = isPIC ? 1 : 0;
-                    
+
                     Swal.fire('Berhasil!', result.message, 'success');
                 } else {
                     // Handle error (PIC duplikat)
@@ -940,7 +994,7 @@
         }
 
         function handleFileUpload(input) {
-             Swal.fire('Info', 'Fitur upload CSV belum diimplementasikan di backend ini.', 'info');
+            Swal.fire('Info', 'Fitur upload CSV belum diimplementasikan di backend ini.', 'info');
         }
 
         renderTable();

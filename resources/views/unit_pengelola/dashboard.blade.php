@@ -653,7 +653,7 @@
                         <thead>
                             <tr>
                                 <th width="20%">Unit Penginput</th>
-                                <th width="10%">Kategori</th>
+                                <th width="20%">Judul Dokumen</th>
                                 <th width="20%">Disetujui Oleh</th>
                                 <th width="15%">Tanggal Publish</th>
                                 <th width="10%">Waktu</th>
@@ -911,7 +911,7 @@
                 return `
                 <tr>
                     <td><strong>${unitName}</strong></td>
-                    <td><span class="badge-status" style="background: #eee;">${doc.category}</span></td>
+                    <td><strong>${doc.title}</strong></td>
                     <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
                     <td>${doc.approval_date}</td>
                     <td><span style="font-weight: 600; color: #64748b;">${doc.publish_time || '-'}</span></td>

@@ -650,7 +650,7 @@
                         <thead>
                             <tr>
                                 <th width="30%">Unit Penginput</th>
-                                <th width="15%">Kategori</th>
+                                <th width="25%">Judul Form</th>
                                 <th width="20%">Disetujui Oleh</th>
                                 <th width="15%">Tanggal Publish</th>
                                 <th width="15%">Penulis</th>
@@ -887,7 +887,7 @@
                 return `
                 <tr>
                     <td><strong>${unitName}</strong></td>
-                    <td><span class="badge-status" style="background: #eee;">${doc.category}</span></td>
+                    <td><strong>${doc.title}</strong></td>
                     <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
                     <td>${doc.date}</td>
                     <td>${doc.author}</td>

@@ -583,8 +583,10 @@
                     <div class="table-header">
                         <h2>Form Terpublikasi</h2>
                         <div class="search-box" style="position: relative; width: 250px;">
-                            <i class="fas fa-search" style="position: absolute; left: 10px; top: 10px; color: #999;"></i>
-                            <input type="text" id="tableSearch" placeholder="Cari form..." onkeyup="handleSearch(this.value)" 
+                            <i class="fas fa-search"
+                                style="position: absolute; left: 10px; top: 10px; color: #999;"></i>
+                            <input type="text" id="tableSearch" placeholder="Cari form..."
+                                onkeyup="handleSearch(this.value)"
                                 style="width: 100%; padding: 8px 10px 8px 35px; border: 1px solid #ddd; border-radius: 6px; outline: none;">
                         </div>
                     </div>
@@ -790,16 +792,16 @@
                 if (deptId && doc.dept_id != deptId) match = false;
                 if (unitId && doc.unit_id != unitId) match = false;
                 if (activeCategory && doc.category !== activeCategory) match = false;
-                
+
                 if (searchTerm) {
                     const term = searchTerm.toLowerCase();
                     const unit = units.find(u => u.id === doc.unit_id);
                     const unitName = unit ? unit.name.toLowerCase() : '';
-                    
+
                     const searchableText = [
-                        doc.title, 
-                        doc.author, 
-                        doc.approver, 
+                        doc.title,
+                        doc.author,
+                        doc.approver,
                         unitName,
                         doc.risk_level
                     ].join(' ').toLowerCase();
@@ -850,6 +852,7 @@
                 const unit = units.find(u => u.id === doc.unit_id);
                 const unitName = unit ? unit.name : '-';
                 return `
+                <tr>
                     <td><strong>${unitName}</strong></td>
                     <td style="font-weight: 500; color: #333;">${doc.title}</td>
                     <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
@@ -857,6 +860,7 @@
                     <td>${doc.time || '-'}</td>
                     <td>${doc.author}</td>
                     <td><a href="/documents/${doc.id}/published" class="btn-action">Detail</a></td>
+                </tr>
             `}).join('');
         }
 

@@ -238,11 +238,22 @@
             border-radius: 50%;
         }
 
+        /* Hide redundant user section from included sidebars */
+        .sidebar .user-section { 
+            display: none !important; 
+        }
+        
         /* Sidebar Logo & Menu Fix */
         .logo-section {
             padding: 30px 20px;
             border-bottom: 1px solid #e0e0e0;
             text-align: center;
+        }
+        /* Fix for includes sidebars that have direct img without .logo-circle */
+        .logo-section > img {
+            width: 50px;
+            height: auto;
+            margin-bottom: 10px;
         }
         .logo-circle {
             width: 70px;
