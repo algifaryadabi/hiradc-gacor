@@ -714,36 +714,51 @@
             <div class="hiradc-wrapper">
                 <table class="excel-table">
                     <thead>
-                        <!-- Header Row 1: Groups -->
+                        <!-- Header Row 1: Main Sections (BAGIAN 1-5) -->
                         <tr>
-                            <th rowspan="2" style="width: 50px;">No</th>
-                            <th colspan="5" class="section-border-right">Kegiatan & Situasi</th>
-                            <th colspan="3" class="section-border-right">Identifikasi Bahaya & Risiko</th>
-                            <th colspan="2" class="section-border-right">Pengendalian Risiko</th>
-                            <th colspan="3" class="section-border-right">Penilaian Risiko Awal</th>
-                            <th rowspan="2" style="width: 250px;">Peraturan / Regulasi</th>
-                            <th rowspan="2" style="width: 100px;" class="section-border-right">Penting / TP</th>
-                            <th colspan="5">Penilaian Risiko Sisa & Tindak Lanjut</th>
+                            <th rowspan="2" style="width: 40px;">No</th>
+                            <th colspan="4" class="section-border-right">BAGIAN 1: Identifikasi Aktivitas</th>
+                            <th colspan="4" class="section-border-right">BAGIAN 2: Identifikasi</th>
+                            <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal</th>
+                            <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
+                            <th colspan="6">BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa</th>
                         </tr>
-                        <!-- Header Row 2: Columns -->
+                        <!-- Header Row 2: Column Details -->
                         <tr>
-                            <th style="width: 200px;">Kegiatan / Proses</th>
-                            <th style="width: 100px;">Kategori</th>
-                            <th style="width: 150px;">Lokasi</th>
-                            <th style="width: 150px;">Pihak Berkepentingan</th>
-                            <th style="width: 100px;" class="section-border-right">Kondisi</th>
-                            <th style="width: 250px;">Potensi Bahaya</th>
-                            <th style="width: 220px;">Dampak / Konsekuensi</th>
-                            <th style="width: 220px;" class="section-border-right">Risiko & Peluang</th>
-                            <th style="width: 300px;">Hirarki Pengendalian</th>
-                            <th style="width: 250px;" class="section-border-right">Pengendalian Existing</th>
-                            <th style="width: 60px;">L</th>
-                            <th style="width: 60px;">S</th>
-                            <th style="width: 80px;" class="section-border-right">Level</th>
-                            <th style="width: 200px;">Tindak Lanjut</th>
-                            <th style="width: 60px;">L</th>
-                            <th style="width: 60px;">S</th>
-                            <th style="width: 80px;">Level</th>
+                            <!-- BAGIAN 1 (Kolom 2-5) -->
+                            <th style="width: 180px;">Proses/Kegiatan<br><small>(Kol 2)</small></th>
+                            <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
+                            <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
+                            <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol 5)</small></th>
+
+                            <!-- BAGIAN 2 (Kolom 6-9) -->
+                            <th style="width: 200px;">Potensi Bahaya/<br>Aspek Lingkungan/<br>Ancaman<br><small>(Kol
+                                    6/7/8)</small></th>
+                            <th style="width: 200px;" class="section-border-right">
+                                RISIKO/DAMPAK/<br>CELAH<br><small>(Kol 9)</small></th>
+
+                            <!-- BAGIAN 3 (Kolom 10-14) -->
+                            <th style="width: 250px;">Hirarki Pengendalian<br><small>(Kol 10)</small></th>
+                            <th style="width: 250px;">Pengendalian Existing<br><small>(Kol 11)</small></th>
+                            <th style="width: 50px;">L<br><small>(Kol 12)</small></th>
+                            <th style="width: 50px;">S<br><small>(Kol 13)</small></th>
+                            <th style="width: 80px;" class="section-border-right">Level<br><small>(Kol 14)</small></th>
+
+                            <!-- BAGIAN 4 (Kolom 15-17) -->
+                            <th style="width: 200px;">Regulasi<br><small>(Kol 15)</small></th>
+                            <th style="width: 80px;">Aspek Penting<br><small>(Kol 16)</small></th>
+                            <th style="width: 200px;" class="section-border-right">Peluang & Risiko<br><small>(Kol
+                                    17)</small></th>
+
+                            <!-- BAGIAN 5 (Kolom 18-22) -->
+                            <th style="width: 100px;">Toleransi<br><small>(Kol 18)</small></th>
+                            <th style="width: 200px;">Pengendalian Lanjut<br><small>(Kol 19)</small></th>
+                            <th style="width: 50px;">L<br><small>(Kol 20)</small></th>
+                            <th style="width: 50px;">S<br><small>(Kol 21)</small></th>
+                            <th style="width: 80px;">Level<br><small>(Kol 22)</small></th>
+                            <th style="width: 50px;">Residual L</th>
+                            <th style="width: 50px;">Residual S</th>
+                            <th style="width: 80px;">Residual Level</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -752,11 +767,16 @@
                                 <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
                                     {{ $index + 1 }}
                                 </td>
-                                <!-- Kegiatan -->
+                                <!-- BAGIAN 1: Identifikasi Aktivitas -->
+                                <!-- Kolom 2: Kegiatan -->
                                 <td>
                                     <div class="cell-text">{{ $item->kolom2_kegiatan }}</div>
                                 </td>
-                                <!-- Kategori -->
+                                <!-- Kolom 3: Lokasi -->
+                                <td>
+                                    <div class="cell-text">{{ $item->kolom3_lokasi }}</div>
+                                </td>
+                                <!-- Kolom 4: Kategori -->
                                 <td>
                                     <div class="cell-input"
                                         style="display:flex; align-items:center; justify-content:center;">
@@ -765,68 +785,79 @@
                                         </span>
                                     </div>
                                 </td>
-                                <!-- Lokasi -->
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom3_lokasi }}</div>
-                                </td>
-                                <!-- Pihak -->
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom4_pihak }}</div>
-                                </td>
-                                <!-- Kondisi -->
+                                <!-- Kolom 5: Kondisi -->
                                 <td class="section-border-right">
                                     <div class="cell-input"
                                         style="display:flex; align-items:center; justify-content:center;">
                                         <span class="doc-meta-badge" style="background:#f1f5f9; color:#475569;">
-                                            {{ $item->kolom5_kondisi == 'N' ? 'Normal' : ($item->kolom5_kondisi == 'AN' ? 'Abnormal' : 'Emergency') }}
+                                            {{ $item->kolom5_kondisi }}
                                         </span>
                                     </div>
                                 </td>
-                                <!-- Bahaya -->
+
+                                <!-- BAGIAN 2: Identifikasi -->
+                                <!-- Kolom 6/7/8: Potensi Bahaya / Aspek Lingkungan / Ancaman (Conditional) -->
                                 <td>
-                                    <div class="cell-checkbox-group">
-                                        @if(!empty($item->kolom6_bahaya['manual']))
-                                            <div
-                                                style="font-size:13px; margin-bottom:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
-                                                <strong>Lainnya:</strong> {{ $item->kolom6_bahaya['manual'] }}
-                                            </div>
-                                        @endif
-                                        @php
-                                            $bahayaDetails = [];
-                                            if (!empty($item->kolom6_bahaya['details']))
-                                                $bahayaDetails = array_merge($bahayaDetails, $item->kolom6_bahaya['details']);
-                                            if (!empty($item->kolom6_bahaya['aspects']))
-                                                $bahayaDetails = array_merge($bahayaDetails, $item->kolom6_bahaya['aspects']);
-                                            if (!empty($item->kolom6_bahaya['threats']))
-                                                $bahayaDetails = array_merge($bahayaDetails, $item->kolom6_bahaya['threats']);
-                                        @endphp
-                                        @foreach($bahayaDetails as $detail)
-                                            <div class="cell-checkbox-item">
-                                                <i class="fas fa-exclamation-triangle"
-                                                    style="color:#ef4444; font-size:10px; margin-top:3px;"></i>
-                                                <span>{{ $detail }}</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
+                                    @if($item->kategori == 'K3' || $item->kategori == 'KO')
+                                        <!-- Kolom 6: Potensi Bahaya (K3/KO) -->
+                                        <div class="cell-checkbox-group">
+                                            @php
+                                                $bahayaDetails = $item->kolom6_bahaya['details'] ?? [];
+                                            @endphp
+                                            @foreach($bahayaDetails as $detail)
+                                                <div class="cell-checkbox-item">
+                                                    <i class="fas fa-exclamation-triangle"
+                                                        style="color:#ef4444; font-size:10px; margin-top:3px;"></i>
+                                                    <span>{{ $detail }}</span>
+                                                </div>
+                                            @endforeach
+                                            @if(!empty($item->kolom6_bahaya['manual']))
+                                                <div
+                                                    style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                    <strong>Lainnya:</strong> {{ $item->kolom6_bahaya['manual'] }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @elseif($item->kategori == 'Lingkungan')
+                                        <!-- Kolom 7: Aspek Lingkungan -->
+                                        <div class="cell-checkbox-group">
+                                            @php
+                                                $aspekLingkungan = $item->kolom7_aspek_lingkungan ?? [];
+                                            @endphp
+                                            @foreach($aspekLingkungan as $aspek)
+                                                <div class="cell-checkbox-item">
+                                                    <i class="fas fa-leaf"
+                                                        style="color:#22c55e; font-size:10px; margin-top:3px;"></i>
+                                                    <span>{{ $aspek }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @elseif($item->kategori == 'Keamanan')
+                                        <!-- Kolom 8: Ancaman Keamanan -->
+                                        <div class="cell-checkbox-group">
+                                            @php
+                                                $ancaman = $item->kolom8_ancaman ?? [];
+                                            @endphp
+                                            @foreach($ancaman as $threat)
+                                                <div class="cell-checkbox-item">
+                                                    <i class="fas fa-shield-alt"
+                                                        style="color:#dc2626; font-size:10px; margin-top:3px;"></i>
+                                                    <span>{{ $threat }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div style="color:#94a3b8; text-align:center;">-</div>
+                                    @endif
                                 </td>
-                                <!-- Dampak -->
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom7_dampak }}</div>
-                                </td>
-                                <!-- Risiko & Peluang -->
+
+                                <!-- Kolom 9: RISIKO / DAMPAK / CELAH -->
                                 <td class="section-border-right">
-                                    <div class="risk-section">
-                                        <div class="risk-label">IDENTIFIKASI:</div>
-                                        <div class="risk-text">{{ $item->kolom9_risiko }}</div>
-                                        <div class="risk-label" style="border-top:1px solid #e2e8f0; margin-top:8px;">
-                                            RISIKO (-):</div>
-                                        <div class="risk-text">{{ $item->kolom17_risiko }}</div>
-                                        <div class="risk-label" style="border-top:1px solid #e2e8f0; margin-top:8px;">
-                                            PELUANG (+):</div>
-                                        <div class="risk-text">{{ $item->kolom17_peluang }}</div>
-                                    </div>
+                                    <div class="cell-text">{{ $item->kolom9_risiko }}</div>
                                 </td>
-                                <!-- Pengendalian Hierarchy -->
+
+                                <!-- BAGIAN 3: Pengendalian & Penilaian -->
+                                <!-- Kolom 10: Hirarki Pengendalian -->
                                 <td>
                                     <div class="cell-checkbox-group">
                                         @php $hs = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
@@ -836,29 +867,17 @@
                                                 <span style="font-weight:600;">{{ $h }}</span>
                                             </div>
                                         @endforeach
-                                        @if(!empty($item->kolom10_pengendalian['new_controls']))
-                                            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #cbd5e1;">
-                                                <strong style="font-size:11px; color:#c2410c;">DETAIL PENGENDALIAN:</strong>
-                                                @foreach($item->kolom10_pengendalian['new_controls'] as $ctrl)
-                                                    <div style="font-size:12px; margin-top:4px;">
-                                                        <span
-                                                            style="background:#fff7ed; color:#c2410c; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">{{ $ctrl['type'] ?? 'Tipe?' }}</span>
-                                                        <span style="color:#334155;">{{ $ctrl['desc'] ?? '-' }}</span>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @endif
                                     </div>
                                 </td>
-                                <!-- Existing -->
-                                <td class="section-border-right">
+                                <!-- Kolom 11: Pengendalian Existing -->
+                                <td>
                                     <div class="cell-text">{{ $item->kolom11_existing }}</div>
                                 </td>
-                                <!-- RISK INITIAL -->
-                                <td class="risk-col section-border-right" style="vertical-align:middle; text-align:center;">
+                                <!-- Kolom 12-14: Penilaian Risiko Awal -->
+                                <td class="risk-col" style="vertical-align:middle; text-align:center;">
                                     <div style="font-weight:800; font-size:16px;">{{ $item->kolom12_kemungkinan }}</div>
                                 </td>
-                                <td class="risk-col section-border-right" style="vertical-align:middle; text-align:center;">
+                                <td class="risk-col" style="vertical-align:middle; text-align:center;">
                                     <div style="font-weight:800; font-size:16px;">{{ $item->kolom13_konsekuensi }}</div>
                                 </td>
                                 <td class="risk-col section-border-right" style="vertical-align:middle;">
@@ -866,31 +885,88 @@
                                         <div class="risk-val">{{ $item->kolom14_score }}</div>
                                         <div
                                             class="risk-badge {{ $item->kolom14_score >= 15 ? 'bg-high' : ($item->kolom14_score >= 8 ? 'bg-med' : 'bg-low') }}">
-                                            {{ $item->risk_level }}
+                                            {{ $item->kolom14_score >= 15 ? 'TINGGI' : ($item->kolom14_score >= 8 ? 'SEDANG' : 'RENDAH') }}
                                         </div>
                                     </div>
                                 </td>
-                                <!-- Regulasi -->
-                                <td class="section-border-right">
+
+                                <!-- BAGIAN 4: Legalitas & Signifikansi -->
+                                <!-- Kolom 15: Regulasi -->
+                                <td>
                                     <div class="cell-text">{{ $item->kolom15_regulasi }}</div>
                                 </td>
-                                <!-- Penting (Col 16) -->
-                                <td class="section-border-right" style="text-align:center; vertical-align:middle;">
-                                    <div class="doc-meta-badge"
-                                        style="{{ $item->kolom16_aspek == 'P' ? 'background:#dbeafe; color:#1e40af;' : 'background:#f1f5f9; color:#64748b;' }}">
-                                        {{ $item->kolom16_aspek }}
+                                <!-- Kolom 16: Aspek Lingkungan Penting (Only for Lingkungan) -->
+                                <td style="text-align:center; vertical-align:middle;">
+                                    @if($item->kategori == 'Lingkungan' && $item->kolom16_aspek)
+                                        <div class="doc-meta-badge"
+                                            style="{{ $item->kolom16_aspek == 'P' ? 'background:#dbeafe; color:#1e40af;' : 'background:#f1f5f9; color:#64748b;' }}">
+                                            {{ $item->kolom16_aspek }}
+                                        </div>
+                                    @else
+                                        <div style="color:#94a3b8;">-</div>
+                                    @endif
+                                </td>
+                                <!-- Kolom 17: Peluang & Risiko -->
+                                <td class="section-border-right">
+                                    <div class="risk-section">
+                                        @if($item->kolom17_risiko)
+                                            <div class="risk-label">RISIKO (-):</div>
+                                            <div class="risk-text">{{ $item->kolom17_risiko }}</div>
+                                        @endif
+                                        @if($item->kolom17_peluang)
+                                            <div class="risk-label" style="border-top:1px solid #e2e8f0; margin-top:6px; padding-top:6px;">
+                                                PELUANG (+):</div>
+                                            <div class="risk-text">{{ $item->kolom17_peluang }}</div>
+                                        @endif
                                     </div>
                                 </td>
-                                <!-- Tindak Lanjut -->
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom18_tindak_lanjut }}</div>
+
+                                <!-- BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa -->
+                                <!-- Kolom 18: Toleransi -->
+                                <td style="text-align:center; vertical-align:middle;">
+                                    <div class="doc-meta-badge"
+                                        style="{{ $item->kolom18_toleransi == 'Ya' ? 'background:#dcfce7; color:#166534;' : 'background:#fee2e2; color:#991b1b;' }}">
+                                        {{ $item->kolom18_toleransi == 'Ya' ? 'Ya' : 'Tidak' }}
+                                    </div>
                                 </td>
-                                <!-- RISK RESIDUAL -->
-                                <td class="risk-col section-border-right" style="vertical-align:middle; text-align:center;">
+                                <!-- Kolom 19-22: Follow-up Risk (Only if Tolerance = Tidak) -->
+                                @if($item->kolom18_toleransi == 'Tidak')
+                                    <!-- Kolom 19: Pengendalian Lanjut -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom19_pengendalian_lanjut }}</div>
+                                    </td>
+                                    <!-- Kolom 20-22: Penilaian Risiko Lanjut -->
+                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom20_kemungkinan_lanjut }}</div>
+                                    </td>
+                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom21_konsekuensi_lanjut }}</div>
+                                    </td>
+                                    <td class="risk-col" style="vertical-align:middle;">
+                                        <div class="risk-score-box">
+                                            <div class="risk-val">{{ $item->kolom22_tingkat_risiko_lanjut }}</div>
+                                            @if($item->kolom22_tingkat_risiko_lanjut)
+                                                <div
+                                                    class="risk-badge {{ $item->kolom22_tingkat_risiko_lanjut >= 15 ? 'bg-high' : ($item->kolom22_tingkat_risiko_lanjut >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                    {{ $item->kolom22_level_lanjut }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                @else
+                                    <!-- Empty cells when tolerance = Ya -->
+                                    <td><div style="color:#94a3b8; text-align:center;">-</div></td>
+                                    <td><div style="color:#94a3b8; text-align:center;">-</div></td>
+                                    <td><div style="color:#94a3b8; text-align:center;">-</div></td>
+                                    <td><div style="color:#94a3b8; text-align:center;">-</div></td>
+                                @endif
+
+                                <!-- Residual Risk (Always displayed) -->
+                                <td class="risk-col" style="vertical-align:middle; text-align:center;">
                                     <div style="font-weight:800; font-size:16px;">{{ $item->residual_kemungkinan }}
                                     </div>
                                 </td>
-                                <td class="risk-col section-border-right" style="vertical-align:middle; text-align:center;">
+                                <td class="risk-col" style="vertical-align:middle; text-align:center;">
                                     <div style="font-weight:800; font-size:16px;">{{ $item->residual_konsekuensi }}
                                     </div>
                                 </td>
