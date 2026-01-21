@@ -1149,8 +1149,18 @@
                                 class="fas fa-user"></i> {{ optional($document->user)->nama_user ?? 'Unknown' }}</span>
                     </div>
                 </div>
-                <a href="{{ route('unit_pengelola.check_documents') }}" class="btn-back"><i
-                        class="fas fa-arrow-left"></i> Kembali</a>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank"
+                        style="padding: 8px 12px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                        <i class="fas fa-file-pdf" style="margin-right: 5px;"></i> PDF
+                    </a>
+                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank"
+                        style="padding: 8px 12px; background: #27ae60; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                        <i class="fas fa-file-excel" style="margin-right: 5px;"></i> Excel
+                    </a>
+                    <a href="{{ route('unit_pengelola.check_documents') }}" class="btn-back"><i
+                            class="fas fa-arrow-left"></i> Kembali</a>
+                </div>
             </div>
 
             <!-- Table Layout Implementation -->

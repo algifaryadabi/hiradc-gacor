@@ -1015,6 +1015,16 @@
                         </div>
                     </div>
                 </div>
+                <div style="margin-left: auto; display: flex; gap: 10px;">
+                    <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank"
+                        style="padding: 8px 12px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                        <i class="fas fa-file-pdf" style="margin-right: 5px;"></i> PDF
+                    </a>
+                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank"
+                        style="padding: 8px 12px; background: #27ae60; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                        <i class="fas fa-file-excel" style="margin-right: 5px;"></i> Excel
+                    </a>
+                </div>
             </div>
 
             <!-- Progress Wizard -->
@@ -1039,7 +1049,8 @@
                         <div class="step-circle">3</div>
                         <div class="step-label">Kepala Dept.</div>
                     </div>
-                    <div class="step-item {{ ($document->status == 'approved' || $document->status == 'published') ? 'completed active' : '' }}">
+                    <div
+                        class="step-item {{ ($document->status == 'approved' || $document->status == 'published') ? 'completed active' : '' }}">
                         <div class="step-circle"><i class="fas fa-check"></i></div>
                         <div class="step-label">Selesai</div>
                     </div>
@@ -1660,7 +1671,7 @@
         function updateWizard(level, status) {
             const steps = document.querySelectorAll('.step-item');
             const isFinished = (status === 'approved' || status === 'published');
-            
+
             // Reset all
             steps.forEach(s => s.classList.remove('active', 'completed'));
 

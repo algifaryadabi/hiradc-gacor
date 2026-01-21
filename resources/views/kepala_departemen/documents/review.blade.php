@@ -682,8 +682,16 @@
                         <div class="doc-label">Judul Dokumen</div>
                         <div class="doc-main-title">{{ $document->judul_dokumen ?? $document->kolom2_kegiatan }}</div>
                     </div>
-                    <div class="risk-pill" style="background:var(--primary); font-size:13px; padding:6px 12px;">
-                        HIRADC
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank" style="padding: 6px 12px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                            <i class="fas fa-file-pdf" style="margin-right: 5px;"></i> PDF
+                        </a>
+                        <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank" style="padding: 6px 12px; background: #27ae60; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                            <i class="fas fa-file-excel" style="margin-right: 5px;"></i> Excel
+                        </a>
+                        <div class="risk-pill" style="background:var(--primary); font-size:13px; padding:6px 12px;">
+                            HIRADC
+                        </div>
                     </div>
                 </div>
 

@@ -580,14 +580,25 @@
 
                 <!-- TABLE -->
                 <div class="table-section">
-                    <div class="table-header">
+                    <div class="table-header"
+                        style="display: flex; justify-content: space-between; align-items: center;">
                         <h2>Form Terpublikasi</h2>
-                        <div class="search-box" style="position: relative; width: 250px;">
-                            <i class="fas fa-search"
-                                style="position: absolute; left: 10px; top: 10px; color: #999;"></i>
-                            <input type="text" id="tableSearch" placeholder="Cari form..."
-                                onkeyup="handleSearch(this.value)"
-                                style="width: 100%; padding: 8px 10px 8px 35px; border: 1px solid #ddd; border-radius: 6px; outline: none;">
+                        <div style="display: flex; gap: 10px;">
+                            <a href="{{ route('documents.export.pdf') }}" target="_blank"
+                                style="padding: 8px 12px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-size: 14px; display: flex; align-items: center;">
+                                <i class="fas fa-file-pdf" style="margin-right: 5px;"></i> PDF
+                            </a>
+                            <a href="{{ route('documents.export.excel') }}" target="_blank"
+                                style="padding: 8px 12px; background: #27ae60; color: white; border-radius: 6px; text-decoration: none; font-size: 14px; display: flex; align-items: center;">
+                                <i class="fas fa-file-excel" style="margin-right: 5px;"></i> Excel
+                            </a>
+                            <div class="search-box" style="position: relative; width: 250px;">
+                                <i class="fas fa-search"
+                                    style="position: absolute; left: 10px; top: 10px; color: #999;"></i>
+                                <input type="text" id="tableSearch" placeholder="Cari form..."
+                                    onkeyup="handleSearch(this.value)"
+                                    style="width: 100%; padding: 8px 10px 8px 35px; border: 1px solid #ddd; border-radius: 6px; outline: none;">
+                            </div>
                         </div>
                     </div>
 

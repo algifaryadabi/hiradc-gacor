@@ -9,9 +9,224 @@ use App\Models\Unit;
 use App\Models\Seksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DocumentController extends Controller
 {
+    /**
+     * Export Published Documents to PDF
+     */
+    public function exportPdf()
+    {
+        $user = Auth::user();
+
+        // 1. Determine Scope
+        // Special Units: Mgt System (34), Security (55), SHE (56) => Can download ALL
+        $specialUnits = [34, 55, 56];
+
+        $query = Document::published()
+            ->with(['user', 'approvals', 'unit']);
+
+        if (!in_array($user->id_unit, $specialUnits)) {
+            $query->where('id_unit', $user->id_unit);
+        }
+
+        $documents = $query->orderBy('published_at', 'desc')->get();
+
+        $pdf = Pdf::loadView('documents.export_pdf', compact('documents'));
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download('published_documents_' . date('Y-m-d_His') . '.pdf');
+    }
+
+    /**
+     * Export Published Documents to Excel (CSV)
+     */
+    public function exportExcel()
+    {
+        $user = Auth::user();
+
+        // 1. Determine Scope
+        $specialUnits = [34, 55, 56];
+
+        $query = Document::published()
+            ->with(['user', 'approvals', 'unit']);
+
+        if (!in_array($user->id_unit, $specialUnits)) {
+            $query->where('id_unit', $user->id_unit);
+        }
+
+        $documents = $query->orderBy('published_at', 'desc')->get();
+
+        $filename = "published_documents_" . date('Y-m-d_His') . ".csv";
+
+        $headers = array(
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        );
+
+        $callback = function () use ($documents) {
+            $file = fopen('php://output', 'w');
+
+            // Header Row
+            fputcsv($file, ['Unit Penginput', 'Judul Form', 'Kategori', 'Disetujui Oleh', 'Tanggal Publish', 'Waktu', 'Penulis', 'Risiko']);
+
+            foreach ($documents as $doc) {
+                $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
+                $approver = $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-';
+                $unitName = $doc->unit ? $doc->unit->nama_unit : '-';
+
+                // Title Mapping logic
+                $title = $doc->judul_dokumen ?? '-';
+
+                fputcsv($file, [
+                    $unitName,
+                    $title,
+                    $doc->kategori,
+                    $approver,
+                    $doc->published_at ? $doc->published_at->format('d M Y') : '-',
+                    $doc->published_at ? $doc->published_at->format('H:i') : '-',
+                    $doc->user->nama_user ?? '-',
+                    $doc->risk_level ?? 'High'
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export Single Document Detail to PDF
+     */
+    public function exportDetailPdf(Document $document)
+    {
+        // Ensure user has access (Author, Approver, or Admin)
+        // Access Control
+        $user = Auth::user();
+        if (!$user) {
+            abort(403, 'Unauthorized');
+        }
+        $isAuthor = $user->id_user == $document->id_user;
+        $isPublic = in_array($document->status, ['published', 'approved']);
+        $isUnitPengelola = $user->isUnitPengelola();
+        $isApprover = $document->approvals()->where('approver_id', $user->id_user)->exists() || $document->canBeApprovedBy($user);
+
+        if (!$isAuthor && !$isPublic && !$isUnitPengelola && !$isApprover) {
+            abort(403, 'Unauthorized access to export document.');
+        }
+
+        $document->load(['details', 'user', 'unit', 'approvals.approver', 'departemen', 'direktorat']);
+
+        $pdf = Pdf::loadView('documents.export_detail_pdf', compact('document'));
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download('hiradc_document_' . $document->id . '.pdf');
+    }
+
+    /**
+     * Export Single Document Detail to Excel
+     */
+    public function exportDetailExcel(Document $document)
+    {
+        // Access Control
+        $user = Auth::user();
+        if (!$user) {
+            abort(403, 'Unauthorized');
+        }
+        $isAuthor = $user->id_user == $document->id_user;
+        $isPublic = in_array($document->status, ['published', 'approved']);
+        $isUnitPengelola = $user->isUnitPengelola();
+        $isApprover = $document->approvals()->where('approver_id', $user->id_user)->exists() || $document->canBeApprovedBy($user);
+
+        if (!$isAuthor && !$isPublic && !$isUnitPengelola && !$isApprover) {
+            abort(403, 'Unauthorized access to export document.');
+        }
+
+        $document->load(['details', 'user', 'unit']);
+
+        $filename = "hiradc_document_" . $document->id . ".csv";
+
+        $headers = array(
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        );
+
+        $callback = function () use ($document) {
+            $file = fopen('php://output', 'w');
+
+            // Document Info Header
+            fputcsv($file, ['JUDUL DOKUMEN', $document->judul_dokumen ?? $document->kolom2_kegiatan]);
+            fputcsv($file, ['UNIT', $document->unit->nama_unit ?? '-']);
+            fputcsv($file, ['PENULIS', $document->user->nama_user ?? '-']);
+            fputcsv($file, []); // Spacer
+
+            // Table Header
+            fputcsv($file, [
+                'Proses',
+                'Kegiatan',
+                'Lokasi',
+                'Kondisi',
+                'Bahaya',
+                'Dampak',
+                'Risiko Awal',
+                'Pengendalian Existing',
+                'P',
+                'C',
+                'Score',
+                'Rating',
+                'Peraturan',
+                'Pengendalian Lanjutan',
+                'Res P',
+                'Res C',
+                'Res Score',
+                'Res Rating'
+            ]);
+
+            foreach ($document->details as $item) {
+                // Formatting
+                $bahaya = is_array($item->kolom6_bahaya)
+                    ? implode(', ', $item->kolom6_bahaya['details'] ?? []) . ' ' . ($item->kolom6_bahaya['manual'] ?? '')
+                    : $item->kolom6_bahaya;
+
+                $controls = is_array($item->kolom10_pengendalian)
+                    ? implode(', ', $item->kolom10_pengendalian['hierarchy'] ?? [])
+                    : $item->kolom10_pengendalian;
+
+                fputcsv($file, [
+                    $item->kolom2_proses,
+                    $item->kolom2_kegiatan,
+                    $item->kolom3_lokasi,
+                    $item->kolom5_kondisi,
+                    $bahaya,
+                    $item->kolom7_dampak,
+                    $item->kolom9_risiko,
+                    $item->kolom11_existing,
+                    $item->kolom12_kemungkinan,
+                    $item->kolom13_konsekuensi,
+                    $item->kolom14_score,
+                    $item->kolom14_level, // Rating
+                    $item->kolom15_regulasi,
+                    $item->kolom18_tindak_lanjut, // Control Lanjutan
+                    $item->residual_kemungkinan,
+                    $item->residual_konsekuensi,
+                    $item->residual_score,
+                    $item->residual_level
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
     public function __construct()
     {
         // Share badge counts with all views handled by this controller

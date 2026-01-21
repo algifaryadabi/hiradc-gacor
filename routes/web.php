@@ -129,6 +129,13 @@ Route::middleware('auth')->group(function () {
     })->name('user.dashboard');
 
     // Document CRUD for users
+    Route::get('/documents/export/pdf', [DocumentController::class, 'exportPdf'])->name('documents.export.pdf');
+    Route::get('/documents/export/excel', [DocumentController::class, 'exportExcel'])->name('documents.export.excel');
+
+    // Detail Export
+    Route::get('/documents/{document}/export/pdf', [DocumentController::class, 'exportDetailPdf'])->name('documents.export.detail.pdf');
+    Route::get('/documents/{document}/export/excel', [DocumentController::class, 'exportDetailExcel'])->name('documents.export.detail.excel');
+
     Route::get('/my-documents/summary', [DocumentController::class, 'summary'])->name('documents.summary');
     Route::get('/my-documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::get('/documents/create', [DocumentController::class, 'create'])->name('documents.create');

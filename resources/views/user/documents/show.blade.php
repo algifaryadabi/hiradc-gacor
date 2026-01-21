@@ -130,7 +130,7 @@
             text-align: center;
             font-size: 16px;
         }
-        
+
         .badge {
             position: absolute;
             right: 20px;
@@ -651,8 +651,19 @@
                             <i class="fas fa-edit"></i> Edit Form
                         </a>
                     @endif
+                    <a href="{{ route('documents.export.detail.pdf', $document->id) }}" class="btn-print"
+                        target="_blank"
+                        style="background:#ef4444; color:white; border-color:#ef4444; text-decoration:none;">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </a>
+                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" class="btn-print"
+                        target="_blank"
+                        style="background:#22c55e; color:white; border-color:#22c55e; text-decoration:none;">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </a>
+                    <div style="width: 1px; height: 30px; background: #e2e8f0; margin: 0 5px;"></div>
                     <button onclick="window.print()" class="btn-print">
-                        <i class="fas fa-print"></i> Cetak PDF
+                        <i class="fas fa-print"></i> Print View
                     </button>
                 </div>
             </div>
@@ -679,7 +690,8 @@
                         <div class="step-circle">3</div>
                         <div class="step-label">Kepala Dept.</div>
                     </div>
-                    <div class="step-item {{ ($document->status == 'approved' || $document->status == 'published') ? 'completed active' : '' }}">
+                    <div
+                        class="step-item {{ ($document->status == 'approved' || $document->status == 'published') ? 'completed active' : '' }}">
                         <div class="step-circle"><i class="fas fa-check"></i></div>
                         <div class="step-label">Selesai</div>
                     </div>
