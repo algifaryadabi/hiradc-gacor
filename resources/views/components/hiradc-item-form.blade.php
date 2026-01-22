@@ -16,10 +16,7 @@
             <label class="form-label" style="font-weight:600; font-size:13px; margin-bottom:5px; display:block;">Lokasi</label>
             <input type="text" class="form-control" name="{{ $prefix }}[{{$index}}][kolom3_lokasi]" value="{{ $item->kolom3_lokasi ?? '' }}" required style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
         </div>
-        <div class="form-group" style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:600; font-size:13px; margin-bottom:5px; display:block;">Pihak Berkepentingan</label>
-            <input type="text" class="form-control" name="{{ $prefix }}[{{$index}}][kolom4_pihak]" value="{{ $item->kolom4_pihak ?? '' }}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
-        </div>
+
         <!-- Category -->
         <div class="form-group" style="margin-bottom:15px;">
             <label class="form-label" style="font-weight:600; font-size:13px; margin-bottom:5px; display:block;">Kategori</label>

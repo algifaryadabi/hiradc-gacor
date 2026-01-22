@@ -1093,7 +1093,7 @@
                                 <th style="width: 200px;">Kegiatan / Proses</th>
                                 <th style="width: 100px;">Kategori</th>
                                 <th style="width: 150px;">Lokasi</th>
-                                <th style="width: 150px;">Pihak Berkepentingan</th>
+
                                 <th style="width: 100px;" class="section-border-right">Kondisi</th>
                                 <th style="width: 250px;">Potensi Bahaya</th>
                                 <th style="width: 220px;">Dampak / Konsekuensi</th>
@@ -1164,10 +1164,7 @@
                                             readonly>{{ $item->kolom3_lokasi }}</textarea>
                                     </td>
                                     <!-- Pihak -->
-                                    <td>
-                                        <textarea class="cell-textarea auto-grow"
-                                            readonly>{{ $item->kolom4_pihak }}</textarea>
-                                    </td>
+
                                     <!-- Kondisi -->
                                     <td class="section-border-right">
                                         <div class="cell-input"

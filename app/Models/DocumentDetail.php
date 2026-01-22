@@ -19,8 +19,25 @@ class DocumentDetail extends Model
         'kolom5_kondisi',
         'kolom6_bahaya',
         'bahaya_manual',
+        'kolom7_aspek_lingkungan', // New
         'kolom7_dampak',
+        'kolom8_ancaman', // New
+        'ancaman_manual', // New (mapped in controller?) - controller says 'manual' => $item['ancaman_manual'], but does it save to 'ancaman_manual' column?
+        // Checking migration 2026_01_16_190935_create_document_details_table.php... 
+        // It has 'bahaya_manual'. conditional migration added 'kolom7_aspek_lingkungan' and 'kolom8_ancaman'.
+        // Does it add 'ancaman_manual'?
+        // Controller line 483: 'manual' => $item['ancaman_manual'] ?? '', inside the JSON structure of kolom8_ancaman?
+        // Ah, Controller line 481: 'kolom8_ancaman' => [ 'details' => ..., 'manual' => ... ]
+        // So 'ancaman_manual' is part of the JSON, NOT a separate column.
+        // Same for 'aspek_manual' -> part of 'kolom7_aspek_lingkungan' JSON.
+        // 'bahaya_manual' IS a separate column (line 27 of create_document_details).
+        // So I only need to add 'kolom7_aspek_lingkungan' and 'kolom8_ancaman' to fillable.
+        
         'kolom9_risiko',
+        'kolom9_risiko_k3ko',
+        'kolom9_dampak_lingkungan',
+        'kolom9_celah_keamanan',
+        
         'kolom10_pengendalian',
         'kolom11_existing',
         'kolom12_kemungkinan',
@@ -33,6 +50,11 @@ class DocumentDetail extends Model
         'kolom17_peluang',
         'kolom18_tindak_lanjut',
         'kolom18_toleransi',
+        'kolom19_pengendalian_lanjut', // New cols from controller
+        'kolom20_kemungkinan_lanjut',
+        'kolom21_konsekuensi_lanjut',
+        'kolom22_tingkat_risiko_lanjut',
+        'kolom22_level_lanjut',
         'residual_kemungkinan',
         'residual_konsekuensi',
         'residual_score',
@@ -41,6 +63,8 @@ class DocumentDetail extends Model
 
     protected $casts = [
         'kolom6_bahaya' => 'array',
+        'kolom7_aspek_lingkungan' => 'array',
+        'kolom8_ancaman' => 'array',
         'kolom10_pengendalian' => 'array',
     ];
 

@@ -678,12 +678,7 @@
                                 <input type="text" class="form-control" name="items[{index}][kolom3_lokasi]" required
                                     placeholder="Contoh: Area Workshop...">
                             </div>
-                            <!-- NEW: Pihak Berkepentingan -->
-                            <div class="form-group">
-                                <label class="form-label">Pihak Berkepentingan (Optional)</label>
-                                <input type="text" class="form-control" name="items[{index}][kolom4_pihak]"
-                                    placeholder="Contoh: Internal, Kontraktor, Tamu...">
-                            </div>
+
                             <div class="form-group">
                                 <label class="form-label">Kategori <span class="required">*</span></label>
                                 <select class="form-control category-select" name="items[{index}][kategori]" required

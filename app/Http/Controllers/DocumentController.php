@@ -470,7 +470,6 @@ class DocumentController extends Controller
                     'kolom2_proses' => $item['kolom2_proses'],
                     'kolom2_kegiatan' => $item['kolom2_kegiatan'],
                     'kolom3_lokasi' => $item['kolom3_lokasi'],
-                    'kolom4_pihak' => $item['kolom4_pihak'] ?? null,
                     'kolom5_kondisi' => $item['kolom5_kondisi'],
                     'kolom6_bahaya' => $bahayaData,
                     // Conditional: Aspek Lingkungan (Lingkungan category only)
@@ -649,7 +648,6 @@ class DocumentController extends Controller
                     'kolom2_proses' => $item['kolom2_proses'],
                     'kolom2_kegiatan' => $item['kolom2_kegiatan'],
                     'kolom3_lokasi' => $item['kolom3_lokasi'],
-                    'kolom4_pihak' => $item['kolom4_pihak'] ?? null,
                     'kolom5_kondisi' => $item['kolom5_kondisi'],
                     'kolom6_bahaya' => $bahayaData,
                     // Conditional: Aspek Lingkungan (Lingkungan category only)

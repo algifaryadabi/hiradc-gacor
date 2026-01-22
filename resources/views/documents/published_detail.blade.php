@@ -534,7 +534,7 @@
                             <th style="width: 200px;">Kegiatan / Proses</th>
                             <th style="width: 100px;">Kategori</th>
                             <th style="width: 150px;">Lokasi</th>
-                            <th style="width: 150px;">Pihak Berkepentingan</th>
+
                             <th style="width: 100px;" class="section-border-right">Kondisi</th>
                             <th style="width: 250px;">Potensi Bahaya</th>
                             <th style="width: 220px;">Dampak / Konsekuensi</th>
@@ -572,7 +572,7 @@
                                 <td>{{ $item->kolom2_kegiatan }}</td>
                                 <td><span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:600; font-size:11px;">{{ $item->kategori }}</span></td>
                                 <td>{{ $item->kolom3_lokasi }}</td>
-                                <td>{{ $item->kolom4_pihak_berkepentingan }}</td>
+
                                 <td class="section-border-right">{{ $item->kolom5_kondisi }}</td>
                                 <td>
                                     <strong>{{ $bahaya['type'] ?? '-' }}</strong>

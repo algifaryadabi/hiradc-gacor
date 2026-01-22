@@ -285,7 +285,7 @@
                                         </div>
                                     </div>
                                     <div class="header-actions" style="display: flex; gap: 10px;">
-                                        <button type="button" class="btn-collapse"><i class="fas fa-chevron-up"></i></button>
+                                        <button type="button" class="btn-collapse"><i class="fas fa-chevron-up transition-transform"></i></button>
                                         <button type="button" class="btn-remove-item" onclick="removeItem(this); event.stopPropagation();" style="border:1px solid #fecaca; color:#ef4444;"><i class="fas fa-trash-alt"></i> Hapus</button>
                                     </div>
                                 </div>
@@ -293,33 +293,28 @@
                                 <div class="card-body collapsible-content">
                                     <!-- 1. Info -->
                                     <div style="margin-bottom:25px;">
-                                        <h3 style="font-size:14px; font-weight:700; border-bottom:2px solid #e2e8f0; margin-bottom:15px; padding-bottom:8px;">1. Informasi Dasar</h3>
+                                        <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">1. Informasi Dasar</h3>
                                         <div class="form-grid-2">
                                             <div class="form-group"><label class="form-label">Proses Bisnis</label><input type="text" class="form-control" name="items[{{$index}}][kolom2_proses]" value="{{ $item->kolom2_proses }}" readonly style="background:#f8fafc; cursor:not-allowed;"></div>
                                             <div class="form-group"><label class="form-label">Kegiatan</label><input type="text" class="form-control item-kegiatan-input" name="items[{{$index}}][kolom2_kegiatan]" value="{{ $item->kolom2_kegiatan }}" required oninput="updateSummary(this)"></div>
                                             <div class="form-group"><label class="form-label">Lokasi</label><input type="text" class="form-control" name="items[{{$index}}][kolom3_lokasi]" value="{{ $item->kolom3_lokasi }}" required></div>
-                                            <div class="form-group"><label class="form-label">Pihak Berkepentingan</label><input type="text" class="form-control" name="items[{{$index}}][kolom4_pihak]" value="{{ $item->kolom4_pihak }}"></div>
-                                            <!-- Category -->
+                                            
                                             <div class="form-group">
                                                 <label class="form-label">Kategori</label>
                                                 <select class="form-control category-select" name="items[{{$index}}][kategori]" required onchange="updateConditions(this)">
-                                                    <option value="K3" {{ $item->kategori == 'K3' ? 'selected' : '' }}>K3</option>
-                                                    <option value="KO" {{ $item->kategori == 'KO' ? 'selected' : '' }}>KO</option>
+                                                    <option value="K3" {{ $item->kategori == 'K3' ? 'selected' : '' }}>K3 - Kesehatan & Keselamatan</option>
+                                                    <option value="KO" {{ $item->kategori == 'KO' ? 'selected' : '' }}>KO - Keselamatan Operasional</option>
                                                     <option value="Lingkungan" {{ $item->kategori == 'Lingkungan' ? 'selected' : '' }}>Lingkungan</option>
                                                     <option value="Keamanan" {{ $item->kategori == 'Keamanan' ? 'selected' : '' }}>Keamanan</option>
                                                 </select>
                                             </div>
-                                            <!-- Condition (Pre-rendered for simplicity) -->
+                                            
                                             <div class="form-group">
                                                 <label class="form-label">Kondisi</label>
                                                 <select class="form-control condition-select" name="items[{{$index}}][kolom5_kondisi]" required>
-                                                     <!-- We manually render options based on category because JS assumes empty on load -->
                                                      @php 
                                                         $opts = match($item->kategori) {
-                                                            'K3','KO' => ['Rutin', 'Non-Rutin', 'Emergency'], // Matches JS 'categories' object
                                                             'Lingkungan' => ['Normal', 'Abnormal', 'Emergency'],
-                                                            'Keamanan' => ['Rutin', 'Non-Rutin', 'Emergency'], // Correct? JS said Rutin/Non-Rutin for Keamanan in edit.blade.php but create.blade.php had different logic? 
-                                                            // JS in create.blade.php says: Keamanan -> Rutin, Non-Rutin, Emergency
                                                             default => ['Rutin', 'Non-Rutin', 'Emergency']
                                                         };
                                                      @endphp
@@ -331,71 +326,101 @@
                                         </div>
                                     </div>
                                     
-                                    <!-- 2. Hazard -->
+                                    <!-- 2. Identifikasi -->
                                     <div style="margin-bottom:25px;">
-                                        <h3 style="font-size:14px; font-weight:700; border-bottom:2px solid #e2e8f0; margin-bottom:15px; padding-bottom:8px;">2. Identifikasi Bahaya</h3>
-                                        <div class="hazard-section" style="background: #fffbeb; padding: 20px; border-radius: 8px;">
-                                            @php $bahaya = $item->kolom6_bahaya; $details = $bahaya['details'] ?? []; @endphp
-                                            <!-- Toggles: Check if we should show them -->
-                                            <div class="toggle-group hazard-toggles {{ in_array($item->kategori, ['K3','KO']) ? '' : 'hidden' }}" style="margin-bottom:15px;">
-                                                <button type="button" class="toggle-btn active" onclick="toggleBahayaType(this, 'condition')">Unsafe Condition</button>
-                                                <button type="button" class="toggle-btn" onclick="toggleBahayaType(this, 'action')">Unsafe Action</button>
-                                            </div>
-                                            <div class="hazard-options checkbox-grid">
-                                                <!-- If K3/KO, populate based on matching keywords or fallback logic? -->
-                                                <!-- Problem: JS clears this. So we rely on "Manual Rendering" just for display, 
-                                                     but if user toggles, it resets. 
-                                                     Strategy: Render checkboxes for ALL options relevant to category? 
-                                                     Or just render what we have. 
-                                                -->
-                                                @foreach($details as $d)
-                                                    <label class="checkbox-card">
-                                                        <input type="checkbox" name="items[{{$index}}][kolom6_bahaya][]" value="{{ $d }}" checked> {{ $d }}
-                                                    </label>
+                                        <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">2. Identifikasi</h3>
+                                        
+                                        <!-- K3/KO: Bahaya -->
+                                        <div class="hazard-section k3-ko-field" data-category="K3,KO" style="{{ in_array($item->kategori, ['K3','KO']) ? '' : 'display:none;' }} background: #fffbeb; padding: 20px; border-radius: 8px; border: 1px solid #fcd34d; margin-bottom: 15px;">
+                                            <label class="form-label">Kolom 6: POTENSI BAHAYA (K3/KO)</label>
+                                            <div class="checkbox-grid">
+                                                @php $bahayaDetails = $item->kolom6_bahaya['details'] ?? []; @endphp
+                                                @foreach(['Bahaya Fisika','Bahaya Kimia','Bahaya Biologi','Bahaya Fisiologis/Ergonomi','Bahaya Psikologis','Bahaya dari Prilaku'] as $opt)
+                                                    <label class="checkbox-card"><input type="checkbox" name="items[{{$index}}][kolom6_bahaya][]" value="{{$opt}}" {{ in_array($opt, $bahayaDetails) ? 'checked' : '' }}> {{$opt}}</label>
                                                 @endforeach
-                                                <!-- Note: If user wants to add more, they must toggle. Toggling clears existing. This is a bit of a UX trap if they don't realize.
-                                                     Better: JS should detect "Pre-filled" state on init. 
-                                                -->
                                             </div>
                                             <div class="form-group mt-4">
                                                 <label class="form-label">Bahaya Lainnya (Manual)</label>
-                                                <input type="text" class="form-control" name="items[{{$index}}][bahaya_manual]" value="{{ $bahaya['manual'] ?? '' }}">
+                                                <input type="text" class="form-control" name="items[{{$index}}][bahaya_manual]" value="{{ $item->kolom6_bahaya['manual'] ?? '' }}">
+                                            </div>
+                                        </div>
+
+                                        <!-- Lingkungan: Aspek -->
+                                        <div class="lingkungan-field" data-category="Lingkungan" style="{{ $item->kategori == 'Lingkungan' ? '' : 'display:none;' }} background: #ecfdf5; padding: 20px; border-radius: 8px; border: 1px solid #10b981; margin-bottom: 15px;">
+                                            <label class="form-label">Kolom 7: ASPEK LINGKUNGAN</label>
+                                            <div class="checkbox-grid">
+                                                @php $aspekDetails = $item->kolom7_aspek_lingkungan['details'] ?? []; @endphp
+                                                @foreach(['Emisi ke udara','Pembuangan ke air','Pembuangan ke tanah','Penggunaan Bahan Baku dan SDA','Penggunaan energi','Paparan energi','Limbah'] as $opt)
+                                                    <label class="checkbox-card"><input type="checkbox" name="items[{{$index}}][kolom7_aspek_lingkungan][]" value="{{$opt}}" {{ in_array($opt, $aspekDetails) ? 'checked' : '' }}> {{$opt}}</label>
+                                                @endforeach
+                                            </div>
+                                            <div class="form-group mt-4">
+                                                <label class="form-label">Aspek Lainnya (Manual)</label>
+                                                <input type="text" class="form-control" name="items[{{$index}}][aspek_manual]" value="{{ $item->kolom7_aspek_lingkungan['manual'] ?? '' }}">
+                                            </div>
+                                        </div>
+
+                                        <!-- Keamanan: Ancaman -->
+                                        <div class="keamanan-field" data-category="Keamanan" style="{{ $item->kategori == 'Keamanan' ? '' : 'display:none;' }} background: #fef2f2; padding: 20px; border-radius: 8px; border: 1px solid #ef4444; margin-bottom: 15px;">
+                                            <label class="form-label">Kolom 8: ANCAMAN KEAMANAN</label>
+                                            <div class="checkbox-grid">
+                                                @php $ancamanDetails = $item->kolom8_ancaman['details'] ?? []; @endphp
+                                                @foreach(['Terorisme','Sabotase','Intimidasi','Pencurian','Perusakan aset'] as $opt)
+                                                    <label class="checkbox-card"><input type="checkbox" name="items[{{$index}}][kolom8_ancaman][]" value="{{$opt}}" {{ in_array($opt, $ancamanDetails) ? 'checked' : '' }}> {{$opt}}</label>
+                                                @endforeach
+                                            </div>
+                                            <div class="form-group mt-4">
+                                                <label class="form-label">Ancaman Lainnya (Manual)</label>
+                                                <input type="text" class="form-control" name="items[{{$index}}][ancaman_manual]" value="{{ $item->kolom8_ancaman['manual'] ?? '' }}">
                                             </div>
                                         </div>
                                     </div>
                                     
-                                    <!-- 3. Risk -->
+                                    <!-- 3. Risk / Impact -->
                                     <div style="margin-bottom:25px;">
-                                        <h3 style="font-size:14px; font-weight:700; border-bottom:2px solid #e2e8f0; margin-bottom:15px; padding-bottom:8px;">3. Analisis Risiko</h3>
-                                        <div class="form-grid-2">
-                                            <div class="form-group"><label class="form-label">Dampak</label><textarea class="form-control" name="items[{{$index}}][kolom7_dampak]" required>{{ $item->kolom7_dampak }}</textarea></div>
-                                            <div class="form-group"><label class="form-label">Risiko</label><textarea class="form-control" name="items[{{$index}}][kolom9_risiko]" required>{{ $item->kolom9_risiko }}</textarea></div>
+                                        <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">3. Analisis Risiko</h3>
+                                        
+                                        <!-- Kolom 9 Variants -->
+                                        <div class="form-group kolom9-k3ko-field" style="{{ in_array($item->kategori, ['K3','KO']) ? '' : 'display:none;' }}">
+                                            <label class="form-label">Kolom 9: RISIKO <span class="required">*</span></label>
+                                            <textarea class="form-control" name="items[{{$index}}][kolom9_risiko_k3ko]" rows="3">{{ $item->kolom9_risiko_k3ko ?? ($item->kategori == 'K3' || $item->kategori == 'KO' ? $item->kolom9_risiko : '') }}</textarea>
+                                        </div>
+
+                                        <div class="form-group kolom9-lingkungan-field" style="{{ $item->kategori == 'Lingkungan' ? '' : 'display:none;' }}">
+                                            <label class="form-label">Kolom 9: DAMPAK LINGKUNGAN <span class="required">*</span></label>
+                                            <textarea class="form-control" name="items[{{$index}}][kolom9_dampak_lingkungan]" rows="3">{{ $item->kolom9_dampak_lingkungan ?? ($item->kategori == 'Lingkungan' ? $item->kolom9_risiko : '') }}</textarea>
+                                        </div>
+
+                                        <div class="form-group kolom9-keamanan-field" style="{{ $item->kategori == 'Keamanan' ? '' : 'display:none;' }}">
+                                            <label class="form-label">Kolom 9: CELAH TIDAK AMAN <span class="required">*</span></label>
+                                            <textarea class="form-control" name="items[{{$index}}][kolom9_celah_keamanan]" rows="3">{{ $item->kolom9_celah_keamanan ?? ($item->kategori == 'Keamanan' ? $item->kolom9_risiko : '') }}</textarea>
                                         </div>
                                     </div>
 
-                                    <!-- 4. Assessment -->
-                                     <div style="margin-bottom: 25px;">
+                                    <!-- 4. Penilaian Risiko Awal -->
+                                    <div style="margin-bottom: 25px;">
                                         <div style="background:#f8fafc; padding:20px; border-radius:12px;">
                                             <h4 style="font-size:13px; font-weight:700; margin-bottom:15px;">Penilaian Risiko Awal</h4>
                                             <div style="display: flex; gap: 20px;">
                                                 <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                                                     <div class="form-group">
-                                                        <label class="form-label">Kemungkinan</label>
+                                                        <label class="form-label">Kemungkinan (L)</label>
                                                         <select class="form-control likelihood-select" name="items[{{$index}}][kolom12_kemungkinan]" required onchange="calculateItemRisk(this)">
                                                             @foreach([1,2,3,4,5] as $v) <option value="{{$v}}" {{ $v == $item->kolom12_kemungkinan ? 'selected' : '' }}>{{$v}}</option> @endforeach
                                                         </select>
                                                     </div>
                                                     <div class="form-group">
-                                                        <label class="form-label">Konsekuensi</label>
+                                                        <label class="form-label">Konsekuensi (S)</label>
                                                         <select class="form-control severity-select" name="items[{{$index}}][kolom13_konsekuensi]" required onchange="calculateItemRisk(this)">
                                                             @foreach([1,2,3,4,5] as $v) <option value="{{$v}}" {{ $v == $item->kolom13_konsekuensi ? 'selected' : '' }}>{{$v}}</option> @endforeach
                                                         </select>
                                                     </div>
                                                 </div>
                                                 <div style="flex: 0 0 160px; text-align:center;">
-                                                    <div class="risk-result-box">
-                                                        <div class="risk-score display-score">-</div>
-                                                        <span class="risk-level display-level">PENDING</span>
+                                                    <label class="form-label">Tingkat Risiko</label>
+                                                    <div class="risk-result-box" style="background:#1f2937; color:white; padding:15px; border-radius:8px;">
+                                                        <div class="risk-score display-score" style="font-size:24px;">{{ $item->kolom14_score }}</div>
+                                                        <span class="risk-level display-level" style="font-size:11px;">{{ $item->kolom14_level }}</span>
                                                     </div>
                                                     <input type="hidden" name="items[{{$index}}][kolom14_score]" class="input-score" value="{{ $item->kolom14_score }}">
                                                     <input type="hidden" name="items[{{$index}}][kolom14_level]" class="input-level" value="{{ $item->kolom14_level }}">
@@ -404,49 +429,72 @@
                                         </div>
                                     </div>
                                     
+                                    <!-- 4b. Legalitas & Signifikansi -->
+                                    <div style="margin-bottom: 25px;">
+                                        <div class="form-group">
+                                            <label class="form-label">Kolom 15: Peraturan/Regulasi</label>
+                                            <textarea class="form-control" name="items[{{$index}}][kolom15_regulasi]" rows="2">{{ $item->kolom15_regulasi }}</textarea>
+                                        </div>
+                                        
+                                        <!-- Kolom 16: Lingkungan only -->
+                                        <div class="form-group lingkungan-only-field" style="{{ $item->kategori == 'Lingkungan' ? '' : 'display:none;' }}">
+                                            <label class="form-label">Kolom 16: Aspek Lingkungan Penting P/TP</label>
+                                            <div style="display:flex; gap:15px;">
+                                                <label class="control-radio">
+                                                    <input type="radio" name="items[{{$index}}][kolom16_aspek]" value="P" {{ $item->kolom16_aspek == 'P' ? 'checked' : '' }}> Penting (P)
+                                                </label>
+                                                <label class="control-radio">
+                                                    <input type="radio" name="items[{{$index}}][kolom16_aspek]" value="TP" {{ ($item->kolom16_aspek == 'TP' || !$item->kolom16_aspek) ? 'checked' : '' }}> Tidak Penting (TP)
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-grid-2">
+                                            <div class="form-group"><label class="form-label">Kolom 17: Peluang</label><textarea class="form-control" name="items[{{$index}}][kolom17_peluang]">{{ $item->kolom17_peluang }}</textarea></div>
+                                            <div class="form-group"><label class="form-label">Kolom 17: Risiko Tambahan</label><textarea class="form-control" name="items[{{$index}}][kolom17_risiko]">{{ $item->kolom17_risiko }}</textarea></div>
+                                        </div>
+                                    </div>
+
                                     <!-- 5. Controls -->
                                     <div style="margin-bottom: 25px;">
-                                         <h3 style="font-size:14px; font-weight:700; border-bottom:2px solid #e2e8f0; margin-bottom:15px; padding-bottom:8px;">5. Pengendalian</h3>
-                                         <div class="form-group">
-                                             <label class="form-label">Hirarki</label>
-                                             <div class="checkbox-grid">
-                                                 @php $h = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
-                                                 @foreach(['Eliminasi','Substitusi','Rekayasa Teknik','Administratif','APD'] as $opt)
-                                                    <label class="checkbox-card"><input type="checkbox" name="items[{{$index}}][kolom10_pengendalian][]" value="{{$opt}}" {{ in_array($opt, (array)$h) ? 'checked' : '' }}> {{ $opt }}</label>
-                                                 @endforeach
-                                             </div>
-                                         </div>
-                                         <div class="form-group"><label class="form-label">Existing Control</label><textarea class="form-control" name="items[{{$index}}][kolom11_existing]">{{ $item->kolom11_existing }}</textarea></div>
-                                         <div class="form-group"><label class="form-label">Regulasi</label><textarea class="form-control" name="items[{{$index}}][kolom15_regulasi]">{{ $item->kolom15_regulasi }}</textarea></div>
+                                        <div class="form-group">
+                                            <label class="form-label">Kolom 10: Hirarki Pengendalian</label>
+                                            <div class="checkbox-grid">
+                                                @php $h = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
+                                                @foreach(['Eliminasi','Substitusi','Rekayasa Teknik','Pengendalian Administratif','APD'] as $opt)
+                                                   <label class="checkbox-card"><input type="checkbox" name="items[{{$index}}][kolom10_pengendalian][]" value="{{$opt}}" {{ in_array($opt, (array)$h) ? 'checked' : '' }}> {{ $opt }}</label>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                        <div class="form-group"><label class="form-label">Kolom 11: Pengendalian Existing</label><textarea class="form-control" name="items[{{$index}}][kolom11_existing]" rows="3">{{ $item->kolom11_existing }}</textarea></div>
                                     </div>
                                     
-                                    <!-- 6. Residual & Follow up -->
-                                     <div style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
+                                    <!-- 6. Residual -->
+                                     <div class="bagian-5-section" style="{{ ($item->kolom14_score ?? 0) >= 8 ? 'display:block;' : 'display:none;' }}">
+                                          <h3 style="font-size:14px; text-transform:uppercase; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">Bagian 5: Residual & Lanjut</h3>
                                           <div class="form-group"><label class="form-label">Tindak Lanjut</label><textarea class="form-control" name="items[{{$index}}][kolom18_tindak_lanjut]">{{ $item->kolom18_tindak_lanjut }}</textarea></div>
-                                          <div style="display:flex; gap:30px;">
-                                              <div style="flex:1; display:flex; gap:20px;">
-                                                  <div class="form-group" style="flex:1"><label class="form-label">Res. Kemungkinan</label><select class="form-control" name="items[{{$index}}][residual_kemungkinan]" onchange="calculateItemResidual(this)">
-                                                      @foreach([1,2,3,4,5] as $v) <option value="{{$v}}" {{ $v == $item->residual_kemungkinan ? 'selected' : '' }}>{{$v}}</option> @endforeach
+                                          
+                                          <div style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
+                                              <div style="display:flex; gap:20px;">
+                                                  <div class="form-group" style="flex:1"><label class="form-label">Res. Kemungkinan</label><select class="form-control res-val" name="items[{{$index}}][residual_kemungkinan]" onchange="calculateItemResidual(this)">
+                                                      <option value="">--</option>@foreach([1,2,3,4,5] as $v) <option value="{{$v}}" {{ $v == $item->residual_kemungkinan ? 'selected' : '' }}>{{$v}}</option> @endforeach
                                                   </select></div>
-                                                  <div class="form-group" style="flex:1"><label class="form-label">Res. Konsekuensi</label><select class="form-control" name="items[{{$index}}][residual_konsekuensi]" onchange="calculateItemResidual(this)">
-                                                      @foreach([1,2,3,4,5] as $v) <option value="{{$v}}" {{ $v == $item->residual_konsekuensi ? 'selected' : '' }}>{{$v}}</option> @endforeach
+                                                  <div class="form-group" style="flex:1"><label class="form-label">Res. Konsekuensi</label><select class="form-control res-val" name="items[{{$index}}][residual_konsekuensi]" onchange="calculateItemResidual(this)">
+                                                      <option value="">--</option>@foreach([1,2,3,4,5] as $v) <option value="{{$v}}" {{ $v == $item->residual_konsekuensi ? 'selected' : '' }}>{{$v}}</option> @endforeach
                                                   </select></div>
                                               </div>
-                                               <div style="flex:0 0 120px;">
-                                                   <div class="risk-result-box res-box" style="padding:10px;">
-                                                        <div class="risk-score res-score" style="font-size:24px;">-</div>
-                                                        <span class="risk-level res-level" style="font-size:10px;">PENDING</span>
-                                                    </div>
-                                                    <input type="hidden" name="items[{{$index}}][residual_score]" class="input-res-score" value="{{ $item->residual_score }}">
-                                                    <input type="hidden" name="items[{{$index}}][residual_level]" class="input-res-level" value="{{ $item->residual_level }}">
-                                               </div>
-                                          </div>
-                                          <div class="form-group mt-4">
-                                              <label class="form-label">Dapat Ditoleransi?</label>
-                                              <select class="form-control" name="items[{{$index}}][kolom18_toleransi]">
-                                                  <option value="Ya" {{ ($item->kolom18_toleransi ?? 'Ya') == 'Ya' ? 'selected' : '' }}>Ya</option>
-                                                  <option value="Tidak" {{ ($item->kolom18_toleransi ?? '') == 'Tidak' ? 'selected' : '' }}>Tidak</option>
-                                              </select>
+                                              <div style="text-align:center;">
+                                                  <div class="risk-result-box res-box" style="background:#15803d; color:white; padding:10px;"><div class="risk-score res-score" style="font-size:24px;">{{$item->residual_score}}</div><span class="risk-level res-level">{{$item->residual_level}}</span></div>
+                                                  <input type="hidden" name="items[{{$index}}][residual_score]" class="input-res-score" value="{{$item->residual_score}}">
+                                                  <input type="hidden" name="items[{{$index}}][residual_level]" class="input-res-level" value="{{$item->residual_level}}">
+                                              </div>
+                                              <div class="form-group mt-4">
+                                                  <label class="form-label">Dapat Ditoleransi?</label>
+                                                  <select class="form-control" name="items[{{$index}}][kolom18_toleransi]">
+                                                      <option value="Ya" {{ ($item->kolom18_toleransi ?? 'Ya') == 'Ya' ? 'selected' : '' }}>Ya</option>
+                                                      <option value="Tidak" {{ ($item->kolom18_toleransi ?? '') == 'Tidak' ? 'selected' : '' }}>Tidak</option>
+                                                  </select>
+                                              </div>
                                           </div>
                                      </div>
 
@@ -475,7 +523,7 @@
         </main>
     </div>
 
-    <!-- ITEM TEMPLATE (Exact Copy from Create) -->
+    <!-- ITEM TEMPLATE (Hidden) -->
     <template id="item-template">
         <div class="doc-item" data-index="{index}" style="margin-bottom: 30px; transition: all 0.3s ease;">
             <div class="doc-card" style="border-left: 5px solid var(--primary-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border-radius: 12px; overflow: hidden; background: white;">
@@ -504,88 +552,149 @@
                              <div class="form-group"><label class="form-label">Proses Bisnis</label><input type="text" class="form-control probis-input" name="items[{index}][kolom2_proses]" readonly style="background-color:#f8fafc; cursor:not-allowed;"></div>
                              <div class="form-group"><label class="form-label">Kegiatan</label><input type="text" class="form-control item-kegiatan-input" name="items[{index}][kolom2_kegiatan]" required oninput="updateSummary(this)"></div>
                              <div class="form-group"><label class="form-label">Lokasi</label><input type="text" class="form-control" name="items[{index}][kolom3_lokasi]" required></div>
-                             <div class="form-group"><label class="form-label">Pihak Berkepentingan</label><input type="text" class="form-control" name="items[{index}][kolom4_pihak]"></div>
-                             <div class="form-group"><label class="form-label">Kategori</label><select class="form-control category-select" name="items[{index}][kategori]" required onchange="updateConditions(this)"><option value="">-- Pilih --</option><option value="K3">K3</option><option value="KO">KO</option><option value="Lingkungan">Lingkungan</option><option value="Keamanan">Keamanan</option></select></div>
+                             
+                             <div class="form-group">
+                                 <label class="form-label">Kategori</label>
+                                 <select class="form-control category-select" name="items[{index}][kategori]" required onchange="updateConditions(this)">
+                                     <option value="">-- Pilih --</option>
+                                     <option value="K3">K3 - Kesehatan & Keselamatan</option>
+                                     <option value="KO">KO - Keselamatan Operasional</option>
+                                     <option value="Lingkungan">Lingkungan</option>
+                                     <option value="Keamanan">Keamanan</option>
+                                 </select>
+                             </div>
+                             
                              <div class="form-group"><label class="form-label">Kondisi</label><select class="form-control condition-select" name="items[{index}][kolom5_kondisi]" required><option value="">-- Pilih Kategori Dulu --</option></select></div>
                         </div>
                      </div>
-                     <!-- Hazard -->
+                     
+                     <!-- 2. Hazard -->
                      <div style="margin-bottom: 25px;">
-                        <h3 style="font-size:14px; text-transform:uppercase; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">2. Identifikasi Bahaya</h3>
-                        <div class="hazard-section" style="background:#fffbeb; padding:20px; border-radius:8px;">
-                             <div class="toggle-group hazard-toggles hidden" style="margin-bottom:15px;">
-                                <button type="button" class="toggle-btn active" onclick="toggleBahayaType(this, 'condition')">Unsafe Condition</button>
-                                <button type="button" class="toggle-btn" onclick="toggleBahayaType(this, 'action')">Unsafe Action</button>
+                        <h3 style="font-size:14px; text-transform:uppercase; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">2. Identifikasi</h3>
+                        
+                        <!-- K3/KO -->
+                        <div class="hazard-section k3-ko-field" data-category="K3,KO" style="background:#fffbeb; padding:20px; border-radius:8px; border:1px solid #fcd34d; margin-bottom:15px;">
+                             <label class="form-label">Kolom 6: POTENSI BAHAYA (K3/KO)</label>
+                             <div class="checkbox-grid">
+                                  @foreach(['Bahaya Fisika','Bahaya Kimia','Bahaya Biologi','Bahaya Fisiologis/Ergonomi','Bahaya Psikologis','Bahaya dari Prilaku'] as $opt)
+                                    <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom6_bahaya][]" value="{{$opt}}"> {{$opt}}</label>
+                                  @endforeach
                              </div>
-                             <div class="hazard-options checkbox-grid"></div>
                              <div class="form-group mt-4"><label class="form-label">Bahaya Manual</label><input type="text" class="form-control" name="items[{index}][bahaya_manual]"></div>
                         </div>
+
+                        <!-- Lingkungan -->
+                        <div class="lingkungan-field" data-category="Lingkungan" style="background:#ecfdf5; padding:20px; border-radius:8px; border:1px solid #10b981; margin-bottom:15px; display:none;">
+                             <label class="form-label">Kolom 7: ASPEK LINGKUNGAN</label>
+                             <div class="checkbox-grid">
+                                  @foreach(['Emisi ke udara','Pembuangan ke air','Pembuangan ke tanah','Penggunaan Bahan Baku dan SDA','Penggunaan energi','Paparan energi','Limbah'] as $opt)
+                                    <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom7_aspek_lingkungan][]" value="{{$opt}}"> {{$opt}}</label>
+                                  @endforeach
+                             </div>
+                             <div class="form-group mt-4"><label class="form-label">Aspek Manual</label><input type="text" class="form-control" name="items[{index}][aspek_manual]"></div>
+                        </div>
+
+                        <!-- Keamanan -->
+                        <div class="keamanan-field" data-category="Keamanan" style="background:#fef2f2; padding:20px; border-radius:8px; border:1px solid #ef4444; margin-bottom:15px; display:none;">
+                             <label class="form-label">Kolom 8: ANCAMAN KEAMANAN</label>
+                             <div class="checkbox-grid">
+                                  @foreach(['Terorisme','Sabotase','Intimidasi','Pencurian','Perusakan aset'] as $opt)
+                                    <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom8_ancaman][]" value="{{$opt}}"> {{$opt}}</label>
+                                  @endforeach
+                             </div>
+                             <div class="form-group mt-4"><label class="form-label">Ancaman Manual</label><input type="text" class="form-control" name="items[{index}][ancaman_manual]"></div>
+                        </div>
                      </div>
-                     <!-- Risk -->
+                     
+                     <!-- 3. Risk -->
                      <div style="margin-bottom: 25px;">
                          <h3 style="font-size:14px; text-transform:uppercase; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">3. Analisis Risiko</h3>
-                         <div class="form-grid-2">
-                             <div class="form-group"><label class="form-label">Dampak</label><textarea class="form-control" name="items[{index}][kolom7_dampak]" required></textarea></div>
-                             <div class="form-group"><label class="form-label">Risiko</label><textarea class="form-control" name="items[{index}][kolom9_risiko]" required></textarea></div>
+                         <div class="form-group kolom9-k3ko-field">
+                             <label class="form-label">Kolom 9: RISIKO <span class="required">*</span></label>
+                             <textarea class="form-control" name="items[{index}][kolom9_risiko_k3ko]" rows="3"></textarea>
+                         </div>
+                         <div class="form-group kolom9-lingkungan-field" style="display:none;">
+                             <label class="form-label">Kolom 9: DAMPAK LINGKUNGAN <span class="required">*</span></label>
+                             <textarea class="form-control" name="items[{index}][kolom9_dampak_lingkungan]" rows="3"></textarea>
+                         </div>
+                         <div class="form-group kolom9-keamanan-field" style="display:none;">
+                             <label class="form-label">Kolom 9: CELAH TIDAK AMAN <span class="required">*</span></label>
+                             <textarea class="form-control" name="items[{index}][kolom9_celah_keamanan]" rows="3"></textarea>
                          </div>
                      </div>
-                     <!-- Assessment -->
+                     
+                     <!-- 4. Assessment -->
                      <div style="margin-bottom: 25px;">
                         <div style="background:#f8fafc; padding:20px; border-radius:12px;">
                             <h4 style="font-size:13px; font-weight:700; margin-bottom:15px;">Penilaian Risiko Awal</h4>
                             <div style="display:flex; gap:20px;">
                                 <div style="flex:1; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                                     <div class="form-group"><label class="form-label">Kemungkinan</label><select class="form-control likelihood-select" name="items[{index}][kolom12_kemungkinan]" required onchange="calculateItemRisk(this)"><option value="">--</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
-                                     <div class="form-group"><label class="form-label">Konsekuensi</label><select class="form-control severity-select" name="items[{index}][kolom13_konsekuensi]" required onchange="calculateItemRisk(this)"><option value="">--</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+                                     <div class="form-group"><label class="form-label">Kemungkinan (L)</label><select class="form-control likelihood-select" name="items[{index}][kolom12_kemungkinan]" required onchange="calculateItemRisk(this)"><option value="">--</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+                                     <div class="form-group"><label class="form-label">Konsekuensi (S)</label><select class="form-control severity-select" name="items[{index}][kolom13_konsekuensi]" required onchange="calculateItemRisk(this)"><option value="">--</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
                                 </div>
                                 <div style="flex:0 0 160px; text-align:center;">
-                                    <div class="risk-result-box"><div class="risk-score display-score">-</div><span class="risk-level display-level">PENDING</span></div>
+                                    <label class="form-label">Tingkat Risiko</label>
+                                    <div class="risk-result-box" style="background:#1f2937; color:white; padding:15px; border-radius:8px;"><div class="risk-score display-score" style="font-size:24px;">-</div><span class="risk-level display-level" style="font-size:11px;">PENDING</span></div>
                                     <input type="hidden" name="items[{index}][kolom14_score]" class="input-score">
                                     <input type="hidden" name="items[{index}][kolom14_level]" class="input-level">
                                 </div>
                             </div>
                         </div>
                      </div>
-                     <!-- Controls -->
+                     
+                     <!-- 4b. Legalitas -->
                      <div style="margin-bottom: 25px;">
-                         <h3 style="font-size:14px; text-transform:uppercase; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">5. Pengendalian</h3>
+                        <div class="form-group"><label class="form-label">Kolom 15: Peraturan/Regulasi</label><textarea class="form-control" name="items[{index}][kolom15_regulasi]" rows="2"></textarea></div>
+                        
+                        <div class="form-group lingkungan-only-field" style="display:none;">
+                            <label class="form-label">Kolom 16: Aspek Lingkungan Penting P/TP</label>
+                            <div style="display:flex; gap:15px;">
+                                <label class="control-radio"><input type="radio" name="items[{index}][kolom16_aspek]" value="P"> Penting (P)</label>
+                                <label class="control-radio"><input type="radio" name="items[{index}][kolom16_aspek]" value="TP" checked> Tidak Penting (TP)</label>
+                            </div>
+                        </div>
+
+                        <div class="form-grid-2">
+                             <div class="form-group"><label class="form-label">Kolom 17: Peluang</label><textarea class="form-control" name="items[{index}][kolom17_peluang]"></textarea></div>
+                             <div class="form-group"><label class="form-label">Kolom 17: Risiko Tambahan</label><textarea class="form-control" name="items[{index}][kolom17_risiko]"></textarea></div>
+                        </div>
+                     </div>
+
+                     <!-- 5. Controls -->
+                     <div style="margin-bottom: 25px;">
                          <div class="form-group">
-                             <label class="form-label">Hirarki</label>
+                             <label class="form-label">Kolom 10: Hirarki Pengendalian</label>
                              <div class="checkbox-grid">
-                                 <!-- Hardcoded Options -->
-                                 <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom10_pengendalian][]" value="Eliminasi"> Eliminasi</label>
-                                 <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom10_pengendalian][]" value="Substitusi"> Substitusi</label>
-                                 <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom10_pengendalian][]" value="Rekayasa Teknik"> Rekayasa Teknik</label>
-                                 <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom10_pengendalian][]" value="Administratif"> Administratif</label>
-                                 <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom10_pengendalian][]" value="APD"> APD</label>
+                                 @foreach(['Eliminasi','Substitusi','Rekayasa Teknik','Pengendalian Administratif','APD'] as $opt)
+                                    <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom10_pengendalian][]" value="{{$opt}}"> {{$opt}}</label>
+                                 @endforeach
                              </div>
                          </div>
-                         <div class="form-group"><label class="form-label">Existing Control</label><textarea class="form-control" name="items[{index}][kolom11_existing]"></textarea></div>
-                         <div class="form-group"><label class="form-label">Regulasi</label><textarea class="form-control" name="items[{index}][kolom15_regulasi]"></textarea></div>
+                         <div class="form-group"><label class="form-label">Kolom 11: Pengendalian Existing</label><textarea class="form-control" name="items[{index}][kolom11_existing]" rows="3"></textarea></div>
                      </div>
-                     <!-- Residual -->
-                     <div style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
+                     
+                     <!-- 6. Residual -->
+                     <div class="bagian-5-section" style="display:none;">
+                          <h3 style="font-size:14px; text-transform:uppercase; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">Bagian 5: Residual & Lanjut</h3>
                           <div class="form-group"><label class="form-label">Tindak Lanjut</label><textarea class="form-control" name="items[{index}][kolom18_tindak_lanjut]"></textarea></div>
-                          <div style="display:flex; gap:30px;">
-                              <div style="flex:1; display:flex; gap:20px;">
-                                  <div class="form-group" style="flex:1"><label class="form-label">Res. Kemungkinan</label><select class="form-control" name="items[{index}][residual_kemungkinan]" onchange="calculateItemResidual(this)"><option value="">--</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
-                                  <div class="form-group" style="flex:1"><label class="form-label">Res. Konsekuensi</label><select class="form-control" name="items[{index}][residual_konsekuensi]" onchange="calculateItemResidual(this)"><option value="">--</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+                          
+                          <div style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
+                              <div style="display:flex; gap:20px;">
+                                  <div class="form-group" style="flex:1"><label class="form-label">Res. Kemungkinan</label><select class="form-control res-val" name="items[{index}][residual_kemungkinan]" onchange="calculateItemResidual(this)"><option value="">--</option>@foreach([1,2,3,4,5] as $v) <option value="{{$v}}">{{$v}}</option> @endforeach</select></div>
+                                  <div class="form-group" style="flex:1"><label class="form-label">Res. Konsekuensi</label><select class="form-control res-val" name="items[{index}][residual_konsekuensi]" onchange="calculateItemResidual(this)"><option value="">--</option>@foreach([1,2,3,4,5] as $v) <option value="{{$v}}">{{$v}}</option> @endforeach</select></div>
                               </div>
-                               <div style="flex:0 0 120px;">
-                                   <div class="risk-result-box res-box" style="padding:10px;">
-                                        <div class="risk-score res-score" style="font-size:24px;">-</div>
-                                        <span class="risk-level res-level" style="font-size:10px;">PENDING</span>
-                                    </div>
-                                    <input type="hidden" name="items[{index}][residual_score]" class="input-res-score">
-                                    <input type="hidden" name="items[{index}][residual_level]" class="input-res-level">
-                               </div>
-                          </div>
-                          <div class="form-group mt-4">
-                              <label class="form-label">Dapat Ditoleransi?</label>
-                              <select class="form-control" name="items[{index}][kolom18_toleransi]">
-                                  <option value="Ya">Ya</option>
-                                  <option value="Tidak">Tidak</option>
-                              </select>
+                              <div style="text-align:center;">
+                                  <div class="risk-result-box res-box" style="background:#15803d; color:white; padding:10px;"><div class="risk-score res-score" style="font-size:24px;">-</div><span class="risk-level res-level">PENDING</span></div>
+                                  <input type="hidden" name="items[{index}][residual_score]" class="input-res-score">
+                                  <input type="hidden" name="items[{index}][residual_level]" class="input-res-level">
+                              </div>
+                              <div class="form-group mt-4">
+                                  <label class="form-label">Dapat Ditoleransi?</label>
+                                  <select class="form-control" name="items[{index}][kolom18_toleransi]">
+                                      <option value="Ya">Ya</option>
+                                      <option value="Tidak">Tidak</option>
+                                  </select>
+                              </div>
                           </div>
                      </div>
                 </div>
@@ -599,17 +708,13 @@
 
         const categories = {
             'K3': { label: 'K3', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
-            'KO': { label: 'KO', conditions: ['Normal', 'Abnormal', 'Emergency'] },
+            'KO': { label: 'KO', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
             'Lingkungan': { label: 'Lingkungan', conditions: ['Normal', 'Abnormal', 'Emergency'] },
-            'Keamanan': { label: 'Keamanan', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] }
+            'Keamanan': { label: 'Keamanan', conditions: ['Emergency'] }
         };
 
-        const hazards = {
-            'condition': ['Licin', 'Terjal', 'Panas', 'Bising', 'Gelap', 'Berdebu', 'Sempit'],
-            'action': ['Tidak Pakai APD', 'Bekerja Buru-buru', 'Posisi Salah', 'Mengabaikan Prosedur']
-        };
+        // Note: 'hazards' array logic is removed in favor of create.blade.php's explicit HTML structure logic
 
-        // Reuse JS logic from create.blade.php
         function addItem() {
             // Collapse all existing first
             document.querySelectorAll('.doc-item').forEach(el => collapseItem(el));
@@ -631,13 +736,24 @@
             itemNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             itemIndex++;
-            updateRemoveButtons();
+            updateItemNumbers();
         }
 
         function removeItem(btn) {
-            if(!confirm('Hapus item ini?')) return;
-            btn.closest('.doc-item').remove();
-            updateItemNumbers();
+            Swal.fire({
+                title: 'Hapus Item?',
+                text: "Data item ini akan dihapus.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    btn.closest('.doc-item').remove();
+                    updateItemNumbers();
+                }
+            });
         }
 
         function toggleCollapse(header) {
@@ -646,7 +762,7 @@
             const icon = item.querySelector('.btn-collapse i');
             const summary = item.querySelector('.item-summary');
             
-            if (!content || !icon) return; // Guard
+            if (!content || !icon) return; 
 
             if (content.style.display === 'none') {
                 content.style.display = 'block';
@@ -681,7 +797,7 @@
             const item = input.closest('.doc-item');
             const summary = item.querySelector('.item-summary');
             if(input.value) {
-                const limit = 30;
+                const limit = 40;
                 let txt = input.value;
                 if(txt.length > limit) txt = txt.substring(0, limit) + '...';
                 summary.textContent = `(${txt})`;
@@ -690,10 +806,11 @@
             }
         }
 
-         function updateItemNumbers() {
+        function updateItemNumbers() {
             const items = document.querySelectorAll('.doc-item');
             items.forEach((item, idx) => {
-                item.querySelector('.item-number').textContent = '#' + (idx + 1);
+                const numBadge = item.querySelector('.item-number');
+                if (numBadge) numBadge.textContent = '#' + (idx + 1);
             });
             updateRemoveButtons();
         }
@@ -704,16 +821,42 @@
             else buttons.forEach(b => b.style.display = 'block');
         }
 
-         function updateConditions(select) {
+        function updateConditions(select) {
             const item = select.closest('.doc-item');
             const condSelect = item.querySelector('.condition-select');
             const cat = select.value;
-            const toggles = item.querySelector('.hazard-toggles');
-            const hazardOptions = item.querySelector('.hazard-options');
+            
+            const k3KoField = item.querySelector('.k3-ko-field');
+            const lingkunganField = item.querySelector('.lingkungan-field');
+            const keamananField = item.querySelector('.keamanan-field');
+            const lingkunganOnlyField = item.querySelector('.lingkungan-only-field');
+
+            const kolom9K3KO = item.querySelector('.kolom9-k3ko-field');
+            const kolom9Lingkungan = item.querySelector('.kolom9-lingkungan-field');
+            const kolom9Keamanan = item.querySelector('.kolom9-keamanan-field');
 
             condSelect.innerHTML = '<option value="">-- Pilih --</option>';
-            hazardOptions.innerHTML = '';
 
+            // 1. Reset/Hide All
+            if (k3KoField) k3KoField.style.display = 'none';
+            if (lingkunganField) lingkunganField.style.display = 'none';
+            if (keamananField) keamananField.style.display = 'none';
+            if (lingkunganOnlyField) lingkunganOnlyField.style.display = 'none';
+
+            if (kolom9K3KO) {
+                kolom9K3KO.style.display = 'none';
+                kolom9K3KO.querySelector('textarea')?.removeAttribute('required');
+            }
+            if (kolom9Lingkungan) {
+                kolom9Lingkungan.style.display = 'none';
+                kolom9Lingkungan.querySelector('textarea')?.removeAttribute('required');
+            }
+            if (kolom9Keamanan) {
+                kolom9Keamanan.style.display = 'none';
+                kolom9Keamanan.querySelector('textarea')?.removeAttribute('required');
+            }
+
+            // 3. Populate Conditions
             if (categories[cat]) {
                 categories[cat].conditions.forEach(c => {
                     const opt = document.createElement('option');
@@ -722,83 +865,122 @@
                     condSelect.appendChild(opt);
                 });
 
+                // 4. Show Specific
                 if (cat === 'K3' || cat === 'KO') {
-                     if(toggles) toggles.classList.remove('hidden');
-                     loadHazards(item, 'condition'); 
-                } else {
-                     if(toggles) toggles.classList.add('hidden');
-                     ['Pencemaran Air', 'Pencemaran Udara', 'Kebisingan'].forEach(h => {
-                         addCheckbox(hazardOptions, item.dataset.index, h);
-                     });
+                     if (k3KoField) {
+                         k3KoField.style.display = 'block';
+                         k3KoField.querySelectorAll('input').forEach(i => i.disabled = false);
+                     }
+                     if (kolom9K3KO) {
+                         kolom9K3KO.style.display = 'block';
+                         kolom9K3KO.querySelector('textarea')?.setAttribute('required', 'required');
+                     }
+                     
+                     if (lingkunganField) lingkunganField.querySelectorAll('input').forEach(i => i.disabled = true);
+                     if (keamananField) keamananField.querySelectorAll('input').forEach(i => i.disabled = true);
+
+                } else if (cat === 'Lingkungan') {
+                     if (lingkunganField) {
+                         lingkunganField.style.display = 'block';
+                         lingkunganField.querySelectorAll('input').forEach(i => i.disabled = false);
+                     }
+                     if (lingkunganOnlyField) lingkunganOnlyField.style.display = 'block';
+                     
+                     if (kolom9Lingkungan) {
+                         kolom9Lingkungan.style.display = 'block';
+                         kolom9Lingkungan.querySelector('textarea')?.setAttribute('required', 'required');
+                     }
+
+                     if (k3KoField) k3KoField.querySelectorAll('input').forEach(i => i.disabled = true);
+                     if (keamananField) keamananField.querySelectorAll('input').forEach(i => i.disabled = true);
+
+                } else if (cat === 'Keamanan') {
+                     if (keamananField) {
+                         keamananField.style.display = 'block';
+                         keamananField.querySelectorAll('input').forEach(i => i.disabled = false);
+                     }
+
+                     if (kolom9Keamanan) {
+                         kolom9Keamanan.style.display = 'block';
+                         kolom9Keamanan.querySelector('textarea')?.setAttribute('required', 'required');
+                     }
+
+                     if (k3KoField) k3KoField.querySelectorAll('input').forEach(i => i.disabled = true);
+                     if (lingkunganField) lingkunganField.querySelectorAll('input').forEach(i => i.disabled = true);
                 }
             }
-        }
-
-        function toggleBahayaType(btn, type) {
-            const group = btn.parentElement;
-            group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            const item = btn.closest('.doc-item');
-            loadHazards(item, type);
-        }
-
-        function loadHazards(item, type) {
-            const container = item.querySelector('.hazard-options');
-            container.innerHTML = '';
-            // For new items, we use index from dataset. For existing, it's PHP index. logic is same.
-            let idx = item.dataset.index;
-            // If template uses {index}, it's replaced. Here we use runtime index.
-            
-            // NOTE: This clears existing checks! Only use on Toggle or Category Change.
-            
-            hazards[type].forEach(h => {
-                 addCheckbox(container, idx, h);
-            });
-        }
-
-        function addCheckbox(container, idx, label) {
-            // Need to handle Items Array Name correctly: items[idx][kolom6_bahaya][]
-            const html = `
-                <label class="checkbox-card">
-                    <input type="checkbox" name="items[${idx}][kolom6_bahaya][]" value="${label}"> ${label}
-                </label>
-            `;
-            container.insertAdjacentHTML('beforeend', html);
         }
 
         function calculateItemRisk(el) {
             const item = el.closest('.doc-item');
             const likelihood = parseInt(item.querySelector('.likelihood-select').value) || 0;
             const severity = parseInt(item.querySelector('.severity-select').value) || 0;
-            
+
             const score = likelihood * severity;
-            updateRiskUI(item, score, '.display-score', '.display-level', '.input-score', '.input-level', '.risk-result-box');
+            const scoreEl = item.querySelector('.display-score');
+            const levelEl = item.querySelector('.display-level');
+            const inputScore = item.querySelector('.input-score');
+            const inputLevel = item.querySelector('.input-level');
+            const riskBox = item.querySelector('.risk-result-box');
+
+            scoreEl.textContent = score || '-';
+            inputScore.value = score;
+
+            let level = 'Rendah';
+            let bg = '#e2e8f0'; 
+            let textColor = '#64748b';
+
+            if (score > 0) {
+                textColor = '#fff';
+                if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
+                else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; }
+                else { level = 'Rendah'; bg = '#10b981'; }
+            }
+
+            levelEl.textContent = (score > 0) ? level : 'PENDING';
+            inputLevel.value = level;
+            riskBox.style.background = bg;
+            riskBox.style.color = textColor;
+
+            const bagian5 = item.querySelector('.bagian-5-section');
+            if (bagian5) {
+                if (score < 8) {
+                    bagian5.style.display = 'none';
+                    const resFields = bagian5.querySelectorAll('.res-val');
+                    resFields.forEach(field => field.removeAttribute('required'));
+                } else {
+                    bagian5.style.display = 'block';
+                    const resFields = bagian5.querySelectorAll('.res-val');
+                    resFields.forEach(field => field.setAttribute('required', 'required'));
+                }
+            }
         }
 
         function calculateItemResidual(el) {
             const item = el.closest('.doc-item');
             const likelihood = parseInt(item.querySelector('[name*="residual_kemungkinan"]').value) || 0;
             const severity = parseInt(item.querySelector('[name*="residual_konsekuensi"]').value) || 0;
+
             const score = likelihood * severity;
-            
-            // For residual, we target specific classes
             const scoreEl = item.querySelector('.res-score');
             const levelEl = item.querySelector('.res-level');
             const resBox = item.querySelector('.res-box');
-            
+
             scoreEl.textContent = score || '-';
             item.querySelector('.input-res-score').value = score;
-            
-            let level = 'Rendah';
-            let bg = '#166534';
-            let textColor = '#fff';
-            
-            if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
-            else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; }
-            else if (score === 0) { level = 'PENDING'; bg = '#cbd5e1'; textColor = '#64748b'; }
 
-            levelEl.textContent = level;
+            let level = '-';
+            let bg = '#e2e8f0';
+            let textColor = '#64748b';
+
+            if (score > 0) {
+                textColor = '#fff';
+                if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
+                else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; }
+                else { level = 'Rendah'; bg = '#15803d'; }
+            }
+
+            levelEl.textContent = (score > 0) ? level : 'PENDING';
             item.querySelector('.input-res-level').value = level;
             if(resBox) {
                 resBox.style.background = bg;
@@ -806,60 +988,50 @@
             }
         }
 
-        function updateRiskUI(item, score, scoreSel, levelSel, inpScoreSel, inpLevelSel, boxSel) {
-            const scoreEl = item.querySelector(scoreSel);
-            const levelEl = item.querySelector(levelSel);
-            const inputScore = item.querySelector(inpScoreSel);
-            const inputLevel = item.querySelector(inpLevelSel);
-            const riskBox = item.querySelector(boxSel);
+        function validateForm() {
+            let valid = true;
+            let missingItems = [];
 
-            scoreEl.textContent = score || '-';
-            inputScore.value = score;
-            
-            let level = 'Rendah';
-            let bg = '#10b981'; // Green
-            let textColor = '#fff';
-            
-            if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
-            else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; } 
-            else if (score === 0) { level = 'PENDING'; bg = '#cbd5e1'; textColor = '#64748b'; }
+            // Simple validation
+            document.querySelectorAll('.doc-item').forEach(item => {
+                const initialScore = item.querySelector('.input-score').value;
+                if (!initialScore || initialScore == 0) {
+                    valid = false;
+                    missingItems.push("Item #" + item.querySelector('.item-number').innerText);
+                }
+            });
 
-            levelEl.textContent = level;
-            inputLevel.value = level;
-            if(riskBox) {
-                riskBox.style.background = bg;
-                riskBox.style.color = textColor;
+            if (!valid) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Belum Lengkap',
+                    text: 'Mohon lengkapi penilaian risiko.',
+                });
+                return false;
             }
+            return true;
         }
 
-        function validateForm() { return true; }
-
-        // Init Existing Items
         document.addEventListener('DOMContentLoaded', () => {
              const loadedItems = document.querySelectorAll('.item-loaded');
              if(loadedItems.length === 0) {
-                 addItem(); // Adds empty one if none
+                 addItem();
              } else {
-                 // Calculate risk for all loaded items
                  loadedItems.forEach(item => {
-                     // Trigger risk calc
+                     // Init calculations
                      const lSelect = item.querySelector('.likelihood-select');
                      if(lSelect) calculateItemRisk(lSelect);
                      
-                     // Trigger residual calc
                      const resSelect = item.querySelector('[name*="residual_kemungkinan"]');
                      if(resSelect) calculateItemResidual(resSelect);
                      
-                     // Collapse initially except first? Or allow user to see all?
-                     // Usually better to collapse to save space, but user is Editing so might want to see.
-                     // Let's collapse all except first.
                      if(item.dataset.index > 0) collapseItem(item);
                  });
              }
              updateRemoveButtons();
         });
         
-         document.addEventListener('keydown', function(event) {
+        document.addEventListener('keydown', function(event) {
             if(event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
                 event.preventDefault();
             }
