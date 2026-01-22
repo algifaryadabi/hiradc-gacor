@@ -375,8 +375,8 @@ class DocumentController extends Controller
             'items.*.kolom2_kegiatan' => 'required|string',
             'items.*.kolom3_lokasi' => 'required|string',
             'items.*.kolom5_kondisi' => 'required|string',
-            'items.*.residual_score' => 'required|numeric|min:1',
-            'items.*.residual_level' => 'required|string',
+            'items.*.residual_score' => 'nullable|numeric|min:0',
+            'items.*.residual_level' => 'nullable|string',
         ]);
 
         $user = Auth::user();
@@ -434,7 +434,7 @@ class DocumentController extends Controller
                 'kolom5_kondisi' => $firstItem['kolom5_kondisi'],
                 'kolom6_bahaya' => $headerBahaya,
                 // kolom7_dampak removed - no longer used in new structure
-                'kolom9_risiko' => $firstItem['kolom9_risiko'],
+                'kolom9_risiko' => $firstItem['kolom9_risiko'] ?? $firstItem['kolom9_risiko_k3ko'] ?? $firstItem['kolom9_dampak_lingkungan'] ?? $firstItem['kolom9_celah_keamanan'] ?? null,
                 'kolom10_pengendalian' => $headerControls,
                 'kolom11_existing' => $firstItem['kolom11_existing'],
                 'kolom12_kemungkinan' => $firstItem['kolom12_kemungkinan'],
@@ -474,10 +474,21 @@ class DocumentController extends Controller
                     'kolom5_kondisi' => $item['kolom5_kondisi'],
                     'kolom6_bahaya' => $bahayaData,
                     // Conditional: Aspek Lingkungan (Lingkungan category only)
-                    'kolom7_aspek_lingkungan' => $item['kolom7_aspek_lingkungan'] ?? null,
+                    'kolom7_aspek_lingkungan' => [
+                        'details' => $item['kolom7_aspek_lingkungan'] ?? [],
+                        'manual' => $item['aspek_manual'] ?? '',
+                    ],
                     // Conditional: Ancaman Keamanan (Keamanan category only)
-                    'kolom8_ancaman' => $item['kolom8_ancaman'] ?? null,
-                    'kolom9_risiko' => $item['kolom9_risiko'],
+                    'kolom8_ancaman' => [
+                        'details' => $item['kolom8_ancaman'] ?? [],
+                        'manual' => $item['ancaman_manual'] ?? '',
+                    ],
+                    // Kolom 9: Separate fields based on category
+                    'kolom9_risiko_k3ko' => $item['kolom9_risiko_k3ko'] ?? null,
+                    'kolom9_dampak_lingkungan' => $item['kolom9_dampak_lingkungan'] ?? null,
+                    'kolom9_celah_keamanan' => $item['kolom9_celah_keamanan'] ?? null,
+                    // Keep old kolom9_risiko for backward compatibility (default to '-' if all new fields are empty)
+                    'kolom9_risiko' => $item['kolom9_risiko_k3ko'] ?? $item['kolom9_dampak_lingkungan'] ?? $item['kolom9_celah_keamanan'] ?? '-',
                     'kolom10_pengendalian' => $controlsData,
                     'kolom11_existing' => $item['kolom11_existing'],
                     'kolom12_kemungkinan' => $item['kolom12_kemungkinan'],
@@ -495,10 +506,10 @@ class DocumentController extends Controller
                     'kolom21_konsekuensi_lanjut' => $item['kolom21_konsekuensi_lanjut'] ?? null,
                     'kolom22_tingkat_risiko_lanjut' => $item['kolom22_tingkat_risiko_lanjut'] ?? null,
                     'kolom22_level_lanjut' => $item['kolom22_level_lanjut'] ?? null,
-                    'residual_kemungkinan' => $item['residual_kemungkinan'],
-                    'residual_konsekuensi' => $item['residual_konsekuensi'],
-                    'residual_score' => $item['residual_score'] ?? ($item['residual_kemungkinan'] * $item['residual_konsekuensi']),
-                    'residual_level' => $item['residual_level'] ?? null,
+                    'residual_kemungkinan' => $item['residual_kemungkinan'] ?? 0,
+                    'residual_konsekuensi' => $item['residual_konsekuensi'] ?? 0,
+                    'residual_score' => $item['residual_score'] ?? (isset($item['residual_kemungkinan']) && isset($item['residual_konsekuensi']) ? ($item['residual_kemungkinan'] * $item['residual_konsekuensi']) : 0),
+                    'residual_level' => $item['residual_level'] ?? '-',
                 ]);
             }
 
@@ -642,10 +653,21 @@ class DocumentController extends Controller
                     'kolom5_kondisi' => $item['kolom5_kondisi'],
                     'kolom6_bahaya' => $bahayaData,
                     // Conditional: Aspek Lingkungan (Lingkungan category only)
-                    'kolom7_aspek_lingkungan' => $item['kolom7_aspek_lingkungan'] ?? null,
+                    'kolom7_aspek_lingkungan' => [
+                        'details' => $item['kolom7_aspek_lingkungan'] ?? [],
+                        'manual' => $item['aspek_manual'] ?? '',
+                    ],
                     // Conditional: Ancaman Keamanan (Keamanan category only)
-                    'kolom8_ancaman' => $item['kolom8_ancaman'] ?? null,
-                    'kolom9_risiko' => $item['kolom9_risiko'],
+                    'kolom8_ancaman' => [
+                        'details' => $item['kolom8_ancaman'] ?? [],
+                        'manual' => $item['ancaman_manual'] ?? '',
+                    ],
+                    // Kolom 9: Separate fields based on category
+                    'kolom9_risiko_k3ko' => $item['kolom9_risiko_k3ko'] ?? null,
+                    'kolom9_dampak_lingkungan' => $item['kolom9_dampak_lingkungan'] ?? null,
+                    'kolom9_celah_keamanan' => $item['kolom9_celah_keamanan'] ?? null,
+                    // Keep old kolom9_risiko for backward compatibility (default to '-' if all new fields are empty)
+                    'kolom9_risiko' => $item['kolom9_risiko_k3ko'] ?? $item['kolom9_dampak_lingkungan'] ?? $item['kolom9_celah_keamanan'] ?? '-',
                     'kolom10_pengendalian' => $controlsData,
                     'kolom11_existing' => $item['kolom11_existing'],
                     'kolom12_kemungkinan' => $item['kolom12_kemungkinan'],
@@ -663,10 +685,10 @@ class DocumentController extends Controller
                     'kolom21_konsekuensi_lanjut' => $item['kolom21_konsekuensi_lanjut'] ?? null,
                     'kolom22_tingkat_risiko_lanjut' => $item['kolom22_tingkat_risiko_lanjut'] ?? null,
                     'kolom22_level_lanjut' => $item['kolom22_level_lanjut'] ?? null,
-                    'residual_kemungkinan' => $item['residual_kemungkinan'],
-                    'residual_konsekuensi' => $item['residual_konsekuensi'],
-                    'residual_score' => $item['residual_score'] ?? ($item['residual_kemungkinan'] * $item['residual_konsekuensi']),
-                    'residual_level' => $item['residual_level'] ?? null,
+                    'residual_kemungkinan' => $item['residual_kemungkinan'] ?? 0,
+                    'residual_konsekuensi' => $item['residual_konsekuensi'] ?? 0,
+                    'residual_score' => $item['residual_score'] ?? (isset($item['residual_kemungkinan']) && isset($item['residual_konsekuensi']) ? ($item['residual_kemungkinan'] * $item['residual_konsekuensi']) : 0),
+                    'residual_level' => $item['residual_level'] ?? '-',
                 ];
 
                 if (isset($item['id']) && in_array($item['id'], $existingIds)) {

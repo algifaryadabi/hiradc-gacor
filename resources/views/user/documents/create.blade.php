@@ -720,13 +720,27 @@
                                 <i class="fas fa-hard-hat" style="color: #f59e0b;"></i>
                                 Kolom 6: POTENSI BAHAYA (K3/KO)
                             </label>
-                            <div class="toggle-group hazard-toggles hidden" style="margin-bottom:15px;">
-                                <button type="button" class="toggle-btn active"
-                                    onclick="toggleBahayaType(this, 'condition')">Unsafe Condition</button>
-                                <button type="button" class="toggle-btn"
-                                    onclick="toggleBahayaType(this, 'action')">Unsafe Action</button>
+                            <div class="hazard-options checkbox-grid"
+                                style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                                <label class="checkbox-card"><input type="checkbox"
+                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya Fisika"> Bahaya
+                                    Fisika</label>
+                                <label class="checkbox-card"><input type="checkbox"
+                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya Kimia"> Bahaya
+                                    Kimia</label>
+                                <label class="checkbox-card"><input type="checkbox"
+                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya Biologi"> Bahaya
+                                    Biologi</label>
+                                <label class="checkbox-card"><input type="checkbox"
+                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya Fisiologis/Ergonomi">
+                                    Bahaya Fisiologis/Ergonomi</label>
+                                <label class="checkbox-card"><input type="checkbox"
+                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya Psikologis"> Bahaya
+                                    Psikologis</label>
+                                <label class="checkbox-card"><input type="checkbox"
+                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya dari Prilaku"> Bahaya dari
+                                    Prilaku</label>
                             </div>
-                            <div class="hazard-options checkbox-grid"></div>
                             <div class="form-group mt-4">
                                 <label class="form-label">Bahaya Lainnya (Manual)</label>
                                 <input type="text" class="form-control bahaya-manual-input"
@@ -744,17 +758,32 @@
                             <div class="checkbox-grid"
                                 style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
                                 <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
-                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Pencemaran Air">
-                                    Pencemaran Air</label>
+                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Emisi ke udara">
+                                    Emisi ke udara</label>
                                 <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
-                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Pencemaran Udara">
-                                    Pencemaran Udara</label>
+                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Pembuangan ke air">
+                                    Pembuangan ke air</label>
                                 <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
-                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Kebisingan">
-                                    Kebisingan</label>
+                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Pembuangan ke tanah">
+                                    Pembuangan ke tanah</label>
                                 <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
-                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Limbah B3"> Limbah
-                                    B3</label>
+                                        name="items[{index}][kolom7_aspek_lingkungan][]"
+                                        value="Penggunaan Bahan Baku dan SDA">
+                                    Penggunaan Bahan Baku dan SDA</label>
+                                <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
+                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Penggunaan energi">
+                                    Penggunaan energi</label>
+                                <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
+                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Paparan energi">
+                                    Paparan energi</label>
+                                <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
+                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Limbah">
+                                    Limbah</label>
+                            </div>
+                            <div class="form-group mt-4">
+                                <label class="form-label">Aspek Lainnya (Manual)</label>
+                                <input type="text" class="form-control aspects-manual-input"
+                                    name="items[{index}][aspek_manual]" placeholder="Deskripsi aspek lain...">
                             </div>
                         </div>
 
@@ -768,320 +797,359 @@
                             <div class="checkbox-grid"
                                 style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
                                 <label class="checkbox-card"><input type="checkbox" class="ancaman-keamanan-checkbox"
-                                        name="items[{index}][kolom8_ancaman][]" value="Pencurian"> Pencurian</label>
-                                <label class="checkbox-card"><input type="checkbox" class="ancaman-keamanan-checkbox"
-                                        name="items[{index}][kolom8_ancaman][]" value="Penyusupan"> Penyusupan</label>
+                                        name="items[{index}][kolom8_ancaman][]" value="Terorisme"> Terorisme</label>
                                 <label class="checkbox-card"><input type="checkbox" class="ancaman-keamanan-checkbox"
                                         name="items[{index}][kolom8_ancaman][]" value="Sabotase"> Sabotase</label>
                                 <label class="checkbox-card"><input type="checkbox" class="ancaman-keamanan-checkbox"
-                                        name="items[{index}][kolom8_ancaman][]" value="Terorisme"> Terorisme</label>
+                                        name="items[{index}][kolom8_ancaman][]" value="Intimidasi"> Intimidasi</label>
+                                <label class="checkbox-card"><input type="checkbox" class="ancaman-keamanan-checkbox"
+                                        name="items[{index}][kolom8_ancaman][]" value="Pencurian"> Pencurian</label>
+                                <label class="checkbox-card"><input type="checkbox" class="ancaman-keamanan-checkbox"
+                                        name="items[{index}][kolom8_ancaman][]" value="Perusakan aset"> Perusakan
+                                    aset</label>
+                            </div>
+                            <div class="form-group mt-4">
+                                <label class="form-label">Ancaman Lainnya (Manual)</label>
+                                <input type="text" class="form-control threats-manual-input"
+                                    name="items[{index}][ancaman_manual]" placeholder="Deskripsi ancaman lain...">
                             </div>
                         </div>
 
-                        <!-- Column 9: RISIKO / DAMPAK / CELAH (conditional label) -->
-                        <div class="form-group">
-                            <label class="form-label kolom9-label">
+                        <!-- Column 9: RISIKO / DAMPAK / CELAH (3 separate fields based on category) -->
+                        <!-- Kolom 9a: RISIKO (K3/KO) -->
+                        <div class="form-group kolom9-k3ko-field" style="display: none;">
+                            <label class="form-label">
                                 Kolom 9: RISIKO <span class="required">*</span>
                             </label>
-                            <textarea class="form-control kolom9-textarea" name="items[{index}][kolom9_risiko]" required
-                                placeholder="Jelaskan risiko yang dapat terjadi..." rows="3"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Removed old Risk Analysis - now part of column 9 above -->
-
-                    <!-- 3. Pengendalian & Penilaian Risiko Saat Ini -->
-                    <div style="margin-bottom: 25px;">
-                        <h3
-                            style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
-                            <i class="fas fa-shield-alt" style="color: #10b981; margin-right: 8px;"></i>
-                            BAGIAN 3: Pengendalian & Penilaian Risiko Saat Ini
-                        </h3>
-
-                        <!-- Columns 10-11: Pengendalian -->
-                        <div class="form-group">
-                            <label class="form-label">Kolom 10: Hirarki Pengendalian Risiko</label>
-                            <div class="checkbox-grid hierarchy-checkboxes"
-                                style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
-                                <label class="checkbox-card"><input type="checkbox"
-                                        name="items[{index}][kolom10_pengendalian][]" value="Eliminasi"
-                                        onchange="updateKolom11(this)">
-                                    Eliminasi</label>
-                                <label class="checkbox-card"><input type="checkbox"
-                                        name="items[{index}][kolom10_pengendalian][]" value="Substitusi"
-                                        onchange="updateKolom11(this)">
-                                    Substitusi</label>
-                                <label class="checkbox-card"><input type="checkbox"
-                                        name="items[{index}][kolom10_pengendalian][]" value="Rekayasa Teknik"
-                                        onchange="updateKolom11(this)"> Rekayasa
-                                    Teknik</label>
-                                <label class="checkbox-card"><input type="checkbox"
-                                        name="items[{index}][kolom10_pengendalian][]" value="Pengendalian Administratif"
-                                        onchange="updateKolom11(this)">
-                                    Pengendalian Administratif</label>
-                                <label class="checkbox-card"><input type="checkbox"
-                                        name="items[{index}][kolom10_pengendalian][]" value="APD"
-                                        onchange="updateKolom11(this)"> APD</label>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Kolom 11: Pengendalian yang Dilakukan <span
-                                    class="required">*</span></label>
-                            <small style="display: block; margin-bottom: 8px; color: #64748b;">
-                                <i class="fas fa-info-circle"></i> Hierarki pengendalian yang dipilih akan muncul di
-                                bawah. Tambahkan penjelasan detail untuk masing-masing.
-                            </small>
-                            <textarea class="form-control kolom11-textarea" name="items[{index}][kolom11_existing]"
-                                required rows="5"
-                                placeholder="Pengendalian akan muncul otomatis berdasarkan pilihan di atas. Tambahkan penjelasan detail untuk setiap hierarki..."></textarea>
+                            <textarea class="form-control" name="items[{index}][kolom9_risiko_k3ko]"
+                                placeholder="Jelaskan risiko yang dapat terjadi dari bahaya yang teridentifikasi..."
+                                rows="3"></textarea>
                         </div>
 
-                        <!-- Columns 12-14: Penilaian Risiko Awal (was section 4) -->
-                        <div
-                            style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #e2e8f0; margin-top:20px;">
-                            <h4
-                                style="font-size:13px; font-weight:700; margin-bottom:15px; text-transform:uppercase; color:#334155;">
-                                Kolom 12-14: Penilaian Risiko Awal (dengan Pengendalian yang Ada)</h4>
-                            <div style="display: flex; gap: 20px; align-items: flex-start;">
+                        <!-- Kolom 9b: DAMPAK LINGKUNGAN (Lingkungan) -->
+                        <div class="form-group kolom9-lingkungan-field" style="display: none;">
+                            <label class="form-label">
+                                Kolom 9: DAMPAK LINGKUNGAN <span class="required">*</span>
+                            </label>
+                            <textarea class="form-control" name="items[{index}][kolom9_dampak_lingkungan]"
+                                placeholder="Jelaskan dampak lingkungan yang dapat terjadi dari aspek lingkungan yang teridentifikasi..."
+                                rows="3"></textarea>
+                        </div>
 
+                        <!-- Kolom 9c: CELAH TIDAK AMAN (Keamanan) -->
+                        <div class="form-group kolom9-keamanan-field" style="display: none;">
+                            <label class="form-label">
+                                Kolom 9: CELAH TIDAK AMAN <span class="required">*</span>
+                            </label>
+                            <textarea class="form-control" name="items[{index}][kolom9_celah_keamanan]"
+                                placeholder="Jelaskan celah tidak aman yang dapat dieksploitasi dari ancaman yang teridentifikasi..."
+                                rows="3"></textarea>
+                        </div>
 
-                                <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                    <div class="form-group">
-                                        <label class="form-label">Kolom 12: Kemungkinan (Likelihood)</label>
-                                        <select class="form-control likelihood-select"
-                                            name="items[{index}][kolom12_kemungkinan]" required
-                                            onchange="calculateItemRisk(this)">
-                                            <option value="">-- Pilih --</option>
-                                            <option value="1">1 - Sangat Jarang</option>
-                                            <option value="2">2 - Jarang</option>
-                                            <option value="3">3 - Kadang-kadang</option>
-                                            <option value="4">4 - Sering</option>
-                                            <option value="5">5 - Sangat Sering</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Kolom 13: Konsekuensi (Severity)</label>
-                                        <select class="form-control severity-select"
-                                            name="items[{index}][kolom13_konsekuensi]" required
-                                            onchange="calculateItemRisk(this)">
-                                            <option value="">-- Pilih --</option>
-                                            <option value="1">1 - Tidak Signifikan</option>
-                                            <option value="2">2 - Minor</option>
-                                            <option value="3">3 - Moderate</option>
-                                            <option value="4">4 - Major</option>
-                                            <option value="5">5 - Catastrophic</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div style="flex: 0 0 160px; text-align:center;">
-                                    <label class="form-label">Kolom 14: Tingkat Risiko</label>
-                                    <div class="risk-result-box"
-                                        style="padding:15px; border-radius:8px; transition: background 0.3s; background: #e2e8f0; border: 1px solid #cbd5e1;">
-                                        <div class="risk-score display-score" style="font-size: 24px;">-</div>
-                                        <span class="risk-level display-level" style="font-size: 11px;">PENDING</span>
-                                    </div>
-                                    <input type="hidden" name="items[{index}][kolom14_score]" class="input-score">
-                                    <input type="hidden" name="items[{index}][kolom14_level]" class="input-level">
+                        <!-- Removed old Risk Analysis - now part of column 9 above -->
+
+                        <!-- 3. Pengendalian & Penilaian Risiko Saat Ini -->
+                        <div style="margin-bottom: 25px;">
+                            <h3
+                                style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                                <i class="fas fa-shield-alt" style="color: #10b981; margin-right: 8px;"></i>
+                                BAGIAN 3: Pengendalian & Penilaian Risiko Saat Ini
+                            </h3>
+
+                            <!-- Columns 10-11: Pengendalian -->
+                            <div class="form-group">
+                                <label class="form-label">Kolom 10: Hirarki Pengendalian Risiko</label>
+                                <div class="checkbox-grid hierarchy-checkboxes"
+                                    style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
+                                    <label class="checkbox-card"><input type="checkbox"
+                                            name="items[{index}][kolom10_pengendalian][]" value="Eliminasi"
+                                            onchange="updateKolom11(this)">
+                                        Eliminasi</label>
+                                    <label class="checkbox-card"><input type="checkbox"
+                                            name="items[{index}][kolom10_pengendalian][]" value="Substitusi"
+                                            onchange="updateKolom11(this)">
+                                        Substitusi</label>
+                                    <label class="checkbox-card"><input type="checkbox"
+                                            name="items[{index}][kolom10_pengendalian][]" value="Rekayasa Teknik"
+                                            onchange="updateKolom11(this)"> Rekayasa
+                                        Teknik</label>
+                                    <label class="checkbox-card"><input type="checkbox"
+                                            name="items[{index}][kolom10_pengendalian][]"
+                                            value="Pengendalian Administratif" onchange="updateKolom11(this)">
+                                        Pengendalian Administratif</label>
+                                    <label class="checkbox-card"><input type="checkbox"
+                                            name="items[{index}][kolom10_pengendalian][]" value="APD"
+                                            onchange="updateKolom11(this)"> APD</label>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- 4. Legalitas & Signifikansi -->
-                    <div style="margin-bottom: 25px;">
-                        <h3
-                            style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
-                            <i class="fas fa-gavel" style="color: #8b5cf6; margin-right: 8px;"></i>
-                            BAGIAN 4: Legalitas & Signifikansi
-                        </h3>
-
-                        <!-- Column 15: Peraturan -->
-                        <div class="form-group">
-                            <label class="form-label">Kolom 15: Peraturan Perundangan Terkait</label>
-                            <textarea class="form-control" name="items[{index}][kolom15_regulasi]" rows="2"
-                                placeholder="Referensi UU, PP, Permenaker, atau standar lain yang relevan..."></textarea>
-                        </div>
-
-                        <!-- Column 16: ASPEK LINGKUNGAN PENTING (only for Lingkungan category) -->
-                        <div class="form-group lingkungan-only-field" style="display: none;">
-                            <label class="form-label">Kolom 16: Aspek Lingkungan Penting P/TP</label>
-                            <div style="display:flex; gap:15px; margin-top:10px;">
-                                <label class="control-radio"
-                                    style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="radio" name="items[{index}][kolom16_aspek]" value="P"
-                                        style="cursor: pointer;">
-                                    <span>Penting (P)</span>
-                                </label>
-                                <label class="control-radio"
-                                    style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="radio" name="items[{index}][kolom16_aspek]" value="TP" checked
-                                        style="cursor: pointer;">
-                                    <span>Tidak Penting (TP)</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Column 17: Peluang & Risiko -->
-                        <div class="form-grid-2">
                             <div class="form-group">
-                                <label class="form-label">Kolom 17: Peluang</label>
-                                <textarea class="form-control" name="items[{index}][kolom17_peluang]" rows="2"
-                                    placeholder="Jika ada peluang perbaikan atau inovasi..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Kolom 17: Risiko</label>
-                                <textarea class="form-control" name="items[{index}][kolom17_risiko]" rows="2"
-                                    placeholder="Jika ada risiko tambahan yang belum tercover..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 5. Mitigasi Lanjutan & Risiko Sisa -->
-                    <div>
-                        <h3
-                            style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
-                            <i class="fas fa-check-double" style="color: #15803d; margin-right: 8px;"></i>
-                            BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa
-                        </h3>
-                        <div style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
-
-                            <!-- Column 18: Toleransi -->
-                            <div class="form-group">
-                                <label class="form-label">Kolom 18: Risiko Dapat Ditoleransi? <span
+                                <label class="form-label">Kolom 11: Pengendalian yang Dilakukan <span
                                         class="required">*</span></label>
-                                <select class="form-control tolerance-select" name="items[{index}][kolom18_toleransi]"
-                                    required onchange="toggleFollowUpFields(this)">
-                                    <option value="Ya" selected>Ya - Dapat Ditoleransi</option>
-                                    <option value="Tidak">Tidak - Perlu Tindak Lanjut</option>
-                                </select>
-                                <small style="display: block; margin-top: 6px; color: #64748b;">
-                                    Jika "Tidak", kolom 19-22 (Pengendalian Tindak Lanjut) akan muncul.
+                                <small style="display: block; margin-bottom: 8px; color: #64748b;">
+                                    <i class="fas fa-info-circle"></i> Hierarki pengendalian yang dipilih akan muncul di
+                                    bawah. Tambahkan penjelasan detail untuk masing-masing.
                                 </small>
+                                <textarea class="form-control kolom11-textarea" name="items[{index}][kolom11_existing]"
+                                    required rows="5"
+                                    placeholder="Pengendalian akan muncul otomatis berdasarkan pilihan di atas. Tambahkan penjelasan detail untuk setiap hierarki..."></textarea>
                             </div>
 
-                            <!-- Columns 19-22: Follow-up Controls (only if tolerance = Tidak) -->
-                            <div class="follow-up-section" style="display: none; margin-top: 20px;">
+                            <!-- Columns 12-14: Penilaian Risiko Awal (was section 4) -->
+                            <div
+                                style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #e2e8f0; margin-top:20px;">
                                 <h4
-                                    style="font-size:13px; font-weight:700; margin-bottom:15px; text-transform:uppercase; color:#15803d; border-top: 2px dashed #bbf7d0; padding-top: 15px;">
-                                    <i class="fas fa-exclamation-circle" style="margin-right:8px;"></i>
-                                    Pengendalian Tindak Lanjut (Kolom 19-22)
-                                </h4>
+                                    style="font-size:13px; font-weight:700; margin-bottom:15px; text-transform:uppercase; color:#334155;">
+                                    Kolom 12-14: Penilaian Risiko Awal (dengan Pengendalian yang Ada)</h4>
+                                <div style="display: flex; gap: 20px; align-items: flex-start;">
 
-                                <!-- Column 19: Pengendalian Lanjut -->
-                                <div class="form-group">
-                                    <label class="form-label">Kolom 19: Rencana Pengendalian Tindak Lanjut <span
-                                            class="required">*</span></label>
-                                    <textarea class="form-control follow-up-field"
-                                        name="items[{index}][kolom19_pengendalian_lanjut]" rows="3"
-                                        placeholder="Jelaskan tindakan pengendalian tambahan yang akan dilakukan..."></textarea>
-                                </div>
 
-                                <!-- Columns 20-22: Penilaian Risiko Setelah Tindak Lanjut -->
-                                <div
-                                    style="background: #dcfce7; padding: 15px; border-radius: 8px; border: 1px solid #86efac;">
-                                    <h5 style="font-size:12px; font-weight:700; margin-bottom:12px; color:#166534;">
-                                        Penilaian Risiko Setelah Pengendalian Tindak Lanjut
-                                    </h5>
-                                    <div style="display: flex; gap: 20px; align-items: flex-start;">
-                                        <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                            <div class="form-group">
-                                                <label class="form-label">Kolom 20: Kemungkinan (Lanjut)</label>
-                                                <select class="form-control follow-up-field"
-                                                    name="items[{index}][kolom20_kemungkinan_lanjut]"
-                                                    onchange="calculateFollowUpRisk(this)">
-                                                    <option value="">-- Pilih --</option>
-                                                    <option value="1">1 - Sangat Jarang</option>
-                                                    <option value="2">2 - Jarang</option>
-                                                    <option value="3">3 - Kadang-kadang</option>
-                                                    <option value="4">4 - Sering</option>
-                                                    <option value="5">5 - Sangat Sering</option>
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Kolom 21: Konsekuensi (Lanjut)</label>
-                                                <select class="form-control follow-up-field"
-                                                    name="items[{index}][kolom21_konsekuensi_lanjut]"
-                                                    onchange="calculateFollowUpRisk(this)">
-                                                    <option value="">-- Pilih --</option>
-                                                    <option value="1">1 - Tidak Signifikan</option>
-                                                    <option value="2">2 - Minor</option>
-                                                    <option value="3">3 - Moderate</option>
-                                                    <option value="4">4 - Major</option>
-                                                    <option value="5">5 - Catastrophic</option>
-                                                </select>
-                                            </div>
+                                    <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                        <div class="form-group">
+                                            <label class="form-label">Kolom 12: Kemungkinan (Likelihood)</label>
+                                            <select class="form-control likelihood-select"
+                                                name="items[{index}][kolom12_kemungkinan]" required
+                                                onchange="calculateItemRisk(this)">
+                                                <option value="">-- Pilih --</option>
+                                                <option value="1">1 - Sangat Jarang</option>
+                                                <option value="2">2 - Jarang</option>
+                                                <option value="3">3 - Kadang-kadang</option>
+                                                <option value="4">4 - Sering</option>
+                                                <option value="5">5 - Sangat Sering</option>
+                                            </select>
                                         </div>
-                                        <div style="flex: 0 0 160px; text-align:center;">
-                                            <label class="form-label">Kolom 22: Tingkat Risiko</label>
-                                            <div class="risk-result-box followup-box"
-                                                style="padding:15px; border-radius:8px; background:#166534; color:white;">
-                                                <div class="risk-score followup-score" style="font-size:24px;">-</div>
-                                                <span class="risk-level followup-level"
-                                                    style="font-size:11px; opacity:0.9;">PENDING</span>
-                                            </div>
-                                            <input type="hidden" name="items[{index}][kolom22_tingkat_risiko_lanjut]"
-                                                class="input-followup-score">
-                                            <input type="hidden" name="items[{index}][kolom22_level_lanjut]"
-                                                class="input-followup-level">
+                                        <div class="form-group">
+                                            <label class="form-label">Kolom 13: Konsekuensi (Severity)</label>
+                                            <select class="form-control severity-select"
+                                                name="items[{index}][kolom13_konsekuensi]" required
+                                                onchange="calculateItemRisk(this)">
+                                                <option value="">-- Pilih --</option>
+                                                <option value="1">1 - Tidak Signifikan</option>
+                                                <option value="2">2 - Minor</option>
+                                                <option value="3">3 - Moderate</option>
+                                                <option value="4">4 - Major</option>
+                                                <option value="5">5 - Catastrophic</option>
+                                            </select>
                                         </div>
+                                    </div>
+                                    <div style="flex: 0 0 160px; text-align:center;">
+                                        <label class="form-label">Kolom 14: Tingkat Risiko</label>
+                                        <div class="risk-result-box"
+                                            style="padding:15px; border-radius:8px; transition: background 0.3s; background: #e2e8f0; border: 1px solid #cbd5e1;">
+                                            <div class="risk-score display-score" style="font-size: 24px;">-</div>
+                                            <span class="risk-level display-level"
+                                                style="font-size: 11px;">PENDING</span>
+                                        </div>
+                                        <input type="hidden" name="items[{index}][kolom14_score]" class="input-score">
+                                        <input type="hidden" name="items[{index}][kolom14_level]" class="input-level">
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <hr style="border:0; border-top:1px dashed #bbf7d0; margin:20px 0;">
+                        <!-- 4. Legalitas & Signifikansi -->
+                        <div style="margin-bottom: 25px;">
+                            <h3
+                                style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                                <i class="fas fa-gavel" style="color: #8b5cf6; margin-right: 8px;"></i>
+                                BAGIAN 4: Legalitas & Signifikansi
+                            </h3>
 
-                            <!-- Residual Risk (Always shown - this is the final risk after controls) -->
-                            <h4
-                                style="font-size:13px; font-weight:700; margin-bottom:15px; text-transform:uppercase; color:#15803d;">
-                                <i class="fas fa-chart-line" style="margin-right:8px;"></i>
-                                Risiko Residual (Risiko Akhir)
-                            </h4>
-                            <div style="display: flex; gap: 20px; align-items:flex-start;">
-                                <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <!-- Column 15: Peraturan -->
+                            <div class="form-group">
+                                <label class="form-label">Kolom 15: Peraturan Perundangan Terkait</label>
+                                <textarea class="form-control" name="items[{index}][kolom15_regulasi]" rows="2"
+                                    placeholder="Referensi UU, PP, Permenaker, atau standar lain yang relevan..."></textarea>
+                            </div>
+
+                            <!-- Column 16: ASPEK LINGKUNGAN PENTING (only for Lingkungan category) -->
+                            <div class="form-group lingkungan-only-field" style="display: none;">
+                                <label class="form-label">Kolom 16: Aspek Lingkungan Penting P/TP</label>
+                                <div style="display:flex; gap:15px; margin-top:10px;">
+                                    <label class="control-radio"
+                                        style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="radio" name="items[{index}][kolom16_aspek]" value="P"
+                                            style="cursor: pointer;">
+                                        <span>Penting (P)</span>
+                                    </label>
+                                    <label class="control-radio"
+                                        style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="radio" name="items[{index}][kolom16_aspek]" value="TP" checked
+                                            style="cursor: pointer;">
+                                        <span>Tidak Penting (TP)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Column 17: Peluang & Risiko -->
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label class="form-label">Kolom 17: Peluang</label>
+                                    <textarea class="form-control" name="items[{index}][kolom17_peluang]" rows="2"
+                                        placeholder="Jika ada peluang perbaikan atau inovasi..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Kolom 17: Risiko</label>
+                                    <textarea class="form-control" name="items[{index}][kolom17_risiko]" rows="2"
+                                        placeholder="Jika ada risiko tambahan yang belum tercover..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Mitigasi Lanjutan & Risiko Sisa -->
+                        <div class="bagian-5-section">
+                            <h3
+                                style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                                <i class="fas fa-check-double" style="color: #15803d; margin-right: 8px;"></i>
+                                BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa
+                            </h3>
+                            <div
+                                style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
+
+                                <!-- Column 18: Toleransi -->
+                                <div class="form-group">
+                                    <label class="form-label">Kolom 18: Risiko Dapat Ditoleransi? <span
+                                            class="required">*</span></label>
+                                    <select class="form-control tolerance-select"
+                                        name="items[{index}][kolom18_toleransi]" required
+                                        onchange="toggleFollowUpFields(this)">
+                                        <option value="Ya" selected>Ya - Dapat Ditoleransi</option>
+                                        <option value="Tidak">Tidak - Perlu Tindak Lanjut</option>
+                                    </select>
+                                    <small style="display: block; margin-top: 6px; color: #64748b;">
+                                        Jika "Tidak", kolom 19-22 (Pengendalian Tindak Lanjut) akan muncul.
+                                    </small>
+                                </div>
+
+                                <!-- Columns 19-22: Follow-up Controls (only if tolerance = Tidak) -->
+                                <div class="follow-up-section" style="display: none; margin-top: 20px;">
+                                    <h4
+                                        style="font-size:13px; font-weight:700; margin-bottom:15px; text-transform:uppercase; color:#15803d; border-top: 2px dashed #bbf7d0; padding-top: 15px;">
+                                        <i class="fas fa-exclamation-circle" style="margin-right:8px;"></i>
+                                        Pengendalian Tindak Lanjut (Kolom 19-22)
+                                    </h4>
+
+                                    <!-- Column 19: Pengendalian Lanjut -->
                                     <div class="form-group">
-                                        <label class="form-label">Kemungkinan (Residual) <span
+                                        <label class="form-label">Kolom 19: Rencana Pengendalian Tindak Lanjut <span
                                                 class="required">*</span></label>
-                                        <select class="form-control res-val" name="items[{index}][residual_kemungkinan]"
-                                            required onchange="calculateItemResidual(this)">
-                                            <option value="">-- Pilih --</option>
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3">3</option>
-                                            <option value="4">4</option>
-                                            <option value="5">5</option>
-                                        </select>
+                                        <textarea class="form-control follow-up-field"
+                                            name="items[{index}][kolom19_pengendalian_lanjut]" rows="3"
+                                            placeholder="Jelaskan tindakan pengendalian tambahan yang akan dilakukan..."></textarea>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Konsekuensi (Residual) <span
-                                                class="required">*</span></label>
-                                        <select class="form-control res-val" name="items[{index}][residual_konsekuensi]"
-                                            required onchange="calculateItemResidual(this)">
-                                            <option value="">-- Pilih --</option>
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3">3</option>
-                                            <option value="4">4</option>
-                                            <option value="5">5</option>
-                                        </select>
+
+                                    <!-- Columns 20-22: Penilaian Risiko Setelah Tindak Lanjut -->
+                                    <div
+                                        style="background: #dcfce7; padding: 15px; border-radius: 8px; border: 1px solid #86efac;">
+                                        <h5 style="font-size:12px; font-weight:700; margin-bottom:12px; color:#166534;">
+                                            Penilaian Risiko Setelah Pengendalian Tindak Lanjut
+                                        </h5>
+                                        <div style="display: flex; gap: 20px; align-items: flex-start;">
+                                            <div
+                                                style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                                <div class="form-group">
+                                                    <label class="form-label">Kolom 20: Kemungkinan (Lanjut)</label>
+                                                    <select class="form-control follow-up-field"
+                                                        name="items[{index}][kolom20_kemungkinan_lanjut]"
+                                                        onchange="calculateFollowUpRisk(this)">
+                                                        <option value="">-- Pilih --</option>
+                                                        <option value="1">1 - Sangat Jarang</option>
+                                                        <option value="2">2 - Jarang</option>
+                                                        <option value="3">3 - Kadang-kadang</option>
+                                                        <option value="4">4 - Sering</option>
+                                                        <option value="5">5 - Sangat Sering</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="form-label">Kolom 21: Konsekuensi (Lanjut)</label>
+                                                    <select class="form-control follow-up-field"
+                                                        name="items[{index}][kolom21_konsekuensi_lanjut]"
+                                                        onchange="calculateFollowUpRisk(this)">
+                                                        <option value="">-- Pilih --</option>
+                                                        <option value="1">1 - Tidak Signifikan</option>
+                                                        <option value="2">2 - Minor</option>
+                                                        <option value="3">3 - Moderate</option>
+                                                        <option value="4">4 - Major</option>
+                                                        <option value="5">5 - Catastrophic</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div style="flex: 0 0 160px; text-align:center;">
+                                                <label class="form-label">Kolom 22: Tingkat Risiko</label>
+                                                <div class="risk-result-box followup-box"
+                                                    style="padding:15px; border-radius:8px; background:#166534; color:white;">
+                                                    <div class="risk-score followup-score" style="font-size:24px;">-
+                                                    </div>
+                                                    <span class="risk-level followup-level"
+                                                        style="font-size:11px; opacity:0.9;">PENDING</span>
+                                                </div>
+                                                <input type="hidden"
+                                                    name="items[{index}][kolom22_tingkat_risiko_lanjut]"
+                                                    class="input-followup-score">
+                                                <input type="hidden" name="items[{index}][kolom22_level_lanjut]"
+                                                    class="input-followup-level">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div style="flex: 0 0 160px; text-align:center;">
-                                    <label class="form-label">Risiko Residual</label>
-                                    <div class="risk-result-box res-box"
-                                        style="padding:15px; border-radius:8px; background:#15803d; color:white;">
-                                        <div class="risk-score res-score" style="font-size:24px;">-</div>
-                                        <span class="risk-level res-level"
-                                            style="font-size:11px; opacity:0.9;">PENDING</span>
+
+                                <hr style="border:0; border-top:1px dashed #bbf7d0; margin:20px 0;">
+
+                                <!-- Residual Risk (Always shown - this is the final risk after controls) -->
+                                <h4
+                                    style="font-size:13px; font-weight:700; margin-bottom:15px; text-transform:uppercase; color:#15803d;">
+                                    <i class="fas fa-chart-line" style="margin-right:8px;"></i>
+                                    Risiko Residual (Risiko Akhir)
+                                </h4>
+                                <div style="display: flex; gap: 20px; align-items:flex-start;">
+                                    <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                        <div class="form-group">
+                                            <label class="form-label">Kemungkinan (Residual) <span
+                                                    class="required">*</span></label>
+                                            <select class="form-control res-val"
+                                                name="items[{index}][residual_kemungkinan]" required
+                                                onchange="calculateItemResidual(this)">
+                                                <option value="">-- Pilih --</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="4">4</option>
+                                                <option value="5">5</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Konsekuensi (Residual) <span
+                                                    class="required">*</span></label>
+                                            <select class="form-control res-val"
+                                                name="items[{index}][residual_konsekuensi]" required
+                                                onchange="calculateItemResidual(this)">
+                                                <option value="">-- Pilih --</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="4">4</option>
+                                                <option value="5">5</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <input type="hidden" name="items[{index}][residual_score]" class="input-res-score">
-                                    <input type="hidden" name="items[{index}][residual_level]" class="input-res-level">
+                                    <div style="flex: 0 0 160px; text-align:center;">
+                                        <label class="form-label">Risiko Residual</label>
+                                        <div class="risk-result-box res-box"
+                                            style="padding:15px; border-radius:8px; background:#15803d; color:white;">
+                                            <div class="risk-score res-score" style="font-size:24px;">-</div>
+                                            <span class="risk-level res-level"
+                                                style="font-size:11px; opacity:0.9;">PENDING</span>
+                                        </div>
+                                        <input type="hidden" name="items[{index}][residual_score]"
+                                            class="input-res-score">
+                                        <input type="hidden" name="items[{index}][residual_level]"
+                                            class="input-res-level">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
     </template>
 
     <script>
@@ -1096,10 +1164,7 @@
             'Keamanan': { label: 'Keamanan', conditions: ['Emergency'] }
         };
 
-        const hazards = {
-            'condition': ['Licin', 'Terjal', 'Panas', 'Bising', 'Gelap', 'Berdebu', 'Sempit'],
-            'action': ['Tidak Pakai APD', 'Bekerja Buru-buru', 'Posisi Salah', 'Mengabaikan Prosedur']
-        };
+
 
         function addItem() {
             // Collapse all existing first
@@ -1220,11 +1285,41 @@
             const cat = select.value;
             const hazardSection = item.querySelector('.hazard-section');
             const hazardOptions = item.querySelector('.hazard-options');
-            const toggles = item.querySelector('.hazard-toggles');
+
+            // Get all conditional field sections using CORRECT classes
+            const k3KoField = item.querySelector('.k3-ko-field'); // Column 6
+            const lingkunganField = item.querySelector('.lingkungan-field'); // Column 7
+            const keamananField = item.querySelector('.keamanan-field'); // Column 8
+            const lingkunganOnlyField = item.querySelector('.lingkungan-only-field'); // Column 16
+
+            // Get kolom 9 variants
+            const kolom9K3KO = item.querySelector('.kolom9-k3ko-field');
+            const kolom9Lingkungan = item.querySelector('.kolom9-lingkungan-field');
+            const kolom9Keamanan = item.querySelector('.kolom9-keamanan-field');
 
             condSelect.innerHTML = '<option value="">-- Pilih --</option>';
-            hazardOptions.innerHTML = '';
 
+            // 1. Reset/Hide All Categories First
+            if (k3KoField) k3KoField.style.display = 'none';
+            if (lingkunganField) lingkunganField.style.display = 'none';
+            if (keamananField) keamananField.style.display = 'none';
+            if (lingkunganOnlyField) lingkunganOnlyField.style.display = 'none';
+
+            // 2. Hide All Kolom 9 Variants & Reset Required
+            if (kolom9K3KO) {
+                kolom9K3KO.style.display = 'none';
+                kolom9K3KO.querySelector('textarea')?.removeAttribute('required');
+            }
+            if (kolom9Lingkungan) {
+                kolom9Lingkungan.style.display = 'none';
+                kolom9Lingkungan.querySelector('textarea')?.removeAttribute('required');
+            }
+            if (kolom9Keamanan) {
+                kolom9Keamanan.style.display = 'none';
+                kolom9Keamanan.querySelector('textarea')?.removeAttribute('required');
+            }
+
+            // 3. Populate Conditions Dropdown
             if (categories[cat]) {
                 categories[cat].conditions.forEach(c => {
                     const opt = document.createElement('option');
@@ -1233,45 +1328,60 @@
                     condSelect.appendChild(opt);
                 });
 
+                // 4. Show Specific Fields Based on Category
                 if (cat === 'K3' || cat === 'KO') {
-                    toggles.classList.remove('hidden');
-                    loadHazards(item, 'condition');
-                } else {
-                    toggles.classList.add('hidden');
-                    ['Pencemaran Air', 'Pencemaran Udara', 'Kebisingan'].forEach(h => {
-                        addCheckbox(hazardOptions, item.dataset.index, h);
-                    });
+                    // Show Kolom 6 & 9a
+                    if (k3KoField) {
+                        k3KoField.style.display = 'block';
+                        k3KoField.querySelectorAll('input').forEach(i => i.disabled = false);
+                    }
+
+                    if (kolom9K3KO) {
+                        kolom9K3KO.style.display = 'block';
+                        kolom9K3KO.querySelector('textarea')?.setAttribute('required', 'required');
+                    }
+
+                    // Disable others to prevent submission
+                    if (lingkunganField) lingkunganField.querySelectorAll('input').forEach(i => i.disabled = true);
+                    if (keamananField) keamananField.querySelectorAll('input').forEach(i => i.disabled = true);
+
+                } else if (cat === 'Lingkungan') {
+                    // Show Kolom 7, 16 & 9b
+                    if (lingkunganField) {
+                        lingkunganField.style.display = 'block';
+                        lingkunganField.querySelectorAll('input').forEach(i => i.disabled = false);
+                    }
+                    if (lingkunganOnlyField) lingkunganOnlyField.style.display = 'block';
+
+                    if (kolom9Lingkungan) {
+                        kolom9Lingkungan.style.display = 'block';
+                        kolom9Lingkungan.querySelector('textarea')?.setAttribute('required', 'required');
+                    }
+
+                    // Disable others
+                    if (k3KoField) k3KoField.querySelectorAll('input').forEach(i => i.disabled = true);
+                    if (keamananField) keamananField.querySelectorAll('input').forEach(i => i.disabled = true);
+
+                } else if (cat === 'Keamanan') {
+                    // Show Kolom 8 & 9c
+                    if (keamananField) {
+                        keamananField.style.display = 'block';
+                        keamananField.querySelectorAll('input').forEach(i => i.disabled = false);
+                    }
+
+                    if (kolom9Keamanan) {
+                        kolom9Keamanan.style.display = 'block';
+                        kolom9Keamanan.querySelector('textarea')?.setAttribute('required', 'required');
+                    }
+
+                    // Disable others
+                    if (k3KoField) k3KoField.querySelectorAll('input').forEach(i => i.disabled = true);
+                    if (lingkunganField) lingkunganField.querySelectorAll('input').forEach(i => i.disabled = true);
                 }
             }
         }
 
-        function toggleBahayaType(btn, type) {
-            const group = btn.parentElement;
-            group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
 
-            const item = btn.closest('.doc-item');
-            loadHazards(item, type);
-        }
-
-        function loadHazards(item, type) {
-            const container = item.querySelector('.hazard-options');
-            container.innerHTML = '';
-            const idx = item.dataset.index;
-
-            hazards[type].forEach(h => {
-                addCheckbox(container, idx, h);
-            });
-        }
-
-        function addCheckbox(container, idx, label) {
-            const html = `
-                <label class="checkbox-card">
-                    <input type="checkbox" name="items[${idx}][kolom6_bahaya][]" value="${label}"> ${label}
-                </label>
-            `;
-            container.insertAdjacentHTML('beforeend', html);
-        }
 
         function calculateItemRisk(el) {
             const item = el.closest('.doc-item');
@@ -1303,6 +1413,24 @@
             inputLevel.value = level;
             riskBox.style.background = bg;
             riskBox.style.color = textColor;
+
+            // Show/Hide BAGIAN 5 based on risk level
+            const bagian5 = item.querySelector('.bagian-5-section');
+            if (bagian5) {
+                if (score < 8) {
+                    // Risk is LOW - hide BAGIAN 5 (no further mitigation needed)
+                    bagian5.style.display = 'none';
+                    // Remove required from residual fields
+                    const resFields = bagian5.querySelectorAll('.res-val');
+                    resFields.forEach(field => field.removeAttribute('required'));
+                } else {
+                    // Risk is MEDIUM or HIGH - show BAGIAN 5
+                    bagian5.style.display = 'block';
+                    // Add required back to residual fields
+                    const resFields = bagian5.querySelectorAll('.res-val');
+                    resFields.forEach(field => field.setAttribute('required', 'required'));
+                }
+            }
         }
 
         function calculateItemResidual(el) {
@@ -1339,16 +1467,35 @@
 
         function validateForm() {
             let valid = true;
+            let missingItems = [];
+
             document.querySelectorAll('.doc-item').forEach(item => {
-                const s = item.querySelector('.input-score').value;
-                if (!s || s == 0) valid = false;
+                const itemName = item.querySelector('[name*="kolom2_kegiatan"]')?.value || 'Item';
+                const initialScore = item.querySelector('.input-score').value;
+
+                // Check initial risk assessment
+                if (!initialScore || initialScore == 0) {
+                    valid = false;
+                    missingItems.push(itemName);
+                    return;
+                }
+
+                // Only check residual risk if BAGIAN 5 is visible (risk >= 8)
+                const bagian5 = item.querySelector('.bagian-5-section');
+                if (bagian5 && bagian5.style.display !== 'none') {
+                    const residualScore = item.querySelector('.input-res-score').value;
+                    if (!residualScore || residualScore == 0) {
+                        valid = false;
+                        missingItems.push(itemName + ' (Residual)');
+                    }
+                }
             });
 
             if (!valid) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Data Belum Lengkap',
-                    text: 'Mohon lengkapi penilaian risiko untuk semua item.',
+                    text: 'Mohon lengkapi penilaian risiko untuk: ' + missingItems.join(', '),
                 });
                 return false;
             }
@@ -1461,8 +1608,11 @@
                             }
                         }
 
-                        // Validate Residual Risk
-                        if (isValid && (!residualS || residualS == 0)) {
+                        // Validate Residual Risk - ONLY if BAGIAN 5 is visible (risk >= 8)
+                        const bagian5 = item.querySelector('.bagian-5-section');
+                        const isBagian5Visible = bagian5 && bagian5.style.display !== 'none';
+
+                        if (isValid && isBagian5Visible && (!residualS || residualS == 0)) {
                             isValid = false;
                             errorMsg = `Penilaian risiko residual belum lengkap untuk: ${kegiatan}`;
                             const content = item.querySelector('.collapsible-content');
@@ -1580,117 +1730,7 @@
             }
         }
 
-        // UPDATED: updateConditions to handle category-based field visibility
-        const originalUpdateConditions = updateConditions;
-        updateConditions = function (select) {
-            const item = select.closest('.doc-item');
-            const condSelect = item.querySelector('.condition-select');
-            const cat = select.value;
 
-            // Get all conditional field sections
-            const k3KoField = item.querySelector('.k3-ko-field');
-            const lingkunganField = item.querySelector('.lingkungan-field');
-            const keamananField = item.querySelector('.keamanan-field');
-            const lingkunganOnlyField = item.querySelector('.lingkungan-only-field');
-            const toggles = item.querySelector('.hazard-toggles');
-            const hazardOptions = item.querySelector('.hazard-options');
-
-            // Update Kondisi dropdown options
-            condSelect.innerHTML = '<option value="">-- Pilih --</option>';
-
-            if (categories[cat]) {
-                categories[cat].conditions.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c;
-                    opt.textContent = c;
-                    condSelect.appendChild(opt);
-                });
-
-                // Show/Hide fields based on category
-                // K3 and KO: show Potensi Bahaya (column 6)
-                if (cat === 'K3' || cat === 'KO') {
-                    k3KoField.style.display = 'block';
-                    toggles.classList.remove('hidden');
-                    loadHazards(item, 'condition');
-                    // Hide others
-                    lingkunganField.style.display = 'none';
-                    keamananField.style.display = 'none';
-                    lingkunganOnlyField.style.display = 'none';
-
-                    // Disable checkboxes in hidden fields
-                    lingkunganField.querySelectorAll('.aspek-lingkungan-checkbox').forEach(cb => cb.disabled = true);
-                    keamananField.querySelectorAll('.ancaman-keamanan-checkbox').forEach(cb => cb.disabled = true);
-                }
-                // Lingkungan: show Aspek Lingkungan (column 7) and column 16
-                else if (cat === 'Lingkungan') {
-                    lingkunganField.style.display = 'block';
-                    lingkunganOnlyField.style.display = 'block';
-                    // Hide others
-                    k3KoField.style.display = 'none';
-                    keamananField.style.display = 'none';
-                    toggles.classList.add('hidden');
-
-                    // Disable checkboxes in hidden fields
-                    item.querySelectorAll('[name*="kolom6_bahaya"]').forEach(cb => cb.disabled = true);
-                    const bahayaManual = item.querySelector('.bahaya-manual-input');
-                    if (bahayaManual) bahayaManual.disabled = true;
-                    keamananField.querySelectorAll('.ancaman-keamanan-checkbox').forEach(cb => cb.disabled = true);
-                }
-                // Keamanan: show Ancaman Keamanan (column 8)
-                else if (cat === 'Keamanan') {
-                    keamananField.style.display = 'block';
-                    // Hide others
-                    k3KoField.style.display = 'none';
-                    lingkunganField.style.display = 'none';
-                    lingkunganOnlyField.style.display = 'none';
-                    toggles.classList.add('hidden');
-
-                    // Disable checkboxes in hidden fields
-                    item.querySelectorAll('[name*="kolom6_bahaya"]').forEach(cb => cb.disabled = true);
-                    const bahayaManual = item.querySelector('.bahaya-manual-input');
-                    if (bahayaManual) bahayaManual.disabled = true;
-                    lingkunganField.querySelectorAll('.aspek-lingkungan-checkbox').forEach(cb => cb.disabled = true);
-                }
-            } else {
-                // No category selected - hide all
-                k3KoField.style.display = 'none';
-                lingkunganField.style.display = 'none';
-                keamananField.style.display = 'none';
-                lingkunganOnlyField.style.display = 'none';
-                toggles.classList.add('hidden');
-            }
-
-            // Update Kolom 9 label based on category
-            updateKolom9Label(item, cat);
-        };
-
-        // NEW: Update Kolom 9 label based on category
-        function updateKolom9Label(item, category) {
-            const label = item.querySelector('.kolom9-label');
-            const textarea = item.querySelector('.kolom9-textarea');
-
-            if (!label || !textarea) return;
-
-            let labelText = 'Kolom 9: ';
-            let placeholder = '';
-
-            if (category === 'K3' || category === 'KO') {
-                labelText += 'RISIKO';
-                placeholder = 'Jelaskan risiko yang dapat terjadi...';
-            } else if (category === 'Lingkungan') {
-                labelText += 'DAMPAK LINGKUNGAN';
-                placeholder = 'Jelaskan dampak terhadap lingkungan...';
-            } else if (category === 'Keamanan') {
-                labelText += 'CELAH TIDAK AMAN';
-                placeholder = 'Jelaskan celah keamanan yang dapat terjadi...';
-            } else {
-                labelText += 'RISIKO / DAMPAK / CELAH';
-                placeholder = 'Jelaskan risiko, dampak, atau celah yang dapat terjadi...';
-            }
-
-            label.innerHTML = labelText + ' <span class="required">*</span>';
-            textarea.placeholder = placeholder;
-        }
 
         // NEW: Update Kolom 11 when hierarchy checkboxes are changed
         function updateKolom11(checkbox) {
