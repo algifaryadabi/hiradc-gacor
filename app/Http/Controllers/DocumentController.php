@@ -1168,7 +1168,11 @@ class DocumentController extends Controller
             // B. Handle Approval Workflow
             if ($document->current_level == 2) {
                 // Unit Pengelola (Level 2)
-                if (!$document->id_dept || $document->id_dept == 0) {
+                // Check if Unit has no Department (id_dept == 0)
+                // Use relation to be sure we check the Master Unit data
+                $unitDeptId = $document->unit ? $document->unit->id_dept : $document->id_dept;
+
+                if (!$unitDeptId || $unitDeptId == 0) {
                     // No Dept -> Publish Directly
                     $document->update([
                         'status' => 'published',
@@ -1635,49 +1639,91 @@ class DocumentController extends Controller
             $document = $detail->document;
 
             // Auth Check: Author OR Approver (Role 3 + Same Unit)
+            // Or Role 2 (Unit Pengelola) if needed?? For now stick to Author/Approver logic or unrestricted for "Approver View" users.
+            $isAuthor = $document->id_user == $user->id_user;
+            $isApprover = ($user->role_jabatan == 3 && $document->id_unit == $user->id_unit);
+            // Allow Unit Pengelola Global?
             $isAuthor = $document->id_user == $user->id_user;
             $isApprover = ($user->role_jabatan == 3 && $document->id_unit == $user->id_unit);
 
-            if (!$isAuthor && !$isApprover) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            // Allow Unit Pengelola (Head & Assigned Staff)
+            $isUnitPengelolaHead = $user->role_jabatan == 2;
+            $isAssignedReviewer = $document->level2_reviewer_id == $user->id_user;
+            $isAssignedApprover = $document->level2_approver_id == $user->id_user;
+
+            if (!$isAuthor && !$isApprover && !$isUnitPengelolaHead && !$isAssignedReviewer && !$isAssignedApprover) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized Access'], 403);
             }
 
-            // Update Logic
-            // We need to reconstruct JSON fields like kolom6_bahaya & kolom10_pengendalian
+            // 1. Prepare Base Data
+            $data = $request->except(['_token', 'kolom6_bahaya', 'kolom7_aspek_lingkungan', 'kolom8_ancaman', 'kolom10_pengendalian']);
 
-            // 1. Bahaya Data
-            $currentBahaya = $detail->kolom6_bahaya ?? [];
-            if ($request->has('kategori'))
-                $currentBahaya['kategori'] = $request->kategori; // sync category
-            // Note: For full edit, we might need more inputs. 
-            // Assuming the modal sends 'kolom2_kegiatan', 'kolom3_lokasi', etc.
-
-            $updateData = $request->only([
-                'kolom2_kegiatan',
-                'kolom3_lokasi',
-                'kolom5_kondisi',
-                'kolom11_existing',
-                'kolom12_kemungkinan',
-                'kolom13_konsekuensi',
-                'kolom16_aspek',
-                'kolom18_tindak_lanjut',
-                'residual_kemungkinan',
-                'residual_konsekuensi'
-            ]);
-
-            // Calc Scores
-            if (isset($updateData['kolom12_kemungkinan']) && isset($updateData['kolom13_konsekuensi'])) {
-                $updateData['kolom14_score'] = $updateData['kolom12_kemungkinan'] * $updateData['kolom13_konsekuensi'];
-                // Update Level logic can be added here or via Accessor/Observer
-            }
-            if (isset($updateData['residual_kemungkinan']) && isset($updateData['residual_konsekuensi'])) {
-                $updateData['residual_score'] = $updateData['residual_kemungkinan'] * $updateData['residual_konsekuensi'];
+            // 2. Handle Multiselect Arrays & Manual Inputs
+            // Kolom 6: Bahaya (K3/KO)
+            if ($request->has('kolom6_bahaya') || $request->has('bahaya_manual')) {
+                $k6 = [
+                    'details' => $request->input('kolom6_bahaya', []), // Array of checkboxes
+                    'manual' => $request->input('bahaya_manual', '')
+                ];
+                $detail->kolom6_bahaya = $k6;
             }
 
-            $detail->update($updateData);
+            // Kolom 7: Aspek Lingkungan
+            if ($request->has('kolom7_aspek_lingkungan') || $request->has('aspek_manual')) {
+                $k7 = [
+                    'details' => $request->input('kolom7_aspek_lingkungan', []),
+                    'manual' => $request->input('aspek_manual', '')
+                ];
+                $detail->kolom7_aspek_lingkungan = $k7;
+            }
 
-            // Optionally update risk levels (simple logic)
-            // ...
+            // Kolom 8: Ancaman Keamanan
+            if ($request->has('kolom8_ancaman') || $request->has('ancaman_manual')) {
+                $k8 = [
+                    'details' => $request->input('kolom8_ancaman', []),
+                    'manual' => $request->input('ancaman_manual', '')
+                ];
+                $detail->kolom8_ancaman = $k8;
+            }
+
+            // Kolom 10: Pengendalian (Hierarchy)
+            if ($request->has('kolom10_pengendalian')) {
+                $k10 = [
+                    'hierarchy' => $request->input('kolom10_pengendalian', []),
+                    'existing' => $request->input('kolom11_existing', '') // duplicate ref if needed or stored in col 11 separately
+                ];
+                // Note: col 11 is separate column in DB usually, but sometimes stored in json. 
+                // Model has 'kolom11_existing' column? Yes.
+                // Keeping hierarchy in JSON column 10.
+                $detail->kolom10_pengendalian = $k10;
+            }
+
+            // 3. Update Direct Columns
+            $detail->fill($data);
+
+            // 4. Recalculate Scores
+            // Initial Risk
+            if (isset($data['kolom12_kemungkinan']) && isset($data['kolom13_konsekuensi'])) {
+                $detail->kolom14_score = $data['kolom12_kemungkinan'] * $data['kolom13_konsekuensi'];
+                // Level Logic
+                $sc = $detail->kolom14_score;
+                $detail->risk_level = ($sc >= 15) ? 'HIGH' : (($sc >= 8) ? 'MED' : 'LOW'); // standardized string
+            }
+
+            // Residual Risk
+            if (isset($data['residual_kemungkinan']) && isset($data['residual_konsekuensi'])) {
+                $detail->residual_score = $data['residual_kemungkinan'] * $data['residual_konsekuensi'];
+            }
+
+            // Follow-up Risk (Cols 20-22)
+            if (isset($data['kolom20_kemungkinan_lanjut']) && isset($data['kolom21_konsekuensi_lanjut'])) {
+                $detail->kolom22_tingkat_risiko_lanjut = $data['kolom20_kemungkinan_lanjut'] * $data['kolom21_konsekuensi_lanjut'];
+                // Level Logic for Followup
+                $fsc = $detail->kolom22_tingkat_risiko_lanjut;
+                $detail->kolom22_level_lanjut = ($fsc >= 15) ? 'HIGH' : (($fsc >= 8) ? 'MED' : 'LOW');
+            }
+
+            $detail->save();
 
             return response()->json(['success' => true, 'message' => 'Data berhasil diupdate']);
 

@@ -1077,60 +1077,62 @@
                 <div class="hiradc-wrapper">
                     <table class="excel-table">
                         <thead>
-                            <!-- Header Row 1: Groups -->
+                            <!-- Header Row 1: Main Sections (BAGIAN 1-5) -->
                             <tr>
-                                <th rowspan="2" style="width: 50px;">No</th>
-                                <th colspan="5" class="section-border-right">Kegiatan & Situasi</th>
-                                <th colspan="3" class="section-border-right">Identifikasi Bahaya & Risiko</th>
-                                <th colspan="2" class="section-border-right">Pengendalian Risiko</th>
-                                <th colspan="3" class="section-border-right">Penilaian Risiko Awal</th>
-                                <th rowspan="2" style="width: 250px;">Peraturan / Regulasi</th>
-                                <th rowspan="2" style="width: 100px;" class="section-border-right">Penting / TP</th>
-                                <th colspan="5">Penilaian Risiko Sisa & Tindak Lanjut</th>
+                                <th rowspan="2" style="width: 40px;">No</th>
+                                <th colspan="4" class="section-border-right">BAGIAN 1: Identifikasi Aktivitas</th>
+                                <th colspan="6" class="section-border-right">BAGIAN 2: Identifikasi</th>
+                                <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal
+                                </th>
+                                <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
+                                <th colspan="8">BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa</th>
                             </tr>
-                            <!-- Header Row 2: Columns -->
+                            <!-- Header Row 2: Column Details -->
                             <tr>
-                                <th style="width: 200px;">Kegiatan / Proses</th>
-                                <th style="width: 100px;">Kategori</th>
-                                <th style="width: 150px;">Lokasi</th>
+                                <!-- BAGIAN 1 (Kolom 2-5) -->
+                                <th style="width: 180px;">Proses/Kegiatan<br><small>(Kol 2)</small></th>
+                                <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
+                                <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
+                                <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol 5)</small>
+                                </th>
 
-                                <th style="width: 100px;" class="section-border-right">Kondisi</th>
-                                <th style="width: 250px;">Potensi Bahaya</th>
-                                <th style="width: 220px;">Dampak / Konsekuensi</th>
-                                <th style="width: 220px;" class="section-border-right">Risiko & Peluang</th>
-                                <th style="width: 300px;">Hirarki Pengendalian</th>
-                                <th style="width: 250px;" class="section-border-right">Pengendalian Existing</th>
-                                <th style="width: 60px;">L</th>
-                                <th style="width: 60px;">S</th>
-                                <th style="width: 80px;" class="section-border-right">Level</th>
-                                <th style="width: 200px;">Tindak Lanjut</th>
-                                <th style="width: 60px;">L</th>
-                                <th style="width: 60px;">S</th>
-                                <th style="width: 80px;">Level</th>
+                                <!-- BAGIAN 2 (Kolom 6-9) -->
+                                <th style="width: 150px;">Potensi Bahaya<br><small>(Kol 6)</small></th>
+                                <th style="width: 150px;">Aspek Lingkungan<br><small>(Kol 7)</small></th>
+                                <th style="width: 150px;">Ancaman Keamanan<br><small>(Kol 8)</small></th>
+
+                                <th style="width: 150px;">RISIKO (K3/KO)<br><small>(Kol 9)</small></th>
+                                <th style="width: 150px;">DAMPAK (Lingk)<br><small>(Kol 9)</small></th>
+                                <th style="width: 150px;" class="section-border-right">CELAH (Keamanan)<br><small>(Kol
+                                        9)</small></th>
+
+                                <!-- BAGIAN 3 (Kolom 10-14) -->
+                                <th style="width: 250px;">Hirarki Pengendalian<br><small>(Kol 10)</small></th>
+                                <th style="width: 250px;">Pengendalian Existing<br><small>(Kol 11)</small></th>
+                                <th style="width: 50px;">L<br><small>(Kol 12)</small></th>
+                                <th style="width: 50px;">S<br><small>(Kol 13)</small></th>
+                                <th style="width: 80px;" class="section-border-right">Level<br><small>(Kol 14)</small>
+                                </th>
+
+                                <!-- BAGIAN 4 (Kolom 15-17) -->
+                                <th style="width: 200px;">Regulasi<br><small>(Kol 15)</small></th>
+                                <th style="width: 80px;">Aspek Penting<br><small>(Kol 16)</small></th>
+                                <th style="width: 200px;" class="section-border-right">Peluang & Risiko<br><small>(Kol
+                                        17)</small></th>
+
+                                <!-- BAGIAN 5 (Kolom 18-22) -->
+                                <th style="width: 100px;">Toleransi<br><small>(Kol 18)</small></th>
+                                <th style="width: 200px;">Pengendalian Lanjut<br><small>(Kol 19)</small></th>
+                                <th style="width: 50px;">L<br><small>(Kol 20)</small></th>
+                                <th style="width: 50px;">S<br><small>(Kol 21)</small></th>
+                                <th style="width: 80px;">Level<br><small>(Kol 22)</small></th>
+                                <th style="width: 50px;">Residual L</th>
+                                <th style="width: 50px;">Residual S</th>
+                                <th style="width: 80px;">Residual Level</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                // Determine Allowed Categories for Unit Pengelola (Level 2)
-                                $allowedCats = ['K3', 'KO', 'Lingkungan', 'Keamanan']; // Default All
-                                $userUnitName = strtoupper(Auth::user()->unit->nama_unit ?? '');
-                                $userRole = Auth::user()->id_role_jabatan; // Assumed Role ID for check
-
-                                // Logic: If User is likely SHE or Security Unit Pengelola
-                                // And Document is at Level 2 (or we just filter for their view regardless of level?)
-                                // User request implies this is their "View".
-
-                                if (str_contains($userUnitName, 'SHE') || str_contains($userUnitName, 'SAFETY')) {
-                                    $allowedCats = ['K3', 'KO', 'Lingkungan'];
-                                } elseif (str_contains($userUnitName, 'KEAMANAN') || str_contains($userUnitName, 'SECURITY')) {
-                                    $allowedCats = ['Keamanan'];
-                                }
-                            @endphp
-
-                            @foreach($document->details as $index => $item)
-                                @if(!in_array($item->kategori, $allowedCats))
-                                    @continue
-                                @endif
+                            @forelse($document->details as $index => $item)
                                 <tr>
                                     <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
                                         {{ $index + 1 }}
@@ -1144,12 +1146,16 @@
                                             </div>
                                         @endif
                                     </td>
-                                    <!-- Kegiatan -->
+                                    <!-- BAGIAN 1: Identifikasi Aktivitas -->
+                                    <!-- Kolom 2: Kegiatan -->
                                     <td>
-                                        <textarea class="cell-textarea auto-grow"
-                                            readonly>{{ $item->kolom2_kegiatan }}</textarea>
+                                        <div class="cell-text">{{ $item->kolom2_kegiatan }}</div>
                                     </td>
-                                    <!-- Kategori -->
+                                    <!-- Kolom 3: Lokasi -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom3_lokasi }}</div>
+                                    </td>
+                                    <!-- Kolom 4: Kategori -->
                                     <td>
                                         <div class="cell-input"
                                             style="display:flex; align-items:center; justify-content:center;">
@@ -1158,68 +1164,129 @@
                                             </span>
                                         </div>
                                     </td>
-                                    <!-- Lokasi -->
-                                    <td>
-                                        <textarea class="cell-textarea auto-grow"
-                                            readonly>{{ $item->kolom3_lokasi }}</textarea>
-                                    </td>
-                                    <!-- Pihak -->
-
-                                    <!-- Kondisi -->
+                                    <!-- Kolom 5: Kondisi -->
                                     <td class="section-border-right">
                                         <div class="cell-input"
                                             style="display:flex; align-items:center; justify-content:center;">
                                             <span class="doc-meta-badge" style="background:#f1f5f9; color:#475569;">
-                                                {{ $item->kolom5_kondisi == 'N' ? 'Normal' : ($item->kolom5_kondisi == 'AN' ? 'Abnormal' : 'Emergency') }}
+                                                {{ $item->kolom5_kondisi }}
                                             </span>
                                         </div>
                                     </td>
-                                    <!-- Bahaya -->
+
+                                    <!-- BAGIAN 2: Identifikasi -->
+
+                                    <!-- Kolom 6: Potensi Bahaya (K3/KO Only) -->
                                     <td>
-                                        <div class="cell-checkbox-group">
-                                            @if(!empty($item->kolom6_bahaya['manual']))
-                                                <div
-                                                    style="font-size:13px; margin-bottom:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
-                                                    <strong>Lainnya:</strong> {{ $item->kolom6_bahaya['manual'] }}
-                                                </div>
-                                            @endif
-                                            @php
-                                                $bahayaDetails = [];
-                                                if (!empty($item->kolom6_bahaya['details']))
-                                                    $bahayaDetails = array_merge($bahayaDetails, $item->kolom6_bahaya['details']);
-                                                if (!empty($item->kolom6_bahaya['aspects']))
-                                                    $bahayaDetails = array_merge($bahayaDetails, $item->kolom6_bahaya['aspects']);
-                                                if (!empty($item->kolom6_bahaya['threats']))
-                                                    $bahayaDetails = array_merge($bahayaDetails, $item->kolom6_bahaya['threats']);
-                                            @endphp
-                                            @foreach($bahayaDetails as $detail)
-                                                <div class="cell-checkbox-item">
-                                                    <i class="fas fa-exclamation-triangle"
-                                                        style="color:#ef4444; font-size:10px; margin-top:3px;"></i>
-                                                    <span>{{ $detail }}</span>
-                                                </div>
-                                            @endforeach
-                                        </div>
+                                        @if($item->kategori == 'K3' || $item->kategori == 'KO')
+                                            <div class="cell-checkbox-group">
+                                                @php $bahayaDetails = $item->kolom6_bahaya['details'] ?? []; @endphp
+                                                @foreach($bahayaDetails as $detail)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-exclamation-triangle"
+                                                            style="color:#ef4444; font-size:10px; margin-top:3px;"></i>
+                                                        <span>{{ $detail }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($item->kolom6_bahaya['manual']))
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                        <strong>Lainnya:</strong> {{ $item->kolom6_bahaya['manual'] }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
                                     </td>
-                                    <!-- Dampak -->
+
+                                    <!-- Kolom 7: Aspek Lingkungan (Lingkungan Only) -->
                                     <td>
-                                        <textarea class="cell-textarea auto-grow"
-                                            readonly>{{ $item->kolom7_dampak }}</textarea>
+                                        @if($item->kategori == 'Lingkungan')
+                                            <div class="cell-checkbox-group">
+                                                @php
+                                                    $col7 = $item->kolom7_aspek_lingkungan ?? [];
+                                                    $details7 = $col7['details'] ?? ((is_array($col7) && !array_key_exists('details', $col7)) ? $col7 : []);
+                                                    $manual7 = $col7['manual'] ?? '';
+                                                @endphp
+                                                @foreach($details7 as $aspek)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-leaf"
+                                                            style="color:#22c55e; font-size:10px; margin-top:3px;"></i>
+                                                        <span>{{ $aspek }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($manual7))
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#f0fdf4; border:1px dashed #22c55e; border-radius:4px; color:#15803d;">
+                                                        <strong>Lainnya:</strong> {{ $manual7 }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
                                     </td>
-                                    <!-- Risiko & Peluang -->
+
+                                    <!-- Kolom 8: Ancaman Keamanan (Keamanan Only) -->
+                                    <td>
+                                        @if($item->kategori == 'Keamanan')
+                                            <div class="cell-checkbox-group">
+                                                @php
+                                                    $col8 = $item->kolom8_ancaman ?? [];
+                                                    $details8 = $col8['details'] ?? ((is_array($col8) && !array_key_exists('details', $col8)) ? $col8 : []);
+                                                    $manual8 = $col8['manual'] ?? '';
+                                                @endphp
+                                                @foreach($details8 as $threat)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-shield-alt"
+                                                            style="color:#dc2626; font-size:10px; margin-top:3px;"></i>
+                                                        <span>{{ $threat }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($manual8))
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                        <strong>Lainnya:</strong> {{ $manual8 }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- Kolom 9a: RISIKO (K3/KO) -->
+                                    <td>
+                                        @if($item->kategori == 'K3' || $item->kategori == 'KO')
+                                            <div class="cell-text">{{ $item->kolom9_risiko_k3ko ?? $item->kolom9_risiko }}</div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- Kolom 9b: DAMPAK (Lingkungan) -->
+                                    <td>
+                                        @if($item->kategori == 'Lingkungan')
+                                            <div class="cell-text">{{ $item->kolom9_dampak_lingkungan ?? $item->kolom9_risiko }}
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- Kolom 9c: CELAH (Keamanan) -->
                                     <td class="section-border-right">
-                                        <div class="risk-section">
-                                            <div class="risk-label">IDENTIFIKASI:</div>
-                                            <div class="risk-text">{{ $item->kolom9_risiko }}</div>
-                                            <div class="risk-label" style="border-top:1px solid #e2e8f0; margin-top:8px;">
-                                                RISIKO (-):</div>
-                                            <div class="risk-text">{{ $item->kolom17_risiko }}</div>
-                                            <div class="risk-label" style="border-top:1px solid #e2e8f0; margin-top:8px;">
-                                                PELUANG (+):</div>
-                                            <div class="risk-text">{{ $item->kolom17_peluang }}</div>
-                                        </div>
+                                        @if($item->kategori == 'Keamanan')
+                                            <div class="cell-text">{{ $item->kolom9_celah_keamanan ?? $item->kolom9_risiko }}
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
                                     </td>
-                                    <!-- Pengendalian Hierarchy -->
+
+                                    <!-- BAGIAN 3: Pengendalian & Penilaian -->
+                                    <!-- Kolom 10: Hirarki Pengendalian -->
                                     <td>
                                         <div class="cell-checkbox-group">
                                             @php $hs = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
@@ -1229,32 +1296,17 @@
                                                     <span style="font-weight:600;">{{ $h }}</span>
                                                 </div>
                                             @endforeach
-                                            @if(!empty($item->kolom10_pengendalian['new_controls']))
-                                                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #cbd5e1;">
-                                                    <strong style="font-size:11px; color:#c2410c;">DETAIL PENGENDALIAN:</strong>
-                                                    @foreach($item->kolom10_pengendalian['new_controls'] as $ctrl)
-                                                        <div style="font-size:12px; margin-top:4px;">
-                                                            <span
-                                                                style="background:#fff7ed; color:#c2410c; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">{{ $ctrl['type'] ?? 'Tipe?' }}</span>
-                                                            <span style="color:#334155;">{{ $ctrl['desc'] ?? '-' }}</span>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
                                         </div>
                                     </td>
-                                    <!-- Existing -->
-                                    <td class="section-border-right">
-                                        <textarea class="cell-textarea auto-grow"
-                                            readonly>{{ $item->kolom11_existing }}</textarea>
+                                    <!-- Kolom 11: Pengendalian Existing -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom11_existing }}</div>
                                     </td>
-                                    <!-- RISK INITIAL -->
-                                    <td class="risk-col section-border-right"
-                                        style="vertical-align:middle; text-align:center;">
+                                    <!-- Kolom 12-14: Penilaian Risiko Awal -->
+                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
                                         <div style="font-weight:800; font-size:16px;">{{ $item->kolom12_kemungkinan }}</div>
                                     </td>
-                                    <td class="risk-col section-border-right"
-                                        style="vertical-align:middle; text-align:center;">
+                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
                                         <div style="font-weight:800; font-size:16px;">{{ $item->kolom13_konsekuensi }}</div>
                                     </td>
                                     <td class="risk-col section-border-right" style="vertical-align:middle;">
@@ -1262,35 +1314,101 @@
                                             <div class="risk-val">{{ $item->kolom14_score }}</div>
                                             <div
                                                 class="risk-badge {{ $item->kolom14_score >= 15 ? 'bg-high' : ($item->kolom14_score >= 8 ? 'bg-med' : 'bg-low') }}">
-                                                {{ $item->risk_level }}
+                                                {{ $item->kolom14_score >= 15 ? 'TINGGI' : ($item->kolom14_score >= 8 ? 'SEDANG' : 'RENDAH') }}
                                             </div>
                                         </div>
                                     </td>
-                                    <!-- Regulasi -->
-                                    <td class="section-border-right">
-                                        <textarea class="cell-textarea auto-grow"
-                                            readonly>{{ $item->kolom15_regulasi }}</textarea>
+
+                                    <!-- BAGIAN 4: Legalitas & Signifikansi -->
+                                    <!-- Kolom 15: Regulasi -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom15_regulasi }}</div>
                                     </td>
-                                    <!-- Penting (Col 16) -->
-                                    <td class="section-border-right" style="text-align:center; vertical-align:middle;">
-                                        <div class="doc-meta-badge"
-                                            style="{{ $item->kolom16_aspek == 'P' ? 'background:#dbeafe; color:#1e40af;' : 'background:#f1f5f9; color:#64748b;' }}">
-                                            {{ $item->kolom16_aspek }}
+                                    <!-- Kolom 16: Aspek Lingkungan Penting (Only for Lingkungan) -->
+                                    <td style="text-align:center; vertical-align:middle;">
+                                        @if($item->kategori == 'Lingkungan' && $item->kolom16_aspek)
+                                            <div class="doc-meta-badge"
+                                                style="{{ $item->kolom16_aspek == 'P' ? 'background:#dbeafe; color:#1e40af;' : 'background:#f1f5f9; color:#64748b;' }}">
+                                                {{ $item->kolom16_aspek }}
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8;">-</div>
+                                        @endif
+                                    </td>
+                                    <!-- Kolom 17: Peluang & Risiko -->
+                                    <td class="section-border-right">
+                                        <div class="risk-section">
+                                            @if($item->kolom17_risiko)
+                                                <div class="risk-label">RISIKO (-):</div>
+                                                <div class="risk-text">{{ $item->kolom17_risiko }}</div>
+                                            @endif
+                                            @if($item->kolom17_peluang)
+                                                <div class="risk-label"
+                                                    style="border-top:1px solid #e2e8f0; margin-top:6px; padding-top:6px;">
+                                                    PELUANG (+):</div>
+                                                <div class="risk-text">{{ $item->kolom17_peluang }}</div>
+                                            @endif
                                         </div>
                                     </td>
-                                    <!-- Tindak Lanjut -->
-                                    <td>
-                                        <textarea class="cell-textarea auto-grow"
-                                            readonly>{{ $item->kolom18_tindak_lanjut }}</textarea>
+
+                                    <!-- BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa -->
+                                    <!-- Kolom 18: Toleransi -->
+                                    <td style="text-align:center; vertical-align:middle;">
+                                        <div class="doc-meta-badge"
+                                            style="{{ $item->kolom18_toleransi == 'Ya' ? 'background:#dcfce7; color:#166534;' : 'background:#fee2e2; color:#991b1b;' }}">
+                                            {{ $item->kolom18_toleransi == 'Ya' ? 'Ya' : 'Tidak' }}
+                                        </div>
                                     </td>
-                                    <!-- RISK RESIDUAL -->
-                                    <td class="risk-col section-border-right"
-                                        style="vertical-align:middle; text-align:center;">
+                                    <!-- Kolom 19-22: Follow-up Risk (Only if Tolerance = Tidak) -->
+                                    @if($item->kolom18_toleransi == 'Tidak')
+                                        <!-- Kolom 19: Pengendalian Lanjut -->
+                                        <td>
+                                            <div class="cell-text">{{ $item->kolom19_pengendalian_lanjut }}</div>
+                                        </td>
+                                        <!-- Kolom 20-22: Penilaian Risiko Lanjut -->
+                                        <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                            <div style="font-weight:800; font-size:16px;">
+                                                {{ $item->kolom20_kemungkinan_lanjut }}
+                                            </div>
+                                        </td>
+                                        <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                            <div style="font-weight:800; font-size:16px;">
+                                                {{ $item->kolom21_konsekuensi_lanjut }}
+                                            </div>
+                                        </td>
+                                        <td class="risk-col" style="vertical-align:middle;">
+                                            <div class="risk-score-box">
+                                                <div class="risk-val">{{ $item->kolom22_tingkat_risiko_lanjut }}</div>
+                                                @if($item->kolom22_tingkat_risiko_lanjut)
+                                                    <div
+                                                        class="risk-badge {{ $item->kolom22_tingkat_risiko_lanjut >= 15 ? 'bg-high' : ($item->kolom22_tingkat_risiko_lanjut >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                        {{ $item->kolom22_level_lanjut }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    @else
+                                        <!-- Empty cells when tolerance = Ya -->
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                    @endif
+
+                                    <!-- Residual Risk (Always displayed) -->
+                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
                                         <div style="font-weight:800; font-size:16px;">{{ $item->residual_kemungkinan }}
                                         </div>
                                     </td>
-                                    <td class="risk-col section-border-right"
-                                        style="vertical-align:middle; text-align:center;">
+                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
                                         <div style="font-weight:800; font-size:16px;">{{ $item->residual_konsekuensi }}
                                         </div>
                                     </td>
@@ -1306,7 +1424,11 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="22" style="text-align: center; padding: 20px;">Belum ada data detail.</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -1584,37 +1706,124 @@
         }
 
         // --- Helper JS for Injected Form ---
+        // --- Helper JS for Injected Form (adapted for Modal) ---
+        const categories = {
+            'K3': { label: 'K3', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
+            'KO': { label: 'KO', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
+            'Lingkungan': { label: 'Lingkungan', conditions: ['Normal', 'Abnormal', 'Emergency'] },
+            'Keamanan': { label: 'Keamanan', conditions: ['Emergency'] }
+        };
+
         function updateConditions(select) {
-            // Logic to update condition dropdown if needed. 
-            // In partial, I used PHP logic to pre-fill.
-            // If user changes Category, Condition options should change.
-            // Simple version:
+            const form = select.closest('form');
+            const condSelect = form.querySelector('.condition-select');
             const cat = select.value;
-            // Find sibling select
-            // This is hard because partial structure.
-            // Let's assume user won't change category often in Approver Mode.
-            // Or implement global logic later.
+
+            // Get all conditional field sections
+            const k3KoField = form.querySelector('.k3-ko-field');
+            const lingkunganField = form.querySelector('.lingkungan-field');
+            const keamananField = form.querySelector('.keamanan-field');
+            const lingkunganOnlyField = form.querySelector('.lingkungan-only-field');
+
+            // Columns 9 variants
+            const kolom9K3KO = form.querySelector('.kolom9-k3ko-field');
+            const kolom9Lingkungan = form.querySelector('.kolom9-lingkungan-field');
+            const kolom9Keamanan = form.querySelector('.kolom9-keamanan-field');
+
+            // 1. Reset Conditions Options
+            condSelect.innerHTML = '<option value="">-- Pilih --</option>';
+            if (categories[cat]) {
+                categories[cat].conditions.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    condSelect.appendChild(opt);
+                });
+            }
+
+            // 2. Hide All
+            if (k3KoField) k3KoField.style.display = 'none';
+            if (lingkunganField) lingkunganField.style.display = 'none';
+            if (keamananField) keamananField.style.display = 'none';
+            if (lingkunganOnlyField) lingkunganOnlyField.style.display = 'none';
+
+            if (kolom9K3KO) kolom9K3KO.style.display = 'none';
+            if (kolom9Lingkungan) kolom9Lingkungan.style.display = 'none';
+            if (kolom9Keamanan) kolom9Keamanan.style.display = 'none';
+
+            // 3. Show Specific
+            if (cat === 'K3' || cat === 'KO') {
+                if (k3KoField) k3KoField.style.display = 'block';
+                if (kolom9K3KO) kolom9K3KO.style.display = 'block';
+            } else if (cat === 'Lingkungan') {
+                if (lingkunganField) lingkunganField.style.display = 'block';
+                if (lingkunganOnlyField) lingkunganOnlyField.style.display = 'block';
+                if (kolom9Lingkungan) kolom9Lingkungan.style.display = 'block';
+            } else if (cat === 'Keamanan') {
+                if (keamananField) keamananField.style.display = 'block';
+                if (kolom9Keamanan) kolom9Keamanan.style.display = 'block';
+            }
         }
 
         function calculateSimpleRisk(select, isResidual = false) {
-            // Find parent container
-            const container = select.closest(isResidual ? 'div[style*="background:#f0fdf4"]' : 'div[style*="background:#f8fafc"]');
+            const container = select.closest('.risk-container'); // Need to add this class to container
+            if (!container) return;
 
-            const lInput = container.querySelector(isResidual ? 'select[name*="residual_kemungkinan"]' : 'select[name*="kolom12_kemungkinan"]');
-            const sInput = container.querySelector(isResidual ? 'select[name*="residual_konsekuensi"]' : 'select[name*="kolom13_konsekuensi"]');
+            const likelihood = parseInt(container.querySelector(isResidual ? '.res-likelihood' : '.likelihood').value) || 0;
+            const severity = parseInt(container.querySelector(isResidual ? '.res-severity' : '.severity').value) || 0;
 
-            const l = parseInt(lInput.value) || 0;
-            const s = parseInt(sInput.value) || 0;
+            const score = likelihood * severity;
+
+            const scoreEl = container.querySelector('.display-score');
+            const levelEl = container.querySelector('.display-level'); // if exists
+            const inputScore = container.querySelector(isResidual ? '.input-res-score' : '.input-score');
+
+            if (scoreEl) scoreEl.textContent = score || '-';
+            if (inputScore) inputScore.value = score;
+
+            // Level Logic
+            let level = 'LOW';
+            let bg = '#10b981';
+            if (score >= 15) { level = 'HIGH'; bg = '#dc2626'; }
+            else if (score >= 8) { level = 'MED'; bg = '#f59e0b'; }
+
+            // Update Badge background
+            const badge = container.querySelector('.risk-badge-box');
+            if (badge) {
+                badge.style.background = bg;
+                badge.textContent = level; // Optional
+            }
+
+            // If Main Risk, toggle FollowUp
+            if (!isResidual) {
+                // Logic to toggle followup specific elements if needed
+            }
+        }
+
+        function calculateFollowUpRisk(select) {
+            const container = select.closest('.followup-container');
+            if (!container) return;
+
+            const l = parseInt(container.querySelector('.followup-l').value) || 0;
+            const s = parseInt(container.querySelector('.followup-s').value) || 0;
             const score = l * s;
 
-            // Update UI
-            const scoreDisplay = container.querySelector(isResidual ? '.display-res-score' : '.display-score');
-            if (scoreDisplay) scoreDisplay.textContent = score;
+            const scoreEl = container.querySelector('.followup-score-display');
+            const inputScore = container.querySelector('.input-followup-score');
 
-            // Update Hidden Input
-            const scoreInput = container.querySelector(isResidual ? '.input-res-score' : '.input-score');
-            if (scoreInput) scoreInput.value = score;
+            if (scoreEl) scoreEl.textContent = score;
+            if (inputScore) inputScore.value = score;
         }
+
+        function toggleFollowUpFields(select) {
+            const val = select.value;
+            const form = select.closest('form');
+            const section = form.querySelector('.follow-up-section');
+            if (section) {
+                section.style.display = (val === 'Tidak') ? 'block' : 'none';
+            }
+        }
+
 
         function confirmAction(type) {
             const notes = document.getElementById('notes').value.trim();
