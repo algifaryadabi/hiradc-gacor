@@ -13,6 +13,7 @@ class Unit extends Model
         'id_dept',
         'nama_unit',
         'kode_unit',
+        'id_probis',
     ];
 
     public function departemen()

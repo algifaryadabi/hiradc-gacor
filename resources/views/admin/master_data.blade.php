@@ -508,6 +508,9 @@
                         <button class="tab-btn" onclick="switchTab('seksi')">
                             <i class="fas fa-user-friends"></i> Seksi
                         </button>
+                        <button class="tab-btn" onclick="switchTab('probis')">
+                            <i class="fas fa-tasks"></i> Probis
+                        </button>
                     </div>
 
                     <!-- Tab Content: Direktorat -->
@@ -620,9 +623,10 @@
                             <thead>
                                 <tr>
                                     <th width="5%">No</th>
-                                    <th width="35%">Departemen</th>
-                                    <th width="40%">Nama Unit</th>
-                                    <th width="20%">Aksi</th>
+                                    <th width="30%">Departemen</th>
+                                    <th width="35%">Nama Unit</th>
+                                    <th width="15%">Probis</th>
+                                    <th width="15%">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="unit-tbody">
@@ -631,6 +635,11 @@
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $item->departemen->nama_dept ?? '-' }}</td>
                                     <td><strong>{{ $item->nama_unit }}</strong></td>
+                                    <td>
+                                        <span class="badge-{{ $item->probis ? 'active' : 'inactive' }}" style="background: {{ $item->probis ? '#3b82f6' : '#e2e8f0'; }}; color: {{ $item->probis ? 'white' : '#64748b' }}">
+                                            {{ $item->probis->kode_probis ?? '-' }}
+                                        </span>
+                                    </td>
                                     <td>
                                         <button class="btn-edit" onclick='editUnit(@json($item))'>
                                             <i class="fas fa-edit"></i> Edit
@@ -701,6 +710,53 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Tab Content: Probis -->
+                    <div id="tab-probis" class="tab-content">
+                        <div class="table-header">
+                            <h3>Daftar Probis (Proses Bisnis)</h3>
+                            <button class="btn-add" onclick="openModal('probis', 'add')">
+                                <i class="fas fa-plus"></i> Tambah Probis
+                            </button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th width="5%">No</th>
+                                    <th width="20%">Kode Probis</th>
+                                    <th width="55%">Nama Probis</th>
+                                    <th width="20%">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="probis-tbody">
+                                @forelse($probis as $index => $item)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td><strong>{{ $item->kode_probis }}</strong></td>
+                                    <td>{{ $item->nama_probis }}</td>
+                                    <td>
+                                        <button class="btn-edit" onclick='editProbis(@json($item))'>
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn-delete" onclick="deleteProbis({{ $item->id }})">
+                                            <i class="fas fa-trash"></i> Hapus
+                                        </button>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="4">
+                                        <div class="empty-state">
+                                            <i class="fas fa-tasks"></i>
+                                            <h3>Belum Ada Data</h3>
+                                            <p>Klik tombol "Tambah Probis" untuk menambahkan data baru</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
@@ -735,6 +791,7 @@
         const direktorats = @json($direktorats);
         const departemens = @json($departemens);
         const units = @json($units);
+        const probisList = @json($probis); // Make available globally
 
         // Tab switching
         function switchTab(tabName) {
@@ -785,7 +842,8 @@
                 'direktorat': 'Direktorat',
                 'departemen': 'Departemen',
                 'unit': 'Unit Kerja',
-                'seksi': 'Seksi'
+                'seksi': 'Seksi',
+                'probis': 'Probis'
             };
             return labels[entityType] || entityType;
         }
@@ -793,6 +851,22 @@
         function buildForm(entityType, mode, data) {
             const formFields = document.getElementById('formFields');
             let html = '';
+
+            // Probis Case
+            if (entityType === 'probis') {
+                html = `
+                     <div class="form-group">
+                        <label>Kode Probis <span style="color:red">*</span></label>
+                        <input type="text" id="kode_probis" name="kode_probis" value="${data ? data.kode_probis : ''}" placeholder="Contoh: K3, HRD" required maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Proses Bisnis <span style="color:red">*</span></label>
+                        <input type="text" id="nama_probis" name="nama_probis" value="${data ? data.nama_probis : ''}" placeholder="Masukkan Nama Probis" required>
+                    </div>
+                `;
+                formFields.innerHTML = html;
+                return;
+            }
 
             switch (entityType) {
                 case 'direktorat':
@@ -838,25 +912,41 @@
                     break;
 
                 case 'unit':
+                     let deptOptions = '';
+                     departemens.forEach(d => {
+                        const selected = (data && data.id_dept == d.id_dept) ? 'selected' : '';
+                        deptOptions += `<option value="${d.id_dept}" ${selected}>${d.nama_dept}</option>`;
+                    });
+
+                    // Add Probis Options
+                    let probisOptions = '';
+                    const probisList = @json($probis); // Pass global probis variable 
+                    probisList.forEach(p => {
+                        const selected = (data && data.id_probis == p.id) ? 'selected' : '';
+                        probisOptions += `<option value="${p.id}" ${selected}>${p.kode_probis} - ${p.nama_probis}</option>`;
+                    });
+
                     html = `
                         <div class="form-group">
                             <label>Departemen <span style="color:red">*</span></label>
                             <select id="id_dept" name="id_dept" required>
                                 <option value="">-- Pilih Departemen --</option>
-                                ${departemens.map(d => `
-                                    <option value="${d.id_dept}" 
-                                        ${data && data.id_dept == d.id_dept ? 'selected' : ''}>
-                                        ${d.nama_dept}
-                                    </option>
-                                `).join('')}
+                                ${deptOptions}
                             </select>
                             <div class="error" id="error-id_dept"></div>
                         </div>
                         <div class="form-group">
-                            <label>Nama Unit <span style="color:red">*</span></label>
+                            <label>Nama Unit Kerja <span style="color:red">*</span></label>
                             <input type="text" id="nama_unit" name="nama_unit" 
                                 value="${data ? data.nama_unit : ''}" required>
                             <div class="error" id="error-nama_unit"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Probis (Opsional)</label>
+                            <select id="id_probis" name="id_probis">
+                                <option value="">-- Pilih Probis --</option>
+                                ${probisOptions}
+                            </select>
                         </div>
                     `;
                     break;
@@ -1002,7 +1092,8 @@
             openModal('unit', 'edit', {
                 id: data.id_unit,
                 id_dept: data.id_dept,
-                nama_unit: data.nama_unit
+                nama_unit: data.nama_unit,
+                id_probis: data.id_probis // Pass probis ID
             });
         }
 
@@ -1029,6 +1120,14 @@
 
         function deleteSeksi(id) {
             confirmDelete('seksi', id);
+        }
+
+        function editProbis(data) {
+            openModal('probis', 'edit', data);
+        }
+
+        function deleteProbis(id) {
+            confirmDelete('probis', id);
         }
 
         function confirmDelete(entityType, id) {

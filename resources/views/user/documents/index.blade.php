@@ -752,15 +752,7 @@
                             data-title="{{ strtolower($doc->kolom2_kegiatan) }}" data-status="{{ $statusKey }}">
 
                             <div class="card-top">
-                                @php
-                                    $catClass = 'cat-k3';
-                                    if ($doc->kategori == 'Lingkungan')
-                                        $catClass = 'cat-lingkungan';
-                                    if ($doc->kategori == 'Keamanan')
-                                        $catClass = 'cat-keamanan';
-                                @endphp
                                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                                    <span class="cat-badge {{ $catClass }}">{{ $doc->kategori }}</span>
                                     <span class="cat-badge"
                                         style="background:#f3f4f6; color:#555; border:1px solid #e5e7eb;">
                                         <i class="fas fa-building"

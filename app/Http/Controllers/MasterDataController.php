@@ -7,6 +7,7 @@ use App\Models\Departemen;
 use App\Models\Unit;
 use App\Models\Seksi;
 use App\Models\User;
+use App\Models\BusinessProcess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -19,10 +20,11 @@ class MasterDataController extends Controller
     {
         $direktorats = Direktorat::orderBy('nama_direktorat')->get();
         $departemens = Departemen::with('direktorat')->orderBy('nama_dept')->get();
-        $units = Unit::with('departemen.direktorat')->orderBy('nama_unit')->get();
+        $units = Unit::with('departemen.direktorat', 'probis')->orderBy('nama_unit')->get();
         $seksis = Seksi::with('unit.departemen.direktorat')->orderBy('nama_seksi')->get();
+        $probis = BusinessProcess::orderBy('kode_probis')->get();
 
-        return view('admin.master_data', compact('direktorats', 'departemens', 'units', 'seksis'));
+        return view('admin.master_data', compact('direktorats', 'departemens', 'units', 'seksis', 'probis'));
     }
 
     // ==================== DIREKTORAT ====================
@@ -216,11 +218,13 @@ class MasterDataController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'id_dept' => 'required|exists:departemen,id_dept',
-            'nama_unit' => 'required|string|max:255'
+            'nama_unit' => 'required|string|max:255',
+            'id_probis' => 'nullable|exists:business_processes,id'
         ], [
             'id_dept.required' => 'Departemen wajib dipilih',
             'id_dept.exists' => 'Departemen tidak valid',
             'nama_unit.required' => 'Nama unit wajib diisi',
+            'id_probis.exists' => 'Probis tidak valid'
         ]);
 
         if ($validator->fails()) {
@@ -241,10 +245,11 @@ class MasterDataController extends Controller
 
         $unit = Unit::create([
             'id_dept' => $request->id_dept,
-            'nama_unit' => $request->nama_unit
+            'nama_unit' => $request->nama_unit,
+            'id_probis' => $request->id_probis
         ]);
 
-        $unit->load('departemen.direktorat');
+        $unit->load('departemen.direktorat', 'probis');
 
         return response()->json([
             'success' => true,
@@ -259,11 +264,13 @@ class MasterDataController extends Controller
 
         $validator = Validator::make($request->all(), [
             'id_dept' => 'required|exists:departemen,id_dept',
-            'nama_unit' => 'required|string|max:255'
+            'nama_unit' => 'required|string|max:255',
+            'id_probis' => 'nullable|exists:business_processes,id'
         ], [
             'id_dept.required' => 'Departemen wajib dipilih',
             'id_dept.exists' => 'Departemen tidak valid',
             'nama_unit.required' => 'Nama unit wajib diisi',
+            'id_probis.exists' => 'Probis tidak valid'
         ]);
 
         if ($validator->fails()) {
@@ -285,10 +292,11 @@ class MasterDataController extends Controller
 
         $unit->update([
             'id_dept' => $request->id_dept,
-            'nama_unit' => $request->nama_unit
+            'nama_unit' => $request->nama_unit,
+            'id_probis' => $request->id_probis
         ]);
 
-        $unit->load('departemen.direktorat');
+        $unit->load('departemen.direktorat', 'probis');
 
         return response()->json([
             'success' => true,
@@ -432,6 +440,95 @@ class MasterDataController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Seksi berhasil dihapus'
+        ]);
+    }
+
+    // ==================== PROBIS (BUSINESS PROCESS) ====================
+
+    public function storeProbis(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'kode_probis' => 'required|string|max:10|unique:business_processes,kode_probis',
+            'nama_probis' => 'required|string|max:255'
+        ], [
+            'kode_probis.required' => 'Kode probis wajib diisi',
+            'kode_probis.unique' => 'Kode probis sudah ada',
+            'nama_probis.required' => 'Nama proses bisnis wajib diisi',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $probis = BusinessProcess::create([
+            'kode_probis' => $request->kode_probis,
+            'nama_probis' => $request->nama_probis
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Probis berhasil ditambahkan',
+            'data' => $probis
+        ]);
+    }
+
+    public function updateProbis(Request $request, $id)
+    {
+        $probis = BusinessProcess::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'kode_probis' => 'required|string|max:10|unique:business_processes,kode_probis,' . $id,
+            'nama_probis' => 'required|string|max:255'
+        ], [
+            'kode_probis.required' => 'Kode probis wajib diisi',
+            'kode_probis.unique' => 'Kode probis sudah ada',
+            'nama_probis.required' => 'Nama proses bisnis wajib diisi',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $probis->update([
+            'kode_probis' => $request->kode_probis,
+            'nama_probis' => $request->nama_probis
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Probis berhasil diperbarui',
+            'data' => $probis
+        ]);
+    }
+
+    public function destroyProbis($id)
+    {
+        $probis = BusinessProcess::findOrFail($id);
+        
+        // Check if probis is used in any unit (using id_probis column in unit table)
+        // Note: unit table uses id_probis which refers to business_processes.id
+        $unitCount = Unit::where('id_probis', $id)->count();
+        if ($unitCount > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => "Tidak dapat menghapus Probis karena masih digunakan oleh {$unitCount} unit kerja"
+            ], 400);
+        }
+
+        // Check relationship with seksi if exists
+        $seksiCount = Seksi::where('id_probis', $id)->count();
+        if ($seksiCount > 0) {
+             return response()->json([
+                'success' => false,
+                'message' => "Tidak dapat menghapus Probis karena masih digunakan oleh {$seksiCount} seksi"
+            ], 400);
+        }
+
+        $probis->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Probis berhasil dihapus'
         ]);
     }
 }

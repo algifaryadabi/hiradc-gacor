@@ -325,6 +325,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/admin/seksi/{id}', [\App\Http\Controllers\MasterDataController::class, 'updateSeksi'])->name('admin.seksi.update');
     Route::delete('/admin/seksi/{id}', [\App\Http\Controllers\MasterDataController::class, 'destroySeksi'])->name('admin.seksi.destroy');
 
+    // Probis (Business Process)
+    Route::post('/admin/probis', [\App\Http\Controllers\MasterDataController::class, 'storeProbis'])->name('admin.probis.store');
+    Route::put('/admin/probis/{id}', [\App\Http\Controllers\MasterDataController::class, 'updateProbis'])->name('admin.probis.update');
+    Route::delete('/admin/probis/{id}', [\App\Http\Controllers\MasterDataController::class, 'destroyProbis'])->name('admin.probis.destroy');
+
     Route::get('/admin/master', function () {
         return view('admin.master');
     })->name('admin.master');
