@@ -635,31 +635,133 @@
             border: 1px solid #bbf7d0;
         }
 
-        /* Timeline */
+        /* Timeline Modern */
         .timeline-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             border: 1px solid var(--border);
-            padding: 24px;
+            padding: 30px;
             margin-top: 40px;
-            margin-bottom: 150px;
+            margin-bottom: 120px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .timeline-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timeline-container {
+            position: relative;
+            padding-left: 10px;
+        }
+
+        /* Vertical Line */
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            left: 24px; /* Align with icon center */
+            top: 10px;
+            bottom: 20px;
+            width: 2px;
+            background: #e2e8f0;
+            z-index: 0;
         }
 
         .timeline-item {
             position: relative;
-            padding-left: 30px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 20px;
+            z-index: 1;
         }
 
-        .timeline-dot {
-            position: absolute;
-            left: 0;
-            top: 5px;
-            width: 12px;
-            height: 12px;
+        .tm-icon {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: #ccc;
+            background: #f1f5f9;
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: 0 0 0 4px #f8fafc;
+            color: #64748b;
+            flex-shrink: 0;
+            position: relative;
+            left: -2px; /* Fine tune alignment */
         }
+
+        /* Color Variants */
+        .timeline-item.tm-green .tm-icon { background: #dcfce7; color: #166534; box-shadow: 0 0 0 4px #f0fdf4; }
+        .timeline-item.tm-red .tm-icon { background: #fee2e2; color: #991b1b; box-shadow: 0 0 0 4px #fef2f2; }
+        .timeline-item.tm-blue .tm-icon { background: #dbeafe; color: #1e40af; box-shadow: 0 0 0 4px #eff6ff; }
+        .timeline-item.tm-purple .tm-icon { background: #f3e8ff; color: #6b21a8; box-shadow: 0 0 0 4px #faf5ff; }
+
+        .tm-content {
+            background: #f8fafc;
+            padding: 15px 20px;
+            border-radius: 12px;
+            flex: 1;
+            border: 1px solid #f1f5f9;
+        }
+
+        .tm-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tm-user {
+            font-weight: 700;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .tm-badge {
+            font-size: 10px;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 99px;
+            background: #e2e8f0;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .tm-date {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .tm-status {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #475569;
+        }
+        .timeline-item.tm-green .tm-status { color: #166534; }
+        .timeline-item.tm-red .tm-status { color: #991b1b; }
+
+        .tm-comment {
+            font-size: 13px;
+            color: #64748b;
+            font-style: italic;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #cbd5e1;
+        }
+        .timeline-item.tm-red .tm-comment { border-left-color: #f87171; }
+        .timeline-item.tm-green .tm-comment { border-left-color: #4ade80; }
 
         /* Modal */
         #editModal .modal-content {
@@ -675,7 +777,10 @@
     @php
         $user = Auth::user();
         $isHead = $user->isUnitPengelola();
-        $isReviewer = ($document->level2_reviewer_id == $user->id_user);
+        // Allow Reviewer if assigned OR if Unassigned and user is Staff Reviewer (Role 5/6)
+        $isReviewer = ($document->level2_reviewer_id == $user->id_user) || 
+                      (empty($document->level2_reviewer_id) && in_array($user->role_jabatan, [5, 6]));
+                      
         $isApprover = ($document->level2_approver_id == $user->id_user);
         $status = $document->level2_status;
 
@@ -693,7 +798,7 @@
         $isApprover = ($document->level2_approver_id == $user->id_user) || 
                       ($isStaffApprover && $status == 'assigned_approval');
 
-        $canEdit = ($isHead && $document->current_level == 2) ||
+        $canEdit = ($isHead && $document->current_level == 2 && ($status == 'returned_to_head' || $status == 'staff_verified')) ||
             ($isReviewer && $status == 'assigned_review') ||
             ($isApprover && $status == 'assigned_approval');
     @endphp
@@ -715,8 +820,13 @@
                     </p>
                 </div>
                 <!-- Logic for Back button differs slightly per role, defaulting to dashboard -->
-                <a href="{{ route('unit_pengelola.dashboard') }}" class="btn-back"><i class="fas fa-arrow-left"></i>
-                    Kembali</a>
+                <div style="display:flex; gap:10px;">
+                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" class="btn" style="background-color:#107c41; color:white;">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </a>
+                    <a href="{{ route('unit_pengelola.dashboard') }}" class="btn-back"><i class="fas fa-arrow-left"></i>
+                        Kembali</a>
+                </div>
             </div>
 
             <!-- Doc Card -->
@@ -971,8 +1081,15 @@
                 </table>
             </div>
 
-            <!-- COMPLIANCE CHECKLIST (Preserved) -->
-            @if(($isReviewer && $status == 'assigned_review') || ($isApprover && $status == 'assigned_approval') || $isHead)
+            <!-- COMPLIANCE CHECKLIST -->
+            <!-- Logic: Show if Head (Level 2) OR Reviewer/Approver active -->
+            @php
+                $showChecklist = ($isHead && $document->current_level == 2) ||
+                                 ($isReviewer && $status == 'assigned_review') || 
+                                 ($isApprover && $status == 'assigned_approval');
+            @endphp
+
+            @if($showChecklist)
                 <div class="doc-card" style="margin-top: 30px;">
                     <div class="card-header-slim" style="display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; align-items:center; gap:12px;">
@@ -1018,6 +1135,26 @@
                                             // Initially disabled (Global Edit Off)
                                             $noteDisabled = 'disabled';
                                             $noteStyle = 'background:#f1f5f9;cursor:not-allowed;'; 
+                                            
+                                            // Enable for Head of Unit Pengelola (Always Editable) OR Staff Verifikator
+                                            // Staff Verifikator (isApprover) can edit when they toggle the button
+                                            
+                                            // LOGIC FIX: Explicitly allow Head to edit if status is suitable
+                                            $headCanEdit = ($isHead && $document->current_level == 2 && ($status == 'staff_verified' || $status == 'returned_to_head'));
+                                            $staffCanEdit = ($isApprover && $status == 'assigned_approval');
+
+                                            if ($headCanEdit || $staffCanEdit) {
+                                                if ($headCanEdit) {
+                                                    // Head: Enabled by default
+                                                    $disabled = '';
+                                                    if ($s == 'NOK' || $s == 'Tdk Penting') {
+                                                        $noteDisabled = '';
+                                                        $noteStyle = 'background:white;cursor:text;';
+                                                    }
+                                                } 
+                                                // Staff: Still relies on JS toggle, but we set base condition here if needed
+                                                // (The JS toggleComplianceEdit simply removes 'disabled' attribute, so start disabled is fine for staff)
+                                            }
                                         @endphp
                                         <tr style="border-bottom:1px solid #e2e8f0;">
                                             <td style="padding:12px; text-align:center;">{{ $idx + 1 }}</td>
@@ -1049,21 +1186,62 @@
 
             <!-- TIMELINE -->
             <div class="timeline-card">
-                <div class="timeline-header"><i class="fas fa-history"></i> Riwayat Approval</div>
-                @foreach($document->approvals as $hist)
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-meta">
-                            <span class="timeline-action">{{ $hist->action }}</span>
-                            <span class="timeline-badge">{{ $hist->level }}</span>
+                <div class="timeline-header">
+                    <i class="fas fa-history" style="color:var(--primary);"></i> 
+                    <span>Riwayat Proses</span>
+                </div>
+                
+                <div class="timeline-container">
+                @php
+                    // Filter Duplicates based on action and created_at (minute precision)
+                    $uniqueHistory = $document->approvals->unique(function ($item) {
+                        return $item->action . $item->created_at->format('YmdHi');
+                    });
+                @endphp
+                @foreach($uniqueHistory as $hist)
+                    @php
+                        $action = strtolower($hist->action);
+                        $colorClass = 'tm-blue';
+                        $icon = 'fa-info-circle';
+                        $label = ucfirst($hist->action);
+
+                        if (in_array($action, ['approved', 'published', 'verified', 'reviewed'])) {
+                            $colorClass = 'tm-green';
+                            $icon = 'fa-check';
+                            if ($action == 'published') $icon = 'fa-globe';
+                            if ($action == 'verified') $icon = 'fa-check-double';
+                        } elseif (in_array($action, ['revision', 'revise', 'returned'])) {
+                            $colorClass = 'tm-red';
+                            $icon = 'fa-undo';
+                        } elseif ($action == 'disposition') {
+                            $colorClass = 'tm-purple';
+                            $icon = 'fa-share';
+                        }
+                    @endphp
+                    <div class="timeline-item {{ $colorClass }}">
+                        <div class="tm-icon">
+                            <i class="fas {{ $icon }}"></i>
                         </div>
-                        <div class="timeline-user">{{ $hist->approver->nama_user ?? 'User' }} -
-                            {{ $hist->created_at->format('d M Y H:i') }}</div>
-                        @if($hist->catatan)
-                        <div class="timeline-comment">{{ $hist->catatan }}</div> @endif
+                        <div class="tm-content">
+                            <div class="tm-header">
+                                <span class="tm-user">{{ $hist->approver->nama_user ?? 'System' }}</span>
+                                <span class="tm-badge">{{ $hist->level }}</span>
+                                <span class="tm-date">{{ $hist->created_at->format('d M Y, H:i') }} WIB</span>
+                            </div>
+                            <div class="tm-status">{{ $label }}</div>
+                            @if($hist->catatan)
+                                <div class="tm-comment">
+                                    <i class="fas fa-quote-left"></i> {{ $hist->catatan }}
+                                </div> 
+                            @endif
+                        </div>
                     </div>
                 @endforeach
+                </div>
             </div>
+
+
+
 
         </main>
 
@@ -1071,46 +1249,20 @@
         <div class="review-footer">
             {{-- 1. KEPALA UNIT PENGELOLA --}}
             @if($isHead && $document->current_level == 2)
-                @if(!$status) <!-- Pending Disposition -->
-                    <form id="dispositionForm" method="POST" action="{{ route('unit_pengelola.disposition', $document->id) }}"
-                        style="width:100%;">
-                        @csrf
-                        <div style="display:flex; gap:15px; margin-bottom:10px;">
-                            <div style="flex:1;">
-                                <label style="font-size:12px; font-weight:600;">Reviewer</label>
-                                <select name="reviewer_id" class="form-control" required>
-                                    <option value="">-- Pilih --</option>
-                                    @foreach($staffReviewers as $s) <option value="{{ $s->id_user }}">{{ $s->nama_user }}
-                                    </option> @endforeach
-                                </select>
-                            </div>
-                            <div style="flex:1;">
-                                <label style="font-size:12px; font-weight:600;">Verifikator</label>
-                                <select name="approver_id" class="form-control" required>
-                                    <option value="">-- Pilih --</option>
-                                    @foreach($staffApprovers as $s) <option value="{{ $s->id_user }}">{{ $s->nama_user }}
-                                    </option> @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-approve"
-                            style="width:100%; justify-content:center;">Disposisikan</button>
-                    </form>
-                @elseif($status == 'returned_to_head' || $status == 'staff_verified')
+                @if($status == 'returned_to_head' || $status == 'staff_verified')
                     <!-- Final Approval by Head -->
                     <form id="headApproveForm" method="POST" action="{{ route('unit_pengelola.approve', $document->id) }}"
-                        style="width:100%; display:flex; gap:15px;">
+                        style="width:100%; display:flex; justify-content: flex-end; gap:15px;">
                         @csrf
-                        <div class="notes-area">
-                            <input type="text" name="catatan" class="notes-input" placeholder="Catatan Approval/Revisi...">
-                        </div>
+                        <!-- Input catatan removed from UI, handled by JS Prompt for Revision -->
                         <div class="action-btns">
                             <button type="button" class="btn btn-revise" onclick="submitHeadAction('revise')">Revisi</button>
                             <button type="button" class="btn btn-approve" onclick="submitHeadAction('approve')">Approve</button>
                         </div>
                     </form>
                 @else
-                    <div class="alert alert-info" style="width:100%; margin:0;">Menunggu proses Staff (Status: {{ $status }})
+                    <div class="alert alert-info" style="width:100%; margin:0; text-align:center;">
+                        <i class="fas fa-clock"></i> Menunggu pemeriksaan oleh Reviewer/Verifikator Staff.
                     </div>
                 @endif
 
@@ -1246,11 +1398,69 @@
 
         // --- 2. Unit Pengelola Actions ---
         function submitHeadAction(type) {
+            // Inject Compliance Data
+            const checklistJson = collectComplianceData();
+            
+            // Create Hidden Input if it doesn't exist
             const form = document.getElementById('headApproveForm');
+            let input = form.querySelector('input[name="compliance_checklist"]');
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'compliance_checklist';
+                form.appendChild(input);
+            }
+            input.value = checklistJson;
+
             if (type === 'revise') {
                 form.action = "{{ route('unit_pengelola.revise', $document->id) }}";
+                
+                Swal.fire({
+                    title: 'Catatan Revisi',
+                    input: 'textarea',
+                    inputLabel: 'Masukkan alasan revisi:',
+                    inputPlaceholder: 'Tulis catatan disini...',
+                    inputAttributes: {
+                        'aria-label': 'Tulis catatan disini'
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: 'Kirim Revisi',
+                    cancelButtonText: 'Batal',
+                    inputValidator: (value) => {
+                        if (!value || value.length < 5) {
+                            return 'Catatan wajib diisi minimal 5 karakter!'
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Create/Update hidden input for catatan
+                        let input = form.querySelector('input[name="catatan"]');
+                        if (!input) {
+                            input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'catatan';
+                            form.appendChild(input);
+                        }
+                        input.value = result.value;
+                        form.submit();
+                    }
+                });
+            } else {
+                // Approve
+                Swal.fire({
+                    title: 'Approve Dokumen?',
+                    text: "Dokumen akan dipublikasikan/diteruskan.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Approve',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                         // Optional: Add empty note if needed, or backend handles null
+                        form.submit();
+                    }
+                });
             }
-            form.submit();
         }
 
         function collectComplianceData() {

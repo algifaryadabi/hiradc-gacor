@@ -142,7 +142,7 @@ class DocumentController extends Controller
         }
         $isAuthor = $user->id_user == $document->id_user;
         $isPublic = in_array($document->status, ['published', 'approved']);
-        $isUnitPengelola = $user->isUnitPengelola();
+        $isUnitPengelola = $user->isUnitPengelola() || (in_array($user->role_jabatan, [4, 5, 6]) && in_array($user->id_unit, [55, 56]));
         $isApprover = $document->approvals()->where('approver_id', $user->id_user)->exists() || $document->canBeApprovedBy($user);
 
         if (!$isAuthor && !$isPublic && !$isUnitPengelola && !$isApprover) {
@@ -1806,11 +1806,13 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized. Only Unit Pengelola staff can access this page.');
         }
 
-        // Load documents assigned to this staff (either as reviewer or approver)
-        $query = Document::where(function ($q) use ($user) {
-            $q->where('level2_reviewer_id', $user->id_user)
-                ->orWhere('level2_approver_id', $user->id_user);
-        });
+        // Load documents assigned to this staff OR unassigned (Pool)
+        $query = Document::where('current_level', 2)
+            ->where(function ($q) use ($user) {
+                $q->where('level2_reviewer_id', $user->id_user)
+                    ->orWhere('level2_approver_id', $user->id_user)
+                    ->orWhereNull('level2_reviewer_id'); // Allow picking up unassigned
+            });
 
         // Filter by role: Verifikator (role_jabatan 4) only sees documents for verification
         // Reviewer (role_jabatan 5, 6) sees all assigned documents
@@ -1818,9 +1820,12 @@ class DocumentController extends Controller
             // Verifikator only sees: assigned_approval (documents that need verification)
             $query->whereIn('level2_status', ['assigned_approval']);
         } else {
-            // Reviewer only sees: assigned_review (documents that need review)
-            // Documents that have been processed (assigned_approval, approved, etc) are hidden
-            $query->whereIn('level2_status', ['assigned_review']);
+            // Reviewer sees: assigned_review OR NULL (Fresh docs)
+            $query->where(function ($q) {
+                $q->where('level2_status', 'assigned_review')
+                  ->orWhereNull('level2_status')
+                  ->orWhere('status', 'pending_level2');
+            });
         }
 
         $documents = $query->with(['user', 'unit', 'approvals.approver'])

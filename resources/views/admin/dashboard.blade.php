@@ -173,14 +173,7 @@
                 <div class="breadcrumb" id="breadcrumb" style="margin-bottom: 0;">
                     <span class="breadcrumb-item active" onclick="resetView()">Home</span>
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <a href="{{ route('documents.export.pdf') }}" target="_blank" style="padding: 8px 12px; background: #c41e3a; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
-                        <i class="fas fa-file-pdf" style="margin-right: 6px;"></i> Export PDF
-                    </a>
-                    <a href="{{ route('documents.export.excel') }}" target="_blank" style="padding: 8px 12px; background: #2e7d32; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
-                        <i class="fas fa-file-excel" style="margin-right: 6px;"></i> Export Excel
-                    </a>
-                </div>
+
             </div>
 
             <!-- Dynamic Content (Accordion) -->
