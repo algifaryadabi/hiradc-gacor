@@ -820,7 +820,7 @@
 
                                 <!-- Kolom 6 (Bahaya - K3/KO) -->
                                 <td>
-                                    @if(in_array($document->kategori, ['K3', 'KO']))
+                                    @if(in_array($item->kategori, ['K3', 'KO']))
                                         @php $bahaya = $item->kolom6_bahaya['details'] ?? [];
                                         $manualB = $item->kolom6_bahaya['manual'] ?? ''; @endphp
                                         <div class="cell-checkbox-group">
@@ -836,7 +836,7 @@
 
                                 <!-- Kolom 7 (Aspek - Lingkungan) -->
                                 <td>
-                                    @if($document->kategori == 'Lingkungan')
+                                    @if($item->kategori == 'Lingkungan')
                                         @php $aspek = $item->kolom7_aspek_lingkungan['details'] ?? [];
                                         $manualA = $item->kolom7_aspek_lingkungan['manual'] ?? ''; @endphp
                                         <div class="cell-checkbox-group">
@@ -852,7 +852,7 @@
 
                                 <!-- Kolom 8 (Ancaman - Keamanan) -->
                                 <td>
-                                    @if($document->kategori == 'Keamanan')
+                                    @if($item->kategori == 'Keamanan')
                                         @php $ancaman = $item->kolom8_ancaman['details'] ?? [];
                                         $manualAn = $item->kolom8_ancaman['manual'] ?? ''; @endphp
                                         <div class="cell-checkbox-group">
@@ -868,7 +868,7 @@
 
                                 <!-- Kolom 9 (Risiko - K3/KO) -->
                                 <td>
-                                    @if(in_array($document->kategori, ['K3', 'KO']))
+                                    @if(in_array($item->kategori, ['K3', 'KO']))
                                         {{ $item->kolom9_risiko }}
                                     @else
                                         -
@@ -877,7 +877,7 @@
 
                                 <!-- Kolom 9 (Dampak - Lingkungan) -->
                                 <td>
-                                    @if($document->kategori == 'Lingkungan')
+                                    @if($item->kategori == 'Lingkungan')
                                         {{ $item->kolom9_dampak_lingkungan ?? '-' }}
                                     @else
                                         -
@@ -886,7 +886,7 @@
 
                                 <!-- Kolom 9 (Celah - Keamanan) -->
                                 <td class="section-border-right">
-                                    @if($document->kategori == 'Keamanan')
+                                    @if($item->kategori == 'Keamanan')
                                         {{ $item->kolom9_celah_keamanan ?? '-' }}
                                     @else
                                         -
