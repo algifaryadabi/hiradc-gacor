@@ -583,7 +583,14 @@
             let filtered = documents;
 
             if (currentStatusFilter !== 'Semua') {
-                filtered = filtered.filter(d => d.status === currentStatusFilter);
+                if (currentStatusFilter === 'Menunggu') {
+                    // Match any "Menunggu" status
+                    filtered = filtered.filter(d => d.status.includes('Menunggu'));
+                } else if (currentStatusFilter === 'Disetujui') {
+                    filtered = filtered.filter(d => d.status === 'Disetujui');
+                } else if (currentStatusFilter === 'Revisi') {
+                    filtered = filtered.filter(d => d.status === 'Revisi');
+                }
             }
 
             if (catFilter !== 'All') {
@@ -599,15 +606,19 @@
                     </div>
                 `;
             } else {
-                // Header Row (Optional, maybe just card list is better? Let's stick to pure card list)
-
                 filtered.forEach(doc => {
                     let btnIcon = 'fa-eye';
                     let tooltip = 'Lihat Detail';
-                    if (doc.status === 'Menunggu') {
+                    if (doc.status.includes('Menunggu')) {
                         btnIcon = 'fa-pen-fancy';
                         tooltip = 'Review Sekarang';
                     }
+
+                    // Badge Color Determination
+                    let badgeClass = 'status-menunggu'; // Default orange
+                    if (doc.status === 'Disetujui') badgeClass = 'status-disetujui'; // Green
+                    if (doc.status === 'Revisi') badgeClass = 'status-revisi'; // Red
+                    if (doc.status.includes('Final')) badgeClass = 'status-diproses'; // Blue/Process
 
                     html += `
                     <div class="doc-item">
@@ -622,15 +633,13 @@
                             <div class="meta-value"><i class="far fa-user" style="margin-right:4px; color:#94a3b8;"></i>${doc.submitter}</div>
                         </div>
 
-
-
                         <div class="doc-meta">
                             <div class="meta-label">Waktu Submit</div>
                             <div class="meta-value">${doc.date_submit}</div>
                             <div style="font-size:11px; color:#64748b;">${doc.time_submit}</div>
                         </div>
 
-                        <div class="status-badge status-${doc.status.toLowerCase()}">
+                        <div class="status-badge ${badgeClass}">
                             ${doc.status}
                         </div>
 
@@ -655,26 +664,8 @@
             renderList();
         }
 
-        // NEW: Handle staff assignment
-        function assignStaff(staffId) {
-            if (!staffId) return;
-
-            // Store selected staff ID in localStorage or session
-            localStorage.setItem('assigned_staff_id', staffId);
-
-            // Get staff name for display
-            const dropdown = document.getElementById('assignStaffDropdown');
-            const staffName = dropdown.options[dropdown.selectedIndex].text;
-
-            // Show confirmation
-            alert(`Staff "${staffName}" telah dipilih.\n\nStaff ini akan menjadi penanggung jawab untuk form-form baru dari unit Anda.`);
-
-            // Optional: You can also send AJAX request to save this assignment to server
-            // fetch('/api/assign-staff', { method: 'POST', body: JSON.stringify({ staff_id: staffId }) })
-        }
-
         function updateCounts() {
-            const waiting = documents.filter(d => d.status === 'Menunggu').length;
+            const waiting = documents.filter(d => d.status.includes('Menunggu')).length;
             const approved = documents.filter(d => d.status === 'Disetujui').length;
             const revision = documents.filter(d => d.status === 'Revisi').length;
             document.getElementById('count-waiting').textContent = waiting;

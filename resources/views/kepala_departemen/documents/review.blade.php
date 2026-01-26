@@ -579,6 +579,41 @@
             border-color: #cbd5e1;
         }
 
+        /* Submitter Table Utilities */
+        .risk-score-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+        }
+        .risk-val { font-size: 16px; font-weight: 800; color: var(--text-main); }
+        .risk-badge { 
+            font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-top: 4px; 
+            font-weight: 700; color: white; text-transform: uppercase;
+        }
+        .bg-low { background: #16a34a; }
+        .bg-med { background: #ca8a04; }
+        .bg-high { background: #dc2626; }
+        
+        .cell-checkbox-group { display: flex; flex-direction: column; gap: 4px; }
+        .cell-checkbox-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; }
+        .cell-checkbox-item i { margin-top: 3px; font-size: 10px; }
+        
+        .doc-meta-badge {
+            display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+            border-radius: 100px; font-size: 12px; font-weight: 700;
+        }
+        .cell-text { font-size: 13.5px; line-height: 1.5; color: var(--text-main); }
+        
+        .risk-section { display: flex; flex-direction: column; gap: 4px; }
+        .risk-label { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; }
+        .risk-text { font-size: 13px; color: var(--text-main); font-weight: 500; }
+        
+        .excel-table { width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; }
+        .excel-table th { background: #0f172a; color: white; padding: 12px; border-right: 1px solid #334155; border-bottom: 1px solid #334155; text-align: center; font-weight: 600; }
+        .section-border-right { border-right: 3px solid #94a3b8 !important; }
+        
     </style>
 </head>
 
@@ -696,110 +731,292 @@
                 </div>
 
                 <div class="table-wrapper">
-                    <table class="hiradc-table">
+                    <table class="excel-table">
                         <thead>
+                            <!-- Header Row 1: Main Sections (BAGIAN 1-5) -->
                             <tr>
-                                <th rowspan="2" style="width: 50px; text-align:center;">No</th>
-                                <th colspan="4" class="section-divider" style="text-align:center;">Kegiatan & Situasi</th>
-                                <th colspan="3" class="section-divider" style="text-align:center;">Identifikasi Bahaya & Risiko</th>
-                                <th colspan="2" class="section-divider" style="text-align:center;">Pengendalian Risiko</th>
-                                <th colspan="3" class="section-divider" style="text-align:center;">Penilaian Risiko Awal</th>
-                                <th rowspan="2" class="section-divider" style="width: 250px;">Peraturan / Regulasi</th>
-                                <th colspan="5">Penilaian Risiko Sisa</th>
+                                <th rowspan="2" style="width: 40px;">No</th>
+                                <th colspan="4" class="section-border-right">BAGIAN 1: Identifikasi Aktivitas</th>
+                                <th colspan="6" class="section-border-right">BAGIAN 2: Identifikasi</th>
+                                <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal</th>
+                                <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
+                                <th colspan="8">BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa</th>
                             </tr>
+                            <!-- Header Row 2: Column Details -->
                             <tr>
-                                <!-- Kegiatan -->
-                                <th style="min-width: 200px;">Kegiatan</th>
-                                <th style="min-width: 100px;">Kategori</th>
-                                <th style="min-width: 150px;">Lokasi</th>
-                                <th class="section-divider" style="min-width: 100px;">Kondisi</th>
-                                
-                                <!-- Identifikasi -->
-                                <th style="min-width: 250px;">Potensi Bahaya</th>
-                                <th style="min-width: 220px;">Dampak</th>
-                                <th class="section-divider" style="min-width: 220px;">Risiko/Peluang</th>
-                                
-                                <!-- Pengendalian -->
-                                <th style="min-width: 300px;">Hirarki Pengendalian</th>
-                                <th class="section-divider" style="min-width: 250px;">Pengendalian Existing</th>
-                                
-                                <!-- Awal -->
-                                <th style="width: 60px; text-align:center;">L</th>
-                                <th style="width: 60px; text-align:center;">S</th>
-                                <th class="section-divider" style="width: 100px; text-align:center;">Level</th>
-                                
-                                <!-- Sisa -->
-                                <th style="min-width: 200px;">Tindak Lanjut</th>
-                                <th style="width: 60px; text-align:center;">L</th>
-                                <th style="width: 60px; text-align:center;">S</th>
-                                <th style="width: 60px; text-align:center;">R</th>
-                                <th style="width: 100px; text-align:center;">Level</th>
+                                <!-- BAGIAN 1 (Kolom 2-5) -->
+                                <th style="width: 180px;">Proses/Kegiatan<br><small>(Kol 2)</small></th>
+                                <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
+                                <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
+                                <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol 5)</small></th>
+
+                                <!-- BAGIAN 2 (Kolom 6-9) -->
+                                <th style="width: 150px;">Potensi Bahaya<br><small>(Kol 6)</small></th>
+                                <th style="width: 150px;">Aspek Lingkungan<br><small>(Kol 7)</small></th>
+                                <th style="width: 150px;">Ancaman Keamanan<br><small>(Kol 8)</small></th>
+
+                                <th style="width: 150px;">RISIKO (K3/KO)<br><small>(Kol 9)</small></th>
+                                <th style="width: 150px;">DAMPAK (Lingk)<br><small>(Kol 9)</small></th>
+                                <th style="width: 150px;" class="section-border-right">CELAH (Keamanan)<br><small>(Kol
+                                        9)</small></th>
+
+                                <!-- BAGIAN 3 (Kolom 10-14) -->
+                                <th style="width: 250px;">Hirarki Pengendalian<br><small>(Kol 10)</small></th>
+                                <th style="width: 250px;">Pengendalian Existing<br><small>(Kol 11)</small></th>
+                                <th style="width: 50px;">L<br><small>(Kol 12)</small></th>
+                                <th style="width: 50px;">S<br><small>(Kol 13)</small></th>
+                                <th style="width: 80px;" class="section-border-right">Level<br><small>(Kol 14)</small></th>
+
+                                <!-- BAGIAN 4 (Kolom 15-17) -->
+                                <th style="width: 200px;">Regulasi<br><small>(Kol 15)</small></th>
+                                <th style="width: 80px;">Aspek Penting<br><small>(Kol 16)</small></th>
+                                <th style="width: 200px;" class="section-border-right">Peluang & Risiko<br><small>(Kol
+                                        17)</small></th>
+
+                                <!-- BAGIAN 5 (Kolom 18-22) -->
+                                <th style="width: 100px;">Toleransi<br><small>(Kol 18)</small></th>
+                                <th style="width: 200px;">Pengendalian Lanjut<br><small>(Kol 19)</small></th>
+                                <th style="width: 50px;">L<br><small>(Kol 20)</small></th>
+                                <th style="width: 50px;">S<br><small>(Kol 21)</small></th>
+                                <th style="width: 80px;">Level<br><small>(Kol 22)</small></th>
+                                <th style="width: 50px;">Residual L</th>
+                                <th style="width: 50px;">Residual S</th>
+                                <th style="width: 80px;">Residual Level</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($document->details as $index => $item)
-                                @php 
-                                    $bahaya = is_array($item->kolom6_bahaya) ? $item->kolom6_bahaya : [];
-                                    $pengendalian = is_array($item->kolom10_pengendalian) ? $item->kolom10_pengendalian : [];
-                                    $bahayaList = $bahaya['details'] ?? [];
-                                    $hierarchyList = $pengendalian['hierarchy'] ?? [];
-                                    if (!is_array($bahayaList)) $bahayaList = [];
-                                    if (!is_array($hierarchyList)) $hierarchyList = [];
-                                    
-                                    // Risk Color Logic
-                                    $initialScore = $item->kolom14_score;
-                                    $initialColor = $initialScore >= 15 ? '#ef4444' : ($initialScore >= 8 ? '#f59e0b' : '#10b981');
-                                    $initialLevel = $initialScore >= 15 ? 'HIGH' : ($initialScore >= 8 ? 'MED' : 'LOW');
-
-                                    $residualScore = $item->residual_score;
-                                    $residualColor = $residualScore >= 15 ? '#ef4444' : ($residualScore >= 8 ? '#f59e0b' : '#10b981');
-                                    $residualLevel = $residualScore >= 15 ? 'HIGH' : ($residualScore >= 8 ? 'MED' : 'LOW');
-                                @endphp
+                            @forelse($document->details as $index => $item)
                                 <tr>
-                                    <td style="text-align:center;">{{ $index + 1 }}</td>
-                                    <td>{{ $item->kolom2_kegiatan }}</td>
-                                    <td><span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:600; font-size:12px;">{{ $item->kategori }}</span></td>
-                                    <td>{{ $item->kolom3_lokasi }}</td>
-                                    <td class="section-divider">{{ $item->kolom5_kondisi }}</td>
-                                    
-                                    <td>
-                                        <div style="font-weight:600; font-size:12px; color:var(--text-sub); margin-bottom:4px;">{{ $bahaya['type'] ?? '-' }}</div>
-                                        <ul style="padding-left:16px; margin:0;">
-                                            @foreach($bahayaList as $d) <li>{{ $d }}</li> @endforeach
-                                        </ul>
+                                    <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
+                                        {{ $index + 1 }}
                                     </td>
-                                    <td>{{ $item->kolom7_dampak }}</td>
-                                    <td class="section-divider">
-                                        @if($item->kolom17_risiko) <div style="color:#ef4444; font-weight:500; margin-bottom:4px;"><i class="fas fa-minus-circle"></i> {{ $item->kolom17_risiko }}</div> @endif
-                                        @if($item->kolom17_peluang) <div style="color:#10b981; font-weight:500;"><i class="fas fa-plus-circle"></i> {{ $item->kolom17_peluang }}</div> @endif
-                                    </td>
-                                    
+                                    <!-- BAGIAN 1: Identifikasi Aktivitas -->
                                     <td>
-                                        <div style="display:flex; flex-wrap:wrap; gap:4px;">
-                                            @foreach($hierarchyList as $h) 
-                                                <span style="background:#eff6ff; color:#1d4ed8; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:600; border:1px solid #dbeafe;">{{ $h }}</span> 
+                                        <div class="cell-text">{{ $item->kolom2_kegiatan }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom3_lokasi }}</div>
+                                    </td>
+                                    <td>
+                                        <div style="display:flex; align-items:center; justify-content:center;">
+                                            <span class="doc-meta-badge" style="background:#e0e7ff; color:#3730a3;">
+                                                {{ $item->kategori }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="section-border-right">
+                                        <div style="display:flex; align-items:center; justify-content:center;">
+                                            <span class="doc-meta-badge" style="background:#f1f5f9; color:#475569;">
+                                                {{ $item->kolom5_kondisi }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <!-- BAGIAN 2: Identifikasi -->
+                                    <td>
+                                        @if($item->kategori == 'K3' || $item->kategori == 'KO')
+                                            <div class="cell-checkbox-group">
+                                                @php $bahayaDetails = $item->kolom6_bahaya['details'] ?? []; @endphp
+                                                @foreach($bahayaDetails as $detail)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i>
+                                                        <span>{{ $detail }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($item->kolom6_bahaya['manual']))
+                                                    <div style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                        <strong>Lainnya:</strong> {{ $item->kolom6_bahaya['manual'] }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        @if($item->kategori == 'Lingkungan')
+                                            <div class="cell-checkbox-group">
+                                                @php
+                                                    $col7 = $item->kolom7_aspek_lingkungan ?? [];
+                                                    $details7 = $col7['details'] ?? ((is_array($col7) && !array_key_exists('details', $col7)) ? $col7 : []);
+                                                    $manual7 = $col7['manual'] ?? '';
+                                                @endphp
+                                                @foreach($details7 as $aspek)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-leaf" style="color:#22c55e;"></i>
+                                                        <span>{{ $aspek }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($manual7))
+                                                    <div style="font-size:13px; margin-top:8px; padding:6px; background:#f0fdf4; border:1px dashed #22c55e; border-radius:4px; color:#15803d;">
+                                                        <strong>Lainnya:</strong> {{ $manual7 }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        @if($item->kategori == 'Keamanan')
+                                            <div class="cell-checkbox-group">
+                                                @php
+                                                    $col8 = $item->kolom8_ancaman ?? [];
+                                                    $details8 = $col8['details'] ?? ((is_array($col8) && !array_key_exists('details', $col8)) ? $col8 : []);
+                                                    $manual8 = $col8['manual'] ?? '';
+                                                @endphp
+                                                @foreach($details8 as $threat)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-shield-alt" style="color:#dc2626;"></i>
+                                                        <span>{{ $threat }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($manual8))
+                                                    <div style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                        <strong>Lainnya:</strong> {{ $manual8 }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        @if($item->kategori == 'K3' || $item->kategori == 'KO')
+                                            <div class="cell-text">{{ $item->kolom9_risiko_k3ko ?? $item->kolom9_risiko }}</div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        @if($item->kategori == 'Lingkungan')
+                                            <div class="cell-text">{{ $item->kolom9_dampak_lingkungan ?? $item->kolom9_risiko }}</div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <td class="section-border-right">
+                                        @if($item->kategori == 'Keamanan')
+                                            <div class="cell-text">{{ $item->kolom9_celah_keamanan ?? $item->kolom9_risiko }}</div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- BAGIAN 3: Pengendalian & Penilaian -->
+                                    <td>
+                                        <div class="cell-checkbox-group">
+                                            @php $hs = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
+                                            @foreach($hs as $h)
+                                                <div class="cell-checkbox-item">
+                                                    <i class="fas fa-check-square" style="color:#10b981;"></i>
+                                                    <span style="font-weight:600;">{{ $h }}</span>
+                                                </div>
                                             @endforeach
                                         </div>
                                     </td>
-                                    <td class="section-divider">{{ $item->kolom11_existing }}</td>
-                                    
-                                    <td style="text-align:center;">{{ $item->kolom12_kemungkinan }}</td>
-                                    <td style="text-align:center;">{{ $item->kolom13_konsekuensi }}</td>
-                                    <td class="section-divider" style="text-align:center;">
-                                        <div class="risk-pill" style="background:{{ $initialColor }}">{{ $initialLevel }}</div>
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom11_existing }}</div>
                                     </td>
-                                    
-                                    <td class="section-divider">{{ $item->kolom15_regulasi }}</td>
-                                    
-                                    <td>{{ $item->kolom18_tindak_lanjut }}</td>
-                                    <td style="text-align:center;">{{ $item->residual_kemungkinan }}</td>
-                                    <td style="text-align:center;">{{ $item->residual_konsekuensi }}</td>
-                                    <td style="text-align:center;">{{ $item->residual_score }}</td>
-                                    <td style="text-align:center;">
-                                        <div class="risk-pill" style="background:{{ $residualColor }}">{{ $residualLevel }}</div>
+                                    <td style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom12_kemungkinan }}</div>
+                                    </td>
+                                    <td style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom13_konsekuensi }}</div>
+                                    </td>
+                                    <td class="section-border-right" style="vertical-align:middle;">
+                                        <div class="risk-score-box">
+                                            <div class="risk-val">{{ $item->kolom14_score }}</div>
+                                            <div class="risk-badge {{ $item->kolom14_score >= 15 ? 'bg-high' : ($item->kolom14_score >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                {{ $item->kolom14_score >= 15 ? 'TINGGI' : ($item->kolom14_score >= 8 ? 'SEDANG' : 'RENDAH') }}
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- BAGIAN 4: Legalitas & Signifikansi -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom15_regulasi }}</div>
+                                    </td>
+                                    <td style="text-align:center; vertical-align:middle;">
+                                        @if($item->kategori == 'Lingkungan' && $item->kolom16_aspek)
+                                            <div class="doc-meta-badge" style="{{ $item->kolom16_aspek == 'P' ? 'background:#dbeafe; color:#1e40af;' : 'background:#f1f5f9; color:#64748b;' }}">
+                                                {{ $item->kolom16_aspek }}
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8;">-</div>
+                                        @endif
+                                    </td>
+                                    <td class="section-border-right">
+                                        <div class="risk-section">
+                                            @if($item->kolom17_risiko)
+                                                <div class="risk-label">RISIKO (-):</div>
+                                                <div class="risk-text">{{ $item->kolom17_risiko }}</div>
+                                            @endif
+                                            @if($item->kolom17_peluang)
+                                                <div class="risk-label" style="border-top:1px solid #e2e8f0; margin-top:6px; padding-top:6px;">PELUANG (+):</div>
+                                                <div class="risk-text">{{ $item->kolom17_peluang }}</div>
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    <!-- BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa -->
+                                    <td style="text-align:center; vertical-align:middle;">
+                                        <div class="doc-meta-badge" style="{{ $item->kolom18_toleransi == 'Ya' ? 'background:#dcfce7; color:#166534;' : 'background:#fee2e2; color:#991b1b;' }}">
+                                            {{ $item->kolom18_toleransi }}
+                                        </div>
+                                    </td>
+                                    @if($item->kolom18_toleransi == 'Tidak')
+                                        <td><div class="cell-text">{{ $item->kolom19_pengendalian_lanjut }}</div></td>
+                                        <td style="vertical-align:middle; text-align:center;">
+                                            <div style="font-weight:800; font-size:16px;">{{ $item->kolom20_kemungkinan_lanjut }}</div>
+                                        </td>
+                                        <td style="vertical-align:middle; text-align:center;">
+                                            <div style="font-weight:800; font-size:16px;">{{ $item->kolom21_konsekuensi_lanjut }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="risk-score-box">
+                                                <div class="risk-val">{{ $item->kolom22_tingkat_risiko_lanjut }}</div>
+                                                @if($item->kolom22_tingkat_risiko_lanjut)
+                                                    <div class="risk-badge {{ $item->kolom22_tingkat_risiko_lanjut >= 15 ? 'bg-high' : ($item->kolom22_tingkat_risiko_lanjut >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                        {{ $item->kolom14_score >= 15 ? 'HIGH' : ($item->kolom14_score >= 8 ? 'MED' : 'LOW') }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    @else
+                                        <td><div style="color:#94a3b8; text-align:center;">-</div></td>
+                                        <td><div style="color:#94a3b8; text-align:center;">-</div></td>
+                                        <td><div style="color:#94a3b8; text-align:center;">-</div></td>
+                                        <td><div style="color:#94a3b8; text-align:center;">-</div></td>
+                                    @endif
+
+                                    <td style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->residual_kemungkinan }}</div>
+                                    </td>
+                                    <td style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->residual_konsekuensi }}</div>
+                                    </td>
+                                    <td style="vertical-align:middle;">
+                                        <div class="risk-score-box">
+                                            <div class="risk-val">{{ $item->residual_score ?? '-' }}</div>
+                                            @if($item->residual_score)
+                                                <div class="risk-badge {{ $item->residual_score >= 15 ? 'bg-high' : ($item->residual_score >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                    {{ $item->residual_score >= 15 ? 'HIGH' : ($item->residual_score >= 8 ? 'MED' : 'LOW') }}
+                                                </div>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="27" style="text-align:center; padding:20px;">Tidak ada data detail.</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

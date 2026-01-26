@@ -332,42 +332,85 @@
         </div>
 
         <!-- Filter & Search Section -->
-        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-            <!-- Search Box -->
+        <div
+            style="background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 25px;">
             <div
-                style="flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
-                    <i class="fas fa-search"></i> Cari User
-                </label>
-                <input type="text" id="searchInput" placeholder="Cari username, email, atau nama..."
-                    style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;"
-                    oninput="handleSearch()">
-            </div>
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: end;">
 
-            <!-- Filter Box -->
-            <div
-                style="flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                <div style="display: flex; gap: 10px; align-items: flex-end;">
-                    <div style="flex: 1;">
-                        <label
-                            style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
-                            <i class="fas fa-filter"></i> Filter Unit
-                        </label>
-                        <select id="unitFilter"
-                            style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white;"
-                            onchange="handleUnitFilter()">
-                            <option value="">-- Semua Unit --</option>
-                            @foreach($units as $unit)
-                                <option value="{{ $unit->id_unit }}">{{ $unit->nama_unit }}</option>
-                            @endforeach
-                        </select>
+                <!-- Search Box -->
+                <div style="grid-column: span 2;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
+                        <i class="fas fa-search" style="color: #c41e3a; margin-right: 5px;"></i> Cari User
+                    </label>
+                    <div style="position: relative;">
+                        <input type="text" id="searchInput" placeholder="Cari username, email, atau nama..."
+                            style="width: 100%; padding: 12px 15px; padding-left: 40px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s;"
+                            onfocus="this.style.borderColor='#c41e3a'; this.style.boxShadow='0 0 0 3px rgba(196, 30, 58, 0.1)'"
+                            onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'"
+                            oninput="handleFilter()">
+                        <i class="fas fa-search"
+                            style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa;"></i>
                     </div>
-                    <div>
-                        <button class="btn btn-secondary" onclick="resetFilters()" title="Reset Filter"
-                            style="height: 42px;">
-                            <i class="fas fa-redo"></i> Reset
-                        </button>
-                    </div>
+                </div>
+
+                <!-- Filter Unit -->
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
+                        <i class="fas fa-building" style="color: #c41e3a; margin-right: 5px;"></i> Unit
+                    </label>
+                    <select id="unitFilter"
+                        style="width: 100%; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white; cursor: pointer; transition: all 0.3s;"
+                        onfocus="this.style.borderColor='#c41e3a'; this.style.boxShadow='0 0 0 3px rgba(196, 30, 58, 0.1)'"
+                        onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'"
+                        onchange="handleFilter()">
+                        <option value="">Semua Unit</option>
+                        @foreach($units as $unit)
+                            <option value="{{ $unit->id_unit }}">{{ $unit->nama_unit }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Filter Departemen -->
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
+                        <i class="fas fa-sitemap" style="color: #c41e3a; margin-right: 5px;"></i> Departemen
+                    </label>
+                    <select id="deptFilter"
+                        style="width: 100%; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white; cursor: pointer; transition: all 0.3s;"
+                        onfocus="this.style.borderColor='#c41e3a'; this.style.boxShadow='0 0 0 3px rgba(196, 30, 58, 0.1)'"
+                        onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'"
+                        onchange="handleFilter()">
+                        <option value="">Semua Departemen</option>
+                        @foreach($departemens as $dept)
+                            <option value="{{ $dept->id_dept }}">{{ $dept->nama_dept }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Filter Jabatan -->
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
+                        <i class="fas fa-user-tie" style="color: #c41e3a; margin-right: 5px;"></i> Jabatan
+                    </label>
+                    <select id="jabatanFilter"
+                        style="width: 100%; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white; cursor: pointer; transition: all 0.3s;"
+                        onfocus="this.style.borderColor='#c41e3a'; this.style.boxShadow='0 0 0 3px rgba(196, 30, 58, 0.1)'"
+                        onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'"
+                        onchange="handleFilter()">
+                        <option value="">Semua Jabatan</option>
+                        @foreach($roleJabatans as $jabatan)
+                            <option value="{{ $jabatan->id_role_jabatan }}">{{ $jabatan->nama_role_jabatan }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Reset Button -->
+                <div style="display: flex; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="resetFilters()" title="Reset Filter"
+                        style="height: 45px; width: 100%; justify-content: center; background: #f8f9fa; color: #333; border: 1px solid #e0e0e0; transition: all 0.2s;">
+                        <i class="fas fa-redo" style="font-size: 14px; color: #666;"></i> <span
+                            style="margin-left: 8px;">Reset</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -396,7 +439,7 @@
         </div>
 
         <!-- Pagination Links -->
-        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+        <div id="paginationContainer" style="margin-top: 20px; display: flex; justify-content: flex-end;">
             {{ $users->links('pagination::bootstrap-4') }}
         </div>
     </main>
@@ -419,6 +462,63 @@
         // Filter state
         // Server-side filtering is now used
 
+        function handleFilter() {
+            const search = document.getElementById('searchInput').value;
+            const unit = document.getElementById('unitFilter').value;
+            const dept = document.getElementById('deptFilter').value;
+            const jabatan = document.getElementById('jabatanFilter').value;
+
+            // Build query params
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (unit) params.append('unit_filter', unit);
+            if (dept) params.append('dept_filter', dept);
+            if (jabatan) params.append('jabatan_filter', jabatan);
+
+            // Show loading state if needed, or just fetch
+            // Using fetch to get filtered data
+
+            fetch(`${window.location.pathname}?${params.toString()}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    users = data.data ? data.data : data; // Handle pagination response
+                    allUsers = [...users]; // Update local cache
+                    renderTable();
+
+                    // HIDE Pagination on Filter/AJAX load because we load ALL data
+                    const paginationContainer = document.getElementById('paginationContainer');
+                    if (paginationContainer) {
+                        paginationContainer.style.display = 'none';
+                    }
+
+                    // Update URL without reload
+                    const newUrl = `${window.location.pathname}?${params.toString()}`;
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+                })
+                .catch(err => console.error('Filter error:', err));
+        }
+
+        // Legacy support if needed, or alias
+        function handleSearch() {
+            handleFilter();
+        }
+
+        function handleUnitFilter() {
+            handleFilter();
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('unitFilter').value = '';
+            document.getElementById('deptFilter').value = '';
+            document.getElementById('jabatanFilter').value = '';
+            handleFilter();
+        }
 
         // DEBUG: Log data untuk troubleshooting
         console.log('=== MASTER DATA DEBUG ===');
@@ -436,6 +536,12 @@
 
         function renderTable() {
             tbody.innerHTML = '';
+
+            if (users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 30px;">Tidak ada data user ditemukan</td></tr>`;
+                return;
+            }
+
             users.forEach(user => {
                 const tr = document.createElement('tr');
                 tr.dataset.id = user.id_user || user.id || 'NEW';
@@ -450,6 +556,9 @@
                 tbody.appendChild(tr);
             });
         }
+
+        // ... rest of the functions (renderViewRow, etc) unchanged
+
 
         function renderViewRow(user) {
             const dirName = user.direktorat ? user.direktorat.nama_direktorat : '-';

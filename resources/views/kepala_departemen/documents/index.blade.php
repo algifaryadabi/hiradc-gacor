@@ -737,20 +737,33 @@
                 // Status Logic
                 let statusClass = 'status-pending';
                 let statusIcon = '<i class="fas fa-clock"></i>';
-                let statusLabel = 'Menunggu';
+                let statusLabel = doc.status; // Use enriched status from controller
 
-                if (['Disetujui', 'Approved'].includes(doc.status)) {
+                if (doc.status.includes('Siap Approval')) {
+                    statusClass = 'status-pending'; // Keep orange or make special blue?
+                    statusIcon = '<i class="fas fa-exclamation-circle"></i>';
+                } else if (['Disetujui', 'Approved'].includes(doc.status)) {
                     statusClass = 'status-approved';
                     statusIcon = '<i class="fas fa-check-circle"></i>';
-                    statusLabel = 'Disetujui';
                 } else if (doc.status === 'Revisi') {
                     statusClass = 'status-revision';
-                    statusIcon = '<i class="fas fa-exclamation-circle"></i>';
-                    statusLabel = 'Revisi';
+                    statusIcon = '<i class="fas fa-undo"></i>';
                 }
 
-                // Parse Date for Badge (assuming format DD MMM YYYY)
-                // If doc.date_submit is string e.g., "17 Jan 2026"
+                // Sub-Status Badges
+                let badgesHtml = '';
+                if(doc.status_she) {
+                    let color = (doc.status_she === 'approved' || doc.status_she === 'published') ? '#d1fae5' : '#f1f5f9';
+                    let textCol = (doc.status_she === 'approved' || doc.status_she === 'published') ? '#065f46' : '#64748b';
+                     badgesHtml += `<span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${color}; color:${textCol}; font-weight:600; border:1px solid ${color};">SHE: ${doc.status_she}</span>`;
+                }
+                if(doc.status_security) {
+                    let color = (doc.status_security === 'approved' || doc.status_security === 'published') ? '#d1fae5' : '#f1f5f9';
+                    let textCol = (doc.status_security === 'approved' || doc.status_security === 'published') ? '#065f46' : '#64748b';
+                     badgesHtml += `<span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${color}; color:${textCol}; font-weight:600; border:1px solid ${color};">SEC: ${doc.status_security}</span>`;
+                }
+
+                // Parse Date
                 const dateParts = doc.date_submit.split(' ');
                 const day = dateParts[0] || '-';
                 const month = dateParts[1] || '-';
@@ -770,7 +783,8 @@
                                 <span style="font-size:12px; color:#94a3b8;">• ${doc.time_submit} WIB</span>
                             </div>
                             <div class="doc-title">${doc.title}</div>
-                            <div class="doc-submitter"><i class="fas fa-user-edit"></i> ${doc.submitter}</div>
+                            <div class="doc-submitter" style="margin-bottom:4px;"><i class="fas fa-user-edit"></i> ${doc.submitter}</div>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">${badgesHtml}</div>
                         </div>
 
                         <!-- Status Badge -->

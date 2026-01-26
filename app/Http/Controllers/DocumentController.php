@@ -676,62 +676,92 @@ class DocumentController extends Controller
         // Use helper if available, or fallback to role_user column
         $role = method_exists($user, 'getRoleName') ? $user->getRoleName() : $user->role_user;
 
-        // MATCHING RULES based on User's Screenshot of 'role_jabatan' table:
-        // 3 = Senior Manager --> Acts as Approver Level 1 (Kepala Unit)
-        // 2 = General Manager --> Acts as Approver Level 3 (Kepala Departemen) ?? (Assumption)
+        // Level Determination
+        $isLevel1 = (in_array($role, ['approver', 'kepala_unit']) || $user->id_role_user == 3 || $user->id_role_jabatan == 3);
+        $isSHE = ($user->id_unit == 56);
+        $isSecurity = ($user->id_unit == 55);
+        $isLevel2 = ($isSHE || $isSecurity) && ($user->role_jabatan >= 3); // Head or Staff? 
+        // Note: Staff (Reviewer/Verificator) also access this?
+        // If staff uses this "Approver Dashboard", we should allow them.
+        // Assuming Staff Reviewer/Verificator are accessing 'approver.check_documents' too.
 
-        $level = 0;
+        $documents = collect([]);
 
-        // Level 1: Kepala Unit
-        // - Role User 'approver' / 'kepala_unit'
-        // - OR Role Jabatan 'Senior Manager' (id 3)
-        if (in_array($role, ['approver', 'kepala_unit']) || $user->id_role_user == 3 || $user->id_role_jabatan == 3) {
-            $level = 1;
+        if ($isLevel2) {
+            // Unit Pengelola (SHE / Security)
+            // Query docs where their respective status is active (not 'none')
+            $query = Document::query()
+                ->with([
+                    'user',
+                    'unit',
+                    'approvals' => function ($q) {
+                        $q->orderBy('created_at', 'desc');
+                    }
+                ]);
+
+            if ($isSHE) {
+                $query->where('status_she', '!=', 'none');
+            } elseif ($isSecurity) {
+                $query->where('status_security', '!=', 'none');
+            }
+
+            $documents = $query->orderBy('created_at', 'desc')->get();
+
+        } else {
+            // Level 1: Kepala Unit Asal
+            // Only see documents from own unit
+            $documents = Document::where('id_unit', $user->id_unit)
+                ->with([
+                    'user',
+                    'unit',
+                    'approvals' => function ($q) {
+                        $q->orderBy('created_at', 'desc');
+                    }
+                ])
+                ->orderBy('created_at', 'desc')
+                ->get();
         }
-        // Level 2: Unit Pengelola (SHE / Security) - ONLY Kepala Unit
-        // - Kepala Unit: role_jabatan = 3 (Senior Manager)
-        // User Request: "Semua list nya yang ada, disetujui revisi maupun sdg diproses"
-        // Show ALL documents for this Unit (excluding drafts potentially, unless asked)
-        // assuming Monitor Unit Documents mode.
-
-        $documents = Document::where('id_unit', $user->id_unit)
-            ->with([
-                'user',
-                'unit',
-                'approvals' => function ($q) {
-                    $q->orderBy('created_at', 'desc');
-                }
-            ])
-            ->orderBy('created_at', 'desc')
-            ->get();
 
         // Transform for View
-        $documentsData = $documents->map(function ($doc) use ($user) {
-            $status = 'Disetujui'; // Default fallback (History/Done)
+        $documentsData = $documents->map(function ($doc) use ($user, $isSHE, $isSecurity, $isLevel2) {
+            $status = 'Disetujui'; // Default fallback
+            $workflowStatus = $doc->status; // Default global
 
-            // Check if this is a revision
-            if ($doc->status === 'revision') {
-                // Get the last approval to determine who sent it back
-                $lastApproval = $doc->approvals->first(); // Already ordered by desc
-
-                // Only show as "Revisi" if it came from Unit Pengelola (Level 2)
-                // Hide if it came from Kepala Unit Kerja themselves (Level 1)
-                if ($lastApproval && $lastApproval->level == 2 && $lastApproval->action == 'revised') {
-                    // This is a revision from Unit Pengelola - SHOW IT
-                    $status = 'Revisi';
-                } elseif ($lastApproval && $lastApproval->level == 1 && $lastApproval->action == 'revised') {
-                    // This is a revision from Kepala Unit Kerja themselves - HIDE IT
-                    return null;
-                } else {
-                    // Fallback for revisions without clear approval history
-                    $status = 'Revisi';
+            // Determine relevant status based on viewer
+            if ($isLevel2) {
+                if ($isSHE) {
+                    $workflowStatus = $doc->status_she;
+                } elseif ($isSecurity) {
+                    $workflowStatus = $doc->status_security;
                 }
-            } elseif ($doc->canBeApprovedBy($user)) {
-                $status = 'Menunggu';
-            } elseif ($doc->status === 'approved') {
-                $status = 'Disetujui';
-            } elseif ($doc->current_level > 1) {
-                $status = 'Disetujui'; // Lanjut ke level berikutnya
+            }
+
+            // Map Technical Status to Friendly Name
+            // Statuses: 'none', 'pending_head', 'pending_reviewer', 'pending_verificator', 'pending_head_final', 'approved', 'revision'
+            switch ($workflowStatus) {
+                case 'pending_level1':
+                    $status = 'Menunggu Approval Kepala Unit';
+                    break;
+                case 'pending_head':
+                    $status = 'Menunggu Disposisi/Approval Head';
+                    break;
+                case 'pending_reviewer':
+                    $status = 'Menunggu Review Staff';
+                    break;
+                case 'pending_verificator':
+                    $status = 'Menunggu Verifikasi Staff';
+                    break;
+                case 'pending_head_final':
+                    $status = 'Menunggu Final Approval';
+                    break;
+                case 'approved':
+                    $status = 'Disetujui';
+                    break;
+                case 'revision':
+                    $status = 'Revisi';
+                    break;
+                default:
+                    $status = ucwords(str_replace('_', ' ', $workflowStatus));
             }
 
             // Friendly Unit Name & Department
@@ -749,6 +779,7 @@ class DocumentController extends Controller
                 'date_submit' => $doc->created_at->format('d M Y'),
                 'time_submit' => $doc->created_at->format('H:i') . ' WIB',
                 'status' => $status,
+                'raw_status' => $workflowStatus, // For logic if needed
                 'viewUrl' => route('approver.review', ['document' => $doc->id])
             ];
         })->filter()->values(); // Remove null values and re-index
@@ -1109,41 +1140,131 @@ class DocumentController extends Controller
             $document->update($dataToUpdate);
 
             // B. Handle Approval Workflow
-            if ($document->current_level == 2) {
-                // Unit Pengelola (Level 2)
-                // Check if Unit has no Department (id_dept == 0)
-                // Use relation to be sure we check the Master Unit data
-                $unitDeptId = $document->unit ? $document->unit->id_dept : $document->id_dept;
+            if ($document->current_level == 1) {
+                // Level 1 Approval (Kepala Unit Asal) -> Move to Level 2 (Unit Pengelola)
 
-                if (!$unitDeptId || $unitDeptId == 0) {
-                    // No Dept -> Publish Directly
-                    $document->update([
-                        'status' => 'published',
-                        'published_at' => now()
-                    ]);
-                } else {
-                    // Has Dept -> Kepala Departemen (Level 3)
+                // Ensure we have fresh data (especially if details were updated indirectly or headers changed)
+                $document->refresh();
+
+                // Initialize Split Statuses
+                $sheStatus = $document->hasSheContent() ? 'pending_head' : 'none';
+                $secStatus = $document->hasSecurityContent() ? 'pending_head' : 'none';
+
+                $document->update([
+                    'current_level' => 2,
+                    'status' => 'pending_level2', // Global status
+                    'status_she' => $sheStatus,
+                    'status_security' => $secStatus,
+                ]);
+
+                // Create History Record
+                $document->approvals()->create([
+                    'approver_id' => $user->id_user,
+                    'level' => 1,
+                    'action' => 'approved',
+                    'catatan' => $request->catatan,
+                    'ip_address' => $request->ip()
+                ]);
+
+            } elseif ($document->current_level == 2) {
+                // Level 2 Approval (Unit Pengelola Internal Flow)
+                // Determine which path we are processing based on User's Unit
+                $isShe = ($user->id_unit == 56); // SHE Unit
+                $isSecurity = ($user->id_unit == 55); // Security Unit
+
+                // Handle SHE Path
+                if ($isShe && $document->status_she != 'none') {
+                    if ($document->status_she == 'pending_head') {
+                        // Alternate path if Head approves directly without disposition (Optional)
+                        // For now, let's keep it as is or redirect to disposition?
+                        // Assuming Head wants to "Approve" means "Move to next" or "Final Approve"?
+                        // If Head approves at start, maybe skip to approved? User requested full flow.
+                        // Let's assume this block is rarely hit via 'approve' route if UI filters.
+                        $document->update(['status_she' => 'assigned_review']);
+                    } elseif ($document->status_she == 'assigned_review') {
+                        $document->update(['status_she' => 'assigned_approval']);
+                    } elseif ($document->status_she == 'assigned_approval') {
+                        $document->update(['status_she' => 'staff_verified']);
+                    } elseif ($document->status_she == 'staff_verified') {
+                        $document->update([
+                            'status_she' => 'approved',
+                            'she_approved_at' => now()
+                        ]);
+                    }
+                }
+                // Handle Security Path
+                elseif ($isSecurity && $document->status_security != 'none') {
+                    if ($document->status_security == 'pending_head') {
+                        $document->update(['status_security' => 'assigned_review']);
+                    } elseif ($document->status_security == 'assigned_review') {
+                        $document->update(['status_security' => 'assigned_approval']);
+                    } elseif ($document->status_security == 'assigned_approval') {
+                        $document->update(['status_security' => 'staff_verified']);
+                    } elseif ($document->status_security == 'staff_verified') {
+                        $document->update([
+                            'status_security' => 'approved',
+                            'security_approved_at' => now()
+                        ]);
+                    }
+                }
+
+                // Check if BOTH are done (Consolidation)
+                // Need to refresh model to get updated statuses
+                $document->refresh();
+
+                if ($document->isSheApproved() && $document->isSecurityApproved()) {
+                    // Move to Level 3 (Kepala Departemen)
                     $document->update([
                         'current_level' => 3,
                         'status' => 'pending_level3'
                     ]);
                 }
+
+                // Create History Record (Level 2)
+                $document->approvals()->create([
+                    'approver_id' => $user->id_user,
+                    'level' => 2,
+                    'action' => 'approved', // Or specific internal action name? Keep 'approved' for consistency
+                    'catatan' => $request->catatan,
+                    'ip_address' => $request->ip()
+                ]);
+
             } elseif ($document->current_level == 3) {
-                // Kepala Departemen (Level 3) -> PUBLISH
+                // Level 3 Approval (Kepala Departemen) -> PUBLISH
+                // Note: Dept Head might approve SHE and Security independently?
+                // But current structure consolidates them at Level 3?
+                // User said: "Kepala Departemen bisa langsung menyetujui kategori yang sudah masuk terlebih dahulu."
+                // "Dashboard Kepala Departemen: Akan muncul Card terpisah".
+                // This implies Level 3 is ALSO split!
+                // OR Level 3 view filters cards based on Level 2 completion.
+
+                // If Dept Head approves, it's final for that card.
+                // If "Consolidation" is final step, maybe document status becomes 'published' only when BOTH cards are approved by Dept Head?
+
+                // Let's implement full consolidation at the end.
+                // Since I cannot change the View logic for Dept Head yet to show partial cards,
+                // I will stick to "Consolidated Approval" for now as per "pending_level3".
+                // Wait, user said "Kepala Departemen bisa langsung menyetujui...".
+                // This means Dept Head sees it AS SOON as one unit finishes.
+                // So my transition logic `if ($document->isSheApproved() && $document->isSecurityApproved())` is WRONG for *Display* but maybe okay for *Status*.
+
+                // Actually, if `status` stays `pending_level2`, the Dept Head won't see it if query looks for `pending_level3`.
+                // I should probably set `current_level` = 3 as soon as ONE unit approves?
+                // But then the other unit is still working.
+                // Complex state! 
+
+                // Simplified Approach for this Iteration:
+                // Wait for both to finish Level 2, THEN move to Level 3.
+                // Use `approved` logic as written above.
+
                 $document->update([
                     'status' => 'published',
                     'published_at' => now()
                 ]);
-            } else {
-                // Standard Model Approval (Level 1 -> 2)
-                $document->approve($user, $request->catatan);
-            }
 
-            // Create History Record if Manual Level 2 or 3 Update
-            if ($document->wasChanged('current_level') || $document->wasChanged('status')) {
                 $document->approvals()->create([
                     'approver_id' => $user->id_user,
-                    'level' => $user->isKepalaDepartemen() ? 3 : ($user->isUnitPengelola() ? 2 : 1),
+                    'level' => 3,
                     'action' => 'approved',
                     'catatan' => $request->catatan,
                     'ip_address' => $request->ip()
@@ -1190,10 +1311,18 @@ class DocumentController extends Controller
             abort(403, 'Akses ditolak. Hanya Kepala Departemen yang dapat mengakses halaman ini.');
         }
 
-        // Fetch Pending (Level 3) & History (Published from this Dept) & Revisions
+        // Fetch Pending (Level 3 or Level 2 Partial) & History
         $documents = Document::where('id_dept', $user->id_dept)
             ->where(function ($q) {
-                $q->where('current_level', 3) // Pending this level
+                $q->where('current_level', 3) // Fully Pending
+                    ->orWhere(function ($sub) {
+                        // Parallel Entry: Level 2 but at least one unit approved
+                        $sub->where('current_level', 2)
+                            ->where(function ($p) {
+                            $p->where('status_she', 'approved')
+                                ->orWhere('status_security', 'approved');
+                        });
+                    })
                     ->orWhere('status', 'approved') // Published
                     ->orWhere('status', 'published')
                     ->orWhere('status', 'revision'); // Revisions
@@ -1203,16 +1332,29 @@ class DocumentController extends Controller
             ->get();
 
         $documentsData = $documents->map(function ($doc) use ($user) {
-            $status = 'Disetujui'; // Default fallback
+            $status = 'Menunggu'; // Default
 
-            // Logic Status
             // Logic Status
             if ($doc->status === 'approved' || $doc->status === 'published') {
                 $status = 'Disetujui';
             } elseif ($doc->status === 'revision') {
                 $status = 'Revisi';
-            } elseif ($doc->canBeApprovedBy($user)) {
-                $status = 'Menunggu';
+            } else {
+                // Check Partial
+                $readyShe = $doc->status_she == 'approved';
+                $readySec = $doc->status_security == 'approved';
+
+                if ($readyShe && $readySec) {
+                    $status = 'Siap Approval (Semua)';
+                } elseif ($readyShe) {
+                    $status = 'Siap Approval (SHE)';
+                } elseif ($readySec) {
+                    $status = 'Siap Approval (Security)';
+                } elseif ($doc->current_level == 3) {
+                    $status = 'Siap Approval';
+                } else {
+                    $status = 'Menunggu Unit Pengelola';
+                }
             }
 
             // Friendly Unit Name & Department
@@ -1229,6 +1371,9 @@ class DocumentController extends Controller
                 'date_submit' => $doc->created_at->format('d M Y'),
                 'time_submit' => $doc->created_at->format('H:i') . ' WIB',
                 'status' => $status,
+                'status_she' => $doc->status_she,
+                'status_security' => $doc->status_security,
+                'current_level' => $doc->current_level,
                 'viewUrl' => route('kepala_departemen.review', ['document' => $doc->id])
             ];
         });
@@ -1310,9 +1455,60 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized to publish this document.');
         }
 
-        // Verify document is at level 3 and pending
-        if ($document->current_level != 3 || $document->status != 'pending_level3') {
+        // Validation: Verify document is ready for Level 3 OR Partial Level 2
+        // We allow Level 2 if at least one track is approved.
+        $isReady = ($document->current_level == 3) ||
+            ($document->current_level == 2 && ($document->status_she == 'approved' || $document->status_security == 'approved'));
+
+        if (!$isReady) {
             return back()->with('error', 'Dokumen tidak dalam status yang tepat untuk dipublikasi.');
+        }
+
+        // Smart Publish Logic: Approve whatever is ready
+        $approvedSomething = false;
+
+        // 1. Approve SHE Track
+        if ($document->status_she == 'approved') {
+            $document->update(['status_she' => 'published']);
+            $approvedSomething = true;
+        }
+
+        // 2. Approve Security Track
+        if ($document->status_security == 'approved') {
+            $document->update(['status_security' => 'published']);
+            $approvedSomething = true;
+        }
+
+        // 3. Already Level 3 (Both were done before)
+        $fullyPublished = false;
+        if ($document->current_level == 3 && $document->status == 'pending_level3') {
+            // Just publish everything
+            // If tracks were used, ensure they are marked published too
+            if ($document->status_she == 'approved')
+                $document->update(['status_she' => 'published']);
+            if ($document->status_security == 'approved')
+                $document->update(['status_security' => 'published']);
+            $document->update(['status' => 'published', 'published_at' => now()]);
+            $fullyPublished = true;
+            $approvedSomething = true;
+        }
+
+        // 4. Check Consolidation (If we just approved a partial track)
+        if (!$fullyPublished) {
+            $sheDone = in_array($document->status_she, ['published', 'none']);
+            $secDone = in_array($document->status_security, ['published', 'none']);
+
+            if ($sheDone && $secDone) {
+                $document->update([
+                    'current_level' => 3, // Move to 3 finally
+                    'status' => 'published',
+                    'published_at' => now()
+                ]);
+            }
+        }
+
+        if (!$approvedSomething) {
+            return back()->with('warning', 'Tidak ada bagian dokumen yang siap disetujui saat ini.');
         }
 
         // Log approval history
@@ -1320,14 +1516,8 @@ class DocumentController extends Controller
             'approver_id' => $user->id_user,
             'level' => 3,
             'action' => 'approved',
-            'catatan' => $request->catatan ?? 'Dokumen dipublikasikan oleh Kepala Departemen',
+            'catatan' => $request->catatan ?? 'Dokumen disetujui oleh Kepala Departemen',
             'ip_address' => $request->ip()
-        ]);
-
-        // Update document status to published
-        $document->update([
-            'status' => 'published',
-            'published_at' => now()
         ]);
 
         return redirect()->route('kepala_departemen.dashboard')
@@ -1354,12 +1544,29 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized disposition.');
         }
 
-        $document->update([
-            'level2_status' => 'assigned_review',
-            'level2_reviewer_id' => $request->reviewer_id,
-            'level2_approver_id' => $request->approver_id,
-            'level2_assignment_date' => now(),
-        ]);
+        // Parallel Workflow: Update Specific Columns based on Unit
+        if ($user->id_unit == 55) { // Security
+            $document->update([
+                'status_security' => 'assigned_review',
+                'security_reviewer_id' => $request->reviewer_id,
+                'security_verificator_id' => $request->approver_id,
+                // 'level2_assignment_date' => now(), // Optional tracking
+            ]);
+        } elseif ($user->id_unit == 56) { // SHE
+            $document->update([
+                'status_she' => 'assigned_review',
+                'she_reviewer_id' => $request->reviewer_id,
+                'she_verificator_id' => $request->approver_id,
+            ]);
+        } else {
+            // Fallback
+            $document->update([
+                'level2_status' => 'assigned_review',
+                'level2_reviewer_id' => $request->reviewer_id,
+                'level2_approver_id' => $request->approver_id,
+                'level2_assignment_date' => now(),
+            ]);
+        }
 
         // Log History for Disposition
         $document->approvals()->create([
@@ -1379,7 +1586,19 @@ class DocumentController extends Controller
     public function submitReviewUnit(Request $request, Document $document)
     {
         // Check: Is User the assigned Reviewer?
-        if (Auth::id() != $document->level2_reviewer_id) {
+        $user = Auth::user();
+        $isAssigned = false;
+
+        if ($user->id_unit == 55) { // Security
+            $isAssigned = ($user->id_user == $document->security_reviewer_id);
+        } elseif ($user->id_unit == 56) { // SHE
+            $isAssigned = ($user->id_user == $document->she_reviewer_id);
+        } else {
+            // Fallback
+            $isAssigned = ($user->id_user == $document->level2_reviewer_id);
+        }
+
+        if (!$isAssigned) {
             abort(403, 'Anda bukan reviewer yang ditunjuk untuk dokumen ini.');
         }
 
@@ -1406,9 +1625,16 @@ class DocumentController extends Controller
             'ip_address' => $request->ip()
         ]);
 
-        $document->update([
-            'level2_status' => 'assigned_approval', // Move to Approver (Band III)
-        ]);
+        // Check Unit
+        $user = Auth::user();
+        if ($user->id_unit == 55) { // Security
+            $document->update(['status_security' => 'assigned_approval']);
+        } elseif ($user->id_unit == 56) { // SHE
+            $document->update(['status_she' => 'assigned_approval']);
+        } else {
+            // Fallback
+            $document->update(['level2_status' => 'assigned_approval']);
+        }
 
         return redirect()->route('unit_pengelola.check_documents')->with('success', 'Review selesai. Dokumen diteruskan ke Verifikator.');
     }
@@ -1418,14 +1644,19 @@ class DocumentController extends Controller
      */
     public function verifyUnit(Request $request, Document $document)
     {
-        // Check: Is User the assigned Approver OR a valid General Staff Approver?
+        // Check: Is User the assigned Approver?
         $user = Auth::user();
-        $isAssigned = Auth::id() == $document->level2_approver_id;
-        // Fix: Do not require doc unit match for Unit Pengelola
-        $isStaffApprover = ($user->role_jabatan == 4) && 
-                           in_array($user->id_unit, [55, 56]);
+        $isAssigned = false;
 
-        if (!$isAssigned && !$isStaffApprover) {
+        if ($user->id_unit == 55) { // Security
+            $isAssigned = ($user->id_user == $document->security_verificator_id);
+        } elseif ($user->id_unit == 56) { // SHE
+            $isAssigned = ($user->id_user == $document->she_verificator_id);
+        } else {
+            $isAssigned = ($user->id_user == $document->level2_approver_id);
+        }
+
+        if (!$isAssigned) {
             abort(403, 'Anda bukan verifikator yang ditunjuk untuk dokumen ini.');
         }
 
@@ -1440,10 +1671,22 @@ class DocumentController extends Controller
             'ip_address' => $request->ip()
         ]);
 
-        $document->update([
-            'level2_status' => 'staff_verified',
-            'status' => 'staff_verified', // Update main status so it appears on Kepala Unit dashboard
-        ]);
+        // Update Status based on Unit
+        if ($user->id_unit == 55) { // Security
+            $document->update([
+                'status_security' => 'staff_verified',
+                // Don't update global status yet, as other unit might be pending
+            ]);
+        } elseif ($user->id_unit == 56) { // SHE
+            $document->update([
+                'status_she' => 'staff_verified',
+            ]);
+        } else {
+            $document->update([
+                'level2_status' => 'staff_verified',
+                'status' => 'staff_verified',
+            ]);
+        }
 
         return redirect()->route('unit_pengelola.check_documents')->with('success', 'Verifikasi selesai. Dokumen dikembalikan ke Kepala Unit.');
     }
@@ -1601,8 +1844,8 @@ class DocumentController extends Controller
             $isAssignedApprover = $document->level2_approver_id == $user->id_user;
             // NEW: Allow Generic Staff Approver (Role 4 in same Unit)
             // Fix: Do not require doc unit match
-            $isStaffApprover = ($user->role_jabatan == 4) && 
-                               in_array($user->id_unit, [55, 56]);
+            $isStaffApprover = ($user->role_jabatan == 4) &&
+                in_array($user->id_unit, [55, 56]);
 
             if (!$isAuthor && !$isApprover && !$isUnitPengelolaHead && !$isAssignedReviewer && !$isAssignedApprover && !$isStaffApprover) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized Access'], 403);
@@ -1697,8 +1940,8 @@ class DocumentController extends Controller
 
             // Auth Check
             // Fix: Do not require doc unit match
-            $isStaffApprover = ($user->role_jabatan == 4) && 
-                               in_array($user->id_unit, [55, 56]);
+            $isStaffApprover = ($user->role_jabatan == 4) &&
+                in_array($user->id_unit, [55, 56]);
 
             if ($document->id_user != $user->id_user && !($user->role_jabatan == 3 && $document->id_unit == $user->id_unit) && !$isStaffApprover) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
@@ -1738,6 +1981,19 @@ class DocumentController extends Controller
 
         $user = Auth::user();
 
+        // Filter Details based on Unit
+        $filteredDetails = $document->details; // Default all
+
+        if ($user->id_unit == 55) { // Security
+            $filteredDetails = $document->details->filter(function ($detail) {
+                return $detail->kategori == 'Keamanan';
+            });
+        } elseif ($user->id_unit == 56) { // SHE
+            $filteredDetails = $document->details->filter(function ($detail) {
+                return in_array($detail->kategori, ['K3', 'KO', 'Lingkungan']);
+            });
+        }
+
         // Fetch Staff for Disposition Forms
         $staffReviewers = \App\Models\User::where('id_unit', $user->id_unit)
             ->whereIn('role_jabatan', [5, 6]) // Band IV, V
@@ -1747,7 +2003,7 @@ class DocumentController extends Controller
             ->where('role_jabatan', 4) // Band III
             ->get();
 
-        return view('unit_pengelola.documents.review', compact('document', 'staffReviewers', 'staffApprovers'));
+        return view('unit_pengelola.documents.review', compact('document', 'filteredDetails', 'staffReviewers', 'staffApprovers'));
     }
 
     /**
@@ -1779,12 +2035,27 @@ class DocumentController extends Controller
             $allowedCategories = ['K3', 'KO', 'Lingkungan'];
         }
 
-        // Load documents that have been approved by Level 1 (Kepala Unit Kerja)
-        // and are now pending for Level 2 (Unit Pengelola) review
-        // Include both: pending disposition AND staff verified (ready for Kepala approval)
-        $documents = Document::where('current_level', 2)
-            ->whereIn('status', ['pending_level2', 'staff_verified'])
-            ->whereIn('kategori', $allowedCategories)
+        // Load documents that have been approved by Level 1 (Level > 1 OR status pending_level2)
+        // Correct Logic: Check if Header Matches OR Details Match
+        // Also ensure current_level is 2 (Unit Pengelola Phase)
+
+        $documents = Document::where('current_level', 2);
+
+        // Filter by Unit-Specific Status
+        if ($user->id_unit == 55) { // Security
+            $documents->whereIn('status_security', ['pending_head', 'staff_verified']);
+        } elseif ($user->id_unit == 56) { // SHE
+            $documents->whereIn('status_she', ['pending_head', 'staff_verified']);
+        } else {
+            $documents->whereIn('status', ['pending_level2', 'staff_verified']);
+        }
+
+        $documents = $documents->where(function ($q) use ($allowedCategories) {
+            $q->whereIn('kategori', $allowedCategories)
+                ->orWhereHas('details', function ($d) use ($allowedCategories) {
+                    $d->whereIn('kategori', $allowedCategories);
+                });
+        })
             ->with(['user', 'unit', 'approvals.approver'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -1806,26 +2077,92 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized. Only Unit Pengelola staff can access this page.');
         }
 
+        // Determine allowed categories based on unit
+        $allowedCategories = [];
+        if ($user->id_unit == 55) { // Security
+            $allowedCategories = ['Keamanan'];
+        } elseif ($user->id_unit == 56) { // SHE
+            $allowedCategories = ['K3', 'KO', 'Lingkungan'];
+        }
+
         // Load documents assigned to this staff OR unassigned (Pool)
-        $query = Document::where('current_level', 2)
-            ->where(function ($q) use ($user) {
+        // Fix (Parallel): Check specific SHE/Security columns depending on Unit
+
+        $query = Document::where('current_level', 2);
+
+        if ($user->id_unit == 55) { // Security
+            $query->where(function ($q) use ($user, $allowedCategories) {
+                // Assigned to ME as Reviewer or Verificator
+                $q->where('security_reviewer_id', $user->id_user)
+                    ->orWhere('security_verificator_id', $user->id_user)
+                    // OR Unassigned (Pool) AND Status is Pending Head (Wait, Head logic needs check)
+                    // Actually, generic pool logic:
+                    ->orWhere(function ($sub) use ($allowedCategories) {
+                        $sub->whereNull('security_reviewer_id')
+                            // Ensure status is appropriate for pool (e.g. pending_head or just assigned_review?)
+                            // If Head hasn't assigned yet, it might not be visible to staff? 
+                            // Logic: Head assigns. So usually not null? 
+                            // If Unassigned Pool is allowed:
+                            ->whereIn('status_security', ['pending_head', 'pending_level2']) // Adjust based on flow
+                            ->where(function ($c) use ($allowedCategories) {
+                                $c->whereIn('kategori', $allowedCategories)
+                                    ->orWhereHas('details', function ($d) use ($allowedCategories) {
+                                        $d->whereIn('kategori', $allowedCategories);
+                                    });
+                            });
+                    });
+            });
+            // Filter by role status
+            if ($user->role_jabatan == 4) { // Verifikator
+                $query->where('status_security', 'assigned_approval'); // or similar status
+            } else { // Reviewer
+                $query->where(function ($q) {
+                    $q->where('status_security', 'assigned_review')
+                        ->orWhere('status_security', 'pending_head'); // Allow seeing fresh docs if pool enabled
+                });
+            }
+
+        } elseif ($user->id_unit == 56) { // SHE
+            $query->where(function ($q) use ($user, $allowedCategories) {
+                $q->where('she_reviewer_id', $user->id_user)
+                    ->orWhere('she_verificator_id', $user->id_user)
+                    ->orWhere(function ($sub) use ($allowedCategories) {
+                        $sub->whereNull('she_reviewer_id')
+                            ->whereIn('status_she', ['pending_head', 'pending_level2'])
+                            ->where(function ($c) use ($allowedCategories) {
+                                $c->whereIn('kategori', $allowedCategories)
+                                    ->orWhereHas('details', function ($d) use ($allowedCategories) {
+                                        $d->whereIn('kategori', $allowedCategories);
+                                    });
+                            });
+                    });
+            });
+            // Status Filter
+            if ($user->role_jabatan == 4) {
+                $query->where('status_she', 'assigned_approval');
+            } else {
+                $query->where(function ($q) {
+                    $q->where('status_she', 'assigned_review')
+                        ->orWhere('status_she', 'pending_head');
+                });
+            }
+
+        } else {
+            // Fallback (Original Logic)
+            $query->where(function ($q) use ($user) {
                 $q->where('level2_reviewer_id', $user->id_user)
                     ->orWhere('level2_approver_id', $user->id_user)
-                    ->orWhereNull('level2_reviewer_id'); // Allow picking up unassigned
+                    ->orWhereNull('level2_reviewer_id');
             });
-
-        // Filter by role: Verifikator (role_jabatan 4) only sees documents for verification
-        // Reviewer (role_jabatan 5, 6) sees all assigned documents
-        if ($user->role_jabatan == 4) {
-            // Verifikator only sees: assigned_approval (documents that need verification)
-            $query->whereIn('level2_status', ['assigned_approval']);
-        } else {
-            // Reviewer sees: assigned_review OR NULL (Fresh docs)
-            $query->where(function ($q) {
-                $q->where('level2_status', 'assigned_review')
-                  ->orWhereNull('level2_status')
-                  ->orWhere('status', 'pending_level2');
-            });
+            if ($user->role_jabatan == 4) {
+                $query->whereIn('level2_status', ['assigned_approval']);
+            } else {
+                $query->where(function ($q) {
+                    $q->where('level2_status', 'assigned_review')
+                        ->orWhereNull('level2_status')
+                        ->orWhere('status', 'pending_level2');
+                });
+            }
         }
 
         $documents = $query->with(['user', 'unit', 'approvals.approver'])
@@ -1963,4 +2300,5 @@ class DocumentController extends Controller
             'status_label' => $statusLabel
         ]);
     }
+
 }

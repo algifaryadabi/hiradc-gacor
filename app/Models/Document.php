@@ -18,10 +18,10 @@ class Document extends Model
         'judul_dokumen',
         'status',
         'current_level',
-        // 'kolom... fields' will be moved to DocumentDetail logic, 
-        // but for now we keep them in fillable if we want to support legacy or partial migration?
-        // Actually, let's keep the fillable as is until we fully switch the Controller.
-        // I will just ADD the relationship below.
+        // 'kolom... fields' will be moved to DocumentDetail logic,
+// but for now we keep them in fillable if we want to support legacy or partial migration?
+// Actually, let's keep the fillable as is until we fully switch the Controller.
+// I will just ADD the relationship below.
         'kolom2_proses',
         'kolom2_kegiatan',
         'kolom3_lokasi',
@@ -50,6 +50,17 @@ class Document extends Model
         'level2_reviewer_id',
         'level2_approver_id',
         'level2_assignment_date',
+        // Workflow Splitting Columns
+        'status_she',
+        'status_security',
+        'she_current_approver_id',
+        'she_reviewer_id',
+        'she_verificator_id',
+        'security_current_approver_id',
+        'security_reviewer_id',
+        'security_verificator_id',
+        'she_approved_at',
+        'security_approved_at',
     ];
 
     protected $casts = [
@@ -170,7 +181,7 @@ class Document extends Model
     public function canBeApprovedBy(User $user): bool
     {
         // Level 0: Kepala Seksi (Optional/Future use)
-        // If workflow ever starts at Level 0, this handles it
+// If workflow ever starts at Level 0, this handles it
         if ($this->current_level == 0) {
             return $user->isKepalaSeksi() && $user->id_seksi == $this->id_seksi;
         }
@@ -181,7 +192,7 @@ class Document extends Model
             return $user->isKepalaUnit() && $user->id_unit == $this->id_unit;
         }
 
-        // Level 2: Unit Pengelola based on category
+        // Level 2: Unit Pengelola based on content
         // ONLY Kepala Unit (Senior Manager, role_jabatan=3) from SHE or Security can approve
         if ($this->current_level == 2) {
             // Must be Kepala Unit (Senior Manager)
@@ -192,13 +203,14 @@ class Document extends Model
             // Get user's unit ID
             $userUnitId = $user->id_unit;
 
-            // Check if user is from the correct managing unit based on document category
-            if (in_array($this->kategori, ['K3', 'KO', 'Lingkungan'])) {
-                // SHE unit (id=56) approves
-                return $userUnitId == 56;
-            } else if ($this->kategori === 'Keamanan') {
-                // Security unit (id=55) approves
-                return $userUnitId == 55;
+            // Check if user is from SHE (56) and document has SHE content
+            if ($userUnitId == 56) {
+                return $this->hasSheContent();
+            }
+
+            // Check if user is from Security (55) and document has Security content
+            if ($userUnitId == 55) {
+                return $this->hasSecurityContent();
             }
 
             return false;
@@ -258,5 +270,45 @@ class Document extends Model
     public function scopePendingAt($query, int $level)
     {
         return $query->where('status', 'pending_level' . $level);
+    }
+
+    // ==================== WORKFLOW HELPERS ====================
+
+    /**
+     * Check if document has SHE content (K3, KO, Lingkungan)
+     */
+    public function hasSheContent(): bool
+    {
+        // Check if main category matches
+        if (in_array($this->kategori, ['K3', 'KO', 'Lingkungan'])) {
+            return true;
+        }
+
+        // Check details if mixed content is supported
+// Note: Currently 'kategori' in header supports mixed?
+// Based on user request "User uploads one complete document covering ALL categories".
+// The 'details' table has 'kategori'.
+        return $this->details()->whereIn('kategori', ['K3', 'KO', 'Lingkungan'])->exists();
+    }
+
+    /**
+     * Check if document has Security content (Keamanan)
+     */
+    public function hasSecurityContent(): bool
+    {
+        if ($this->kategori === 'Keamanan') {
+            return true;
+        }
+        return $this->details()->where('kategori', 'Keamanan')->exists();
+    }
+
+    public function isSheApproved(): bool
+    {
+        return $this->status_she === 'approved' || !$this->hasSheContent();
+    }
+
+    public function isSecurityApproved(): bool
+    {
+        return $this->status_security === 'approved' || !$this->hasSecurityContent();
     }
 }

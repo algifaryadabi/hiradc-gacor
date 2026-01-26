@@ -750,6 +750,10 @@
         }
         .timeline-item.tm-green .tm-status { color: #166534; }
         .timeline-item.tm-red .tm-status { color: #991b1b; }
+        .timeline-item.tm-teal { border-left-color: #14b8a6; background: #f0fdfa; }
+        .timeline-item.tm-teal .tm-status { color: #0d9488; }
+        .timeline-item.tm-indigo { border-left-color: #6366f1; background: #eef2ff; }
+        .timeline-item.tm-indigo .tm-status { color: #4338ca; }
 
         .tm-comment {
             font-size: 13px;
@@ -777,28 +781,43 @@
     @php
         $user = Auth::user();
         $isHead = $user->isUnitPengelola();
-        // Allow Reviewer if assigned OR if Unassigned and user is Staff Reviewer (Role 5/6)
-        $isReviewer = ($document->level2_reviewer_id == $user->id_user) || 
-                      (empty($document->level2_reviewer_id) && in_array($user->role_jabatan, [5, 6]));
-                      
-        $isApprover = ($document->level2_approver_id == $user->id_user);
-        $status = $document->level2_status;
+        // Parallel Workflow Logic: Determine Context based on User Unit
+        if ($user->id_unit == 55) { // Security
+            $currentStatus = $document->status_security;
+            $currentReviewerId = $document->security_reviewer_id;
+            $currentApproverId = $document->security_verificator_id;
+        } elseif ($user->id_unit == 56) { // SHE
+            $currentStatus = $document->status_she;
+            $currentReviewerId = $document->she_reviewer_id;
+            $currentApproverId = $document->she_verificator_id;
+        } else {
+            // Fallback
+            $currentStatus = $document->level2_status;
+            $currentReviewerId = $document->level2_reviewer_id;
+            $currentApproverId = $document->level2_approver_id;
+        }
 
-        // Determine if current user can edit
-        // 1. Head can edit if Level 2 pending (conceptually) - though originally disposition only.
-        // 2. Reviewer can edit if assigned_review
-        // 3. Approver can edit if assigned_approval
+        // Global Status fallback if unit status is empty (e.g. before disposition)
+        if (empty($currentStatus) && $document->current_level == 2) {
+             // If Head, they need to see it as pending to dispose
+             // If Staff, they might not see it yet unless in Pool
+             $currentStatus = 'pending_head'; 
+        }
 
-        // RELAXED LOGIC for Unit Pengelola (Requested):
-        // Allow ANY Staff Verifikator (Role 4) in the same Unit (55/56) to view/act if status is 'assigned_approval'
-        // CRITICAL FIX: Do NOT check if document->id_unit == user->id_unit because Unit Pengelola reviews OTHER units' documents.
+        $status = $currentStatus;
+
+        // Reviewer Logic
+        $isReviewer = ($currentReviewerId == $user->id_user) || 
+                      (empty($currentReviewerId) && in_array($user->role_jabatan, [5, 6]));
+
+        // Approver Logic (Relaxed for Unit Pengelola)
         $isStaffApprover = ($user->role_jabatan == 4) && 
                            in_array($user->id_unit, [55, 56]);
 
-        $isApprover = ($document->level2_approver_id == $user->id_user) || 
+        $isApprover = ($currentApproverId == $user->id_user) || 
                       ($isStaffApprover && $status == 'assigned_approval');
 
-        $canEdit = ($isHead && $document->current_level == 2 && ($status == 'returned_to_head' || $status == 'staff_verified')) ||
+        $canEdit = ($isHead && $document->current_level == 2 && ($status == 'returned_to_head' || $status == 'staff_verified' || $status == 'pending_head')) ||
             ($isReviewer && $status == 'assigned_review') ||
             ($isApprover && $status == 'assigned_approval');
     @endphp
@@ -909,7 +928,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($document->details as $index => $item)
+                        @forelse($filteredDetails ?? $document->details as $index => $item)
                             <tr>
                                 <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
                                     {{ $index + 1 }}
@@ -1205,11 +1224,18 @@
                         $icon = 'fa-info-circle';
                         $label = ucfirst($hist->action);
 
-                        if (in_array($action, ['approved', 'published', 'verified', 'reviewed'])) {
+                        if ($action == 'published') {
                             $colorClass = 'tm-green';
-                            $icon = 'fa-check';
-                            if ($action == 'published') $icon = 'fa-globe';
-                            if ($action == 'verified') $icon = 'fa-check-double';
+                            $icon = 'fa-globe';
+                        } elseif ($action == 'approved') {
+                            $colorClass = 'tm-green';
+                            $icon = 'fa-check-circle';
+                        } elseif ($action == 'verified') {
+                            $colorClass = 'tm-teal'; // Distinct color
+                            $icon = 'fa-check-double';
+                        } elseif ($action == 'reviewed') {
+                            $colorClass = 'tm-indigo'; // Distinct color
+                            $icon = 'fa-glasses';
                         } elseif (in_array($action, ['revision', 'revise', 'returned'])) {
                             $colorClass = 'tm-red';
                             $icon = 'fa-undo';
@@ -1240,6 +1266,32 @@
                 </div>
             </div>
 
+            <!-- Global Toast/Alert Helper -->
+            @if(session('success'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: "{{ session('success') }}",
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    });
+                </script>
+            @endif
+            @if(session('error'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: "{{ session('error') }}",
+                        });
+                    });
+                </script>
+            @endif
+
 
 
 
@@ -1247,6 +1299,9 @@
 
         <!-- FOOTER ACTIONS -->
         <div class="review-footer">
+            {{-- DEBUG --}}
+            {{-- @php dd('Status:', $status, 'Unit:', $user->id_unit, 'SHE Status:', $document->status_she, 'Sec Status:', $document->status_security); @endphp --}}
+            
             {{-- 1. KEPALA UNIT PENGELOLA --}}
             @if($isHead && $document->current_level == 2)
                 @if($status == 'returned_to_head' || $status == 'staff_verified')

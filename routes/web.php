@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 |--------------------------------------------------------------------------
 */
 
+
 Route::get('/', function () {
     return redirect()->route('login');
 });

@@ -518,10 +518,27 @@
             @php
                 // Categorize documents
                 $allDocs = $documents;
-                $disposisiDocs = $documents->filter(fn($d) => $d->current_level == 2 && $d->status == 'pending_level2' && is_null($d->level2_status));
-                $dalamReviewDocs = $documents->filter(fn($d) => in_array($d->level2_status, ['assigned_review', 'assigned_approval']));
-                $keputusanAkhirDocs = $documents->filter(fn($d) => $d->level2_status == 'returned_to_head' || $d->level2_status == 'staff_verified');
-                $approveDocs = $documents->filter(fn($d) => $d->level2_status == 'approved' || ($d->current_level > 2 && $d->status != 'pending_level2'));
+                $userUnit = Auth::user()->id_unit;
+
+                $disposisiDocs = $documents->filter(function ($d) use ($userUnit) {
+                    $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
+                    return $d->current_level == 2 && ($st == 'pending_head' || empty($st));
+                });
+
+                $dalamReviewDocs = $documents->filter(function ($d) use ($userUnit) {
+                    $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
+                    return in_array($st, ['assigned_review', 'assigned_approval']);
+                });
+
+                $keputusanAkhirDocs = $documents->filter(function ($d) use ($userUnit) {
+                    $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
+                    return $st == 'returned_to_head' || $st == 'staff_verified';
+                });
+
+                $approveDocs = $documents->filter(function ($d) use ($userUnit) {
+                    $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
+                    return $st == 'approved' || $st == 'published' || $d->current_level > 2;
+                });
 
                 // Get staff for disposition
                 // Staff Reviewer: role_jabatan 5 (Band IV) and 6 (Band V)
@@ -599,15 +616,36 @@
             <div class="doc-list">
                 @forelse($documents as $doc)
                     @php
-                        // Determine document category
+                        // Determine Unit Specific Status
+                        $currentStatus = $doc->level2_status; // Default
+                        if (Auth::user()->id_unit == 55) {
+                            $currentStatus = $doc->status_security;
+                        } elseif (Auth::user()->id_unit == 56) {
+                            $currentStatus = $doc->status_she;
+                        }
+
+                        // Categorize documents using $currentStatus
                         $docCategory = 'semua';
-                        if ($doc->current_level == 2 && $doc->status == 'pending_level2' && is_null($doc->level2_status)) {
+
+                        // Logic:
+                        // Disposisi: Status is one of pending states for head
+                        if ($doc->current_level == 2 && ($currentStatus == 'pending_head' || empty($currentStatus))) {
                             $docCategory = 'disposisi';
-                        } elseif (in_array($doc->level2_status, ['assigned_review', 'assigned_approval'])) {
+                        }
+                        // Dalam Review: Assigned to staff
+                        elseif (in_array($currentStatus, ['assigned_review', 'assigned_approval'])) {
                             $docCategory = 'dalam_review';
-                        } elseif ($doc->level2_status == 'returned_to_head' || $doc->level2_status == 'staff_verified') {
+                        }
+                        // Keputusan Akhir: Returned or Verified by Staff
+                        elseif ($currentStatus == 'returned_to_head' || $currentStatus == 'staff_verified') {
                             $docCategory = 'keputusan_akhir';
-                        } elseif ($doc->level2_status == 'approved' || ($doc->current_level > 2 && $doc->status != 'pending_level2')) {
+                        }
+                        // Approved: Done for this unit
+                        elseif ($currentStatus == 'approved' || $currentStatus == 'published') {
+                            $docCategory = 'approve';
+                        }
+                        // Fallback: If global level > 2, it's approved/done
+                        elseif ($doc->current_level > 2) {
                             $docCategory = 'approve';
                         }
 
