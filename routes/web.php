@@ -171,6 +171,7 @@ Route::middleware('auth')->group(function () {
 
     // ==================== UNIT PENGELOLA DASHBOARD ====================
     Route::get('/unit-pengelola/dashboard', [DocumentController::class, 'unitPengelolaDashboard'])->name('unit_pengelola.dashboard');
+    Route::get('/unit-pengelola/dashboard/data', [DocumentController::class, 'getUnitPengelolaDashboardData'])->name('unit_pengelola.dashboard.data');
 
     Route::get('/unit-pengelola/documents', [DocumentController::class, 'unitPengelolaPending'])->name('unit_pengelola.documents.index');
     Route::get('/unit-pengelola/check-documents', [DocumentController::class, 'unitPengelolaPending'])->name('unit_pengelola.check_documents');
@@ -280,15 +281,27 @@ Route::middleware('auth')->group(function () {
             ->limit(20)
             ->get();
 
+        // Master Data for Filters
+        $direktorats = \App\Models\Direktorat::where('status_aktif', 1)->get();
+        $departemens = \App\Models\Departemen::all();
+        $units = \App\Models\Unit::all();
+        $seksis = \App\Models\Seksi::all();
+
         return view('admin.dashboard', compact(
             'user',
             'totalDocuments',
             'publishedDocuments',
             'pendingDocuments',
             'revisionDocuments',
-            'documents'
+            'documents',
+            'direktorats',
+            'departemens',
+            'units',
+            'seksis'
         ));
     })->name('admin.dashboard');
+
+    Route::get('/admin/dashboard/data', [DocumentController::class, 'getAdminDashboardData'])->name('admin.dashboard.data');
 
     // User Management Routes
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users');

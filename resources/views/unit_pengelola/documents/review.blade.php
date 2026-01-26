@@ -684,6 +684,15 @@
         // 2. Reviewer can edit if assigned_review
         // 3. Approver can edit if assigned_approval
 
+        // RELAXED LOGIC for Unit Pengelola (Requested):
+        // Allow ANY Staff Verifikator (Role 4) in the same Unit (55/56) to view/act if status is 'assigned_approval'
+        // CRITICAL FIX: Do NOT check if document->id_unit == user->id_unit because Unit Pengelola reviews OTHER units' documents.
+        $isStaffApprover = ($user->role_jabatan == 4) && 
+                           in_array($user->id_unit, [55, 56]);
+
+        $isApprover = ($document->level2_approver_id == $user->id_user) || 
+                      ($isStaffApprover && $status == 'assigned_approval');
+
         $canEdit = ($isHead && $document->current_level == 2) ||
             ($isReviewer && $status == 'assigned_review') ||
             ($isApprover && $status == 'assigned_approval');
@@ -963,11 +972,18 @@
             </div>
 
             <!-- COMPLIANCE CHECKLIST (Preserved) -->
-            @if(($isReviewer && $status == 'assigned_review') || ($isApprover && $status == 'assigned_approval'))
+            @if(($isReviewer && $status == 'assigned_review') || ($isApprover && $status == 'assigned_approval') || $isHead)
                 <div class="doc-card" style="margin-top: 30px;">
-                    <div class="card-header-slim">
-                        <i class="fas fa-clipboard-check"></i>
-                        <h2>Tabel Kesesuaian (Compliance Checklist)</h2>
+                    <div class="card-header-slim" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <i class="fas fa-clipboard-check"></i>
+                            <h2>Tabel Kesesuaian (Compliance Checklist)</h2>
+                        </div>
+                        @if(!$isHead)
+                        <button type="button" onclick="toggleComplianceEdit()" class="btn-sm" style="background:none; border:none; cursor:pointer; color:#f59e0b; font-size:16px;" title="Edit Checklist">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        @endif
                     </div>
                     <div class="doc-body">
                         <div style="overflow-x: auto;">
@@ -998,14 +1014,18 @@
                                         @php
                                             $s = $existing[$c['key']]['status'] ?? '';
                                             $n = $existing[$c['key']]['note'] ?? '';
-                                            $disabled = $isApprover ? 'disabled' : ''; 
+                                            $disabled = 'disabled'; 
+                                            // Initially disabled (Global Edit Off)
+                                            $noteDisabled = 'disabled';
+                                            $noteStyle = 'background:#f1f5f9;cursor:not-allowed;'; 
                                         @endphp
                                         <tr style="border-bottom:1px solid #e2e8f0;">
                                             <td style="padding:12px; text-align:center;">{{ $idx + 1 }}</td>
                                             <td style="padding:12px;">{{ $c['label'] }}</td>
                                             <td style="padding:12px;">
                                                 <select name="compliance_checklist[{{ $c['key'] }}][status]"
-                                                    id="status_{{ $c['key'] }}" class="compliance-status form-control" {{ $disabled }}>
+                                                    id="status_{{ $c['key'] }}" class="compliance-status form-control" {{ $disabled }}
+                                                    onchange="toggleNoteField('{{ $c['key'] }}')">
                                                     <option value="">-- Pilih --</option>
                                                     <option value="OK" {{ $s == 'OK' ? 'selected' : '' }}>OK</option>
                                                     <option value="NOK" {{ $s == 'NOK' ? 'selected' : '' }}>NOK</option>
@@ -1016,7 +1036,7 @@
                                             <td style="padding:12px;">
                                                 <input type="text" name="compliance_checklist[{{ $c['key'] }}][note]"
                                                     id="note_{{ $c['key'] }}" value="{{ $n }}"
-                                                    class="compliance-note form-control" {{ $disabled ? 'readonly' : '' }}>
+                                                    class="compliance-note form-control" {{ $noteDisabled }} style="{{ $noteStyle }}">
                                             </td>
                                         </tr>
                                     @endforeach
@@ -1363,20 +1383,60 @@
             }
         }
 
+        let isComplianceEditing = false;
+
+        function toggleComplianceEdit() {
+            isComplianceEditing = !isComplianceEditing;
+            
+            const dropDowns = document.querySelectorAll('.compliance-status');
+            dropDowns.forEach(el => {
+                // Toggle Dropdown
+                if (isComplianceEditing) el.removeAttribute('disabled');
+                else el.setAttribute('disabled', 'disabled');
+
+                // Trigger Note Field Update based on current value
+                const id = el.id;
+                if(id && id.startsWith('status_')) {
+                    const key = id.replace('status_', '');
+                    toggleNoteField(key);
+                }
+            });
+
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: isComplianceEditing ? 'info' : 'warning',
+                title: isComplianceEditing ? 'Mode Edit Aktif' : 'Mode Edit Non-Aktif',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
+
         function toggleNoteField(key) {
             const statusSelect = document.getElementById('status_' + key);
             const noteInput = document.getElementById('note_' + key);
-            if (statusSelect && noteInput) {
-                if (statusSelect.value === 'NOK' || statusSelect.value === 'Tdk Penting') {
-                    noteInput.readOnly = false;
-                    noteInput.style.background = 'white';
-                    noteInput.style.cursor = 'text';
-                } else {
-                    noteInput.readOnly = true;
-                    // noteInput.value = ''; // Optional: Clear value
-                    noteInput.style.background = '#f1f5f9';
-                    noteInput.style.cursor = 'not-allowed';
-                }
+            
+            if (!statusSelect || !noteInput) return;
+
+            // 1. If Global Edit Mode is OFF -> ALWAYS DISABLE
+            if (!isComplianceEditing) {
+                noteInput.setAttribute('disabled', 'disabled');
+                noteInput.style.background = '#f1f5f9';
+                noteInput.style.cursor = 'not-allowed';
+                return;
+            }
+
+            // 2. If Global Edit Mode is ON -> Check Dropdown Value
+            const val = statusSelect.value;
+            if (val === 'NOK' || val === 'Tdk Penting') {
+                noteInput.removeAttribute('disabled');
+                noteInput.style.background = 'white';
+                noteInput.style.cursor = 'text';
+            } else {
+                noteInput.setAttribute('disabled', 'disabled');
+                noteInput.style.background = '#f1f5f9';
+                noteInput.style.cursor = 'not-allowed';
+                noteInput.value = ''; // Auto clear when OK/Empty
             }
         }
     </script>

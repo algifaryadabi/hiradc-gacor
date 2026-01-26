@@ -217,318 +217,58 @@
             padding: 30px 40px;
         }
 
-        /* FILTERS */
-        .filters-container {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-        }
+   
+        /* ADD Accordion Styles */
+        .accordion-container { max-width: 100%; margin-top: 20px; }
+        .accordion-item { background: white; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; overflow: hidden; transition: all 0.3s; }
+        .accordion-item:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
+        .accordion-header { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: #fff; transition: background 0.2s; }
+        .accordion-header:hover { background: #f8f9fa; }
+        .accordion-header.active { background: #f0f7ff; border-bottom: 1px solid #e0e0e0; }
+        .dept-info { display: flex; align-items: center; gap: 15px; }
+        .dept-icon { width: 36px; height: 36px; background: #e3f2fd; color: #1565c0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .dept-name { font-weight: 600; color: #333; font-size: 15px; }
+        .accordion-icon { color: #999; transition: transform 0.3s; }
+        .accordion-header.active .accordion-icon { transform: rotate(180deg); color: #1565c0; }
+        .accordion-body { display: none; background: #fafafa; border-top: 1px solid #f0f0f0; }
+        .accordion-body.show { display: block; animation: slideDown 0.3s ease-out; }
+        .unit-list { list-style: none; padding: 0; margin: 0; }
+        .unit-item { padding: 12px 20px 12px 60px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #555; transition: all 0.2s; }
+        .unit-item:last-child { border-bottom: none; }
+        .unit-item:hover { background: #fff; color: #c41e3a; padding-left: 65px; }
+        .unit-item i { opacity: 0; transition: opacity 0.2s; }
+        .unit-item:hover i { opacity: 1; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Breadcrumb */
+        .breadcrumb { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 14px; color: #666; }
+        .breadcrumb-item { cursor: pointer; transition: color 0.2s; }
+        .breadcrumb-item:hover { color: #c41e3a; text-decoration: underline; }
+        .breadcrumb-item.active { font-weight: 600; color: #333; cursor: default; text-decoration: none; }
+        .breadcrumb-separator { color: #ccc; font-size: 12px; }
 
-        .filter-group label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .filter-group select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #555;
-            background-color: #fff;
-            cursor: pointer;
-        }
-
-        .filter-group select:focus {
-            outline: none;
-            border-color: #c41e3a;
-        }
-
-        /* CARDS */
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .cat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: left;
-            border: 1px solid transparent;
-            height: 120px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .cat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .cat-card.active {
-            border-color: #c41e3a;
-            background: #ffe5e5;
-        }
-
-        .cat-card h3 {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .cat-card h2 {
-            font-size: 20px;
-            color: #333;
-            font-weight: 700;
-        }
-
-        /* TABLE */
-        .table-section {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            border: 1px solid #eee;
-        }
-
-        .table-header {
-            padding: 20px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eee;
-            background-color: #fbfbfb;
-        }
-
-        .table-header h2 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .custom-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .custom-table thead {
-            background: #fff;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .custom-table th {
-            padding: 18px 25px;
-            text-align: left;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #888;
-        }
-
-        .custom-table tbody tr {
-            border-bottom: 1px solid #f9f9f9;
-            transition: all 0.2s;
-        }
-
-        .custom-table tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        .custom-table td {
-            padding: 18px 25px;
-            font-size: 14px;
-            color: #555;
-            vertical-align: middle;
-        }
-
-        .btn-filter-toggle {
-            padding: 8px 16px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .btn-action {
-            padding: 8px 18px;
-            background: #c41e3a;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-
-        .badge-status {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            display: inline-block;
-        }
-
-        /* MODAL STYLES */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 9999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-            font-family: 'Inter', sans-serif;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 0;
-            border: 1px solid #888;
-            width: 600px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            position: relative;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-header {
-            padding: 20px 30px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-header h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #333;
-            margin: 0;
-        }
-
-        .close-btn {
-            color: #aaa;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .close-btn:hover {
-            color: #c41e3a;
-        }
-
-        .modal-body {
-            padding: 30px;
-        }
-
-        .section-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #c41e3a;
-            /* Red color */
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-title.green {
-            color: #2e7d32;
-        }
-
-        .info-row {
-            display: flex;
-            margin-bottom: 15px;
-            align-items: flex-start;
-        }
-
-        .info-label {
-            width: 140px;
-            font-size: 14px;
-            color: #888;
-            font-weight: 500;
-        }
-
-        .info-value {
-            flex: 1;
-            font-size: 14px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .risk-high {
-            color: #c41e3a;
-            font-weight: 700;
-        }
-
-        .status-pill {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .approval-box {
-            background-color: #f1f8e9;
-            /* Light green bg */
-            border-left: 4px solid #2e7d32;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-        .approval-text {
-            font-size: 13px;
-            color: #33691e;
-            line-height: 1.5;
-        }
-
-        .approval-header {
-            font-weight: 700;
-            margin-bottom: 5px;
-            color: #1b5e20;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+         /* Table Section */
+        .table-section { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #eee; animation: fadeIn 0.3s ease-out; margin-top: 20px;}
+        .table-header { padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; background-color: #fbfbfb; }
+        .btn-action { padding: 6px 14px; background: #c41e3a; color: white; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 500; transition: background 0.2s; cursor: pointer; display: inline-block;}
+        /* Keep Modal Styles as they are */
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.5); font-family: 'Inter', sans-serif; }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 0; border: 1px solid #888; width: 600px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); position: relative; animation: slideDown 0.3s ease-out; }
+        .modal-header { padding: 20px 30px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 18px; font-weight: 700; color: #333; margin: 0; }
+        .close-btn { color: #aaa; font-size: 24px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
+        .close-btn:hover { color: #c41e3a; }
+        .modal-body { padding: 30px; }
+        .section-title { font-size: 14px; font-weight: 700; color: #c41e3a; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .section-title.green { color: #2e7d32; }
+        .info-row { display: flex; margin-bottom: 15px; align-items: flex-start; }
+        .info-label { width: 140px; font-size: 14px; color: #888; font-weight: 500; }
+        .info-value { flex: 1; font-size: 14px; color: #333; font-weight: 600; }
+        .risk-high { color: #c41e3a; font-weight: 700; }
+        .status-pill { background-color: #e8f5e9; color: #2e7d32; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+        .approval-box { background-color: #f1f8e9; border-left: 4px solid #2e7d32; padding: 15px; border-radius: 4px; margin-top: 10px; }
+        .approval-text { font-size: 13px; color: #33691e; line-height: 1.5; }
+        .approval-header { font-weight: 700; margin-bottom: 5px; color: #1b5e20; display: flex; align-items: center; gap: 8px; }
     </style>
 </head>
 
@@ -587,85 +327,13 @@
 
             <div class="content-area">
 
-                <!-- 4 FILTERS -->
-                <div class="filters-container" style="grid-template-columns: repeat(4, 1fr);">
-                    <div class="filter-group">
-                        <label>Direktorat</label>
-                        <select id="filter_directorate" onchange="filterDepartments()">
-                            <option value="">-- Pilih Direktorat --</option>
-                            @foreach($direktorats as $dir)
-                                <option value="{{ $dir->id_direktorat }}">{{ $dir->nama_direktorat }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Departemen</label>
-                        <select id="filter_department" onchange="filterUnits()">
-                            <option value="">-- Pilih Departemen --</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Unit Kerja</label>
-                        <select id="filter_unit" onchange="filterSeksi()">
-                            <option value="">-- Pilih Unit --</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Seksi</label>
-                        <select id="filter_seksi" onchange="applyFilters()">
-                            <option value="">-- Pilih Seksi --</option>
-                            @foreach($seksis as $seksi)
-                                <option value="{{ $seksi->id_seksi }}" data-unit-id="{{ $seksi->id_unit }}">
-                                    {{ $seksi->nama_seksi }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                <!-- Breadcrumb -->
+                <div class="breadcrumb" id="breadcrumb" style="margin-bottom: 20px;">
+                    <span class="breadcrumb-item active" onclick="resetView()">Home</span>
                 </div>
 
-                <!-- 4 SUMMARY CARDS -->
-                <div class="category-grid">
-                    <div class="cat-card" onclick="selectCategory('K3', this)">
-                        <h3>Dokumen</h3>
-                        <h2>K3</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('KO', this)">
-                        <h3>Dokumen</h3>
-                        <h2>KO</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('Lingkungan', this)">
-                        <h3>Dokumen</h3>
-                        <h2>Lingkungan</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('Keamanan', this)">
-                        <h3>Dokumen</h3>
-                        <h2>Keamanan</h2>
-                    </div>
-                </div>
-
-                <!-- TABLE -->
-                <div class="table-section">
-                    <div class="table-header">
-                        <h2>Dokumen Terpublikasi</h2>
-                    </div>
-
-                    <table class="custom-table">
-                        <thead>
-                            <tr>
-                                <th width="20%">Unit Penginput</th>
-                                <th width="20%">Judul Dokumen</th>
-                                <th width="20%">Disetujui Oleh</th>
-                                <th width="15%">Tanggal Publish</th>
-                                <th width="10%">Waktu</th>
-                                <th width="15%">Penulis</th>
-                                <th width="10%">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            <!-- JS Populated -->
-                        </tbody>
-                    </table>
-                </div>
+                <!-- Dynamic Content (Accordion) -->
+                <div id="dynamicContent"></div>
             </div>
         </main>
     </div>
@@ -730,228 +398,280 @@
     </div>
 
     <script>
-        // MASTER DATA FROM DATABASE
-        const directorates = @json($direktorats->map(fn($d) => ['id' => $d->id_direktorat, 'name' => $d->nama_direktorat]));
+        @php
+             // Preparing data for JS
+             $departmentsData = $departemens->map(fn($d) => [
+                'id_dept' => is_array($d) ? $d['id_dept'] : $d->id_dept,
+                'nama_dept' => is_array($d) ? $d['nama_dept'] : $d->nama_dept
+            ]);
+            $unitsData = $units->map(fn($u) => [
+                'id_unit' => is_array($u) ? $u['id_unit'] : $u->id_unit,
+                'id_dept' => is_array($u) ? $u['id_dept'] : $u->id_dept,
+                'nama_unit' => is_array($u) ? $u['nama_unit'] : $u->nama_unit
+            ]);
+        @endphp
 
-        const departments = @json($departemens->map(fn($d) => ['id' => $d->id_dept, 'dir_id' => $d->id_direktorat, 'name' => $d->nama_dept]));
-
-        const units = @json($units->map(fn($u) => ['id' => $u->id_unit, 'dept_id' => $u->id_dept, 'name' => $u->nama_unit]));
-
-        const seksis = @json($seksis->map(fn($s) => ['id' => $s->id_seksi, 'unit_id' => $s->id_unit, 'name' => $s->nama_seksi]));
-
+        // Processed Data
+        const departments = @json($departmentsData);
+        const units = @json($unitsData);
         const documents = @json($publishedData);
 
-        let activeCategory = '';
-
-        // Debug logging
-        console.log('Seksis data:', seksis);
-        console.log('Total seksis:', seksis.length);
+        // State
+        let currentLevel = 'dept';
+        let selectedDept = null;
+        let selectedUnit = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            populateDirectorates();
-            filterDepartments(); // Initialize Departments
-            renderTable(); // Initial render
+            renderDepartments();
         });
 
-        function populateDirectorates() {
-            const select = document.getElementById('filter_directorate');
-            select.innerHTML = '<option value="">-- Pilih Direktorat --</option>';
-            directorates.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d.id;
-                opt.textContent = d.name;
-                select.appendChild(opt);
-            });
-        }
+        function renderDepartments() {
+            currentLevel = 'dept';
+            selectedDept = null;
+            selectedUnit = null;
+            updateBreadcrumb();
 
-        function filterDepartments() {
-            const dirId = document.getElementById('filter_directorate').value;
-            const deptSelect = document.getElementById('filter_department');
-            // Reset is handled by re-populating. If logic was appending, we'd need to clear. 
-            // innerHTML assignment clears it.
-
-            deptSelect.innerHTML = '<option value="">-- Pilih Departemen --</option>';
-
-            // Should units be reset here? Yes, because department list changes/resets
-            // But we will call filterUnits right after to re-populate them based on empty dept (Show All) or selected dept
-            // Just clearing it here might cause blink if filterUnits isn't fast, but it's JS so it's blocking/fast.
-
-            let filteredDepts = departments;
-            if (dirId) {
-                filteredDepts = departments.filter(d => d.dir_id == dirId);
+            const container = document.getElementById('dynamicContent');
+            
+            if (departments.length === 0) {
+                 container.innerHTML = `<div style="text-align:center; padding:50px; color:#999;"><i class="fas fa-building" style="font-size:40px; margin-bottom:15px;"></i><p>Tidak ada departemen ditemukan.</p></div>`;
+                 return;
             }
 
-            filteredDepts.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d.id;
-                opt.textContent = d.name;
-                deptSelect.appendChild(opt);
-            });
+            let html = '<div class="accordion-container">';
+            
+            // 1. Regular Departments (Excluding ID 0 and ID 93)
+            const regularDepts = departments.filter(d => d.id_dept != 0 && d.id_dept != 93);
+            
+            regularDepts.forEach(dept => {
+                const deptUnits = units.filter(u => u.id_dept == dept.id_dept);
+                const unitCount = deptUnits.length;
 
-            filterUnits();
-        }
-
-        function filterUnits() {
-            const deptId = document.getElementById('filter_department').value;
-            const unitSelect = document.getElementById('filter_unit');
-
-            unitSelect.innerHTML = '<option value="">-- Pilih Unit --</option>';
-
-            let filteredUnits = units;
-            if (deptId) {
-                filteredUnits = units.filter(u => u.dept_id == deptId);
-            }
-
-            filteredUnits.forEach(u => {
-                const opt = document.createElement('option');
-                opt.value = u.id;
-                opt.textContent = u.name;
-                unitSelect.appendChild(opt);
-            });
-            // Reset seksi dropdown
-            const seksiSelect = document.getElementById('filter_seksi');
-            seksiSelect.innerHTML = '<option value="">-- Pilih Seksi --</option>';
-        }
-
-        function filterSeksi() {
-            const unitId = document.getElementById('filter_unit').value;
-            const seksiSelect = document.getElementById('filter_seksi');
-
-            console.log('filterSeksi called, unitId:', unitId);
-
-            // Reset to first option (-- Pilih Seksi --)
-            seksiSelect.selectedIndex = 0;
-
-            // Show/hide options based on selected unit
-            const options = seksiSelect.querySelectorAll('option');
-            options.forEach((option, index) => {
-                if (index === 0) {
-                    // Always show the placeholder
-                    option.style.display = '';
-                    return;
-                }
-
-                const optionUnitId = option.getAttribute('data-unit-id');
-                if (!unitId || optionUnitId == unitId) {
-                    option.style.display = '';
-                } else {
-                    option.style.display = 'none';
-                }
-            });
-
-            applyFilters();
-        }
-
-        function selectCategory(cat, el) {
-            document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
-            if (activeCategory === cat) {
-                activeCategory = '';
-            } else {
-                activeCategory = cat;
-                el.classList.add('active');
-            }
-            applyFilters();
-        }
-
-        function applyFilters() {
-            const dirId = document.getElementById('filter_directorate').value;
-            const deptId = document.getElementById('filter_department').value;
-            const unitId = document.getElementById('filter_unit').value;
-            const seksiId = document.getElementById('filter_seksi').value;
-
-            const filtered = documents.filter(doc => {
-                let match = true;
-                if (dirId && doc.dir_id != dirId) match = false;
-                if (deptId && doc.dept_id != deptId) match = false;
-                if (unitId && doc.unit_id != unitId) match = false;
-                if (seksiId && doc.seksi_id != seksiId) match = false;
-                if (activeCategory && doc.category !== activeCategory) match = false;
-                return match;
-            });
-
-            renderTable(filtered);
-        }
-
-        function renderTable(data = documents) {
-            const tbody = document.getElementById('tableBody');
-            const tableSection = document.querySelector('.table-section');
-
-            // Always show table section
-            tableSection.style.display = 'block';
-
-            if (data.length === 0) {
-                let mainText = 'Belum Ada Laporan Terpublikasi';
-                let subText = 'Belum ada dokumen yang dipublikasikan.';
-
-                if (activeCategory) {
-                    subText = `Tidak ada dokumen ditemukan untuk kategori <strong>${activeCategory}</strong>.`;
-                }
-
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 60px 20px;">
-                            <div style="margin-bottom: 20px;">
-                                <i class="fas fa-folder-open" style="font-size: 64px; color: #ddd;"></i>
+                html += `
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleDepartment(${dept.id_dept})">
+                            <div class="dept-info">
+                                <div class="dept-icon"><i class="fas fa-building"></i></div>
+                                <div class="dept-name">${dept.nama_dept}</div>
                             </div>
-                            <h3 style="font-size: 18px; color: #666; margin-bottom: 10px; font-weight: 600;">
-                                ${mainText}
-                            </h3>
-                            <p style="font-size: 14px; color: #999; margin: 0;">
-                                ${subText}
-                            </p>
-                        </td>
-                    </tr>
+                            <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+                        </div>
+                        <div class="accordion-body" id="dept-${dept.id_dept}">
+                            <ul class="unit-list">
                 `;
-                return;
+
+                if (unitCount > 0) {
+                    deptUnits.forEach(unit => {
+                        html += `
+                            <li class="unit-item" onclick="selectUnit(${unit.id_unit}, '${unit.nama_unit.replace(/'/g, "\\'")}', ${dept.id_dept})">
+                                <span>${unit.nama_unit}</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </li>
+                        `;
+                    });
+                } else {
+                    html += `<li class="unit-item" style="color: #999; cursor: default;">Tidak ada Unit Kerja</li>`;
+                }
+
+                html += `
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // 2. Unassigned Units
+            const unassignedDept = departments.find(d => d.id_dept == 0);
+            if (unassignedDept) {
+                const directUnits = units.filter(u => u.id_dept == 0 && u.id_unit != 0);
+                if (directUnits.length > 0) {
+                     directUnits.forEach(unit => {
+                        html += `
+                            <div class="accordion-item" onclick="selectUnit(${unit.id_unit}, '${unit.nama_unit.replace(/'/g, "\\'")}', 0)" style="cursor:pointer;">
+                                <div class="accordion-header">
+                                    <div class="dept-info">
+                                        <div class="dept-icon" style="background:#fce4ec; color:#c2185b;"><i class="fas fa-layer-group"></i></div>
+                                        <div class="dept-name">${unit.nama_unit}</div>
+                                    </div>
+                                    <div class="accordion-icon"><i class="fas fa-arrow-right"></i></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
             }
 
-            tbody.innerHTML = data.map(doc => {
-                const unit = units.find(u => u.id === doc.unit_id);
-                const unitName = unit ? unit.name : '-';
-                return `
-                <tr>
-                    <td><strong>${unitName}</strong></td>
-                    <td><strong>${doc.title}</strong></td>
-                    <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
-                    <td>${doc.approval_date}</td>
-                    <td><span style="font-weight: 600; color: #64748b;">${doc.publish_time || '-'}</span></td>
-                    <td>${doc.author}</td>
-                    <td><a href="/documents/${doc.id}/published" class="btn-action">Detail</a></td>
-                </tr>
-            `}).join('');
+            html += '</div>';
+            container.innerHTML = html;
         }
 
-        // MODAL FUNCTIONS
+        function toggleDepartment(id) {
+            const body = document.getElementById(`dept-${id}`);
+            if (!body) return;
+            const header = body.previousElementSibling;
+            
+            const isShown = body.classList.contains('show');
+            
+            document.querySelectorAll('.accordion-body').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.accordion-header').forEach(el => el.classList.remove('active'));
+
+            if (!isShown) {
+                body.classList.add('show');
+                header.classList.add('active');
+            }
+        }
+
+        function selectDepartment(id, name) {
+            renderDepartments();
+            setTimeout(() => {
+                const body = document.getElementById(`dept-${id}`);
+                if(body) {
+                    body.classList.add('show');
+                    body.previousElementSibling.classList.add('active');
+                    body.parentElement.scrollIntoView({behavior: 'smooth'});
+                }
+            }, 50);
+        }
+
+        function selectUnit(id, name, deptId) {
+            const dept = departments.find(d => d.id_dept == deptId);
+            selectedDept = { id: deptId, name: dept ? dept.nama_dept : '-' };
+            selectedUnit = { id, name };
+            currentLevel = 'docs';
+            updateBreadcrumb();
+
+            const container = document.getElementById('dynamicContent');
+            
+             // Show Loading
+            container.innerHTML = `<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin" style="font-size: 30px; color: #c41e3a;"></i><br><br>Memuat dokumen...</div>`;
+
+            // FETCH DATA via AJAX
+            fetch(`{{ route('unit_pengelola.dashboard.data') }}?unit_id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Merge new docs into global documents array to ensure Detail Modal works
+                    data.forEach(newDoc => {
+                        if (!documents.some(d => d.id === newDoc.id)) {
+                            documents.push(newDoc);
+                        }
+                    });
+                    
+                    renderDocumentsTable(name, deptId, data);
+                })
+                .catch(error => {
+                    console.error('Error fetching docs:', error);
+                    container.innerHTML = `<div style="text-align: center; padding: 20px; color: red;">Gagal memuat dokumen. Silakan coba lagi.</div>`;
+                });
+        }
+
+        function renderDocumentsTable(unitName, deptId, docs) {
+            const container = document.getElementById('dynamicContent');
+            
+            let html = `
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2>Dokumen Terpublikasi - ${unitName}</h2>
+                         <button class="btn-action" style="background:#666;" onclick="selectDepartment(${deptId})"><i class="fas fa-arrow-left"></i> Kembali</button>
+                    </div>
+            `;
+
+            if (docs.length === 0) {
+                 html += `<div style="text-align: center; padding: 40px; color: #999;"><i class="fas fa-folder-open" style="font-size:30px; margin-bottom:10px;"></i><p>Belum ada dokumen yang dipublish dari Unit ini.</p></div>`;
+            } else {
+                html += `
+                    <table class="custom-table" style="width:100%; border-collapse: collapse;">
+                        <thead style="background:#fff; border-bottom:2px solid #f0f0f0;">
+                            <tr>
+                                <th style="padding:15px; text-align:left;">Judul Dokumen</th>
+                                <th style="padding:15px; text-align:left;">Kategori</th>
+                                <th style="padding:15px; text-align:left;">Penulis</th>
+                                <th style="padding:15px; text-align:left;">Tanggal</th>
+                                <th style="padding:15px; text-align:left;">Status</th>
+                                <th style="padding:15px; text-align:left;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                docs.forEach(doc => {
+                    html += `
+                        <tr style="border-bottom:1px solid #eee;">
+                            <td style="padding:15px;">${doc.title}</td>
+                            <td style="padding:15px;">${doc.category || '-'}</td>
+                            <td style="padding:15px;">${doc.author || '-'}</td>
+                            <td style="padding:15px;">${doc.date || '-'}</td>
+                            <td style="padding:15px;"><span class="status-pill" style="background:#e8f5e9; color:#2e7d32; padding:4px 12px; border-radius:15px; font-size:11px; font-weight:700;">DISETUJUI</span></td>
+                            <td style="padding:15px;">
+                                <a href="/documents/${doc.id}/published" class="btn-action">
+                                    <i class="fas fa-eye"></i> Detail
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+            }
+            
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function updateBreadcrumb() {
+            const bc = document.getElementById('breadcrumb');
+            let html = `<span class="breadcrumb-item" onclick="renderDepartments()">Home</span>`;
+
+            if (currentLevel === 'unit' || currentLevel === 'docs') {
+                 if (selectedDept) {
+                     html += `
+                        <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                        <span class="breadcrumb-item" onclick="selectDepartment(${selectedDept.id}, '${selectedDept.name.replace(/'/g, "\\'")}')">
+                            ${selectedDept.name}
+                        </span>
+                    `;
+                 }
+            }
+
+            if (currentLevel === 'docs' && selectedUnit) {
+                html += `
+                    <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                    <span class="breadcrumb-item active">${selectedUnit.name}</span>
+                `;
+            }
+            bc.innerHTML = html;
+        }
+
+        function resetView() {
+            renderDepartments();
+        }
+
+        // KEEP MODAL FUNCTIONS
         function openDetailModal(id) {
             const doc = documents.find(d => d.id === id);
             if (!doc) return;
-
-            const unit = units.find(u => u.id === doc.unit_id);
-            const unitName = unit ? unit.name : '-';
+            const unit = units.find(u => u.id_unit === doc.unit_id);
+            const unitName = unit ? unit.nama_unit : '-';
 
             document.getElementById('m_title').innerText = doc.title;
-            document.getElementById('m_status').innerText = doc.status;
+            document.getElementById('m_status').innerText = 'DISETUJUI'; 
             document.getElementById('m_category').innerText = doc.category;
-            document.getElementById('m_unit').innerText = unitName; // Show Unit Name
-            document.getElementById('m_date').innerText = doc.date;
-            document.getElementById('m_author').innerText = doc.author;
-
-            // Risk Level Styling
+            document.getElementById('m_unit').innerText = unitName;
+            document.getElementById('m_date').innerText = doc.date || '-';
+            document.getElementById('m_author').innerText = doc.author || '-';
+            
+            // Risk
             const riskEl = document.getElementById('m_risk');
-            riskEl.innerText = doc.risk_level;
-            riskEl.className = 'info-value'; // Reset
-            if (doc.risk_level === 'Tinggi') riskEl.classList.add('risk-high');
+            if(doc.risk_level) {
+                 riskEl.innerText = doc.risk_level;
+                 riskEl.parentElement.style.display = 'flex';
+                 riskEl.className = 'info-value';
+                 if (doc.risk_level === 'Tinggi') riskEl.classList.add('risk-high');
+            } else {
+                 riskEl.parentElement.style.display = 'none';
+            }
 
-            // Approval Info
-            // Extract the Approver Name part before the () if needed, or use full string. 
-            // The image says: "Disetujui oleh Kepala Departemen pada [Date]"
-            // But our data has "approver" containing name. Let's format it nicely.
-            // Assumption: The approver string "Bpk. Ahmad (Ka. Dept Produksi)" implies role is in parens.
-            // For now, let's just use "Kepala Departemen" generic text + date as requested in image, or use the real data.
-            // The image text is: "Disetujui oleh Kepala Departemen pada 14 Des 2025"
-
-            document.getElementById('m_approval_header').innerText = `Disetujui oleh Kepala Departemen pada ${doc.approval_date}`;
-            document.getElementById('m_approval_note').innerText = doc.approval_note;
+            document.getElementById('m_approval_header').innerText = `Disetujui pada ${doc.approval_date || '-'}`;
+            document.getElementById('m_approval_note').innerText = doc.approval_note || '-';
 
             document.getElementById('detailModal').style.display = 'block';
         }
@@ -960,14 +680,12 @@
             document.getElementById('detailModal').style.display = 'none';
         }
 
-        // Close modal if clicked outside
         window.onclick = function (event) {
             const modal = document.getElementById('detailModal');
             if (event.target == modal) {
                 modal.style.display = 'none';
             }
         }
-
     </script>
 </body>
 

@@ -34,6 +34,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            z-index: 100;
         }
 
         .logo-section {
@@ -110,18 +111,6 @@
             font-size: 16px;
         }
 
-        .badge {
-            position: absolute;
-            right: 20px;
-            background: #c41e3a;
-            color: white;
-            font-size: 10px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-
-        /* User Info at Bottom */
         .user-info-bottom {
             padding: 20px;
             border-top: 2px solid #e0e0e0;
@@ -196,6 +185,7 @@
         .main-content {
             flex: 1;
             margin-left: 250px;
+            padding: 0;
         }
 
         .header {
@@ -217,51 +207,47 @@
             padding: 30px 40px;
         }
 
-        /* FILTERS */
-        .filters-container {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+        /* Breadcrumb */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            color: #666;
         }
 
-        .filter-group label {
-            display: block;
-            font-size: 14px;
+        .breadcrumb-item {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb-item:hover {
+            color: #c41e3a;
+            text-decoration: underline;
+        }
+
+        .breadcrumb-item.active {
             font-weight: 600;
             color: #333;
-            margin-bottom: 8px;
+            cursor: default;
+            text-decoration: none;
         }
 
-        .filter-group select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #555;
-            background-color: #fff;
-            cursor: pointer;
+        .breadcrumb-separator {
+            color: #ccc;
+            font-size: 12px;
         }
 
-        .filter-group select:focus {
-            outline: none;
-            border-color: #c41e3a;
-        }
-
-        /* CARDS */
-        .category-grid {
+        /* Responsive Grid */
+        .cards-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
         }
 
-        .cat-card {
+        /* Card Style */
+        .drill-card {
             background: white;
             padding: 25px;
             border-radius: 12px;
@@ -270,42 +256,93 @@
             transition: all 0.3s ease;
             text-align: left;
             border: 1px solid transparent;
-            height: 120px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            min-height: 140px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .cat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        .drill-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-color: #ffe5e5;
         }
 
-        .cat-card.active {
-            border-color: #c41e3a;
-            background: #ffe5e5;
+        .drill-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #c41e3a;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        .cat-card h3 {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-            font-weight: 500;
+        .drill-card:hover::before {
+            opacity: 1;
         }
 
-        .cat-card h2 {
-            font-size: 20px;
+        .drill-card-icon {
+            width: 40px;
+            height: 40px;
+            background: #fff5f5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #c41e3a;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .drill-card h3 {
+            font-size: 16px;
             color: #333;
             font-weight: 700;
+            margin-bottom: 5px;
         }
 
-        /* TABLE */
+        .drill-card p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        /* Table Section */
         .table-section {
             background: white;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             border: 1px solid #eee;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .table-header {
@@ -315,12 +352,6 @@
             align-items: center;
             border-bottom: 1px solid #eee;
             background-color: #fbfbfb;
-        }
-
-        .table-header h2 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #333;
         }
 
         .custom-table {
@@ -334,7 +365,7 @@
         }
 
         .custom-table th {
-            padding: 18px 25px;
+            padding: 15px 20px;
             text-align: left;
             font-size: 12px;
             font-weight: 700;
@@ -352,34 +383,14 @@
         }
 
         .custom-table td {
-            padding: 18px 25px;
+            padding: 15px 20px;
             font-size: 14px;
             color: #555;
             vertical-align: middle;
         }
 
-        .btn-filter-toggle {
-            padding: 8px 16px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .btn-action {
-            padding: 8px 18px;
-            background: #c41e3a;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-
-        .badge-status {
-            padding: 6px 14px;
+        .status-pill {
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 11px;
             font-weight: 600;
@@ -387,7 +398,28 @@
             display: inline-block;
         }
 
-        /* MODAL STYLES */
+        .status-pill.approved {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .btn-action {
+            padding: 6px 14px;
+            background: #c41e3a;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-action:hover {
+            background: #a01830;
+        }
+
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -417,6 +449,7 @@
             from {
                 transform: translateY(-50px);
                 opacity: 0;
+                transform: translateY(0);
             }
 
             to {
@@ -445,7 +478,6 @@
             font-size: 24px;
             font-weight: bold;
             cursor: pointer;
-            transition: color 0.2s;
         }
 
         .close-btn:hover {
@@ -460,7 +492,6 @@
             font-size: 14px;
             font-weight: 700;
             color: #c41e3a;
-            /* Red color */
             margin-bottom: 20px;
             display: flex;
             align-items: center;
@@ -491,43 +522,123 @@
             font-weight: 600;
         }
 
-        .risk-high {
-            color: #c41e3a;
-            font-weight: 700;
+        /* Accordion Style */
+        .accordion-container {
+            max-width: 100%;
         }
 
-        .status-pill {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
+        .accordion-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
         }
 
-        .approval-box {
-            background-color: #f1f8e9;
-            /* Light green bg */
-            border-left: 4px solid #2e7d32;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 10px;
+        .accordion-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
-        .approval-text {
-            font-size: 13px;
-            color: #33691e;
-            line-height: 1.5;
-        }
-
-        .approval-header {
-            font-weight: 700;
-            margin-bottom: 5px;
-            color: #1b5e20;
+        .accordion-header {
+            padding: 15px 20px;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            background: #fff;
+            transition: background 0.2s;
+        }
+
+        .accordion-header:hover {
+            background: #f8f9fa;
+        }
+
+        .accordion-header.active {
+            background: #f0f7ff;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .dept-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .dept-icon {
+            width: 36px;
+            height: 36px;
+            background: #e3f2fd;
+            color: #1565c0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .dept-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .accordion-icon {
+            color: #999;
+            transition: transform 0.3s;
+        }
+
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+            color: #1565c0;
+        }
+
+        .accordion-body {
+            display: none;
+            background: #fafafa;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .accordion-body.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .unit-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .unit-item {
+            padding: 12px 20px 12px 60px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #555;
+            transition: all 0.2s;
+        }
+
+        .unit-item:last-child {
+            border-bottom: none;
+        }
+
+        .unit-item:hover {
+            background: #fff;
+            color: #c41e3a;
+            padding-left: 65px;
+        }
+
+        .unit-item i {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .unit-item:hover i {
+            opacity: 1;
         }
     </style>
 </head>
@@ -542,388 +653,335 @@
             <div class="header">
                 <h1>Dashboard Utama</h1>
             </div>
-
             <div class="content-area">
-
-                <!-- 4 FILTERS -->
-                <div class="filters-container" style="grid-template-columns: repeat(4, 1fr);">
-                    <div class="filter-group">
-                        <label>Direktorat</label>
-                        <select id="filter_directorate" onchange="filterDepartments()">
-                            <option value="">-- Pilih Direktorat --</option>
-                            @foreach($direktorats as $dir)
-                                <option value="{{ $dir->id_direktorat }}">{{ $dir->nama_direktorat }}</option>
-                            @endforeach
-                        </select>
+                <!-- Breadcrumb & Actions -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div class="breadcrumb" id="breadcrumb" style="margin-bottom: 0;">
+                        <span class="breadcrumb-item active" onclick="resetView()">Home</span>
                     </div>
-                    <div class="filter-group">
-                        <label>Departemen</label>
-                        <select id="filter_department" onchange="filterUnits()">
-                            <option value="">-- Pilih Departemen --</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Unit Kerja</label>
-                        <select id="filter_unit" onchange="filterSeksi()">
-                            <option value="">-- Pilih Unit --</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Seksi</label>
-                        <select id="filter_seksi" onchange="applyFilters()">
-                            <option value="">-- Pilih Seksi --</option>
-                        </select>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="{{ route('documents.export.pdf') }}" target="_blank" style="padding: 8px 12px; background: #c41e3a; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                            <i class="fas fa-file-pdf" style="margin-right: 6px;"></i> Export PDF
+                        </a>
+                        <a href="{{ route('documents.export.excel') }}" target="_blank" style="padding: 8px 12px; background: #2e7d32; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                            <i class="fas fa-file-excel" style="margin-right: 6px;"></i> Export Excel
+                        </a>
                     </div>
                 </div>
-
-
-
-                <!-- TABLE -->
-                <div class="table-section">
-                    <div class="table-header"
-                        style="display: flex; justify-content: space-between; align-items: center;">
-                        <h2>Form Terpublikasi</h2>
-                        <div style="display: flex; gap: 10px;">
-                            <a href="{{ route('documents.export.pdf') }}" target="_blank"
-                                style="padding: 8px 12px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-size: 14px; display: flex; align-items: center;">
-                                <i class="fas fa-file-pdf" style="margin-right: 5px;"></i> PDF
-                            </a>
-                            <a href="{{ route('documents.export.excel') }}" target="_blank"
-                                style="padding: 8px 12px; background: #27ae60; color: white; border-radius: 6px; text-decoration: none; font-size: 14px; display: flex; align-items: center;">
-                                <i class="fas fa-file-excel" style="margin-right: 5px;"></i> Excel
-                            </a>
-                            <div class="search-box" style="position: relative; width: 250px;">
-                                <i class="fas fa-search"
-                                    style="position: absolute; left: 10px; top: 10px; color: #999;"></i>
-                                <input type="text" id="tableSearch" placeholder="Cari form..."
-                                    onkeyup="handleSearch(this.value)"
-                                    style="width: 100%; padding: 8px 10px 8px 35px; border: 1px solid #ddd; border-radius: 6px; outline: none;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <table class="custom-table">
-                        <thead>
-                            <tr>
-                                <th width="20%">Unit Penginput</th>
-                                <th width="25%">Judul Form</th>
-                                <th width="20%">Disetujui Oleh</th>
-                                <th width="15%">Tanggal Publish</th>
-                                <th width="10%">Waktu</th>
-                                <th width="20%">Penulis</th>
-                                <th width="10%">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            <!-- JS Populated -->
-                        </tbody>
-                    </table>
+                <!-- Dynamic Content Container -->
+                <div id="dynamicContent">
+                    <!-- Javascript will render content here -->
                 </div>
             </div>
         </main>
     </div>
-
     <!-- DETAIL MODAL -->
     <div id="detailModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Detail Form</h2>
-                <span class="close-btn" onclick="closeModal()">&times;</span>
+                <h2>Detail Form</h2><span class="close-btn" onclick="closeModal()">&times;
+                </span>
             </div>
             <div class="modal-body">
-                <!-- Section 1 -->
-                <div class="section-title">
-                    <i class="fas fa-file-alt"></i> Informasi Form
-                </div>
-
+                <!-- Data populated by JS -->
+                <div class="section-title"><i class="fas fa-file-alt"></i>Informasi Form </div>
                 <div class="info-row">
                     <div class="info-label">Judul Form:</div>
                     <div class="info-value" id="m_title"></div>
                 </div>
+                <!-- Add other fields as needed -->
                 <div class="info-row">
                     <div class="info-label">Status:</div>
-                    <div class="info-value"><span class="status-pill" id="m_status"></span></div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Kategori:</div>
-                    <div class="info-value" id="m_category"></div>
+                    <div class="info-value"><span class="status-pill approved" id="m_status"></span></div>
                 </div>
                 <div class="info-row">
                     <div class="info-label">Unit Kerja:</div>
                     <div class="info-value" id="m_unit"></div>
                 </div>
                 <div class="info-row">
-                    <div class="info-label">Tanggal Terbit:</div>
-                    <div class="info-value" id="m_date"></div>
-                </div>
-                <div class="info-row">
                     <div class="info-label">Penulis:</div>
                     <div class="info-value" id="m_author"></div>
                 </div>
-                <div class="info-row">
-                    <div class="info-label">Tingkat Risiko:</div>
-                    <div class="info-value risk-high" id="m_risk"></div>
-                </div>
-
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;">
-
-                <!-- Section 2 -->
-                <div class="section-title green">
-                    <i class="fas fa-check-circle"></i> Informasi Persetujuan
+                <div class="section-title green"><i class="fas fa-check-circle"></i>Informasi Persetujuan
                 </div>
-
-                <div class="approval-box">
-                    <div class="approval-header">
-                        <i class="fas fa-check"></i> <span id="m_approval_header"></span>
-                    </div>
-                    <div class="approval-text" id="m_approval_note"></div>
+                <div class="info-row">
+                    <div class="info-label">Tanggal Publish:</div>
+                    <div class="info-value" id="m_date"></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Disetujui Oleh:</div>
+                    <div class="info-value" id="m_approver"></div>
                 </div>
             </div>
         </div>
     </div>
+    <script> // Data from Server
+        const departments =
+            @json($departemens)
+            ;
+        const units =
+            @json($units)
+            ;
+        const documents =
+            @json($documents)
+            ;
 
-    <script>
-        // MASTER DATA FROM DATABASE
-        const directorates = @json($direktorats->map(fn($d) => ['id' => $d->id_direktorat, 'name' => $d->nama_direktorat]));
-
-        const departments = @json($departemens->map(fn($d) => ['id' => $d->id_dept, 'dir_id' => $d->id_direktorat, 'name' => $d->nama_dept]));
-
-        const units = @json($units->map(fn($u) => ['id' => $u->id_unit, 'dept_id' => $u->id_dept, 'name' => $u->nama_unit]));
-
-        const seksis = @json($seksis->map(fn($s) => ['id' => $s->id_seksi, 'unit_id' => $s->id_unit, 'name' => $s->nama_seksi]));
-
-        const documents = @json($documents);
-
-        let activeCategory = '';
-        let searchTerm = '';
+        // State
+        let currentLevel = 'dept'; // dept, unit, docs
+        let selectedDept = null;
+        let selectedUnit = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            populateDirectorates();
-            filterDepartments(); // Initialize Departments
-            renderTable(); // Initial render
+            renderDepartments();
         });
 
-        function populateDirectorates() {
-            const select = document.getElementById('filter_directorate');
-            select.innerHTML = '<option value="">-- Pilih Direktorat --</option>';
-            directorates.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d.id;
-                opt.textContent = d.name;
-                select.appendChild(opt);
-            });
-        }
+        // ================= RENDER FUNCTIONS =================
 
-        function filterDepartments() {
-            const dirId = document.getElementById('filter_directorate').value;
-            const deptSelect = document.getElementById('filter_department');
-            // Reset is handled by re-populating. If logic was appending, we'd need to clear. 
-            // innerHTML assignment clears it.
+        // Level 1: Departments (Accordion List)
+        function renderDepartments() {
+            currentLevel = 'dept';
+            selectedDept = null;
+            selectedUnit = null;
+            updateBreadcrumb();
 
-            deptSelect.innerHTML = '<option value="">-- Pilih Departemen --</option>';
+            const container = document.getElementById('dynamicContent');
 
-            // Should units be reset here? Yes, because department list changes/resets
-            // But we will call filterUnits right after to re-populate them based on empty dept (Show All) or selected dept
-            // Just clearing it here might cause blink if filterUnits isn't fast, but it's JS so it's blocking/fast.
-
-            let filteredDepts = departments;
-            if (dirId) {
-                filteredDepts = departments.filter(d => d.dir_id == dirId);
-            }
-
-            filteredDepts.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d.id;
-                opt.textContent = d.name;
-                deptSelect.appendChild(opt);
-            });
-
-            filterUnits();
-        }
-
-        function filterUnits() {
-            const deptId = document.getElementById('filter_department').value;
-            const unitSelect = document.getElementById('filter_unit');
-
-            unitSelect.innerHTML = '<option value="">-- Pilih Unit --</option>';
-
-            let filteredUnits = units;
-            if (deptId) {
-                filteredUnits = units.filter(u => u.dept_id == deptId);
-            }
-
-            filteredUnits.forEach(u => {
-                const opt = document.createElement('option');
-                opt.value = u.id;
-                opt.textContent = u.name;
-                unitSelect.appendChild(opt);
-            });
-            // Reset seksi dropdown and populate
-            filterSeksi();
-        }
-
-        function filterSeksi() {
-            const unitId = document.getElementById('filter_unit').value;
-            const seksiSelect = document.getElementById('filter_seksi');
-            seksiSelect.innerHTML = '<option value="">-- Pilih Seksi --</option>';
-
-            let filteredSeksis = seksis;
-            if (unitId) {
-                filteredSeksis = seksis.filter(s => s.unit_id == unitId);
-            }
-
-            filteredSeksis.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s.id;
-                opt.textContent = s.name;
-                seksiSelect.appendChild(opt);
-            });
-            applyFilters();
-        }
-
-        function selectCategory(cat, el) {
-            document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
-            if (activeCategory === cat) {
-                activeCategory = '';
-            } else {
-                activeCategory = cat;
-                el.classList.add('active');
-            }
-            applyFilters();
-        }
-
-        function applyFilters() {
-            const dirId = document.getElementById('filter_directorate').value;
-            const deptId = document.getElementById('filter_department').value;
-            const unitId = document.getElementById('filter_unit').value;
-
-            const filtered = documents.filter(doc => {
-                let match = true;
-                if (dirId && doc.dir_id != dirId) match = false;
-                if (deptId && doc.dept_id != deptId) match = false;
-                if (unitId && doc.unit_id != unitId) match = false;
-                if (activeCategory && doc.category !== activeCategory) match = false;
-
-                if (searchTerm) {
-                    const term = searchTerm.toLowerCase();
-                    const unit = units.find(u => u.id === doc.unit_id);
-                    const unitName = unit ? unit.name.toLowerCase() : '';
-
-                    const searchableText = [
-                        doc.title,
-                        doc.author,
-                        doc.approver,
-                        unitName,
-                        doc.risk_level
-                    ].join(' ').toLowerCase();
-
-                    if (!searchableText.includes(term)) match = false;
-                }
-
-                return match;
-            });
-
-            renderTable(filtered);
-        }
-
-        function renderTable(data = documents) {
-            const tbody = document.getElementById('tableBody');
-            const tableSection = document.querySelector('.table-section');
-
-            // Always show table section
-            tableSection.style.display = 'block';
-
-            if (data.length === 0) {
-                let mainText = 'Belum Ada Form Terpublikasi';
-                let subText = 'Belum ada form yang dipublikasikan.';
-
-                if (activeCategory) {
-                    subText = `Tidak ada form ditemukan untuk kategori <strong>${activeCategory}</strong>.`;
-                }
-
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 60px 20px;">
-                            <div style="margin-bottom: 20px;">
-                                <i class="fas fa-folder-open" style="font-size: 64px; color: #ddd;"></i>
-                            </div>
-                            <h3 style="font-size: 18px; color: #666; margin-bottom: 10px; font-weight: 600;">
-                                ${mainText}
-                            </h3>
-                            <p style="font-size: 14px; color: #999; margin: 0;">
-                                ${subText}
-                            </p>
-                        </td>
-                    </tr>
-                `;
+            if (departments.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fas fa-building"></i><p>Tidak ada departemen ditemukan.</p></div>`;
                 return;
             }
 
-            tbody.innerHTML = data.map(doc => {
-                const unit = units.find(u => u.id === doc.unit_id);
-                const unitName = unit ? unit.name : '-';
-                return `
-                <tr>
-                    <td><strong>${unitName}</strong></td>
-                    <td style="font-weight: 500; color: #333;">${doc.title}</td>
-                    <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
-                    <td>${doc.date}</td>
-                    <td>${doc.time || '-'}</td>
-                    <td>${doc.author}</td>
-                    <td><a href="/documents/${doc.id}/published" class="btn-action">Detail</a></td>
-                </tr>
-            `}).join('');
+            let html = '<div class="accordion-container">';
+            
+            // 1. Regular Departments (Excluding ID 0 and ID 93)
+            const regularDepts = departments.filter(d => d.id_dept != 0 && d.id_dept != 93);
+
+            regularDepts.forEach(dept => {
+                // Pre-calculate units for this dept to check if empty
+                const deptUnits = units.filter(u => u.id_dept == dept.id_dept);
+                const unitCount = deptUnits.length;
+
+                html += `
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleDepartment(${dept.id_dept})">
+                            <div class="dept-info">
+                                <div class="dept-icon"><i class="fas fa-building"></i></div>
+                                <div class="dept-name">${dept.nama_dept}</div>
+                            </div>
+                            <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+                        </div>
+                        <div class="accordion-body" id="dept-${dept.id_dept}">
+                            <ul class="unit-list">
+                `;
+
+                if (unitCount > 0) {
+                    deptUnits.forEach(unit => {
+                        html += `
+                            <li class="unit-item" onclick="selectUnit(${unit.id_unit}, '${unit.nama_unit.replace(/'/g, "\\'")}', ${dept.id_dept})">
+                                <span>${unit.nama_unit}</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </li>
+                        `;
+                    });
+                } else {
+                    html += `<li class="unit-item" style="color: #999; cursor: default;">Tidak ada Unit Kerja</li>`;
+                }
+
+                html += `
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // 2. Unassigned Units
+            const unassignedDept = departments.find(d => d.id_dept == 0);
+            if (unassignedDept) {
+                // Filter out ID 0
+                const directUnits = units.filter(u => u.id_dept == 0 && u.id_unit != 0);
+                if (directUnits.length > 0) {
+                     
+                     directUnits.forEach(unit => {
+                        html += `
+                            <div class="accordion-item" onclick="selectUnit(${unit.id_unit}, '${unit.nama_unit.replace(/'/g, "\\'")}', 0)" style="cursor:pointer;">
+                                <div class="accordion-header">
+                                    <div class="dept-info">
+                                        <div class="dept-icon" style="background:#fce4ec; color:#c2185b;"><i class="fas fa-layer-group"></i></div>
+                                        <div class="dept-name">${unit.nama_unit}</div>
+                                    </div>
+                                    <div class="accordion-icon"><i class="fas fa-arrow-right"></i></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
         }
 
-        // MODAL FUNCTIONS
-        function handleSearch(val) {
-            searchTerm = val;
-            applyFilters();
+        function toggleDepartment(id) {
+            const body = document.getElementById(`dept-${id}`);
+            if (!body) return;
+            const header = body.previousElementSibling;
+
+            // Toggle Logic
+            const isShown = body.classList.contains('show');
+
+            if (!isShown) {
+                // Close others
+                document.querySelectorAll('.accordion-body').forEach(el => el.classList.remove('show'));
+                document.querySelectorAll('.accordion-header').forEach(el => el.classList.remove('active'));
+
+                body.classList.add('show');
+                header.classList.add('active');
+            } else {
+                body.classList.remove('show');
+                header.classList.remove('active');
+            }
         }
 
-        function openDetailModal(id) {
-            const doc = documents.find(d => d.id === id);
-            if (!doc) return;
+        // Helper to simulate selecting a department (for breadcrumb)
+        function selectDepartment(id, name) {
+            renderDepartments();
+            // Expand the department
+            setTimeout(() => {
+                const body = document.getElementById(`dept-${id}`);
+                if (body) {
+                    body.classList.add('show');
+                    body.previousElementSibling.classList.add('active');
+                    // Scroll to it
+                    body.parentElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 50);
+        }
 
-            const unit = units.find(u => u.id === doc.unit_id);
-            const unitName = unit ? unit.name : '-';
+        // Level 3: Documents (Drill down from Accordion Unit click)
+        function selectUnit(id, name, deptId) {
+            // Find dept name if not already selected
+            const dept = departments.find(d => d.id_dept == deptId);
+            selectedDept = { id: deptId, name: dept ? dept.nama_dept : '-' };
 
+            selectedUnit = { id, name };
+            currentLevel = 'docs';
+            updateBreadcrumb();
+
+            const container = document.getElementById('dynamicContent');
+            const unitDocs = documents.filter(doc => doc.unit_id == id);
+
+            let html = `
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2>Dokumen Terpublikasi - ${name}</h2>
+                         <button class="btn-action" style="background:#666;" onclick="selectDepartment(${deptId})"><i class="fas fa-arrow-left"></i> Kembali</button>
+                    </div>
+            `;
+
+            if (unitDocs.length === 0) {
+                html += `<div class="empty-state" style="padding: 30px;"><i class="fas fa-file-contract"></i><p>Belum ada dokumen yang dipublish dari Unit ini.</p></div>`;
+            } else {
+                html += `
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Judul Dokumen</th>
+                                <th>Kategori</th>
+                                <th>Penulis</th>
+                                <th>Tanggal Publish</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                unitDocs.forEach(doc => {
+                    html += `
+                        <tr>
+                            <td>${doc.title}</td>
+                            <td>${doc.category || '-'}</td>
+                            <td>${doc.author}</td>
+                            <td>${doc.date}</td>
+                            <td><span class="status-pill approved">DISETUJUI</span></td>
+                            <td>
+                                <a href="/documents/${doc.id}/published" class="btn-action">
+                                    <i class="fas fa-eye"></i> Detail
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        // ================= HELPERS =================
+
+        function updateBreadcrumb() {
+            const bc = document.getElementById('breadcrumb');
+            let html = `<span class="breadcrumb-item" onclick="renderDepartments()">Home</span>`;
+
+            if (currentLevel === 'unit' || currentLevel === 'docs') {
+                // In accordion view, 'unit' level is visually same as home but expanded. 
+                // But strictly speaking we just have Home > [optional Dept] > [Unit]
+                // Since we use drill down for Docs, we can show Dept.
+
+                if (selectedDept) {
+                    html += `
+                        <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                        <span class="breadcrumb-item" onclick="selectDepartment(${selectedDept.id}, '${selectedDept.name.replace(/'/g, "\\'")}')">
+                            ${selectedDept.name}
+                        </span>
+                    `;
+                }
+            }
+
+            if (currentLevel === 'docs' && selectedUnit) {
+                html += `
+                    <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                    <span class="breadcrumb-item active">${selectedUnit.name}</span>
+                `;
+            }
+
+            bc.innerHTML = html;
+        }
+
+        function resetView() {
+            renderDepartments();
+        }
+
+        // ================= MODAL =================
+        const modal = document.getElementById('detailModal');
+
+        function openDetail(id) {
+            const doc = documents.find(d => d.id == id);
+            if (doc) showDetail(doc);
+        }
+
+        function showDetail(doc) {
             document.getElementById('m_title').innerText = doc.title;
-            document.getElementById('m_status').innerText = doc.status;
-            document.getElementById('m_category').innerText = doc.category;
-            document.getElementById('m_unit').innerText = unitName; // Show Unit Name
-            document.getElementById('m_date').innerText = doc.date;
+            document.getElementById('m_status').innerText = "DISETUJUI";
+            document.getElementById('m_unit').innerText = selectedUnit ? selectedUnit.name : '-';
             document.getElementById('m_author').innerText = doc.author;
+            document.getElementById('m_date').innerText = doc.date;
+            document.getElementById('m_approver').innerText = doc.approver || '-';
 
-            // Risk Level Styling
-            const riskEl = document.getElementById('m_risk');
-            riskEl.innerText = doc.risk_level;
-            riskEl.className = 'info-value'; // Reset
-            if (doc.risk_level === 'Tinggi') riskEl.classList.add('risk-high');
-
-            // Approval Info
-            // Extract the Approver Name part before the () if needed, or use full string. 
-            // The image says: "Disetujui oleh Kepala Departemen pada [Date]"
-            // But our data has "approver" containing name. Let's format it nicely.
-            // Assumption: The approver string "Bpk. Ahmad (Ka. Dept Produksi)" implies role is in parens.
-            // For now, let's just use "Kepala Departemen" generic text + date as requested in image, or use the real data.
-            // The image text is: "Disetujui oleh Kepala Departemen pada 14 Des 2025"
-
-            document.getElementById('m_approval_header').innerText = `Disetujui oleh Kepala Departemen pada ${doc.approval_date}`;
-            document.getElementById('m_approval_note').innerText = doc.approval_note;
-
-            document.getElementById('detailModal').style.display = 'block';
+            modal.style.display = 'block';
         }
 
         function closeModal() {
-            document.getElementById('detailModal').style.display = 'none';
+            modal.style.display = 'none';
         }
 
-        // Close modal if clicked outside
         window.onclick = function (event) {
-            const modal = document.getElementById('detailModal');
             if (event.target == modal) {
-                modal.style.display = 'none';
+                closeModal();
             }
         }
 

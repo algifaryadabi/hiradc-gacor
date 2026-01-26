@@ -10,6 +10,8 @@ use App\Models\Seksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\DocumentDetailExport;
 
 class DocumentController extends Controller
 {
@@ -147,84 +149,9 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized access to export document.');
         }
 
-        $document->load(['details', 'user', 'unit']);
+        $document->load(['details', 'user', 'unit', 'departemen']);
 
-        $filename = "hiradc_document_" . $document->id . ".csv";
-
-        $headers = array(
-            "Content-type" => "text/csv",
-            "Content-Disposition" => "attachment; filename=$filename",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
-        );
-
-        $callback = function () use ($document) {
-            $file = fopen('php://output', 'w');
-
-            // Document Info Header
-            fputcsv($file, ['JUDUL DOKUMEN', $document->judul_dokumen ?? $document->kolom2_kegiatan]);
-            fputcsv($file, ['UNIT', $document->unit->nama_unit ?? '-']);
-            fputcsv($file, ['PENULIS', $document->user->nama_user ?? '-']);
-            fputcsv($file, []); // Spacer
-
-            // Table Header
-            fputcsv($file, [
-                'Proses',
-                'Kegiatan',
-                'Lokasi',
-                'Kondisi',
-                'Bahaya',
-                'Dampak',
-                'Risiko Awal',
-                'Pengendalian Existing',
-                'P',
-                'C',
-                'Score',
-                'Rating',
-                'Peraturan',
-                'Pengendalian Lanjutan',
-                'Res P',
-                'Res C',
-                'Res Score',
-                'Res Rating'
-            ]);
-
-            foreach ($document->details as $item) {
-                // Formatting
-                $bahaya = is_array($item->kolom6_bahaya)
-                    ? implode(', ', $item->kolom6_bahaya['details'] ?? []) . ' ' . ($item->kolom6_bahaya['manual'] ?? '')
-                    : $item->kolom6_bahaya;
-
-                $controls = is_array($item->kolom10_pengendalian)
-                    ? implode(', ', $item->kolom10_pengendalian['hierarchy'] ?? [])
-                    : $item->kolom10_pengendalian;
-
-                fputcsv($file, [
-                    $item->kolom2_proses,
-                    $item->kolom2_kegiatan,
-                    $item->kolom3_lokasi,
-                    $item->kolom5_kondisi,
-                    $bahaya,
-                    $item->kolom9_risiko,
-                    $item->kolom11_existing,
-                    $item->kolom12_kemungkinan,
-                    $item->kolom13_konsekuensi,
-                    $item->kolom14_score,
-                    $item->kolom14_level, // Rating
-                    $item->kolom15_regulasi,
-                    $item->kolom18_tindak_lanjut, // Control Lanjutan
-                    $item->residual_kemungkinan,
-                    $item->residual_konsekuensi,
-                    $item->residual_score,
-                    $item->residual_level
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return Excel::download(new DocumentDetailExport($document), 'hiradc_document_' . $document->id . '.xlsx');
     }
     public function __construct()
     {
@@ -876,19 +803,35 @@ class DocumentController extends Controller
     }
 
     // NEW: Realtime Data for Dashboard Table
-    public function getApproverDashboardData()
+    public function getApproverDashboardData(Request $request)
     {
-        $publishedDocuments = Document::published()
+        $query = Document::published()
             ->with(['user', 'unit', 'approvals.approver'])
-            ->orderBy('published_at', 'desc')
-            ->limit(20) // Limit to 20 for performance
-            ->get();
+            ->orderBy('published_at', 'desc');
+
+        // Filter by Unit if provided
+        if ($request->has('unit_id') && $request->unit_id != '') {
+            $query->where('id_unit', $request->unit_id);
+        }
+
+        // Optional: Filter by Dept if provided (though Unit usually implies Dept)
+        if ($request->has('dept_id') && $request->dept_id != '') {
+            $query->where('id_dept', $request->dept_id);
+        }
+
+        // Limit defaults to 20 only if no specific filter? 
+        // Or if specific filter, show all? Usually specific unit doesn't have thousands.
+        if (!$request->has('unit_id')) {
+            $query->limit(20);
+        }
+
+        $publishedDocuments = $query->get();
 
         $data = $publishedDocuments->map(function ($doc) {
             $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
             return [
                 'id' => $doc->id,
-                'title' => $doc->kolom2_kegiatan,
+                'title' => $doc->judul_dokumen ?? $doc->kolom2_kegiatan, // Use title fallback
                 'document_title' => $doc->judul_dokumen,
                 'category' => $doc->kategori,
                 'date' => $doc->created_at->format('d M Y'),
@@ -898,8 +841,8 @@ class DocumentController extends Controller
                 'dept_id' => $doc->id_dept,
                 'unit_id' => $doc->id_unit,
                 'seksi_id' => $doc->id_seksi,
-                'status' => 'DISETUJUI',
-                'risk_level' => $doc->risk_level,
+                'status' => 'DISETUJUI', // Static for Published
+                'risk_level' => $doc->risk_level ?? 'Normal', // Add risk level
                 'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
                 'publish_time' => $doc->published_at ? $doc->published_at->format('H:i') . ' WIB' : '-',
                 'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
@@ -973,7 +916,7 @@ class DocumentController extends Controller
 
 
         $publishedDocuments = Document::published()
-            ->whereIn('kategori', $categoryFilter)
+            // ->whereIn('kategori', $categoryFilter) // Removed restriction to show ALL categories for any Unit Pengelola
             ->with(['user', 'unit', 'approvals.approver'])
             ->orderBy('published_at', 'desc')
             ->limit(20)
@@ -1475,8 +1418,14 @@ class DocumentController extends Controller
      */
     public function verifyUnit(Request $request, Document $document)
     {
-        // Check: Is User the assigned Approver?
-        if (Auth::id() != $document->level2_approver_id) {
+        // Check: Is User the assigned Approver OR a valid General Staff Approver?
+        $user = Auth::user();
+        $isAssigned = Auth::id() == $document->level2_approver_id;
+        // Fix: Do not require doc unit match for Unit Pengelola
+        $isStaffApprover = ($user->role_jabatan == 4) && 
+                           in_array($user->id_unit, [55, 56]);
+
+        if (!$isAssigned && !$isStaffApprover) {
             abort(403, 'Anda bukan verifikator yang ditunjuk untuk dokumen ini.');
         }
 
@@ -1650,8 +1599,12 @@ class DocumentController extends Controller
             $isUnitPengelolaHead = $user->role_jabatan == 2;
             $isAssignedReviewer = $document->level2_reviewer_id == $user->id_user;
             $isAssignedApprover = $document->level2_approver_id == $user->id_user;
+            // NEW: Allow Generic Staff Approver (Role 4 in same Unit)
+            // Fix: Do not require doc unit match
+            $isStaffApprover = ($user->role_jabatan == 4) && 
+                               in_array($user->id_unit, [55, 56]);
 
-            if (!$isAuthor && !$isApprover && !$isUnitPengelolaHead && !$isAssignedReviewer && !$isAssignedApprover) {
+            if (!$isAuthor && !$isApprover && !$isUnitPengelolaHead && !$isAssignedReviewer && !$isAssignedApprover && !$isStaffApprover) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized Access'], 403);
             }
 
@@ -1743,7 +1696,11 @@ class DocumentController extends Controller
             $document = $detail->document;
 
             // Auth Check
-            if ($document->id_user != $user->id_user && !($user->role_jabatan == 3 && $document->id_unit == $user->id_unit)) {
+            // Fix: Do not require doc unit match
+            $isStaffApprover = ($user->role_jabatan == 4) && 
+                               in_array($user->id_unit, [55, 56]);
+
+            if ($document->id_user != $user->id_user && !($user->role_jabatan == 3 && $document->id_unit == $user->id_unit) && !$isStaffApprover) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
@@ -1874,6 +1831,114 @@ class DocumentController extends Controller
     }
 
 
+
+    // NEW: Unit Pengelola Dashboard Data (AJAX)
+    public function getUnitPengelolaDashboardData(Request $request)
+    {
+        $user = Auth::user();
+
+        // Verify user is from SHE or Security (Head or Staff)
+        if (!in_array($user->id_unit, [55, 56])) {
+            return response()->json([], 403);
+        }
+
+        // Filter documents by category based on user's unit
+        // REQ: User wants ALL categories to be visible regardless of Unit Pengelola type
+        // $categoryFilter = [];
+        // if ($user->id_unit == 56) {
+        //     // SHE unit: K3, KO, Lingkungan
+        //     $categoryFilter = ['K3', 'KO', 'Lingkungan'];
+        // } elseif ($user->id_unit == 55) {
+        //     // Security unit: Keamanan
+        //     $categoryFilter = ['Keamanan', 'keamanan', 'Security', 'security'];
+        // }
+
+        $query = Document::published()
+            // ->whereIn('kategori', $categoryFilter) // Removed restriction
+            ->with(['user', 'unit', 'approvals.approver'])
+            ->orderBy('published_at', 'desc');
+
+        // Filter by Unit if provided
+        if ($request->has('unit_id') && $request->unit_id != '') {
+            $query->where('id_unit', $request->unit_id);
+        }
+
+        // Limit defaults to 20 only if no specific filter
+        if (!$request->has('unit_id')) {
+            $query->limit(20);
+        }
+
+        $publishedDocuments = $query->get();
+
+        $data = $publishedDocuments->map(function ($doc) {
+            $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
+            return [
+                'id' => $doc->id,
+                'title' => $doc->judul_dokumen ?? $doc->kolom2_kegiatan,
+                'document_title' => $doc->judul_dokumen,
+                'category' => $doc->kategori,
+                'date' => $doc->created_at->format('d M Y'),
+                'author' => $doc->user->nama_user ?? '-',
+                'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
+                'dir_id' => $doc->id_direktorat,
+                'dept_id' => $doc->id_dept,
+                'unit_id' => $doc->id_unit,
+                'seksi_id' => $doc->id_seksi,
+                'status' => 'DISETUJUI',
+                'risk_level' => $doc->risk_level ?? 'Normal',
+                'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
+                'publish_time' => $doc->published_at ? $doc->published_at->format('H:i') . ' WIB' : '-',
+                'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
+            ];
+        });
+
+        return response()->json($data);
+    }
+
+    // NEW: Admin Dashboard Data (AJAX) - For Accordion
+    public function getAdminDashboardData(Request $request)
+    {
+        // Admin sees ALL published documents
+        $query = Document::published()
+            ->with(['user', 'unit', 'approvals.approver'])
+            ->orderBy('published_at', 'desc');
+
+        // Filter by Unit if provided (clicked from Accordion)
+        if ($request->has('unit_id') && $request->unit_id != '') {
+            $query->where('id_unit', $request->unit_id);
+        }
+
+        // Limit defaults to 20 only if no specific filter
+        if (!$request->has('unit_id')) {
+            $query->limit(20);
+        }
+
+        $publishedDocuments = $query->get();
+
+        $data = $publishedDocuments->map(function ($doc) {
+            $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
+            return [
+                'id' => $doc->id,
+                'title' => $doc->judul_dokumen ?? $doc->kolom2_kegiatan,
+                'document_title' => $doc->judul_dokumen,
+                'category' => $doc->kategori,
+                'date' => $doc->created_at->format('d M Y'),
+                'author' => $doc->user->nama_user ?? '-',
+                'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
+                'dir_id' => $doc->id_direktorat,
+                'dept_id' => $doc->id_dept,
+                'unit_id' => $doc->id_unit,
+                'seksi_id' => $doc->id_seksi,
+                'status' => 'DISETUJUI',
+                'risk_level' => $doc->risk_level ?? 'Normal',
+                'approval_date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
+                'publish_time' => $doc->published_at ? $doc->published_at->format('H:i') . ' WIB' : '-',
+                'approval_note' => $lastApproval ? $lastApproval->catatan : '-'
+            ];
+        });
+
+        return response()->json($data);
+    }
 
     // NEW: Realtime Status Check for Polling
     public function getStatus($id)

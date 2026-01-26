@@ -217,318 +217,68 @@
             padding: 30px 40px;
         }
 
-        /* FILTERS */
-        .filters-container {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-        }
+    
+        /* ADD Accordion Styles */
+        .accordion-container { max-width: 100%; margin-top: 20px; }
+        .accordion-item { background: white; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; overflow: hidden; transition: all 0.3s; }
+        .accordion-item:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
+        .accordion-header { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: #fff; transition: background 0.2s; }
+        .accordion-header:hover { background: #f8f9fa; }
+        .accordion-header.active { background: #f0f7ff; border-bottom: 1px solid #e0e0e0; }
+        .dept-info { display: flex; align-items: center; gap: 15px; }
+        .dept-icon { width: 36px; height: 36px; background: #e3f2fd; color: #1565c0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .dept-name { font-weight: 600; color: #333; font-size: 15px; }
+        .accordion-icon { color: #999; transition: transform 0.3s; }
+        .accordion-header.active .accordion-icon { transform: rotate(180deg); color: #1565c0; }
+        .accordion-body { display: none; background: #fafafa; border-top: 1px solid #f0f0f0; }
+        .accordion-body.show { display: block; animation: slideDown 0.3s ease-out; }
+        .unit-list { list-style: none; padding: 0; margin: 0; }
+        .unit-item { padding: 12px 20px 12px 60px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #555; transition: all 0.2s; }
+        .unit-item:last-child { border-bottom: none; }
+        .unit-item:hover { background: #fff; color: #c41e3a; padding-left: 65px; }
+        .unit-item i { opacity: 0; transition: opacity 0.2s; }
+        .unit-item:hover i { opacity: 1; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Breadcrumb */
+        .breadcrumb { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 14px; color: #666; }
+        .breadcrumb-item { cursor: pointer; transition: color 0.2s; }
+        .breadcrumb-item:hover { color: #c41e3a; text-decoration: underline; }
+        .breadcrumb-item.active { font-weight: 600; color: #333; cursor: default; text-decoration: none; }
+        .breadcrumb-separator { color: #ccc; font-size: 12px; }
 
-        .filter-group label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
+        /* Table Section */
+        .table-section { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #eee; animation: fadeIn 0.3s ease-out; margin-top: 20px;}
+        .table-header { padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; background-color: #fbfbfb; }
+        .table-header h2 { margin: 0; font-size: 18px; color: #333; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px 25px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        th { background: #fafafa; font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; }
+        td { font-size: 14px; color: #333; }
+        
+        .badge-status { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .btn-action { padding: 6px 14px; background: #c41e3a; color: white; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 500; transition: background 0.2s; cursor: pointer; display: inline-block;}
+        .btn-action:hover { background: #a01729; }
 
-        .filter-group select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #555;
-            background-color: #fff;
-            cursor: pointer;
-        }
-
-        .filter-group select:focus {
-            outline: none;
-            border-color: #c41e3a;
-        }
-
-        /* CARDS */
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .cat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: left;
-            border: 1px solid transparent;
-            height: 120px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .cat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .cat-card.active {
-            border-color: #c41e3a;
-            background: #ffe5e5;
-        }
-
-        .cat-card h3 {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .cat-card h2 {
-            font-size: 20px;
-            color: #333;
-            font-weight: 700;
-        }
-
-        /* TABLE */
-        .table-section {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            border: 1px solid #eee;
-        }
-
-        .table-header {
-            padding: 20px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eee;
-            background-color: #fbfbfb;
-        }
-
-        .table-header h2 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .custom-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .custom-table thead {
-            background: #fff;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .custom-table th {
-            padding: 18px 25px;
-            text-align: left;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #888;
-        }
-
-        .custom-table tbody tr {
-            border-bottom: 1px solid #f9f9f9;
-            transition: all 0.2s;
-        }
-
-        .custom-table tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        .custom-table td {
-            padding: 18px 25px;
-            font-size: 14px;
-            color: #555;
-            vertical-align: middle;
-        }
-
-        .btn-filter-toggle {
-            padding: 8px 16px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .btn-action {
-            padding: 8px 18px;
-            background: #c41e3a;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-
-        .badge-status {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            display: inline-block;
-        }
-
-        /* MODAL STYLES */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 9999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-            font-family: 'Inter', sans-serif;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 0;
-            border: 1px solid #888;
-            width: 600px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            position: relative;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-header {
-            padding: 20px 30px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-header h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #333;
-            margin: 0;
-        }
-
-        .close-btn {
-            color: #aaa;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .close-btn:hover {
-            color: #c41e3a;
-        }
-
-        .modal-body {
-            padding: 30px;
-        }
-
-        .section-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #c41e3a;
-            /* Red color */
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-title.green {
-            color: #2e7d32;
-        }
-
-        .info-row {
-            display: flex;
-            margin-bottom: 15px;
-            align-items: flex-start;
-        }
-
-        .info-label {
-            width: 140px;
-            font-size: 14px;
-            color: #888;
-            font-weight: 500;
-        }
-
-        .info-value {
-            flex: 1;
-            font-size: 14px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .risk-high {
-            color: #c41e3a;
-            font-weight: 700;
-        }
-
-        .status-pill {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .approval-box {
-            background-color: #f1f8e9;
-            /* Light green bg */
-            border-left: 4px solid #2e7d32;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-        .approval-text {
-            font-size: 13px;
-            color: #33691e;
-            line-height: 1.5;
-        }
-
-        .approval-header {
-            font-weight: 700;
-            margin-bottom: 5px;
-            color: #1b5e20;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.5); font-family: 'Inter', sans-serif; }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 0; border: 1px solid #888; width: 600px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); position: relative; animation: slideDown 0.3s ease-out; }
+        .modal-header { padding: 20px 30px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 18px; font-weight: 700; color: #333; margin: 0; }
+        .close-btn { color: #aaa; font-size: 24px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
+        .close-btn:hover { color: #c41e3a; }
+        .modal-body { padding: 30px; }
+        .section-title { font-size: 14px; font-weight: 700; color: #c41e3a; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .section-title.green { color: #2e7d32; }
+        .info-row { display: flex; margin-bottom: 15px; align-items: flex-start; }
+        .info-label { width: 140px; font-size: 14px; color: #888; font-weight: 500; }
+        .info-value { flex: 1; font-size: 14px; color: #333; font-weight: 600; }
+        .risk-high { color: #c41e3a; font-weight: 700; }
+        .status-pill { background-color: #e8f5e9; color: #2e7d32; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+        .approval-box { background-color: #f1f8e9; border-left: 4px solid #2e7d32; padding: 15px; border-radius: 4px; margin-top: 10px; }
+        .approval-text { font-size: 13px; color: #33691e; line-height: 1.5; }
+        .approval-header { font-weight: 700; margin-bottom: 5px; color: #1b5e20; display: flex; align-items: center; gap: 8px; }
     </style>
 </head>
 
@@ -552,7 +302,9 @@
                 <a href="{{ route('kepala_departemen.check_documents') }}" class="nav-item">
                     <i class="fas fa-file-contract"></i>
                     <span>Review Dokumen</span>
-                    <span class="badge">2</span>
+                    @if(isset($pendingCount) && $pendingCount > 0)
+                        <span class="badge" style="background:#c41e3a; color:white; padding:2px 6px; border-radius:10px; font-size:10px; margin-left:auto;">{{ $pendingCount }}</span>
+                    @endif
                 </a>
             </nav>
 
@@ -585,83 +337,23 @@
             </div>
 
             <div class="content-area">
-
-                <!-- 4 FILTERS -->
-                <div class="filters-container" style="grid-template-columns: repeat(4, 1fr);">
-                    <div class="filter-group">
-                        <label>Direktorat</label>
-                        <select id="filter_directorate" onchange="filterDepartments()">
-                            <option value="">........</option>
-                            <!-- JS Populated -->
-                        </select>
+                <!-- Breadcrumb & Actions -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div class="breadcrumb" id="breadcrumb" style="margin-bottom: 0;">
+                        <span class="breadcrumb-item active" onclick="resetView()">Home</span>
                     </div>
-                    <div class="filter-group">
-                        <label>Departemen</label>
-                        <select id="filter_department" onchange="filterUnits()">
-                            <option value="">........</option>
-                            <!-- JS Populated -->
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Kepala Unit Kerja</label>
-                        <select id="filter_unit" onchange="filterSeksi()">
-                            <option value="">........</option>
-                            <!-- JS Populated -->
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Seksi</label>
-                        <select id="filter_seksi" onchange="applyFilters()">
-                            <option value="">........</option>
-                            <!-- JS Populated -->
-                        </select>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="{{ route('documents.export.pdf') }}" target="_blank" style="padding: 8px 12px; background: #c41e3a; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                            <i class="fas fa-file-pdf" style="margin-right: 6px;"></i> Export PDF
+                        </a>
+                        <a href="{{ route('documents.export.excel') }}" target="_blank" style="padding: 8px 12px; background: #2e7d32; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                            <i class="fas fa-file-excel" style="margin-right: 6px;"></i> Export Excel
+                        </a>
                     </div>
                 </div>
 
-                <!-- 4 SUMMARY CARDS -->
-                <div class="category-grid">
-                    <div class="cat-card" onclick="selectCategory('K3', this)">
-                        <h3>Dokumen</h3>
-                        <h2>K3</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('KO', this)">
-                        <h3>Dokumen</h3>
-                        <h2>KO</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('Lingkungan', this)">
-                        <h3>Dokumen</h3>
-                        <h2>Lingkungan</h2>
-                    </div>
-                    <div class="cat-card" onclick="selectCategory('Keamanan', this)">
-                        <h3>Dokumen</h3>
-                        <h2>Keamanan</h2>
-                    </div>
-                </div>
-
-
-
-                <!-- TABLE -->
-                <div class="table-section">
-                    <div class="table-header">
-                        <h2>Laporan Terpublikasi</h2>
-                    </div>
-
-                    <table class="custom-table">
-                        <thead>
-                            <tr>
-                                <th width="30%">Unit Penginput</th>
-                                <th width="25%">Judul Form</th>
-                                <th width="20%">Disetujui Oleh</th>
-                                <th width="15%">Tanggal Publish</th>
-                                <th width="15%">Penulis</th>
-                                <th width="5%">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            <!-- JS Populated -->
-                        </tbody>
-                    </table>
-                </div>
+                <!-- Dynamic Content (Accordion) -->
+                <div id="dynamicContent"></div>
             </div>
         </main>
     </div>
@@ -727,214 +419,281 @@
 
     <script>
         @php
-            // Prepare data for JS
-            $directoratesData = $direktorats->map(fn($d) => [
-                'id' => $d->id_direktorat,
-                'name' => $d->nama_direktorat
-            ]);
-            $departmentsData = $departemens->map(fn($d) => [
-                'id' => $d->id_dept,
-                'dir_id' => $d->id_direktorat,
-                'name' => $d->nama_dept
+             $departmentsData = $departemens->map(fn($d) => [
+                'id_dept' => $d->id_dept, // Using id_dept to match JS logic
+                'nama_dept' => $d->nama_dept
             ]);
             $unitsData = $units->map(fn($u) => [
-                'id' => $u->id_unit,
-                'dept_id' => $u->id_dept,
-                'name' => $u->nama_unit
-            ]);
-            $seksisData = $seksis->map(fn($s) => [
-                'id' => $s->id_seksi,
-                'unit_id' => $s->id_unit,
-                'name' => $s->nama_seksi
+                'id_unit' => $u->id_unit, // Using id_unit
+                'id_dept' => $u->id_dept,
+                'nama_unit' => $u->nama_unit
             ]);
         @endphp
-        // MASTER DATA FROM CONTROLLER
-        const directorates = @json($directoratesData);
+
+        // Processed Data
         const departments = @json($departmentsData);
         const units = @json($unitsData);
-        const seksis = @json($seksisData);
-
-        // REAL DATA FROM CONTROLLER
+        // Using publishedData from controller which looks like it has necessary fields
+        // Note: JS logic expects 'unit_id', 'title', 'category' etc.
+        // The controller transforms it to 'unit_id', 'title' etc. 
+        // Controller publishedData mapping matches JS expectations broadly? 
+        // Controller: 'title' => $doc->judul_dokumen, 'unit_id' => ... 
         const documents = @json($publishedData);
-        const pendingDocs = @json($pendingData);
-        const currentUserDept = "{{ Auth::user()->departemen->nama_dept ?? 'Departemen' }}";
 
-        let activeCategory = '';
+        // State
+        let currentLevel = 'dept';
+        let selectedDept = null;
+        let selectedUnit = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            populateDirectorates();
-            filterDepartments();
+            renderDepartments();
         });
 
+        function renderDepartments() {
+            currentLevel = 'dept';
+            selectedDept = null;
+            selectedUnit = null;
+            updateBreadcrumb();
 
-
-        function populateDirectorates() {
-            const select = document.getElementById('filter_directorate');
-            select.innerHTML = '<option value="">........</option>';
-            directorates.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d.id;
-                opt.textContent = d.name;
-                select.appendChild(opt);
-            });
-        }
-
-        function filterDepartments() {
-            const dirId = document.getElementById('filter_directorate').value;
-            const deptSelect = document.getElementById('filter_department');
-
-            deptSelect.innerHTML = '<option value="">........</option>';
-
-            let filteredDepts = departments;
-            if (dirId) {
-                filteredDepts = departments.filter(d => d.dir_id == dirId);
+            const container = document.getElementById('dynamicContent');
+            
+            if (departments.length === 0) {
+                 container.innerHTML = `<div style="text-align:center; padding:50px; color:#999;"><i class="fas fa-building" style="font-size:40px; margin-bottom:15px;"></i><p>Tidak ada departemen ditemukan.</p></div>`;
+                 return;
             }
 
-            filteredDepts.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d.id;
-                opt.textContent = d.name;
-                deptSelect.appendChild(opt);
+            let html = '<div class="accordion-container">';
+            
+            // 1. Regular Departments (Excluding ID 0 and ID 93)
+            const regularDepts = departments.filter(d => d.id_dept != 0 && d.id_dept != 93);
+
+            regularDepts.forEach(dept => {
+                const deptUnits = units.filter(u => u.id_dept == dept.id_dept);
+                const unitCount = deptUnits.length;
+
+                html += `
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleDepartment(${dept.id_dept})">
+                            <div class="dept-info">
+                                <div class="dept-icon"><i class="fas fa-building"></i></div>
+                                <div class="dept-name">${dept.nama_dept}</div>
+                            </div>
+                            <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+                        </div>
+                        <div class="accordion-body" id="dept-${dept.id_dept}">
+                            <ul class="unit-list">
+                `;
+
+                if (unitCount > 0) {
+                    deptUnits.forEach(unit => {
+                        html += `
+                            <li class="unit-item" onclick="selectUnit(${unit.id_unit}, '${unit.nama_unit.replace(/'/g, "\\'")}', ${dept.id_dept})">
+                                <span>${unit.nama_unit}</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </li>
+                        `;
+                    });
+                } else {
+                    html += `<li class="unit-item" style="color: #999; cursor: default;">Tidak ada Unit Kerja</li>`;
+                }
+
+                html += `
+                            </ul>
+                        </div>
+                    </div>
+                `;
             });
 
-            filterUnits();
-        }
-
-        function filterUnits() {
-            const deptId = document.getElementById('filter_department').value;
-            const unitSelect = document.getElementById('filter_unit');
-
-            unitSelect.innerHTML = '<option value="">........</option>';
-
-            let filteredUnits = units;
-            if (deptId) {
-                filteredUnits = units.filter(u => u.dept_id == deptId);
+            // 2. Unassigned Units
+            const unassignedDept = departments.find(d => d.id_dept == 0);
+            if (unassignedDept) {
+                // Filter out ID 0
+                const directUnits = units.filter(u => u.id_dept == 0 && u.id_unit != 0);
+                if (directUnits.length > 0) {
+                     
+                     directUnits.forEach(unit => {
+                        html += `
+                            <div class="accordion-item" onclick="selectUnit(${unit.id_unit}, '${unit.nama_unit.replace(/'/g, "\\'")}', 0)" style="cursor:pointer;">
+                                <div class="accordion-header">
+                                    <div class="dept-info">
+                                        <div class="dept-icon" style="background:#fce4ec; color:#c2185b;"><i class="fas fa-layer-group"></i></div>
+                                        <div class="dept-name">${unit.nama_unit}</div>
+                                    </div>
+                                    <div class="accordion-icon"><i class="fas fa-arrow-right"></i></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
             }
 
-            filteredUnits.forEach(u => {
-                const opt = document.createElement('option');
-                opt.value = u.id;
-                opt.textContent = u.name;
-                unitSelect.appendChild(opt);
-            });
-            filterSeksi();
+            html += '</div>';
+            container.innerHTML = html;
         }
 
-        function filterSeksi() {
-            const unitId = document.getElementById('filter_unit').value;
-            const seksiSelect = document.getElementById('filter_seksi');
-            seksiSelect.innerHTML = '<option value="">........</option>';
+        function toggleDepartment(id) {
+            const body = document.getElementById(`dept-${id}`);
+            if (!body) return;
+            const header = body.previousElementSibling;
 
-            let filteredSeksis = seksis;
-            if (unitId) {
-                filteredSeksis = seksis.filter(s => s.unit_id == unitId);
+            const isShown = body.classList.contains('show');
+
+            // Close others
+            document.querySelectorAll('.accordion-body').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.accordion-header').forEach(el => el.classList.remove('active'));
+
+            if (!isShown) {
+                body.classList.add('show');
+                header.classList.add('active');
             }
-
-            filteredSeksis.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s.id;
-                opt.textContent = s.name;
-                seksiSelect.appendChild(opt);
-            });
-            applyFilters();
         }
 
-        function selectCategory(cat, el) {
-            document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
-            if (activeCategory === cat) {
-                activeCategory = '';
+        function selectDepartment(id, name) {
+            renderDepartments();
+            setTimeout(() => {
+                const body = document.getElementById(`dept-${id}`);
+                if (body) {
+                    body.classList.add('show');
+                    body.previousElementSibling.classList.add('active');
+                    body.parentElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 50);
+        }
+
+        function selectUnit(id, name, deptId) {
+            const dept = departments.find(d => d.id_dept == deptId);
+            selectedDept = { id: deptId, name: dept ? dept.nama_dept : '-' };
+            selectedUnit = { id, name };
+            currentLevel = 'docs';
+            updateBreadcrumb();
+
+            const container = document.getElementById('dynamicContent');
+            const unitDocs = documents.filter(doc => doc.unit_id == id);
+
+            let html = `
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2>Laporan Terpublikasi - ${name}</h2>
+                        <button class="btn-action" style="background:#666;" onclick="selectDepartment(${deptId})"><i class="fas fa-arrow-left"></i> Kembali</button>
+                    </div>
+            `;
+
+            if (unitDocs.length === 0) {
+                html += `<div style="text-align: center; padding: 40px; color: #999;"><i class="fas fa-file-contract" style="font-size:30px; margin-bottom:10px;"></i><p>Tidak ada dokumen terpublikasi untuk unit ini.</p></div>`;
             } else {
-                activeCategory = cat;
-                el.classList.add('active');
+                html += `
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Judul Form</th>
+                                <th>Kategori</th>
+                                <th>Penulis</th>
+                                <th>Tanggal Publish</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                unitDocs.forEach(doc => {
+                    html += `
+                        <tr>
+                            <td>${doc.title}</td>
+                            <td>${doc.category || '-'}</td>
+                            <td>${doc.author}</td>
+                            <td>${doc.date}</td>
+                            <td><span class="status-pill" style="background:#e8f5e9; color:#2e7d32; padding:4px 12px; border-radius:15px; font-size:11px; font-weight:700;">DISETUJUI</span></td>
+                            <td>
+                                <a href="/documents/${doc.id}/published" class="btn-action">
+                                    <i class="fas fa-eye"></i> Detail
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
             }
-            applyFilters();
+
+            html += `</div>`;
+            container.innerHTML = html;
         }
 
-        function applyFilters() {
-            const dirId = document.getElementById('filter_directorate').value;
-            const deptId = document.getElementById('filter_department').value;
-            const unitId = document.getElementById('filter_unit').value;
-            const seksiId = document.getElementById('filter_seksi').value;
+        function updateBreadcrumb() {
+            const bc = document.getElementById('breadcrumb');
+            let html = `<span class="breadcrumb-item" onclick="renderDepartments()">Home</span>`;
 
-            const filtered = documents.filter(doc => {
-                let match = true;
-                if (dirId && doc.dir_id != dirId) match = false;
-                if (deptId && doc.dept_id != deptId) match = false;
-                if (unitId && doc.unit_id != unitId) match = false;
-                if (seksiId && doc.seksi_id != seksiId) match = false;
-                if (activeCategory && doc.category !== activeCategory) match = false;
-                return match;
-            });
-
-            renderTable(filtered);
-        }
-
-        function renderTable(data = documents) {
-            const tbody = document.getElementById('tableBody');
-            const tableSection = document.querySelector('.table-section');
-
-            if (data.length === 0) {
-                tableSection.style.display = 'block';
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#999; font-style:italic;">Form belum terpublish</td></tr>';
-                return;
+            if (currentLevel === 'unit' || currentLevel === 'docs') {
+                 if (selectedDept) {
+                     html += `
+                        <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                        <span class="breadcrumb-item" onclick="selectDepartment(${selectedDept.id}, '${selectedDept.name.replace(/'/g, "\\'")}')">
+                            ${selectedDept.name}
+                        </span>
+                    `;
+                 }
             }
 
-            tableSection.style.display = 'block';
-
-            tbody.innerHTML = data.map(doc => {
-                const unit = units.find(u => u.id === doc.unit_id);
-                const unitName = unit ? unit.name : '-';
-                return `
-                <tr>
-                    <td><strong>${unitName}</strong></td>
-                    <td><strong>${doc.title}</strong></td>
-                    <td style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> ${doc.approver}</td>
-                    <td>${doc.date}</td>
-                    <td>${doc.author}</td>
-                    <td><a href="/documents/${doc.id}/published" class="btn-action">Detail</a></td>
-                </tr>
-            `}).join('');
+            if (currentLevel === 'docs' && selectedUnit) {
+                html += `
+                    <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                    <span class="breadcrumb-item active">${selectedUnit.name}</span>
+                `;
+            }
+            bc.innerHTML = html;
         }
 
-        // MODAL FUNCTIONS
-        function openDetailModal(id) {
-            const doc = documents.find(d => d.id === id);
-            if (!doc) return;
+        function resetView() {
+            renderDepartments();
+        }
 
-            const unit = units.find(u => u.id === doc.unit_id);
-            const unitName = unit ? unit.name : '-';
+        // ================= MODAL =================
+        const modal = document.getElementById('detailModal');
 
+        function openDetail(id) {
+            const doc = documents.find(d => d.id == id);
+            if (doc) showDetail(doc);
+        }
+
+        function showDetail(doc) {
             document.getElementById('m_title').innerText = doc.title;
-            document.getElementById('m_status').innerText = doc.status;
-            document.getElementById('m_category').innerText = doc.category;
-            document.getElementById('m_unit').innerText = unitName;
-            document.getElementById('m_date').innerText = doc.date;
+            document.getElementById('m_status').innerText = "DISETUJUI";
+            document.getElementById('m_unit').innerText = selectedUnit ? selectedUnit.name : '-';
             document.getElementById('m_author').innerText = doc.author;
+            document.getElementById('m_date').innerText = doc.date;
+            document.getElementById('m_category').innerText = doc.category || '-';
+            
+            // Risk Level
+             const riskEl = document.getElementById('m_risk');
+            if(doc.risk_level) {
+                riskEl.innerText = doc.risk_level;
+                riskEl.parentElement.style.display = 'flex';
+                 if (doc.risk_level === 'Tinggi') {
+                    riskEl.className = 'info-value risk-high';
+                 } else {
+                    riskEl.className = 'info-value';
+                 }
+            } else {
+                riskEl.parentElement.style.display = 'none';
+            }
 
-            // Risk Level Styling
-            const riskEl = document.getElementById('m_risk');
-            riskEl.innerText = doc.risk_level;
-            riskEl.className = 'info-value'; // Reset
-            if (doc.risk_level === 'Tinggi') riskEl.classList.add('risk-high');
+            // Approval Info
+            document.getElementById('m_approval_header').innerText = `Disetujui pada ${doc.approval_date || doc.date}`;
+            document.getElementById('m_approval_note').innerText = doc.approval_note || '-';
 
-            document.getElementById('m_approval_header').innerText = `Disetujui oleh Kepala Departemen pada ${doc.approval_date}`;
-            document.getElementById('m_approval_note').innerText = doc.approval_note;
-
-            document.getElementById('detailModal').style.display = 'block';
+            modal.style.display = 'block';
         }
 
         function closeModal() {
-            document.getElementById('detailModal').style.display = 'none';
+            modal.style.display = 'none';
         }
 
-        // Close modal if clicked outside
         window.onclick = function (event) {
-            const modal = document.getElementById('detailModal');
             if (event.target == modal) {
-                modal.style.display = 'none';
+                closeModal();
             }
         }
-
     </script>
 </body>
 
