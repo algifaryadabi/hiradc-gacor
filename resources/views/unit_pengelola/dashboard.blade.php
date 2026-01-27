@@ -850,54 +850,112 @@
             selectedUnit = { id: unitId, name: unitName };
             currentLevel = 'unit';
             updateBreadcrumb();
-            renderDocuments(unitId);
+            renderDocuments(unitId, 'ALL');
         }
 
-        function renderDocuments(unitId) {
+        function selectDepartment(id) {
+            renderDepartments();
+            setTimeout(() => {
+                const body = document.getElementById(`body-${id}`);
+                if (body) {
+                    body.classList.add('show');
+                    body.previousElementSibling.classList.add('active');
+                    body.parentElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 50);
+        }
+
+        function renderDocuments(unitId, filterCategory = 'ALL') {
             // Need to fetch or filter documents for this unit.
             // Client-side filtering of 'documents' (publishedData)
-            const unitDocs = documents.filter(d => d.unit_id == unitId);
+            const unitDocsRaw = documents.filter(d => d.unit_id == unitId);
+            const unitName = selectedUnit ? selectedUnit.name : '-';
+            const deptId = selectedDept ? selectedDept.id : 0;
+
+            // SPLIT MULTI-CATEGORY DOCS
+            let unitDocs = [];
+            unitDocsRaw.forEach(doc => {
+                if (doc.category && doc.category.includes(',')) {
+                    const cats = doc.category.split(',').map(c => c.trim());
+                    cats.forEach(c => {
+                        unitDocs.push({ ...doc, category: c });
+                    });
+                } else {
+                    unitDocs.push(doc);
+                }
+            });
+
+            // Filter by Category
+            if (filterCategory !== 'ALL') {
+                unitDocs = unitDocs.filter(doc => doc.category === filterCategory);
+            }
+
+            const categories = ['SHE', 'Security'];
 
             const container = document.getElementById('dynamicContent');
 
             let html = `
                 <div class="table-section">
-                    <div class="table-header">
-                        <h2>Dokumen HIRADC: ${selectedUnit.name}</h2>
+                    <div class="table-header" style="flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h2 style="margin-bottom:5px;">Laporan Terpublikasi - ${unitName}</h2>
+                            <div style="font-size:12px; color:#666;">Menampilkan kategori: <b>${filterCategory}</b></div>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <select onchange="renderDocuments(${unitId}, this.value)" style="padding:6px 12px; border-radius:6px; border:1px solid #ddd; font-size:13px; color:#333; cursor:pointer;">
+                                <option value="ALL" ${filterCategory === 'ALL' ? 'selected' : ''}>Semua Kategori</option>
+                                ${categories.map(c => `<option value="${c}" ${filterCategory === c ? 'selected' : ''}>${c}</option>`).join('')}
+                            </select>
+                            <button class="btn-action" style="background:#666;" onclick="selectDepartment(${deptId})"><i class="fas fa-arrow-left"></i> Kembali</button>
+                        </div>
                     </div>
             `;
 
             if (unitDocs.length === 0) {
-                html += `<div style="padding:40px; text-align:center; color:#999;">Belum ada dokumen yang dipublikasikan untuk unit ini.</div>`;
+                html += `
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <i class="fas fa-filter" style="font-size:30px; margin-bottom:10px;"></i>
+                        <p>Tidak ada dokumen terpublikasi untuk kategori <b>${filterCategory}</b>.</p>
+                    </div>`;
             } else {
                 html += `
-                    <table>
+                    <table class="custom-table">
                         <thead>
                             <tr>
-                                <th>Judul Dokumen</th>
-                                <th>Unit Pengelola</th>
-                                <th>Tanggal Approve</th>
-                                <th>Disetujui Oleh</th>
-                                <th>Risiko</th>
-                                <th>Detail</th>
+                                <th>Judul Form</th>
+                                <th>Kategori</th>
+                                <th>Penulis</th>
+                                <th>Tanggal Publish</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                 `;
 
                 unitDocs.forEach(doc => {
+                    // Category Badge Color
+                    let catColor = '#e0e0e0';
+                    let catText = '#333';
+                    if (doc.category == 'K3') { catColor = '#fee2e2'; catText = '#991b1b'; }
+                    else if (doc.category == 'Lingkungan') { catColor = '#dcfce7'; catText = '#166534'; }
+                    else if (doc.category == 'Keamanan') { catColor = '#e0f2fe'; catText = '#075985'; }
+                    else if (doc.category == 'KO') { catColor = '#ffedd5'; catText = '#9a3412'; }
+                    // Fallback for SHE / Security
+                    if (doc.category === 'SHE') { catColor = '#dcfce7'; catText = '#166534'; }
+                    if (doc.category === 'Security') { catColor = '#fee2e2'; catText = '#991b1b'; }
+
                     html += `
                         <tr>
-                            <td>
-                                <div style="font-weight:600;">${doc.title}</div>
-                                <div style="font-size:12px; color:#888;">Penulis: ${doc.author}</div>
-                            </td>
-                            <td><span class="badge-status" style="background:${doc.category.includes('SHE') ? '#dcfce7;color:#166534' : '#fee2e2;color:#991b1b'}">${doc.category}</span></td>
+                            <td>${doc.title}</td>
+                            <td><span class="status-pill" style="background:${catColor}; color:${catText};">${doc.category || '-'}</span></td>
+                            <td>${doc.author}</td>
                             <td>${doc.date}</td>
-                            <td>${doc.approver}</td>
-                            <td><span style="color:${doc.risk_level === 'High' ? '#dc2626' : (doc.risk_level === 'Medium' ? '#d97706' : '#16a34a')}; font-weight:700;">${doc.risk_level}</span></td>
+                            <td><span class="status-pill" style="background:#e8f5e9; color:#2e7d32; padding:4px 12px; border-radius:15px; font-size:11px; font-weight:700;">DISETUJUI</span></td>
                             <td>
-                                <button class="btn-action" onclick="showDetail(${doc.id})">Lihat</button>
+                                <a href="/documents/${doc.id}/published?filter=${doc.category}" class="btn-action">
+                                    <i class="fas fa-eye"></i> Detail
+                                </a>
                             </td>
                         </tr>
                     `;
@@ -936,29 +994,9 @@
             renderDepartments();
         }
 
-        // Modal Logic
+        // Modal Logic (Kept for consistency if needed, but Table uses Link now)
         function showDetail(id) {
-            const doc = documents.find(d => d.id == id);
-            if (!doc) return;
-
-            document.getElementById('m_title').textContent = doc.title;
-            document.getElementById('m_status').textContent = doc.status;
-            document.getElementById('m_category').textContent = doc.category;
-            document.getElementById('m_unit').textContent = doc.unit;
-            document.getElementById('m_date').textContent = doc.date;
-            document.getElementById('m_author').textContent = doc.author;
-            document.getElementById('m_risk').textContent = doc.risk_level;
-
-            // Risk Color
-            const riskEl = document.getElementById('m_risk');
-            if (doc.risk_level === 'High') riskEl.style.color = '#dc2626';
-            else if (doc.risk_level === 'Medium') riskEl.style.color = '#d97706';
-            else riskEl.style.color = '#16a34a';
-
-            document.getElementById('m_approval_header').textContent = "Disetujui Oleh: " + doc.approver + " (" + doc.approval_date + ")";
-            document.getElementById('m_approval_note').textContent = doc.approval_note || "Tidak ada catatan.";
-
-            document.getElementById('detailModal').style.display = 'block';
+            // ... (unused by table now)
         }
 
         function closeModal() {
