@@ -107,7 +107,21 @@
         </tr>
     </thead>
     <tbody>
-        @foreach($document->details as $item)
+        @php
+            // Filter details based on user's unit
+            $user = Auth::user();
+            $filteredDetails = $document->details;
+            
+            if ($user->id_unit == 55) {
+                // Security staff - only show Keamanan category
+                $filteredDetails = $document->details->filter(fn($item) => $item->kategori == 'Keamanan');
+            } elseif ($user->id_unit == 56) {
+                // SHE staff - only show K3, KO, Lingkungan categories
+                $filteredDetails = $document->details->filter(fn($item) => in_array($item->kategori, ['K3', 'KO', 'Lingkungan']));
+            }
+        @endphp
+        
+        @foreach($filteredDetails as $item)
         <tr>
             <td style="border: 1px solid #000000; text-align: center; vertical-align: top;">{{ $loop->iteration }}</td>
             

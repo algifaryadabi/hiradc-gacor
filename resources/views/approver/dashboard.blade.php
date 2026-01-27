@@ -496,26 +496,57 @@
                 });
         }
 
-        function renderDocumentsTable(unitName, deptId, docs) {
+        function renderDocumentsTable(unitName, deptId, rawDocs, filterCategory = 'ALL') {
             const container = document.getElementById('dynamicContent');
             
+            // SPLIT MULTI-CATEGORY DOCS
+            let docs = [];
+            if (Array.isArray(rawDocs)) {
+                rawDocs.forEach(doc => {
+                    if (doc.category && doc.category.includes(',')) {
+                        const cats = doc.category.split(',').map(c => c.trim());
+                        cats.forEach(c => {
+                            docs.push({ ...doc, category: c });
+                        });
+                    } else {
+                        docs.push(doc);
+                    }
+                });
+            }
+
+            // FILTER
+            if (filterCategory !== 'ALL') {
+                docs = docs.filter(doc => doc.category === filterCategory);
+            }
+
+            const categories = ['SHE', 'Security'];
+
             let html = `
                 <div class="table-section">
-                    <div class="table-header">
-                        <h2>Dokumen Terpublikasi - ${unitName}</h2>
-                         <button class="btn-action" style="background:#666;" onclick="selectDepartment(${deptId})"><i class="fas fa-arrow-left"></i> Kembali</button>
+                    <div class="table-header" style="flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h2 style="margin-bottom:5px;">Dokumen Terpublikasi - ${unitName}</h2>
+                            <div style="font-size:12px; color:#666;">Menampilkan kategori: <b>${filterCategory}</b></div>
+                        </div>
+                         <div style="display:flex; gap:10px; align-items:center;">
+                            <select onchange="renderDocumentsTable('${unitName.replace(/'/g, "\\'")}', ${deptId}, documents, this.value)" style="padding:6px 12px; border-radius:6px; border:1px solid #ddd; font-size:13px; color:#333; cursor:pointer;">
+                                <option value="ALL" ${filterCategory === 'ALL' ? 'selected' : ''}>Semua Kategori</option>
+                                ${categories.map(c => `<option value="${c}" ${filterCategory === c ? 'selected' : ''}>${c}</option>`).join('')}
+                            </select>
+                            <button class="btn-action" style="background:#666;" onclick="selectDepartment(${deptId})"><i class="fas fa-arrow-left"></i> Kembali</button>
+                        </div>
                     </div>
             `;
 
             if (docs.length === 0) {
-                 html += `<div style="text-align: center; padding: 40px; color: #999;"><i class="fas fa-folder-open" style="font-size:30px; margin-bottom:10px;"></i><p>Belum ada dokumen yang dipublish dari Unit ini.</p></div>`;
+                 html += `<div style="text-align: center; padding: 40px; color: #999;"><i class="fas fa-folder-open" style="font-size:30px; margin-bottom:10px;"></i><p>Belum ada dokumen untuk kategori <b>${filterCategory}</b>.</p></div>`;
             } else {
                 html += `
                     <table class="custom-table" style="width:100%; border-collapse: collapse;">
                         <thead style="background:#fff; border-bottom:2px solid #f0f0f0;">
                             <tr>
                                 <th style="padding:15px; text-align:left;">Judul Dokumen</th>
-                                <th style="padding:15px; text-align:left;">Kategori</th>
+                                <th style="padding:15px; text-align:left;">Unit Pengelola</th>
                                 <th style="padding:15px; text-align:left;">Penulis</th>
                                 <th style="padding:15px; text-align:left;">Tanggal</th>
                                 <th style="padding:15px; text-align:left;">Status</th>
@@ -526,15 +557,21 @@
                 `;
 
                 docs.forEach(doc => {
+                    // Category Badge Color
+                    let catColor = '#e0e0e0';
+                    let catText = '#333';
+                    if(doc.category == 'SHE') { catColor = '#dcfce7'; catText = '#166534'; }
+                    else if(doc.category == 'Security') { catColor = '#e0f2fe'; catText = '#075985'; }
+
                     html += `
                         <tr style="border-bottom:1px solid #eee;">
                             <td style="padding:15px;">${doc.title}</td>
-                            <td style="padding:15px;">${doc.category || '-'}</td>
+                            <td style="padding:15px;"><span class="status-pill" style="background:${catColor}; color:${catText};">${doc.category || '-'}</span></td>
                             <td style="padding:15px;">${doc.author}</td>
                             <td style="padding:15px;">${doc.date}</td>
                             <td style="padding:15px;"><span class="status-pill" style="background:#e8f5e9; color:#2e7d32; padding:4px 12px; border-radius:15px; font-size:11px; font-weight:700;">DISETUJUI</span></td>
                             <td style="padding:15px;">
-                                <a href="/documents/${doc.id}/published" class="btn-action">
+                                <a href="/documents/${doc.id}/published?filter=${doc.category}" class="btn-action">
                                     <i class="fas fa-eye"></i> Detail
                                 </a>
                             </td>

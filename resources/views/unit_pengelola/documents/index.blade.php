@@ -218,53 +218,89 @@
             color: #666;
         }
 
-        /* Category Filter Cards */
-        .category-filters {
+        /* Stats Cards - Synced with Dashboard */
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 15px;
             margin-bottom: 30px;
         }
 
-        .category-card {
+        .stat-card {
             background: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 12px;
-            border: 2px solid #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
+            border: 2px solid transparent;
         }
 
-        .category-card:hover {
+        .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .category-card.active {
-            border-color: #3b82f6;
-            background: #eff6ff;
+        .stat-card.active {
+            border-color: #c41e3a;
+            background: #fff5f5;
         }
 
-        .category-card h3 {
-            font-size: 14px;
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #888;
             font-weight: 600;
-            color: #666;
-            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .category-card.active h3 {
-            color: #3b82f6;
-        }
-
-        .category-card .count {
-            font-size: 24px;
+        .stat-value {
+            font-size: 20px;
             font-weight: 700;
             color: #333;
         }
 
-        .category-card.active .count {
-            color: #3b82f6;
+        .icon-blue {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .icon-orange {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .icon-red {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .icon-green {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .icon-purple {
+            background: #f3e5f5;
+            color: #7b1fa2;
         }
 
         /* Staff Assignment Card */
@@ -457,6 +493,13 @@
             color: #cbd5e1;
             margin-bottom: 15px;
         }
+
+        /* Save Preferences Button */
+        .btn-save-preferences:hover {
+            background: #059669 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
     </style>
 </head>
 
@@ -552,115 +595,151 @@
                     ->get();
             @endphp
 
-            <!-- Category Filter Cards -->
-            <div class="category-filters">
-                <div class="category-card active" onclick="selectCategory('semua', this)">
-                    <h3>Semua</h3>
-                    <div class="count">{{ $allDocs->count() }}</div>
+            <!-- Stats Summary -->
+            <div class="stats-grid">
+                <div class="stat-card active" onclick="selectCategory('semua', this)">
+                    <div class="stat-icon icon-blue"><i class="fas fa-file-alt"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Semua</span>
+                        <span class="stat-value">{{ $documents->count() }}</span>
+                    </div>
                 </div>
-                <div class="category-card" onclick="selectCategory('disposisi', this)">
-                    <h3>Disposisi</h3>
-                    <div class="count">{{ $disposisiDocs->count() }}</div>
+                <div class="stat-card" onclick="selectCategory('disposisi', this)">
+                    <div class="stat-icon icon-red"><i class="fas fa-file-import"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Disposisi</span>
+                        <span class="stat-value">{{ $disposisiDocs->count() }}</span>
+                    </div>
                 </div>
-                <div class="category-card" onclick="selectCategory('keputusan_akhir', this)">
-                    <h3>Keputusan Akhir</h3>
-                    <div class="count">{{ $keputusanAkhirDocs->count() }}</div>
+                <div class="stat-card" onclick="selectCategory('dalam_review_staff', this)">
+                    <div class="stat-icon icon-purple"><i class="fas fa-user-clock"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Diperiksa Staff</span>
+                        <span class="stat-value">{{ $dalamReviewDocs->count() }}</span>
+                    </div>
                 </div>
-                <div class="category-card" onclick="selectCategory('approve', this)">
-                    <h3>Approve</h3>
-                    <div class="count">{{ $approveDocs->count() }}</div>
+                <div class="stat-card" onclick="selectCategory('keputusan_akhir', this)">
+                    <div class="stat-icon icon-orange"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Keputusan Akhir</span>
+                        <span class="stat-value">{{ $keputusanAkhirDocs->count() }}</span>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="selectCategory('approve', this)">
+                    <div class="stat-icon icon-green"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Approve</span>
+                        <span class="stat-value">{{ $approveDocs->count() }}</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Staff Assignment Card -->
-            <div class="staff-selection-card" id="staffCard" style="display: none;">
-                <h4><i class="fas fa-users"></i> Tetapkan Staff untuk Disposisi</h4>
-                <form id="staffAssignmentForm">
-                    <div class="staff-selection-grid">
-                        <div>
-                            <label>Staff Reviewer (Band IV/V)</label>
-                            <select id="default_reviewer_id" name="reviewer_id">
-                                <option value="">-- Pilih Reviewer --</option>
-                                @foreach($staffReviewers as $s)
-                                    <option value="{{ $s->id_user }}">{{ $s->nama_user }} - {{ $s->role_jabatan_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label>Staff Verifikator (Band III)</label>
-                            <select id="default_approver_id" name="approver_id">
-                                <option value="">-- Pilih Verifikator --</option>
-                                @foreach($staffApprovers as $s)
-                                    <option value="{{ $s->id_user }}">{{ $s->nama_user }} - {{ $s->role_jabatan_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+            <!-- Disposition Card (Inline) - Shows when there are pending documents -->
+            @if($disposisiDocs->count() > 0)
+                <div class="staff-selection-card" style="margin-bottom: 25px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                        <i class="fas fa-paper-plane" style="color:#3b82f6; font-size:18px;"></i>
+                        <h4 style="margin:0; font-size:16px; font-weight:700; color:#333;">Disposisi Dokumen ke Staff</h4>
                     </div>
-                    <p class="staff-info-text">
-                        <i class="fas fa-info-circle"></i> Pilih staff terlebih dahulu, kemudian klik "Kirim" pada
-                        setiap dokumen untuk mendisposisikan.
+                    <p style="font-size:13px; color:#666; margin-bottom:20px;">
+                        Pilih staff untuk mereview dan memverifikasi dokumen yang masuk. Anda dapat memilih staff yang sama
+                        untuk semua dokumen pending.
                     </p>
-                    <div style="margin-top: 15px; text-align: right;">
-                        <button type="button" onclick="updateStaffAssignment()"
-                            style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">
-                            <i class="fas fa-check"></i> Update
-                        </button>
-                    </div>
-                </form>
+
+                    <form id="bulkDispositionForm" method="POST" action="">
+                        @csrf
+                        <input type="hidden" name="document_ids" id="document_ids" value="">
+
+                        <div class="staff-selection-grid">
+                            <div>
+                                <label>Staff Reviewer (Band IV/V)</label>
+                                <select name="reviewer_id" id="bulk_reviewer_id" required>
+                                    <option value="">-- Pilih Reviewer --</option>
+                                    @foreach($staffReviewers as $s)
+                                        <option value="{{ $s->id_user }}">{{ $s->nama_user }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label>Staff Verifikator (Band III)</label>
+                                <select name="approver_id" id="bulk_approver_id" required>
+                                    <option value="">-- Pilih Verifikator --</option>
+                                    @foreach($staffApprovers as $s)
+                                        <option value="{{ $s->id_user }}">{{ $s->nama_user }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:13px; color:#666;">
+                                <i class="fas fa-info-circle"></i>
+                                Klik tombol "Kirim" pada dokumen untuk mendisposisikan
+                            </span>
+                            <button type="button" onclick="saveStaffPreferences()" class="btn-save-preferences"
+                                style="padding:8px 16px; background:#10b981; color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all 0.2s;">
+                                <i class="fas fa-save"></i>
+                                Simpan Pilihan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            @endif
+
+            <!-- Success Message Container -->
+            <div id="saveSuccessMessage"
+                style="display:none; margin-bottom:20px; padding:12px 20px; background:#dcfce7; border-left:4px solid #10b981; border-radius:6px; color:#166534; font-size:14px; font-weight:500;">
+                <i class="fas fa-check-circle"></i> Pilihan staff berhasil disimpan!
             </div>
 
             <!-- Document List Container -->
 
             <div class="doc-list">
-                @forelse($documents as $doc)
+                @foreach($documents as $doc)
                     @php
                         // Determine Unit Specific Status
                         $currentStatus = $doc->level2_status; // Default
-                        if (Auth::user()->id_unit == 55) {
+                        $userUnit = Auth::user()->id_unit;
+                        if ($userUnit == 55) {
                             $currentStatus = $doc->status_security;
-                        } elseif (Auth::user()->id_unit == 56) {
+                        } elseif ($userUnit == 56) {
                             $currentStatus = $doc->status_she;
                         }
 
                         // Categorize documents using $currentStatus
                         $docCategory = 'semua';
 
-                        // Logic:
-                        // Disposisi: Status is one of pending states for head
+                        // 1. Disposisi (Fresh)
                         if ($doc->current_level == 2 && ($currentStatus == 'pending_head' || empty($currentStatus))) {
                             $docCategory = 'disposisi';
                         }
-                        // Dalam Review: Assigned to staff
+                        // 2. Dalam Review Staff (Assigned)
                         elseif (in_array($currentStatus, ['assigned_review', 'assigned_approval'])) {
-                            $docCategory = 'dalam_review';
+                            $docCategory = 'dalam_review_staff';
                         }
-                        // Keputusan Akhir: Returned or Verified by Staff
+                        // 3. Keputusan Akhir (Verified by Staff)
                         elseif ($currentStatus == 'returned_to_head' || $currentStatus == 'staff_verified') {
                             $docCategory = 'keputusan_akhir';
                         }
-                        // Approved: Done for this unit
-                        elseif ($currentStatus == 'approved' || $currentStatus == 'published') {
-                            $docCategory = 'approve';
-                        }
-                        // Fallback: If global level > 2, it's approved/done
-                        elseif ($doc->current_level > 2) {
+                        // 4. Approved (Finalized)
+                        elseif ($currentStatus == 'approved' || $doc->current_level > 2) {
                             $docCategory = 'approve';
                         }
 
                         // Determine status label
                         $statusLabel = 'Menunggu Disposisi';
-                        if ($docCategory == 'dalam_review') {
-                            $statusLabel = 'Dalam Review';
+                        if ($docCategory == 'dalam_review_staff') {
+                            $statusLabel = 'Lagi Diperiksa Staff';
                         } elseif ($docCategory == 'keputusan_akhir') {
-                            $statusLabel = 'Keputusan Akhir';
+                            $statusLabel = 'Siap Keputusan Akhir';
                         } elseif ($docCategory == 'approve') {
-                            $statusLabel = 'Approved';
+                            $statusLabel = 'Approved / Published';
                         }
                     @endphp
 
-                    <div class="doc-item" data-category="{{ $docCategory }}" data-doc-id="{{ $doc->id }}">
+                    <div class="doc-item" data-category="{{ $docCategory }}" data-doc-id="{{ $doc->id }}"
+                        style="display: grid;">
                         <!-- Date Box -->
                         <div class="doc-date-box">
                             <span class="doc-day">{{ $doc->created_at->format('d') }}</span>
@@ -678,7 +757,8 @@
 
                         <!-- Status -->
                         <div>
-                            <span class="badge-status">
+                            <span class="badge-status"
+                                style="{{ $docCategory == 'approve' ? 'background:#dcfce7; color:#166534;' : ($docCategory == 'disposisi' ? 'background:#fee2e2; color:#991b1b;' : 'background:#e0f2fe; color:#0369a1;') }}">
                                 {{ $statusLabel }}
                             </span>
                         </div>
@@ -692,10 +772,16 @@
                                     <i class="fas fa-eye" style="font-size:11px;"></i>
                                 </a>
                                 <button onclick="sendToStaff({{ $doc->id }})" class="btn-review"
-                                    style="background: #3b82f6; border: none; cursor: pointer;">
+                                    style="background: #3b82f6; border: none; cursor: pointer; color:white;">
                                     <span>Kirim</span>
                                     <i class="fas fa-paper-plane" style="font-size:11px;"></i>
                                 </button>
+                            @elseif($docCategory == 'approve')
+                                <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-review"
+                                    style="background: #10b981; color:white;">
+                                    <span>Lihat</span>
+                                    <i class="fas fa-eye" style="font-size:11px;"></i>
+                                </a>
                             @else
                                 <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-review">
                                     <span>Tindak Lanjut</span>
@@ -704,18 +790,29 @@
                             @endif
                         </div>
                     </div>
-                @empty
-                    <div class="empty-state">
-                        <i class="fas fa-clipboard-check empty-icon"></i>
-                        <h3 style="font-size:18px; font-weight:600; color:#333; margin-bottom:8px;">Semua Bersih!</h3>
-                        <p style="color:#666;">Tidak ada dokumen baru yang perlu didisposisikan saat ini.</p>
+                @endforeach
+
+                <!-- Persistent Empty State (Hidden by default, shown by JS filter) -->
+                <div class="empty-state"
+                    style="display:none; flex-direction:column; align-items:center; justify-content:center; padding:50px;">
+                    <i class="fas fa-filter empty-icon" style="font-size:40px; color:#cbd5e1; margin-bottom:15px;"></i>
+                    <h3 style="font-size:18px; font-weight:600; color:#333; margin-bottom:8px;">Tidak ada dokumen di
+                        kategori ini</h3>
+                    <p style="color:#666;">Silakan pilih kategori lain.</p>
+                </div>
+
+                @if($documents->isEmpty())
+                    <!-- Initial Empty State if NO docs at all in database for this level -->
+                    <div class="initial-empty-state" style="text-align:center; padding:50px;">
+                        <i class="fas fa-inbox" style="font-size:40px; color:#cbd5e1; margin-bottom:15px;"></i>
+                        <h3>Inbox Kosong</h3>
+                        <p>Belum ada dokumen yang perlu diproses.</p>
                     </div>
-                @endforelse
+                @endif
             </div>
         </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -734,141 +831,153 @@
             // Category filtering
             function selectCategory(category, element) {
                 // Update active state
-                document.querySelectorAll('.category-card').forEach(card => {
+                document.querySelectorAll('.stat-card').forEach(card => {
                     card.classList.remove('active');
                 });
                 element.classList.add('active');
 
-
-                // Show/hide staff card for Disposisi category
-                const staffCard = document.getElementById('staffCard');
-                if (category === 'disposisi') {
-                    staffCard.style.display = 'block';
-                } else {
-                    staffCard.style.display = 'none';
-                }
-
                 // Filter documents
                 const allDocs = document.querySelectorAll('.doc-item');
+                let count = 0;
+
                 allDocs.forEach(doc => {
                     const docCategory = doc.getAttribute('data-category');
                     if (category === 'semua' || docCategory === category) {
                         doc.style.display = 'grid';
+                        count++;
                     } else {
                         doc.style.display = 'none';
                     }
                 });
 
                 // Update empty state visibility
-                const visibleDocs = Array.from(allDocs).filter(doc => doc.style.display !== 'none');
                 const emptyState = document.querySelector('.empty-state');
-                if (emptyState) {
-                    emptyState.style.display = visibleDocs.length === 0 ? 'flex' : 'none';
+                const initialEmpty = document.querySelector('.initial-empty-state');
+
+                // Only show filter empty state if initial empty state is NOT present (meaning we have docs but filtered out)
+                if (emptyState && !initialEmpty) {
+                    emptyState.style.display = count === 0 ? 'flex' : 'none';
                 }
             }
 
-        // Update staff assignment
-        function updateStaffAssignment() {
-            const reviewerId = document.getElementById('default_reviewer_id').value;
-            const approverId = document.getElementById('default_approver_id').value;
+        // --- DISPOSITION INLINE CARD LOGIC ---
+        function sendToStaff(documentId) {
+            // Get selected staff from the inline form
+            const reviewerId = document.getElementById('bulk_reviewer_id').value;
+            const approverId = document.getElementById('bulk_approver_id').value;
 
             if (!reviewerId || !approverId) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Pilihan Tidak Lengkap',
-                    text: 'Mohon pilih Staff Reviewer dan Verifikator.',
-                    confirmButtonColor: '#3b82f6'
+                    title: 'Pilih Staff',
+                    text: 'Silakan pilih Reviewer dan Verifikator terlebih dahulu di form atas.',
+                    confirmButtonColor: '#c41e3a'
+                });
+                return;
+            }
+
+            // Create a temporary form and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/unit-pengelola/documents/' + documentId + '/disposition';
+
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            form.appendChild(csrfInput);
+
+            // Add reviewer_id
+            const reviewerInput = document.createElement('input');
+            reviewerInput.type = 'hidden';
+            reviewerInput.name = 'reviewer_id';
+            reviewerInput.value = reviewerId;
+            form.appendChild(reviewerInput);
+
+            // Add approver_id
+            const approverInput = document.createElement('input');
+            approverInput.type = 'hidden';
+            approverInput.name = 'approver_id';
+            approverInput.value = approverId;
+            form.appendChild(approverInput);
+
+            // Save to localStorage for next time
+            localStorage.setItem('last_reviewer_id', reviewerId);
+            localStorage.setItem('last_approver_id', approverId);
+
+            // Submit form
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // Save staff preferences
+        function saveStaffPreferences() {
+            const reviewerId = document.getElementById('bulk_reviewer_id').value;
+            const approverId = document.getElementById('bulk_approver_id').value;
+
+            if (!reviewerId || !approverId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pilihan Belum Lengkap',
+                    text: 'Silakan pilih Reviewer dan Verifikator terlebih dahulu.',
+                    confirmButtonColor: '#c41e3a'
                 });
                 return;
             }
 
             // Save to localStorage
-            localStorage.setItem('default_reviewer_id', reviewerId);
-            localStorage.setItem('default_approver_id', approverId);
+            localStorage.setItem('last_reviewer_id', reviewerId);
+            localStorage.setItem('last_approver_id', approverId);
 
+            // Get staff names for display
+            const reviewerSelect = document.getElementById('bulk_reviewer_id');
+            const approverSelect = document.getElementById('bulk_approver_id');
+            const reviewerName = reviewerSelect.options[reviewerSelect.selectedIndex].text;
+            const approverName = approverSelect.options[approverSelect.selectedIndex].text;
+
+            // Show success message
             Swal.fire({
                 icon: 'success',
-                title: 'Berhasil!',
-                text: 'Staff default untuk disposisi telah diperbarui.',
-                confirmButtonColor: '#3b82f6',
-                timer: 2000
-            });
-        }
-
-        // Send document to staff
-        function sendToStaff(documentId) {
-            const reviewerId = document.getElementById('default_reviewer_id').value;
-            const approverId = document.getElementById('default_approver_id').value;
-
-            if (!reviewerId || !approverId) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Staff Belum Dipilih',
-                    text: 'Mohon pilih Staff Reviewer dan Verifikator terlebih dahulu, lalu klik tombol "Update".',
-                    confirmButtonColor: '#3b82f6'
-                });
-                return;
-            }
-
-            Swal.fire({
-                title: 'Kirim Dokumen?',
-                text: 'Dokumen akan dikirim ke staff yang dipilih.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3b82f6',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Ya, Kirim',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Create form and submit
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/unit-pengelola/documents/' + documentId + '/disposition';
-
-                    // CSRF Token
-                    const csrfInput = document.createElement('input');
-                    csrfInput.type = 'hidden';
-                    csrfInput.name = '_token';
-                    csrfInput.value = '{{ csrf_token() }}';
-                    form.appendChild(csrfInput);
-
-                    // Reviewer ID
-                    const reviewerInput = document.createElement('input');
-                    reviewerInput.type = 'hidden';
-                    reviewerInput.name = 'reviewer_id';
-                    reviewerInput.value = reviewerId;
-                    form.appendChild(reviewerInput);
-
-                    // Approver ID
-                    const approverInput = document.createElement('input');
-                    approverInput.type = 'hidden';
-                    approverInput.name = 'approver_id';
-                    approverInput.value = approverId;
-                    form.appendChild(approverInput);
-
-                    document.body.appendChild(form);
-                    form.submit();
-                }
+                title: 'Pilihan Tersimpan!',
+                html: `<div style="text-align:left; font-size:14px;">
+                    <p><strong>Reviewer:</strong> ${reviewerName}</p>
+                    <p><strong>Verifikator:</strong> ${approverName}</p>
+                    <p style="margin-top:10px; color:#666;">Pilihan ini akan digunakan untuk disposisi dokumen selanjutnya.</p>
+                </div>`,
+                confirmButtonColor: '#10b981',
+                timer: 3000
             });
         }
 
         // Load saved staff assignment on page load
         document.addEventListener('DOMContentLoaded', function () {
-            const savedReviewerId = localStorage.getItem('default_reviewer_id');
-            const savedApproverId = localStorage.getItem('default_approver_id');
-
-            if (savedReviewerId) {
-                document.getElementById('default_reviewer_id').value = savedReviewerId;
-            }
-            if (savedApproverId) {
-                document.getElementById('default_approver_id').value = savedApproverId;
-            }
-
-            // Initialize default view (Disposisi)
-            const activeCard = document.querySelector('.category-card.active');
+            // Initialize default view (Semua)
+            const activeCard = document.querySelector('.stat-card.active');
             if (activeCard) {
-                selectCategory('disposisi', activeCard);
+                // Determine category from onclick attribute to match filter behavior
+                // onclick="selectCategory('semua', this)"
+                const onclickVal = activeCard.getAttribute('onclick');
+                const match = onclickVal.match(/'([^']+)'/);
+                if (match) {
+                    selectCategory(match[1], activeCard);
+                } else {
+                    selectCategory('semua', activeCard);
+                }
+            }
+
+            // Load previous staff selections from localStorage
+            const savedReviewer = localStorage.getItem('last_reviewer_id');
+            const savedApprover = localStorage.getItem('last_approver_id');
+
+            const reviewerSelect = document.getElementById('bulk_reviewer_id');
+            const approverSelect = document.getElementById('bulk_approver_id');
+
+            if (savedReviewer && reviewerSelect) {
+                reviewerSelect.value = savedReviewer;
+            }
+            if (savedApprover && approverSelect) {
+                approverSelect.value = savedApprover;
             }
         });
     </script>

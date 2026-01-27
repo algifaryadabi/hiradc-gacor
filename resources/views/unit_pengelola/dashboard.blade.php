@@ -85,7 +85,7 @@
             align-items: center;
             gap: 12px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
             color: #666;
             font-size: 14px;
             font-weight: 500;
@@ -217,58 +217,374 @@
             padding: 30px 40px;
         }
 
-   
-        /* ADD Accordion Styles */
-        .accordion-container { max-width: 100%; margin-top: 20px; }
-        .accordion-item { background: white; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; overflow: hidden; transition: all 0.3s; }
-        .accordion-item:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
-        .accordion-header { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: #fff; transition: background 0.2s; }
-        .accordion-header:hover { background: #f8f9fa; }
-        .accordion-header.active { background: #f0f7ff; border-bottom: 1px solid #e0e0e0; }
-        .dept-info { display: flex; align-items: center; gap: 15px; }
-        .dept-icon { width: 36px; height: 36px; background: #e3f2fd; color: #1565c0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-        .dept-name { font-weight: 600; color: #333; font-size: 15px; }
-        .accordion-icon { color: #999; transition: transform 0.3s; }
-        .accordion-header.active .accordion-icon { transform: rotate(180deg); color: #1565c0; }
-        .accordion-body { display: none; background: #fafafa; border-top: 1px solid #f0f0f0; }
-        .accordion-body.show { display: block; animation: slideDown 0.3s ease-out; }
-        .unit-list { list-style: none; padding: 0; margin: 0; }
-        .unit-item { padding: 12px 20px 12px 60px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #555; transition: all 0.2s; }
-        .unit-item:last-child { border-bottom: none; }
-        .unit-item:hover { background: #fff; color: #c41e3a; padding-left: 65px; }
-        .unit-item i { opacity: 0; transition: opacity 0.2s; }
-        .unit-item:hover i { opacity: 1; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Breadcrumb */
-        .breadcrumb { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 14px; color: #666; }
-        .breadcrumb-item { cursor: pointer; transition: color 0.2s; }
-        .breadcrumb-item:hover { color: #c41e3a; text-decoration: underline; }
-        .breadcrumb-item.active { font-weight: 600; color: #333; cursor: default; text-decoration: none; }
-        .breadcrumb-separator { color: #ccc; font-size: 12px; }
 
-         /* Table Section */
-        .table-section { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #eee; animation: fadeIn 0.3s ease-out; margin-top: 20px;}
-        .table-header { padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; background-color: #fbfbfb; }
-        .btn-action { padding: 6px 14px; background: #c41e3a; color: white; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 500; transition: background 0.2s; cursor: pointer; display: inline-block;}
-        /* Keep Modal Styles as they are */
-        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.5); font-family: 'Inter', sans-serif; }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 0; border: 1px solid #888; width: 600px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); position: relative; animation: slideDown 0.3s ease-out; }
-        .modal-header { padding: 20px 30px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h2 { font-size: 18px; font-weight: 700; color: #333; margin: 0; }
-        .close-btn { color: #aaa; font-size: 24px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
-        .close-btn:hover { color: #c41e3a; }
-        .modal-body { padding: 30px; }
-        .section-title { font-size: 14px; font-weight: 700; color: #c41e3a; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .section-title.green { color: #2e7d32; }
-        .info-row { display: flex; margin-bottom: 15px; align-items: flex-start; }
-        .info-label { width: 140px; font-size: 14px; color: #888; font-weight: 500; }
-        .info-value { flex: 1; font-size: 14px; color: #333; font-weight: 600; }
-        .risk-high { color: #c41e3a; font-weight: 700; }
-        .status-pill { background-color: #e8f5e9; color: #2e7d32; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-        .approval-box { background-color: #f1f8e9; border-left: 4px solid #2e7d32; padding: 15px; border-radius: 4px; margin-top: 10px; }
-        .approval-text { font-size: 13px; color: #33691e; line-height: 1.5; }
-        .approval-header { font-weight: 700; margin-bottom: 5px; color: #1b5e20; display: flex; align-items: center; gap: 8px; }
+        /* ADD Accordion Styles */
+        .accordion-container {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+
+        .accordion-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .accordion-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .accordion-header {
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+            transition: background 0.2s;
+        }
+
+        .accordion-header:hover {
+            background: #f8f9fa;
+        }
+
+        .accordion-header.active {
+            background: #f0f7ff;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .dept-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .dept-icon {
+            width: 36px;
+            height: 36px;
+            background: #e3f2fd;
+            color: #1565c0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .dept-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .accordion-icon {
+            color: #999;
+            transition: transform 0.3s;
+        }
+
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+            color: #1565c0;
+        }
+
+        .accordion-body {
+            display: none;
+            background: #fafafa;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .accordion-body.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .unit-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .unit-item {
+            padding: 12px 20px 12px 60px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #555;
+            transition: all 0.2s;
+        }
+
+        .unit-item:last-child {
+            border-bottom: none;
+        }
+
+        .unit-item:hover {
+            background: #fff;
+            color: #c41e3a;
+            padding-left: 65px;
+        }
+
+        .unit-item i {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .unit-item:hover i {
+            opacity: 1;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb-item {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb-item:hover {
+            color: #c41e3a;
+            text-decoration: underline;
+        }
+
+        .breadcrumb-item.active {
+            font-weight: 600;
+            color: #333;
+            cursor: default;
+            text-decoration: none;
+        }
+
+        .breadcrumb-separator {
+            color: #ccc;
+            font-size: 12px;
+        }
+
+        /* Table Section */
+        .table-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid #eee;
+            animation: fadeIn 0.3s ease-out;
+            margin-top: 20px;
+        }
+
+        .table-header {
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            background-color: #fbfbfb;
+        }
+
+        .table-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 15px 25px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        td {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .badge-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .btn-action {
+            padding: 6px 14px;
+            background: #c41e3a;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.2s;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn-action:hover {
+            background: #a01729;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 0;
+            border: 1px solid #888;
+            width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            position: relative;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+        }
+
+        .close-btn {
+            color: #aaa;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #c41e3a;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #c41e3a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title.green {
+            color: #2e7d32;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+
+        .info-label {
+            width: 140px;
+            font-size: 14px;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .info-value {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .risk-high {
+            color: #c41e3a;
+            font-weight: 700;
+        }
+
+        .status-pill {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .approval-box {
+            background-color: #f1f8e9;
+            border-left: 4px solid #2e7d32;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .approval-text {
+            font-size: 13px;
+            color: #33691e;
+            line-height: 1.5;
+        }
+
+        .approval-header {
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #1b5e20;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
     </style>
 </head>
 
@@ -289,9 +605,13 @@
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('unit_pengelola.documents.index') }}" class="nav-item">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Inbox Dokumen</span>
+                <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Review Dokumen</span>
+                    @if(isset($pendingCount) && $pendingCount > 0)
+                        <span class="badge"
+                            style="background:#c41e3a; color:white; padding:2px 6px; border-radius:10px; font-size:10px; margin-left:auto;">{{ $pendingCount }}</span>
+                    @endif
                 </a>
             </nav>
 
@@ -326,10 +646,12 @@
             </div>
 
             <div class="content-area">
+                <!-- Breadcrumb & Actions -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div class="breadcrumb" id="breadcrumb" style="margin-bottom: 0;">
+                        <span class="breadcrumb-item active" onclick="resetView()">Home</span>
+                    </div>
 
-                <!-- Breadcrumb -->
-                <div class="breadcrumb" id="breadcrumb" style="margin-bottom: 20px;">
-                    <span class="breadcrumb-item active" onclick="resetView()">Home</span>
                 </div>
 
                 <!-- Dynamic Content (Accordion) -->
@@ -360,7 +682,7 @@
                     <div class="info-value"><span class="status-pill" id="m_status"></span></div>
                 </div>
                 <div class="info-row">
-                    <div class="info-label">Kategori:</div>
+                    <div class="info-label">Unit Pengelola:</div>
                     <div class="info-value" id="m_category"></div>
                 </div>
                 <div class="info-row">
@@ -397,24 +719,27 @@
         </div>
     </div>
 
+    @php
+        $departmentsData = $departemens->map(fn($d) => [
+            'id_dept' => is_array($d) ? $d['id_dept'] : $d->id_dept,
+            'nama_dept' => is_array($d) ? $d['nama_dept'] : $d->nama_dept
+        ]);
+        $unitsData = $units->map(fn($u) => [
+            'id_unit' => is_array($u) ? $u['id_unit'] : $u->id_unit,
+            'id_dept' => is_array($u) ? $u['id_dept'] : $u->id_dept,
+            'nama_unit' => is_array($u) ? $u['nama_unit'] : $u->nama_unit
+        ]);
+    @endphp
+
     <script>
-        @php
-             // Preparing data for JS
-             $departmentsData = $departemens->map(fn($d) => [
-                'id_dept' => is_array($d) ? $d['id_dept'] : $d->id_dept,
-                'nama_dept' => is_array($d) ? $d['nama_dept'] : $d->nama_dept
-            ]);
-            $unitsData = $units->map(fn($u) => [
-                'id_unit' => is_array($u) ? $u['id_unit'] : $u->id_unit,
-                'id_dept' => is_array($u) ? $u['id_dept'] : $u->id_dept,
-                'nama_unit' => is_array($u) ? $u['nama_unit'] : $u->nama_unit
-            ]);
-        @endphp
 
         // Processed Data
         const departments = @json($departmentsData);
         const units = @json($unitsData);
+        // Published Data for Browsing
         const documents = @json($publishedData);
+        // Pending Actions for User
+        const pendingDocs = @json($pendingData ?? []);
 
         // State
         let currentLevel = 'dept';
@@ -432,45 +757,50 @@
             updateBreadcrumb();
 
             const container = document.getElementById('dynamicContent');
-            
+
             if (departments.length === 0) {
-                 container.innerHTML = `<div style="text-align:center; padding:50px; color:#999;"><i class="fas fa-building" style="font-size:40px; margin-bottom:15px;"></i><p>Tidak ada departemen ditemukan.</p></div>`;
-                 return;
+                container.innerHTML = `<div style="text-align:center; padding:50px; color:#999;"><i class="fas fa-building" style="font-size:40px; margin-bottom:15px;"></i><p>Tidak ada departemen ditemukan.</p></div>`;
+                return;
             }
 
-            let html = '<div class="accordion-container">';
-            
-            // 1. Regular Departments (Excluding ID 0 and ID 93)
-            const regularDepts = departments.filter(d => d.id_dept != 0 && d.id_dept != 93);
-            
+            let html = '';
+
+
+            // 1. Separate "Unassigned" and Regular Departments
+            const unassignedDeptId = 0; // ID for "Unassigned / Non-Dept"
+            const directUnits = units.filter(u => u.id_dept == unassignedDeptId);
+            const regularDepts = departments.filter(d => d.id_dept != unassignedDeptId);
+
+            html += `<div class="accordion-container">`;
+
+            // A. Regular Departments
             regularDepts.forEach(dept => {
                 const deptUnits = units.filter(u => u.id_dept == dept.id_dept);
-                const unitCount = deptUnits.length;
 
                 html += `
                     <div class="accordion-item">
-                        <div class="accordion-header" onclick="toggleDepartment(${dept.id_dept})">
+                        <div class="accordion-header" onclick="toggleAccordion(this, '${dept.id_dept}')">
                             <div class="dept-info">
                                 <div class="dept-icon"><i class="fas fa-building"></i></div>
                                 <div class="dept-name">${dept.nama_dept}</div>
                             </div>
-                            <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+                            <i class="fas fa-chevron-down accordion-icon"></i>
                         </div>
-                        <div class="accordion-body" id="dept-${dept.id_dept}">
+                        <div class="accordion-body" id="body-${dept.id_dept}">
                             <ul class="unit-list">
                 `;
 
-                if (unitCount > 0) {
+                if (deptUnits.length === 0) {
+                    html += `<li class="unit-item" style="color:#999; cursor:default;">Tidak ada unit</li>`;
+                } else {
                     deptUnits.forEach(unit => {
                         html += `
-                            <li class="unit-item" onclick="selectUnit(${unit.id_unit}, '${unit.nama_unit.replace(/'/g, "\\'")}', ${dept.id_dept})">
+                            <li class="unit-item" onclick="selectUnit('${unit.id_unit}', '${unit.nama_unit.replace(/'/g, "\\'")}', '${dept.nama_dept.replace(/'/g, "\\'")}', '${dept.id_dept}')">
                                 <span>${unit.nama_unit}</span>
                                 <i class="fas fa-arrow-right"></i>
                             </li>
                         `;
                     });
-                } else {
-                    html += `<li class="unit-item" style="color: #999; cursor: default;">Tidak ada Unit Kerja</li>`;
                 }
 
                 html += `
@@ -480,131 +810,94 @@
                 `;
             });
 
-            // 2. Unassigned Units
-            const unassignedDept = departments.find(d => d.id_dept == 0);
-            if (unassignedDept) {
-                const directUnits = units.filter(u => u.id_dept == 0 && u.id_unit != 0);
-                if (directUnits.length > 0) {
-                     directUnits.forEach(unit => {
-                        html += `
-                            <div class="accordion-item" onclick="selectUnit(${unit.id_unit}, '${unit.nama_unit.replace(/'/g, "\\'")}', 0)" style="cursor:pointer;">
-                                <div class="accordion-header">
-                                    <div class="dept-info">
-                                        <div class="dept-icon" style="background:#fce4ec; color:#c2185b;"><i class="fas fa-layer-group"></i></div>
-                                        <div class="dept-name">${unit.nama_unit}</div>
-                                    </div>
-                                    <div class="accordion-icon"><i class="fas fa-arrow-right"></i></div>
-                                </div>
+            // B. Direct Units (from Unassigned)
+            directUnits.forEach(unit => {
+                html += `
+                    <div class="accordion-item">
+                         <!-- Similar style to header but no drop icon and clickable to go to details directly -->
+                        <div class="accordion-header" onclick="selectUnit('${unit.id_unit}', '${unit.nama_unit.replace(/'/g, "\\'")}', 'Unit', '${unassignedDeptId}')">
+                            <div class="dept-info">
+                                <div class="dept-icon" style="background:#f3e8ff; color:#7e22ce;"><i class="fas fa-layer-group"></i></div>
+                                <div class="dept-name">${unit.nama_unit}</div>
                             </div>
-                        `;
-                    });
-                }
-            }
+                            <!-- Arrow right to indicate actionable -->
+                            <i class="fas fa-arrow-right" style="color:#ccc; font-size:12px;"></i>
+                        </div>
+                    </div>
+                `;
+            });
 
-            html += '</div>';
+            html += `</div>`;
             container.innerHTML = html;
         }
 
-        function toggleDepartment(id) {
-            const body = document.getElementById(`dept-${id}`);
-            if (!body) return;
-            const header = body.previousElementSibling;
-            
-            const isShown = body.classList.contains('show');
-            
-            document.querySelectorAll('.accordion-body').forEach(el => el.classList.remove('show'));
-            document.querySelectorAll('.accordion-header').forEach(el => el.classList.remove('active'));
+        function toggleAccordion(header, deptId) {
+            const body = document.getElementById(`body-${deptId}`);
+            const isActive = header.classList.contains('active');
 
-            if (!isShown) {
-                body.classList.add('show');
+            // Close all
+            document.querySelectorAll('.accordion-header').forEach(h => h.classList.remove('active'));
+            document.querySelectorAll('.accordion-body').forEach(b => b.classList.remove('show'));
+
+            if (!isActive) {
                 header.classList.add('active');
+                body.classList.add('show');
             }
         }
 
-        function selectDepartment(id, name) {
-            renderDepartments();
-            setTimeout(() => {
-                const body = document.getElementById(`dept-${id}`);
-                if(body) {
-                    body.classList.add('show');
-                    body.previousElementSibling.classList.add('active');
-                    body.parentElement.scrollIntoView({behavior: 'smooth'});
-                }
-            }, 50);
-        }
-
-        function selectUnit(id, name, deptId) {
-            const dept = departments.find(d => d.id_dept == deptId);
-            selectedDept = { id: deptId, name: dept ? dept.nama_dept : '-' };
-            selectedUnit = { id, name };
-            currentLevel = 'docs';
+        function selectUnit(unitId, unitName, deptName, deptId) {
+            selectedDept = { id: deptId, name: deptName };
+            selectedUnit = { id: unitId, name: unitName };
+            currentLevel = 'unit';
             updateBreadcrumb();
-
-            const container = document.getElementById('dynamicContent');
-            
-             // Show Loading
-            container.innerHTML = `<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin" style="font-size: 30px; color: #c41e3a;"></i><br><br>Memuat dokumen...</div>`;
-
-            // FETCH DATA via AJAX
-            fetch(`{{ route('unit_pengelola.dashboard.data') }}?unit_id=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Merge new docs into global documents array to ensure Detail Modal works
-                    data.forEach(newDoc => {
-                        if (!documents.some(d => d.id === newDoc.id)) {
-                            documents.push(newDoc);
-                        }
-                    });
-                    
-                    renderDocumentsTable(name, deptId, data);
-                })
-                .catch(error => {
-                    console.error('Error fetching docs:', error);
-                    container.innerHTML = `<div style="text-align: center; padding: 20px; color: red;">Gagal memuat dokumen. Silakan coba lagi.</div>`;
-                });
+            renderDocuments(unitId);
         }
 
-        function renderDocumentsTable(unitName, deptId, docs) {
+        function renderDocuments(unitId) {
+            // Need to fetch or filter documents for this unit.
+            // Client-side filtering of 'documents' (publishedData)
+            const unitDocs = documents.filter(d => d.unit_id == unitId);
+
             const container = document.getElementById('dynamicContent');
-            
+
             let html = `
                 <div class="table-section">
                     <div class="table-header">
-                        <h2>Dokumen Terpublikasi - ${unitName}</h2>
-                         <button class="btn-action" style="background:#666;" onclick="selectDepartment(${deptId})"><i class="fas fa-arrow-left"></i> Kembali</button>
+                        <h2>Dokumen HIRADC: ${selectedUnit.name}</h2>
                     </div>
             `;
 
-            if (docs.length === 0) {
-                 html += `<div style="text-align: center; padding: 40px; color: #999;"><i class="fas fa-folder-open" style="font-size:30px; margin-bottom:10px;"></i><p>Belum ada dokumen yang dipublish dari Unit ini.</p></div>`;
+            if (unitDocs.length === 0) {
+                html += `<div style="padding:40px; text-align:center; color:#999;">Belum ada dokumen yang dipublikasikan untuk unit ini.</div>`;
             } else {
                 html += `
-                    <table class="custom-table" style="width:100%; border-collapse: collapse;">
-                        <thead style="background:#fff; border-bottom:2px solid #f0f0f0;">
+                    <table>
+                        <thead>
                             <tr>
-                                <th style="padding:15px; text-align:left;">Judul Dokumen</th>
-                                <th style="padding:15px; text-align:left;">Kategori</th>
-                                <th style="padding:15px; text-align:left;">Penulis</th>
-                                <th style="padding:15px; text-align:left;">Tanggal</th>
-                                <th style="padding:15px; text-align:left;">Status</th>
-                                <th style="padding:15px; text-align:left;">Aksi</th>
+                                <th>Judul Dokumen</th>
+                                <th>Unit Pengelola</th>
+                                <th>Tanggal Approve</th>
+                                <th>Disetujui Oleh</th>
+                                <th>Risiko</th>
+                                <th>Detail</th>
                             </tr>
                         </thead>
                         <tbody>
                 `;
 
-                docs.forEach(doc => {
+                unitDocs.forEach(doc => {
                     html += `
-                        <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:15px;">${doc.title}</td>
-                            <td style="padding:15px;">${doc.category || '-'}</td>
-                            <td style="padding:15px;">${doc.author || '-'}</td>
-                            <td style="padding:15px;">${doc.date || '-'}</td>
-                            <td style="padding:15px;"><span class="status-pill" style="background:#e8f5e9; color:#2e7d32; padding:4px 12px; border-radius:15px; font-size:11px; font-weight:700;">DISETUJUI</span></td>
-                            <td style="padding:15px;">
-                                <a href="/documents/${doc.id}/published" class="btn-action">
-                                    <i class="fas fa-eye"></i> Detail
-                                </a>
+                        <tr>
+                            <td>
+                                <div style="font-weight:600;">${doc.title}</div>
+                                <div style="font-size:12px; color:#888;">Penulis: ${doc.author}</div>
+                            </td>
+                            <td><span class="badge-status" style="background:${doc.category.includes('SHE') ? '#dcfce7;color:#166534' : '#fee2e2;color:#991b1b'}">${doc.category}</span></td>
+                            <td>${doc.date}</td>
+                            <td>${doc.approver}</td>
+                            <td><span style="color:${doc.risk_level === 'High' ? '#dc2626' : (doc.risk_level === 'Medium' ? '#d97706' : '#16a34a')}; font-weight:700;">${doc.risk_level}</span></td>
+                            <td>
+                                <button class="btn-action" onclick="showDetail(${doc.id})">Lihat</button>
                             </td>
                         </tr>
                     `;
@@ -612,32 +905,30 @@
 
                 html += `</tbody></table>`;
             }
-            
+
             html += `</div>`;
             container.innerHTML = html;
         }
 
+        // Breadcrumb Logic
         function updateBreadcrumb() {
             const bc = document.getElementById('breadcrumb');
-            let html = `<span class="breadcrumb-item" onclick="renderDepartments()">Home</span>`;
+            let html = `<span class="breadcrumb-item ${currentLevel === 'dept' ? 'active' : ''}" onclick="resetView()">Home</span>`;
 
-            if (currentLevel === 'unit' || currentLevel === 'docs') {
-                 if (selectedDept) {
-                     html += `
-                        <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
-                        <span class="breadcrumb-item" onclick="selectDepartment(${selectedDept.id}, '${selectedDept.name.replace(/'/g, "\\'")}')">
-                            ${selectedDept.name}
-                        </span>
-                    `;
-                 }
+            if (selectedDept) {
+                html += `
+                    <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                    <span class="breadcrumb-item" onclick="resetView()">${selectedDept.name}</span>
+                `;
             }
 
-            if (currentLevel === 'docs' && selectedUnit) {
+            if (selectedUnit) {
                 html += `
                     <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
                     <span class="breadcrumb-item active">${selectedUnit.name}</span>
                 `;
             }
+
             bc.innerHTML = html;
         }
 
@@ -645,33 +936,27 @@
             renderDepartments();
         }
 
-        // KEEP MODAL FUNCTIONS
-        function openDetailModal(id) {
-            const doc = documents.find(d => d.id === id);
+        // Modal Logic
+        function showDetail(id) {
+            const doc = documents.find(d => d.id == id);
             if (!doc) return;
-            const unit = units.find(u => u.id_unit === doc.unit_id);
-            const unitName = unit ? unit.nama_unit : '-';
 
-            document.getElementById('m_title').innerText = doc.title;
-            document.getElementById('m_status').innerText = 'DISETUJUI'; 
-            document.getElementById('m_category').innerText = doc.category;
-            document.getElementById('m_unit').innerText = unitName;
-            document.getElementById('m_date').innerText = doc.date || '-';
-            document.getElementById('m_author').innerText = doc.author || '-';
-            
-            // Risk
+            document.getElementById('m_title').textContent = doc.title;
+            document.getElementById('m_status').textContent = doc.status;
+            document.getElementById('m_category').textContent = doc.category;
+            document.getElementById('m_unit').textContent = doc.unit;
+            document.getElementById('m_date').textContent = doc.date;
+            document.getElementById('m_author').textContent = doc.author;
+            document.getElementById('m_risk').textContent = doc.risk_level;
+
+            // Risk Color
             const riskEl = document.getElementById('m_risk');
-            if(doc.risk_level) {
-                 riskEl.innerText = doc.risk_level;
-                 riskEl.parentElement.style.display = 'flex';
-                 riskEl.className = 'info-value';
-                 if (doc.risk_level === 'Tinggi') riskEl.classList.add('risk-high');
-            } else {
-                 riskEl.parentElement.style.display = 'none';
-            }
+            if (doc.risk_level === 'High') riskEl.style.color = '#dc2626';
+            else if (doc.risk_level === 'Medium') riskEl.style.color = '#d97706';
+            else riskEl.style.color = '#16a34a';
 
-            document.getElementById('m_approval_header').innerText = `Disetujui pada ${doc.approval_date || '-'}`;
-            document.getElementById('m_approval_note').innerText = doc.approval_note || '-';
+            document.getElementById('m_approval_header').textContent = "Disetujui Oleh: " + doc.approver + " (" + doc.approval_date + ")";
+            document.getElementById('m_approval_note').textContent = doc.approval_note || "Tidak ada catatan.";
 
             document.getElementById('detailModal').style.display = 'block';
         }
@@ -683,9 +968,30 @@
         window.onclick = function (event) {
             const modal = document.getElementById('detailModal');
             if (event.target == modal) {
-                modal.style.display = 'none';
+                closeModal();
             }
         }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: "{{ session('success') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "{{ session('error') }}",
+            });
+        @endif
     </script>
 </body>
 

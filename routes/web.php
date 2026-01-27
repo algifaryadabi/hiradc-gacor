@@ -65,8 +65,9 @@ Route::middleware('auth')->group(function () {
 
         // Load published documents (General View)
         // Load published documents (General View)
+        // Load published documents (General View)
         $rawDocuments = \App\Models\Document::published()
-            ->with(['user', 'unit', 'approvals.approver'])
+            ->with(['user', 'unit', 'approvals.approver', 'details'])
             ->orderBy('published_at', 'desc')
             ->get();
 
@@ -82,10 +83,18 @@ Route::middleware('auth')->group(function () {
                 $approvalNote = $lastApproval->catatan ?? '-';
             }
 
+            // Revert to Broad Categories (SHE, Security)
+            $cats = [];
+            if ($doc->hasSheContent())
+                $cats[] = 'SHE';
+            if ($doc->hasSecurityContent())
+                $cats[] = 'Security';
+            $categoryLabel = empty($cats) ? '-' : implode(', ', $cats);
+
             return [
                 'id' => $doc->id,
                 'title' => $doc->judul_dokumen ?? $doc->kolom2_kegiatan,
-                'category' => $doc->kategori,
+                'category' => $categoryLabel,
                 'date' => $doc->published_at ? $doc->published_at->format('d M Y') : $doc->created_at->format('d M Y'),
                 'time' => $doc->published_at ? $doc->published_at->format('H:i') . ' WIB' : $doc->created_at->format('H:i') . ' WIB',
                 'author' => $doc->user->nama_user ?? 'Unknown',
@@ -133,13 +142,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/documents/export/pdf', [DocumentController::class, 'exportPdf'])->name('documents.export.pdf');
     Route::get('/documents/export/excel', [DocumentController::class, 'exportExcel'])->name('documents.export.excel');
 
-    // Detail Export
-    Route::get('/documents/{document}/export/pdf', [DocumentController::class, 'exportDetailPdf'])->name('documents.export.detail.pdf');
+    // Document Routes
+    Route::resource('documents', \App\Http\Controllers\DocumentController::class);
+    Route::put('documents/{id}/update-detail', [\App\Http\Controllers\DocumentController::class, 'updateDetail'])
+        ->name('documents.update_detail');
+    Route::get('documents/{document}/export-detail-pdf', [\App\Http\Controllers\DocumentController::class, 'exportDetailPdf'])
+        ->name('documents.export.detail.pdf');
     Route::get('/documents/{document}/export/excel', [DocumentController::class, 'exportDetailExcel'])->name('documents.export.detail.excel');
 
     Route::get('/my-documents/summary', [DocumentController::class, 'summary'])->name('documents.summary');
     Route::get('/my-documents', [DocumentController::class, 'index'])->name('documents.index');
-    Route::get('/documents/create', [DocumentController::class, 'create'])->name('documents.create');
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
     Route::get('/documents/{document}/edit', [DocumentController::class, 'edit'])->name('documents.edit');
     Route::put('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
@@ -199,7 +211,7 @@ Route::middleware('auth')->group(function () {
         $pendingCount = $pendingDocuments->count();
 
         $publishedDocuments = \App\Models\Document::published()
-            ->with(['user', 'unit'])
+            ->with(['user', 'unit', 'details'])
             ->orderBy('published_at', 'desc')
             ->limit(10)
             ->get();
@@ -218,10 +230,21 @@ Route::middleware('auth')->group(function () {
 
         $publishedData = $publishedDocuments->map(function ($doc) {
             $lastApproval = $doc->approvals()->latest()->first();
+
+            // Revert to Broad Categories (SHE, Security) as requested
+            // We use the same logic as managing_unit but manually here if needed, or just managing_unit attribute.
+            // But we want to ensure it works for the Split logic later.
+            $cats = [];
+            if ($doc->hasSheContent())
+                $cats[] = 'SHE';
+            if ($doc->hasSecurityContent())
+                $cats[] = 'Security';
+            $categoryLabel = empty($cats) ? '-' : implode(', ', $cats);
+
             return [
                 'id' => $doc->id,
                 'title' => $doc->judul_dokumen ?? '-',
-                'category' => $doc->kategori,
+                'category' => $categoryLabel,
                 'date' => $doc->published_at ? $doc->published_at->format('d M Y') : $doc->created_at->format('d M Y'),
                 'author' => $doc->user->nama_user ?? 'Unknown',
                 'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
@@ -275,12 +298,35 @@ Route::middleware('auth')->group(function () {
         $revisionDocuments = \App\Models\Document::where('status', 'revision')->count();
 
         // Get published documents for table
-        $documents = \App\Models\Document::where('status', 'published')
+        $rawDocuments = \App\Models\Document::where('status', 'published')
             ->whereNotNull('published_at')
-            ->with(['user', 'unit'])
+            ->with(['user', 'unit', 'details'])
             ->orderBy('published_at', 'desc')
             ->limit(20)
             ->get();
+
+        $documents = $rawDocuments->map(function ($doc) {
+            // Revert to Broad Categories (SHE, Security)
+            $cats = [];
+            if ($doc->hasSheContent())
+                $cats[] = 'SHE';
+            if ($doc->hasSecurityContent())
+                $cats[] = 'Security';
+            $categoryLabel = empty($cats) ? '-' : implode(', ', $cats);
+
+            // Use Accessors or Direct attributes since we are mapping manually now
+            return [
+                'id' => $doc->id,
+                'title' => $doc->judul_dokumen ?? $doc->kolom2_kegiatan,
+                'category' => $categoryLabel,
+                'date' => $doc->published_at ? $doc->published_at->format('d M Y') : $doc->created_at->format('d M Y'),
+                'author' => $doc->user->nama_user ?? 'Unknown',
+                'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
+                'status' => 'DISETUJUI', // Admin view of published
+                'status_label' => 'Terpublikasi',
+                'risk_level' => $doc->risk_level ?? 'High'
+            ];
+        });
 
         // Master Data for Filters
         $direktorats = \App\Models\Direktorat::where('status_aktif', 1)->get();

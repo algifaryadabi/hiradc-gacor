@@ -746,7 +746,7 @@
             }
 
             let html = '<div class="accordion-container">';
-            
+
             // 1. Regular Departments (Excluding ID 0 and ID 93)
             const regularDepts = departments.filter(d => d.id_dept != 0 && d.id_dept != 93);
 
@@ -794,8 +794,8 @@
                 // Filter out ID 0
                 const directUnits = units.filter(u => u.id_dept == 0 && u.id_unit != 0);
                 if (directUnits.length > 0) {
-                     
-                     directUnits.forEach(unit => {
+
+                    directUnits.forEach(unit => {
                         html += `
                             <div class="accordion-item" onclick="selectUnit(${unit.id_unit}, '${unit.nama_unit.replace(/'/g, "\\'")}', 0)" style="cursor:pointer;">
                                 <div class="accordion-header">
@@ -853,58 +853,99 @@
 
         // Level 3: Documents (Drill down from Accordion Unit click)
         function selectUnit(id, name, deptId) {
-            // Find dept name if not already selected
-            const dept = departments.find(d => d.id_dept == deptId);
-            selectedDept = { id: deptId, name: dept ? dept.nama_dept : '-' };
+            renderUnitDocs(id, name, deptId, 'ALL');
+        }
 
-            selectedUnit = { id, name };
-            currentLevel = 'docs';
-            updateBreadcrumb();
-
+        function renderUnitDocs(id, name, deptId, filterCategory = 'ALL') {
             const container = document.getElementById('dynamicContent');
-            const unitDocs = documents.filter(doc => doc.unit_id == id);
+            const rawDocs = documents.filter(doc => doc.unit_id == id);
+
+            // SPLIT MULTI-CATEGORY DOCS
+            let unitDocs = [];
+            if (Array.isArray(rawDocs)) {
+                rawDocs.forEach(doc => {
+                    if (doc.category && doc.category.includes(',')) {
+                        const cats = doc.category.split(',').map(c => c.trim());
+                        cats.forEach(c => {
+                            unitDocs.push({ ...doc, category: c });
+                        });
+                    } else {
+                        unitDocs.push(doc);
+                    }
+                });
+            }
+
+            // FILTER
+            if (filterCategory !== 'ALL') {
+                unitDocs = unitDocs.filter(doc => doc.category === filterCategory);
+            }
+
+            // Categories available for filter
+            const categories = ['SHE', 'Security'];
 
             let html = `
-                <div class="table-section">
-                    <div class="table-header">
-                        <h2>Dokumen Terpublikasi - ${name}</h2>
-                         <button class="btn-action" style="background:#666;" onclick="selectDepartment(${deptId})"><i class="fas fa-arrow-left"></i> Kembali</button>
-                    </div>
-            `;
+                 <div class="table-section">
+                     <div class="table-header" style="flex-wrap: wrap; gap: 10px;">
+                         <div>
+                             <h2 style="margin-bottom:5px;">Dokumen Terpublikasi - ${name}</h2>
+                             <div style="font-size:12px; color:#666;">Menampilkan kategori: <b>${filterCategory}</b></div>
+                         </div>
+                         <div style="display:flex; gap:10px; align-items:center;">
+                             <select onchange="renderUnitDocs(${id}, '${name.replace(/'/g, "\\'")}', ${deptId}, this.value)" style="padding:6px 12px; border-radius:6px; border:1px solid #ddd; font-size:13px; color:#333; cursor:pointer;">
+                                 <option value="ALL" ${filterCategory === 'ALL' ? 'selected' : ''}>Semua Kategori</option>
+                                 ${categories.map(c => `<option value="${c}" ${filterCategory === c ? 'selected' : ''}>${c}</option>`).join('')}
+                             </select>
+                             <button class="btn-action" style="background:#666;" onclick="selectDepartment(${deptId})"><i class="fas fa-arrow-left"></i> Kembali</button>
+                         </div>
+                     </div>
+             `;
 
             if (unitDocs.length === 0) {
-                html += `<div class="empty-state" style="padding: 30px;"><i class="fas fa-file-contract"></i><p>Belum ada dokumen yang dipublish dari Unit ini.</p></div>`;
+                html += `
+                     <div style="text-align: center; padding: 40px; color: #999;">
+                         <i class="fas fa-filter" style="font-size:30px; margin-bottom:10px;"></i>
+                         <p>Tidak ada dokumen terpublikasi untuk kategori <b>${filterCategory}</b>.</p>
+                     </div>`;
             } else {
                 html += `
-                    <table class="custom-table">
-                        <thead>
-                            <tr>
-                                <th>Judul Dokumen</th>
-                                <th>Kategori</th>
-                                <th>Penulis</th>
-                                <th>Tanggal Publish</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
+                     <table class="custom-table">
+                         <thead>
+                             <tr>
+                                 <th>Judul Form</th>
+                                 <th>Unit Pengelola</th>
+                                 <th>Penulis</th>
+                                 <th>Tanggal Publish</th>
+                                 <th>Status</th>
+                                 <th>Aksi</th>
+                             </tr>
+                         </thead>
+                         <tbody>
+                 `;
 
                 unitDocs.forEach(doc => {
+                    // Category Badge Color
+                    let catColor = '#e0e0e0';
+                    let catText = '#333';
+                    if (doc.category == 'SHE') { catColor = '#dcfce7'; catText = '#166534'; }
+                    else if (doc.category == 'Security') { catColor = '#e0f2fe'; catText = '#075985'; }
+
                     html += `
-                        <tr>
-                            <td>${doc.title}</td>
-                            <td>${doc.category || '-'}</td>
-                            <td>${doc.author}</td>
-                            <td>${doc.date}</td>
-                            <td><span class="status-pill approved">DISETUJUI</span></td>
-                            <td>
-                                <a href="/documents/${doc.id}/published" class="btn-action">
-                                    <i class="fas fa-eye"></i> Detail
-                                </a>
-                            </td>
-                        </tr>
-                    `;
+                         <tr>
+                             <td>${doc.title}</td>
+                             <td><span class="status-pill" style="background:${catColor}; color:${catText};">${doc.category || '-'}</span></td>
+                             <td>${doc.author}</td>
+                             <td>${doc.date}</td>
+                             <td><span class="status-pill approved">DISETUJUI</span></td>
+                             <td>
+                                 <a href="#" class="btn-action" onclick="openDetail(${doc.id})">
+                                     <i class="fas fa-eye"></i> Detail
+                                 </a>
+                                 <a href="/documents/${doc.id}/published?filter=${doc.category}" class="btn-action" style="background: #2563eb; margin-left: 5px;">
+                                     <i class="fas fa-external-link-alt"></i> Buka
+                                 </a>
+                             </td>
+                         </tr>
+                     `;
                 });
 
                 html += `</tbody></table>`;
@@ -912,6 +953,14 @@
 
             html += `</div>`;
             container.innerHTML = html;
+
+            // Find dept name if not already selected
+            const dept = departments.find(d => d.id_dept == deptId);
+            selectedDept = { id: deptId, name: dept ? dept.nama_dept : '-' };
+
+            selectedUnit = { id, name };
+            currentLevel = 'docs';
+            updateBreadcrumb();
         }
 
         // ================= HELPERS =================

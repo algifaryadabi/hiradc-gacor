@@ -146,9 +146,30 @@ class Document extends Model
         if ($this->current_level == 1) {
             $this->current_level = 2;
             $this->status = 'pending_level2';
+
+            // Initialize Split Workflow Statuses
+            if ($this->hasSheContent()) {
+                $this->status_she = 'pending_head'; // Need Head Unit (Level 2) attention
+            }
+            if ($this->hasSecurityContent()) {
+                $this->status_security = 'pending_head'; // Need Head Unit (Level 2) attention
+            }
+
         } elseif ($this->current_level == 2) {
+            // Logic for Level 2 moving to 3 is simpler here, 
+            // but usually Controller handles complex split logic.
+            // If we use Model::approve directly, it assumes linear.
+            // But we want to support the split.
+            // If this method is called, it might close status for level 2.
             $this->current_level = 3;
             $this->status = 'pending_level3';
+
+            // Ensure flags are set if not already (safeguard)
+            if ($this->hasSheContent() && !$this->status_she)
+                $this->status_she = 'approved';
+            if ($this->hasSecurityContent() && !$this->status_security)
+                $this->status_security = 'approved';
+
         } elseif ($this->current_level == 3) {
             $this->status = 'published';
             $this->published_at = now();
@@ -236,6 +257,19 @@ class Document extends Model
         if ($score >= 8)
             return 'Sedang';
         return 'Rendah';
+    }
+
+    /**
+     * Get managing unit(s) based on content
+     */
+    public function getManagingUnitAttribute(): string
+    {
+        $units = [];
+        if ($this->hasSheContent())
+            $units[] = 'SHE';
+        if ($this->hasSecurityContent())
+            $units[] = 'Security';
+        return implode(', ', $units) ?: '-';
     }
 
     /**

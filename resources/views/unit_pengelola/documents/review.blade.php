@@ -817,7 +817,7 @@
         $isApprover = ($currentApproverId == $user->id_user) || 
                       ($isStaffApprover && $status == 'assigned_approval');
 
-        $canEdit = ($isHead && $document->current_level == 2 && ($status == 'returned_to_head' || $status == 'staff_verified' || $status == 'pending_head')) ||
+        $canEdit = ($isHead && $document->current_level == 2) ||
             ($isReviewer && $status == 'assigned_review') ||
             ($isApprover && $status == 'assigned_approval');
     @endphp
@@ -1159,8 +1159,9 @@
                                             // Staff Verifikator (isApprover) can edit when they toggle the button
                                             
                                             // LOGIC FIX: Explicitly allow Head to edit if status is suitable
-                                            $headCanEdit = ($isHead && $document->current_level == 2 && ($status == 'staff_verified' || $status == 'returned_to_head'));
-                                            $staffCanEdit = ($isApprover && $status == 'assigned_approval');
+                                            // Head can edit if it's pending them or returned to them
+                                            $headCanEdit = ($isHead && $document->current_level == 2 && in_array($status, ['pending_head', 'pending_level2', 'staff_verified', 'returned_to_head']));
+                                            $staffCanEdit = ($isApprover && $status == 'assigned_approval') || ($isReviewer && $status == 'assigned_review');
 
                                             if ($headCanEdit || $staffCanEdit) {
                                                 if ($headCanEdit) {
@@ -1304,17 +1305,23 @@
             
             {{-- 1. KEPALA UNIT PENGELOLA --}}
             @if($isHead && $document->current_level == 2)
-                @if($status == 'returned_to_head' || $status == 'staff_verified')
+                @if(in_array($status, ['returned_to_head', 'staff_verified', 'pending_head', 'pending_level2']))
                     <!-- Final Approval by Head -->
                     <form id="headApproveForm" method="POST" action="{{ route('unit_pengelola.approve', $document->id) }}"
-                        style="width:100%; display:flex; justify-content: flex-end; gap:15px;">
+                        style="width:100%; display:flex; flex-direction:column; gap:15px;">
                         @csrf
-                        <!-- Input catatan removed from UI, handled by JS Prompt for Revision -->
-                        <div class="action-btns">
+                        <div class="notes-area">
+                             <textarea name="catatan" class="notes-input" placeholder="Tambahkan komentar/catatan (Opsional untuk Approve, Wajib untuk Revisi)..."></textarea>
+                        </div>
+                        <div class="action-btns" style="display:flex; justify-content: flex-end; gap:15px;">
                             <button type="button" class="btn btn-revise" onclick="submitHeadAction('revise')">Revisi</button>
                             <button type="button" class="btn btn-approve" onclick="submitHeadAction('approve')">Approve</button>
                         </div>
                     </form>
+                @elseif($status == 'approved')
+                    <div class="alert alert-success" style="width:100%; margin:0; text-align:center;">
+                        <i class="fas fa-check-circle"></i> Dokumen ini telah Anda setujui.
+                    </div>
                 @else
                     <div class="alert alert-info" style="width:100%; margin:0; text-align:center;">
                         <i class="fas fa-clock"></i> Menunggu pemeriksaan oleh Reviewer/Verifikator Staff.
@@ -1467,36 +1474,33 @@
             }
             input.value = checklistJson;
 
+            // Get Note Value
+            const noteInput = form.querySelector('textarea[name="catatan"]');
+            const noteValue = noteInput ? noteInput.value.trim() : '';
+
             if (type === 'revise') {
+                if (noteValue.length < 5) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Catatan Wajib',
+                        text: 'Mohon isi catatan revisi minimal 5 karakter pada kolom komentar dibawah.',
+                        confirmButtonColor: '#3b82f6'
+                    });
+                    return;
+                }
+
                 form.action = "{{ route('unit_pengelola.revise', $document->id) }}";
                 
                 Swal.fire({
-                    title: 'Catatan Revisi',
-                    input: 'textarea',
-                    inputLabel: 'Masukkan alasan revisi:',
-                    inputPlaceholder: 'Tulis catatan disini...',
-                    inputAttributes: {
-                        'aria-label': 'Tulis catatan disini'
-                    },
+                    title: 'Kirim Revisi?',
+                    text: 'Dokumen akan dikembalikan ke staff.',
+                    icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonText: 'Kirim Revisi',
+                    confirmButtonText: 'Ya, Revisi',
                     cancelButtonText: 'Batal',
-                    inputValidator: (value) => {
-                        if (!value || value.length < 5) {
-                            return 'Catatan wajib diisi minimal 5 karakter!'
-                        }
-                    }
+                    confirmButtonColor: '#dc2626'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Create/Update hidden input for catatan
-                        let input = form.querySelector('input[name="catatan"]');
-                        if (!input) {
-                            input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'catatan';
-                            form.appendChild(input);
-                        }
-                        input.value = result.value;
                         form.submit();
                     }
                 });
@@ -1508,10 +1512,10 @@
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Ya, Approve',
-                    cancelButtonText: 'Batal'
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#16a34a'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                         // Optional: Add empty note if needed, or backend handles null
                         form.submit();
                     }
                 });
@@ -1542,6 +1546,32 @@
         }
 
         function submitStaffAction() {
+            // Validation: Ensure all Compliance Checklist items are filled
+            const selects = document.querySelectorAll('select[name^="compliance_checklist"]');
+            let allFilled = true;
+            
+            selects.forEach(select => {
+                if (select.value === "") {
+                    allFilled = false;
+                    select.classList.add('border-red-500'); // Visual cue if using Tailwind, or just rely on alert
+                    select.style.border = "1px solid red";
+                } else {
+                    select.style.border = ""; // Reset if fixed
+                }
+            });
+
+            if (!allFilled) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Checklist Belum Lengkap',
+                    text: 'Mohon lengkapi semua poin pada Tabel Kesesuaian (Compliance Checklist) sebelum menyelesaikan review/verifikasi.',
+                    confirmButtonColor: '#f59e0b'
+                });
+                // Scroll to checklist
+                document.querySelector('.doc-card').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
             // Inject Compliance Data
             const checklistJson = collectComplianceData();
             document.getElementById('compliance_checklist_input').value = checklistJson;
@@ -1704,6 +1734,265 @@
                 noteInput.value = ''; // Auto clear when OK/Empty
             }
         }
+    </script>
+    <!-- Edit Modal -->
+    <div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; overflow:auto;">
+        <div style="position:relative; width:95%; max-width:1200px; margin:20px auto; background:white; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto;">
+            <!-- Modal Header -->
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 30px; border-bottom:2px solid #e5e7eb; background:#f9fafb; border-radius:12px 12px 0 0; position:sticky; top:0; z-index:10;">
+                <h2 style="margin:0; font-size:20px; font-weight:700; color:#1f2937;">
+                    <i class="fas fa-edit"></i> Edit Detail Item
+                </h2>
+                <button onclick="closeEditModal()" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; transition:all 0.2s;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body with Edit Form -->
+            <div id="editFormContainer" style="padding:30px;">
+                <p style="text-align:center; color:#6b7280;">Pilih item untuk diedit</p>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div style="padding:20px 30px; border-top:2px solid #e5e7eb; background:#f9fafb; border-radius:0 0 12px 12px; display:flex; justify-content:flex-end; gap:10px; position:sticky; bottom:0;">
+                <button onclick="closeEditModal()" class="btn" style="background:#6b7280; color:white;">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+                <button onclick="saveEditForm()" class="btn" style="background:#3b82f6; color:white;">
+                    <i class="fas fa-save"></i> Simpan Perubahan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+            font-size: 14px;
+        }
+        
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+    </style>
+
+    <script>
+        let currentEditItem = null;
+        
+        function openEditModal(item = null) {
+            const modal = document.getElementById('editModal');
+            const formContainer = document.getElementById('editFormContainer');
+            
+            if (!item) {
+                // If open without item (e.g. from header button), assume we want to edit something?
+                // Or maybe just show empty state
+                // But the header button calls openEditModal() without args
+                // For now, let's just show alert if no item
+                // Ideally header button should not be there if we editing per row
+                // Or user meant "Edit Table" = "Table with editable cells" which is different.
+                // But user asked for "pop up edit form".
+                
+                // Let's try to find the first item if none provided, or just show alert
+                // Or maybe "Mode Edit" logic is confusing.
+                
+                // Wait, if item is passed as object, great.
+                // The header button calls openEditModal() with no args.
+                // Maybe we should remove the header button action or make it clear.
+                
+                // For now, handle null item gracefully
+                 alert('Silakan klik icon pensil di tabel untuk mengedit baris tertentu.');
+                 return;
+            }
+            
+            currentEditItem = item;
+            
+            // Build edit form HTML
+            const formHTML = `
+                <form id="editItemForm">
+                    <input type="hidden" name="item_id" value="${item.id}">
+                    
+                    <div class="form-group">
+                        <label class="form-label">Proses/Kegiatan (Kolom 2)</label>
+                        <textarea name="kolom2_kegiatan" class="form-textarea">${item.kolom2_kegiatan || ''}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Lokasi (Kolom 3)</label>
+                        <input type="text" name="kolom3_lokasi" class="form-input" value="${item.kolom3_lokasi || ''}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Kategori (Kolom 4)</label>
+                        <select name="kategori" class="form-select">
+                            <option value="K3" ${item.kategori == 'K3' ? 'selected' : ''}>K3</option>
+                            <option value="KO" ${item.kategori == 'KO' ? 'selected' : ''}>KO</option>
+                            <option value="Lingkungan" ${item.kategori == 'Lingkungan' ? 'selected' : ''}>Lingkungan</option>
+                            <option value="Keamanan" ${item.kategori == 'Keamanan' ? 'selected' : ''}>Keamanan</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Kondisi (Kolom 5)</label>
+                        <select name="kolom5_kondisi" class="form-select">
+                            <option value="Normal" ${item.kolom5_kondisi == 'Normal' ? 'selected' : ''}>Normal</option>
+                            <option value="Abnormal" ${item.kolom5_kondisi == 'Abnormal' ? 'selected' : ''}>Abnormal</option>
+                            <option value="Emergency" ${item.kolom5_kondisi == 'Emergency' ? 'selected' : ''}>Emergency</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Risiko/Dampak/Celah (Kolom 9)</label>
+                        <textarea name="kolom9_risiko" class="form-textarea">${item.kolom9_risiko_k3ko || item.kolom9_dampak_lingkungan || item.kolom9_celah_keamanan || item.kolom9_risiko || ''}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Pengendalian Existing (Kolom 11)</label>
+                        <textarea name="kolom11_existing" class="form-textarea">${item.kolom11_existing || ''}</textarea>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        <div class="form-group">
+                            <label class="form-label">Kemungkinan (L) - Kolom 12</label>
+                            <input type="number" name="kolom12_kemungkinan" class="form-input" value="${item.kolom12_kemungkinan || ''}" min="1" max="5">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Konsekuensi (S) - Kolom 13</label>
+                            <input type="number" name="kolom13_konsekuensi" class="form-input" value="${item.kolom13_konsekuensi || ''}" min="1" max="5">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Regulasi (Kolom 15)</label>
+                        <textarea name="kolom15_regulasi" class="form-textarea">${item.kolom15_regulasi || ''}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Toleransi (Kolom 18)</label>
+                        <select name="kolom18_toleransi" class="form-select">
+                            <option value="Ya" ${item.kolom18_toleransi == 'Ya' ? 'selected' : ''}>Ya</option>
+                            <option value="Tidak" ${item.kolom18_toleransi == 'Tidak' ? 'selected' : ''}>Tidak</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Pengendalian Lanjut (Kolom 19)</label>
+                        <textarea name="kolom19_pengendalian_lanjut" class="form-textarea">${item.kolom19_pengendalian_lanjut || ''}</textarea>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:15px;">
+                        <div class="form-group">
+                            <label class="form-label">Kemungkinan Lanjut (L) - Kolom 20</label>
+                            <input type="number" name="kolom20_kemungkinan_lanjut" class="form-input" value="${item.kolom20_kemungkinan_lanjut || ''}" min="1" max="5">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Konsekuensi Lanjut (S) - Kolom 21</label>
+                            <input type="number" name="kolom21_konsekuensi_lanjut" class="form-input" value="${item.kolom21_konsekuensi_lanjut || ''}" min="1" max="5">
+                        </div>
+                    </div>
+                </form>
+            `;
+            
+            formContainer.innerHTML = formHTML;
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            currentEditItem = null;
+        }
+        
+        function saveEditForm() {
+            if (!currentEditItem) {
+                alert('Tidak ada item yang sedang diedit');
+                return;
+            }
+            
+            const form = document.getElementById('editItemForm');
+            const formData = new FormData(form);
+            
+            // Show loading
+            const formContainer = document.getElementById('editFormContainer');
+            formContainer.innerHTML = '<div style="text-align:center; padding:40px;"><div style="width:60px; height:60px; border:4px solid #e5e7eb; border-top:4px solid #3b82f6; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 15px;"></div><p>Menyimpan...</p></div>';
+            
+            // Send AJAX request
+            fetch('{{ route("documents.update_detail", $document->id) }}', {
+                method: 'PUT',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    detail_id: currentEditItem.id,
+                    ...Object.fromEntries(formData)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Data berhasil diupdate',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    closeEditModal();
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    throw new Error(data.message || 'Gagal menyimpan data');
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Terjadi kesalahan saat menyimpan data'
+                });
+                // Restore form
+                openEditModal(currentEditItem);
+            });
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('editModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
     </script>
 </body>
 

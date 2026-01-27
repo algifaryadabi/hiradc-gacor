@@ -420,18 +420,98 @@
             @php
                 // Categorize documents
                 $allDocs = $documents;
-                $reviewDocs = $documents->filter(fn($d) => $d->level2_status == 'assigned_review');
-                $keputusanAkhirDocs = $documents->filter(fn($d) => $d->level2_status == 'assigned_approval');
-                $approveDocs = $documents->filter(fn($d) => $d->level2_status == 'approved' || ($d->current_level > 2 && $d->status != 'pending_level2'));
+                $user = Auth::user();
+
+                // Filter based on unit-specific status
+                if ($user->id_unit == 55) {
+                    // Security staff
+                    $reviewDocs = $documents->filter(fn($d) => $d->status_security == 'assigned_review');
+                    $keputusanAkhirDocs = $documents->filter(fn($d) => $d->status_security == 'assigned_approval');
+                    $approveDocs = $documents->filter(fn($d) => in_array($d->status_security, ['approved', 'published']) || $d->current_level > 2);
+                } elseif ($user->id_unit == 56) {
+                    // SHE staff
+                    $reviewDocs = $documents->filter(fn($d) => $d->status_she == 'assigned_review');
+                    $keputusanAkhirDocs = $documents->filter(fn($d) => $d->status_she == 'assigned_approval');
+                    $approveDocs = $documents->filter(fn($d) => in_array($d->status_she, ['approved', 'published']) || $d->current_level > 2);
+                } else {
+                    // Fallback to generic level2_status
+                    $reviewDocs = $documents->filter(fn($d) => $d->level2_status == 'assigned_review');
+                    $keputusanAkhirDocs = $documents->filter(fn($d) => $d->level2_status == 'assigned_approval');
+                    $approveDocs = $documents->filter(fn($d) => $d->level2_status == 'approved' || ($d->current_level > 2 && $d->status != 'pending_level2'));
+                }
+
+                // Get ALL documents where this staff is assigned as reviewer OR verificator
+                // This includes both pending and completed reviews/verifications
+                if ($user->id_unit == 55) {
+                    // Security staff
+                    if ($user->role_jabatan == 4) { // Verifikator
+                        $completedReviews = \App\Models\Document::where('security_verificator_id', $user->id_user)
+                            ->where('current_level', '>=', 2)
+                            ->orderBy('updated_at', 'desc')
+                            ->get();
+                    } else { // Reviewer
+                        $completedReviews = \App\Models\Document::where('security_reviewer_id', $user->id_user)
+                            ->where('current_level', '>=', 2)
+                            ->orderBy('updated_at', 'desc')
+                            ->get();
+                    }
+
+                } elseif ($user->id_unit == 56) {
+                    // SHE staff
+                    if ($user->role_jabatan == 4) { // Verifikator
+                        $completedReviews = \App\Models\Document::where('she_verificator_id', $user->id_user)
+                            ->where('current_level', '>=', 2)
+                            ->orderBy('updated_at', 'desc')
+                            ->get();
+                    } else { // Reviewer
+                        $completedReviews = \App\Models\Document::where('she_reviewer_id', $user->id_user)
+                            ->where('current_level', '>=', 2)
+                            ->orderBy('updated_at', 'desc')
+                            ->get();
+                    }
+                } else {
+                    $completedReviews = collect(); // Empty collection for other roles
+                }
+
+                // Separate into completed (not pending) for history display
+                $historyReviews = $completedReviews->filter(function ($d) use ($user) {
+                    if ($user->id_unit == 55) {
+                        // For Verifikator: Check if approved/returned (not assigned_approval)
+                        // For Reviewer: Check if passed review (not assigned_review)
+                        if ($user->role_jabatan == 4) {
+                            return $d->status_security != 'assigned_approval' && !empty($d->status_security) && $d->status_security != 'assigned_review';
+                            // Logic: If status is 'assigned_review', it's active for reviewer, effectively 'past' for verificator? No.
+                            // Verificator acts AFTER reviewer.
+                            // If status is 'assigned_approval', it's PENDING for verificator.
+                            // If status is 'staff_verified', 'returned_to_head', 'approved' -> COMPLETED by verificator.
+                        } else {
+                            return $d->status_security != 'assigned_review' && !empty($d->status_security);
+                        }
+                    } elseif ($user->id_unit == 56) {
+                        if ($user->role_jabatan == 4) {
+                            // Verifikator Logic
+                            return $d->status_she != 'assigned_approval' && !empty($d->status_she) && $d->status_she != 'assigned_review';
+                        } else {
+                            return $d->status_she != 'assigned_review' && !empty($d->status_she);
+                        }
+                    }
+                    return false;
+                });
             @endphp
 
             <!-- Category Filter Cards -->
             <div class="category-filters">
                 @if(in_array(Auth::user()->role_jabatan, [5, 6]))
                     <!-- Review category only for Staff Reviewer (Band IV/V) -->
-                    <div class="category-card active" onclick="selectCategory('review', this)">
+                    <div class="category-card active" onclick="showMainDocList(); selectCategory('review', this)">
                         <h3>Review</h3>
                         <div class="count">{{ $reviewDocs->count() }}</div>
+                    </div>
+
+                    <!-- History Review Card -->
+                    <div class="category-card" onclick="toggleHistoryCard()" style="border-color:#10b981; cursor:pointer;">
+                        <h3 style="color:#10b981;"><i class="fas fa-history"></i> History Review</h3>
+                        <div class="count" style="color:#10b981;">{{ $historyReviews->count() }}</div>
                     </div>
                 @endif
 
@@ -441,27 +521,110 @@
                         <h3>Keputusan Akhir</h3>
                         <div class="count">{{ $keputusanAkhirDocs->count() }}</div>
                     </div>
+
+                    <!-- History Review Card for Verifikator -->
+                    <div class="category-card" onclick="toggleHistoryCard()" style="border-color:#10b981; cursor:pointer;">
+                        <h3 style="color:#10b981;"><i class="fas fa-history"></i> History Verifikator</h3>
+                        <div class="count" style="color:#10b981;">{{ $historyReviews->count() }}</div>
+                    </div>
                 @endif
+            </div>
+
+            <!-- History Review Expandable Section -->
+            <div id="historyReviewSection" style="display:none; margin-bottom:30px;">
+                <div style="background:white; border-radius:12px; padding:25px; border:2px solid #10b981;">
+                    <div style="margin-bottom:20px;">
+                        <h2 style="font-size:18px; font-weight:700; color:#10b981; margin:0;">
+                            <i class="fas fa-history"></i>
+                            @if(Auth::user()->role_jabatan == 4)
+                                Riwayat Verifikasi
+                            @else
+                                Riwayat Review Dokumen
+                            @endif
+                        </h2>
+                    </div>
+
+
+                    @if($historyReviews->count() > 0)
+                        <div style="display:flex; flex-direction:column; gap:12px;">
+                            @foreach($historyReviews as $doc)
+                                <div
+                                    style="background:#f8f9fa; padding:15px; border-radius:8px; display:grid; grid-template-columns:60px 1fr auto; gap:15px; align-items:center;">
+                                    <!-- Date -->
+                                    <div style="text-align:center; padding:8px; background:white; border-radius:6px;">
+                                        <div style="font-size:18px; font-weight:700; color:#10b981; line-height:1;">
+                                            {{ $doc->updated_at->format('d') }}
+                                        </div>
+                                        <div style="font-size:10px; color:#666; text-transform:uppercase;">
+                                            {{ $doc->updated_at->format('M Y') }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Info -->
+                                    <div>
+                                        <h4 style="font-size:14px; font-weight:600; color:#333; margin-bottom:5px;">
+                                            {{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}
+                                        </h4>
+                                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                            <span
+                                                style="font-size:11px; color:#666; background:#e5e7eb; padding:3px 8px; border-radius:12px;">
+                                                <i class="fas fa-building"></i> {{ $doc->unit->nama_unit ?? '-' }}
+                                            </span>
+                                            <span
+                                                style="font-size:11px; color:#059669; background:#d1fae5; padding:3px 8px; border-radius:12px; font-weight:600;">
+                                                <i class="fas fa-check-circle"></i>
+                                                @if(Auth::user()->role_jabatan == 4)
+                                                    Selesai Diverifikasi
+                                                @else
+                                                    Selesai Direview
+                                                @endif
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action -->
+                                    <a href="{{ route('unit_pengelola.review', $doc->id) }}"
+                                        style="padding:8px 16px; background:#10b981; color:white; border-radius:6px; font-weight:600; font-size:12px; text-decoration:none; display:flex; align-items:center; gap:6px;">
+                                        <i class="fas fa-eye"></i> Lihat
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div style="text-align:center; padding:40px; color:#999;">
+                            <i class="fas fa-inbox" style="font-size:40px; margin-bottom:10px; display:block;"></i>
+                            <p>Belum ada riwayat review.</p>
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <!-- Document List -->
             <div class="doc-list">
                 @forelse($documents as $doc)
                     @php
-                        // Determine category
+                        // Determine category based on unit-specific status
                         $docCategory = 'semua';
                         $statusLabel = 'Menunggu Review';
 
-                        if ($doc->level2_status == 'assigned_review') {
+                        // Get unit-specific status
+                        $currentStatus = $doc->level2_status; // Default
+                        if ($user->id_unit == 55) {
+                            $currentStatus = $doc->status_security;
+                        } elseif ($user->id_unit == 56) {
+                            $currentStatus = $doc->status_she;
+                        }
+
+                        if ($currentStatus == 'assigned_review') {
                             $docCategory = 'review';
                             $statusLabel = 'Menunggu Review';
-                        } elseif ($doc->level2_status == 'assigned_approval') {
+                        } elseif ($currentStatus == 'assigned_approval') {
                             $docCategory = 'keputusan_akhir';
                             $statusLabel = 'Sedang Diverifikasi';
-                        } elseif ($doc->level2_status == 'returned_to_head') {
+                        } elseif ($currentStatus == 'returned_to_head' || $currentStatus == 'staff_verified') {
                             $docCategory = 'keputusan_akhir';
                             $statusLabel = 'Keputusan Akhir';
-                        } elseif ($doc->level2_status == 'approved' || ($doc->current_level > 2 && $doc->status != 'pending_level2')) {
+                        } elseif ($currentStatus == 'approved' || $currentStatus == 'published' || $doc->current_level > 2) {
                             $docCategory = 'approve';
                             $statusLabel = 'Approved';
                         }
@@ -518,8 +681,51 @@
     </div>
 
     <script>
+        // Toggle History Review Section
+        function toggleHistoryCard() {
+            console.log('toggleHistoryCard called');
+            const historySection = document.getElementById('historyReviewSection');
+            const mainDocList = document.querySelector('.doc-list');
+            console.log('historySection:', historySection);
+            console.log('mainDocList:', mainDocList);
+
+            if (!historySection) {
+                console.error('History section not found!');
+                alert('Error: History section tidak ditemukan. Silakan refresh halaman.');
+                return;
+            }
+
+            if (historySection.style.display === 'none' || historySection.style.display === '') {
+                // Show history, hide main list
+                historySection.style.display = 'block';
+                if (mainDocList) mainDocList.style.display = 'none';
+                console.log('Showing history section, hiding main doc list');
+                // Scroll to history section
+                setTimeout(() => {
+                    historySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            } else {
+                // Hide history, show main list
+                historySection.style.display = 'none';
+                if (mainDocList) mainDocList.style.display = 'flex';
+                console.log('Hiding history section, showing main doc list');
+            }
+        }
+
+        // Show main document list (hide history)
+        function showMainDocList() {
+            const historySection = document.getElementById('historyReviewSection');
+            const mainDocList = document.querySelector('.doc-list');
+
+            if (historySection) historySection.style.display = 'none';
+            if (mainDocList) mainDocList.style.display = 'flex';
+        }
+
         // Category filtering
         function selectCategory(category, element) {
+            // Ensure main list is visible (in case History was open)
+            showMainDocList();
+
             // Update active state
             document.querySelectorAll('.category-card').forEach(card => {
                 card.classList.remove('active');
@@ -544,7 +750,6 @@
                 emptyState.style.display = visibleDocs.length === 0 ? 'flex' : 'none';
             }
         }
-    }
 
         // Check for success session
         @if(session('success'))

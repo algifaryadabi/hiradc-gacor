@@ -22,7 +22,6 @@ class DocumentDetail extends Model
         'kolom7_aspek_lingkungan', // New
         'kolom7_dampak',
         'kolom8_ancaman', // New
-        'ancaman_manual', // New (mapped in controller?) - controller says 'manual' => $item['ancaman_manual'], but does it save to 'ancaman_manual' column?
         // Checking migration 2026_01_16_190935_create_document_details_table.php... 
         // It has 'bahaya_manual'. conditional migration added 'kolom7_aspek_lingkungan' and 'kolom8_ancaman'.
         // Does it add 'ancaman_manual'?
@@ -32,12 +31,12 @@ class DocumentDetail extends Model
         // Same for 'aspek_manual' -> part of 'kolom7_aspek_lingkungan' JSON.
         // 'bahaya_manual' IS a separate column (line 27 of create_document_details).
         // So I only need to add 'kolom7_aspek_lingkungan' and 'kolom8_ancaman' to fillable.
-        
+
         'kolom9_risiko',
         'kolom9_risiko_k3ko',
         'kolom9_dampak_lingkungan',
         'kolom9_celah_keamanan',
-        
+
         'kolom10_pengendalian',
         'kolom11_existing',
         'kolom12_kemungkinan',
