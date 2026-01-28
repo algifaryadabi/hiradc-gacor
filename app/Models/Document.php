@@ -61,6 +61,8 @@ class Document extends Model
         'security_verificator_id',
         'she_approved_at',
         'security_approved_at',
+        'compliance_checklist_she',
+        'compliance_checklist_security',
     ];
 
     protected $casts = [
@@ -68,6 +70,8 @@ class Document extends Model
         'kolom10_pengendalian' => 'array',
         'published_at' => 'datetime',
         'compliance_checklist' => 'array',
+        'compliance_checklist_she' => 'array',
+        'compliance_checklist_security' => 'array',
     ];
 
     // ==================== RELATIONSHIPS ====================
@@ -148,11 +152,21 @@ class Document extends Model
             $this->status = 'pending_level2';
 
             // Initialize Split Workflow Statuses
+            // SMART CHECK: specific revision flow protection.
+            // Only reset to 'pending_head' if it's NOT already done (approved/published)
+
             if ($this->hasSheContent()) {
-                $this->status_she = 'pending_head'; // Need Head Unit (Level 2) attention
+                // If currently revision (from partial) or pending or null, reset to pending_head.
+                // If it is 'approved' or 'published', KEEP IT.
+                if (!in_array($this->status_she, ['approved', 'published'])) {
+                    $this->status_she = 'pending_head';
+                }
             }
+
             if ($this->hasSecurityContent()) {
-                $this->status_security = 'pending_head'; // Need Head Unit (Level 2) attention
+                if (!in_array($this->status_security, ['approved', 'published'])) {
+                    $this->status_security = 'pending_head';
+                }
             }
 
         } elseif ($this->current_level == 2) {
@@ -238,7 +252,11 @@ class Document extends Model
         }
 
         // Level 3: Kepala Departemen
-        if ($this->current_level == 3) {
+        // Condition:
+        // Allow access if document is at least Level 2.
+        // We relax the strict status check here to avoid 403 errors during complex partial flows.
+        // The Controller/Dashboard will filter what is actionable.
+        if ($this->current_level >= 2) {
             // Must be General Manager (Role 2) AND same Dept
             return $user->isKepalaDepartemen() && $user->id_dept == $this->id_dept;
         }

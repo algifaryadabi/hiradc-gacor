@@ -1157,20 +1157,13 @@
                                             ['key' => 'condition_coverage', 'label' => 'Ident. mencakup semua kondisi (R/NR/E)'],
                                             ['key' => 'mitigation', 'label' => 'Kesesuaian Program Mitigasi']
                                         ];
-                                        $fullChecklist = $document->compliance_checklist ?? [];
-                                        if (!is_array($fullChecklist)) $fullChecklist = json_decode($fullChecklist, true) ?? [];
-                                        
                                         $existing = [];
-                                        if ($user->id_unit == 56) {
-                                            $existing = $fullChecklist['she'] ?? [];
-                                        } elseif ($user->id_unit == 55) {
-                                            $existing = $fullChecklist['security'] ?? [];
+                                        if ($user->id_unit == 56) { // SHE
+                                            $existing = $document->compliance_checklist_she ?? [];
+                                        } elseif ($user->id_unit == 55) { // Security
+                                            $existing = $document->compliance_checklist_security ?? [];
                                         } else {
-                                            // View only or fallback: Show merged or primary?
-                                            // For now, if we are reviewing, we likely match one of above.
-                                            // If view only, show general or maybe SHE preference?
-                                            // Let's show SHE if available, else Security.
-                                            $existing = $fullChecklist['she'] ?? $fullChecklist['security'] ?? $fullChecklist['general'] ?? [];
+                                            $existing = $document->compliance_checklist_she ?? $document->compliance_checklist_security ?? $document->compliance_checklist ?? [];
                                         }
                                     @endphp
                                     @foreach($criteriaList as $idx => $c)
@@ -1247,19 +1240,24 @@
                 @endphp
                 @foreach($uniqueHistory as $hist)
                     @php
-                        // FILTER LOGIC: Hide parallel history for Unit Pengelola Head during Final Decision
+                        // Strictly hide logs from the other department unit
                         $isParallelHidden = false;
-                        if ($isHead && in_array($status, ['staff_verified', 'returned_to_head'])) {
-                            $histUnit = optional($hist->approver)->id_unit;
-                            // If I am SHE (56), hide Security (55)
-                            if ($user->id_unit == 56 && $histUnit == 55) {
-                                $isParallelHidden = true;
-                            }
-                            // If I am Security (55), hide SHE (56)
-                            if ($user->id_unit == 55 && $histUnit == 56) {
-                                $isParallelHidden = true;
+                        $histUnit = optional($hist->approver)->id_unit;
+                        $histLevel = $hist->level ?? 0;
+                        $histAction = strtolower($hist->action ?? '');
+                        
+                        // Allow Level 1 and created/submitted for all
+                        $isSharedAction = ($histLevel == 1) || in_array($histAction, ['created', 'submitted']);
+                        
+                        // For all other actions, filter by unit
+                        if (!$isSharedAction) {
+                            if ($user->id_unit == 56) { // I am SHE
+                                if ($histUnit == 55) $isParallelHidden = true; // Hide Security
+                            } elseif ($user->id_unit == 55) { // I am Security
+                                if ($histUnit == 56) $isParallelHidden = true; // Hide SHE
                             }
                         }
+                        
                         if ($isParallelHidden) continue;
                     @endphp
                     @php

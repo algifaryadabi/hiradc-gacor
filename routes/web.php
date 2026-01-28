@@ -150,7 +150,9 @@ Route::middleware('auth')->group(function () {
         ->name('documents.export.detail.pdf');
     Route::get('/documents/{document}/export/excel', [DocumentController::class, 'exportDetailExcel'])->name('documents.export.detail.excel');
 
-    Route::get('/my-documents/summary', [DocumentController::class, 'summary'])->name('documents.summary');
+    Route::get('/my-documents/summary', function () {
+        return redirect()->route('documents.index');
+    })->name('documents.summary');
     Route::get('/my-documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
     Route::get('/documents/{document}/edit', [DocumentController::class, 'edit'])->name('documents.edit');

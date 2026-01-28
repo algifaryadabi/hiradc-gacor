@@ -9,197 +9,412 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* ========================================
+           DESIGN SYSTEM - CSS CUSTOM PROPERTIES
+           ======================================== */
         :root {
-            /* Palette Modern (Slate & Primary Red) */
-            --primary: #e11d48; /* Rose 600 */
-            --primary-hover: #be123c; /* Rose 700 */
-            --primary-light: #fff1f2; /* Rose 50 */
-            --primary-soft: #ffe4e6; /* Rose 100 */
-            
-            --bg-body: #f8fafc; /* Slate 50 */
-            --surface: #ffffff;
-            
-            --text-main: #0f172a; /* Slate 900 */
-            --text-sub: #64748b; /* Slate 500 */
-            --text-light: #94a3b8; /* Slate 400 */
-            
-            --border: #e2e8f0; /* Slate 200 */
-            
-            /* Modern Status Colors */
+            /* Brand Colors - PT Semen Padang */
+            --primary: #c41e3a;
+            --primary-dark: #9a1829;
+            --primary-light: #e63950;
+            --primary-50: #fef2f3;
+            --primary-100: #fce7e9;
+            --primary-200: #f9d0d4;
+            --primary-600: #c41e3a;
+
+            /* Neutral Palette */
+            --gray-50: #fafafa;
+            --gray-100: #f5f5f5;
+            --gray-200: #e5e5e5;
+            --gray-300: #d4d4d4;
+            --gray-400: #a3a3a3;
+            --gray-500: #737373;
+            --gray-600: #525252;
+            --gray-700: #404040;
+            --gray-800: #262626;
+            --gray-900: #171717;
+
+            /* Semantic Colors */
             --success: #10b981;
-            --success-bg: #ecfdf5;
+            --success-light: #d1fae5;
             --warning: #f59e0b;
-            --warning-bg: #fffbeb;
-            --danger: #ef4444;
-            --danger-bg: #fef2f2;
+            --warning-light: #fef3c7;
+            --error: #ef4444;
+            --error-light: #fee2e2;
             --info: #3b82f6;
-            --info-bg: #eff6ff;
+            --info-light: #dbeafe;
+
+            /* Surface & Background - Enhanced */
+            --bg-body: #f1f5f9;
+            --surface: #ffffff;
+            --surface-hover: #f9fafb;
+            --surface-elevated: #ffffff;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --border-radius: 16px; /* Added for compatibility */
+
+            /* Text Colors */
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --text-inverse: #ffffff;
+            --text-main: #0f172a; /* Legacy compat */
+            --text-sub: #64748b; /* Legacy compat */
+
+            /* Shadows - Enhanced */
+            --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --shadow-colored: 0 10px 25px -5px rgba(196, 30, 58, 0.15);
             
-            /* Shadows for Depth */
-            --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --sidebar-bg: #5b6fd8; /* Legacy compat */
+            --header-bg: #1e293b; /* Legacy compat */
+            --header-text: #ffffff; /* Legacy compat */
+            
+            /* Transitions */
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Spacing (Added for Dashboard compatibility) */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+            --space-12: 3rem;
+            --space-16: 4rem;
+            
+            --radius-lg: 0.75rem;
+            --radius-full: 9999px;
+            --font-weight-bold: 700;
+            --font-weight-semibold: 600;
+            --font-weight-medium: 500;
         }
 
+        /* ========================================
+           BASE STYLES
+           ======================================== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             outline: none;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: var(--bg-body);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(196, 30, 58, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
             color: var(--text-main);
             padding-bottom: 60px;
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            max-width: 100vw;
+            min-height: 100vh;
         }
 
-        /* Sidebar */
+        .layout-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========================================
+           SIDEBAR - Enhanced Design
+           ======================================== */
         .sidebar {
-            width: 250px;
-            background: white;
-            border-right: 1px solid #e0e0e0;
+            width: 280px;
+            background: #5b6fd8;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             position: fixed;
             height: 100vh;
             display: flex;
             flex-direction: column;
             z-index: 100;
+            box-shadow: var(--shadow-md);
             font-family: 'Inter', sans-serif;
         }
 
         .logo-section {
-            padding: 30px 20px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: var(--space-8) var(--space-6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             text-align: center;
+            background: transparent;
+            position: relative;
+        }
+
+        .logo-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
         }
 
         .logo-circle {
-            width: 70px;
-            height: 70px;
-            background: #fff;
-            border-radius: 50%;
-            margin: 0 auto 15px;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto var(--space-5);
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all var(--transition-base);
+            background: white;
+            border-radius: 50%;
             overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-circle:hover {
+            transform: scale(1.05);
         }
 
         .logo-circle img {
-            max-width: 80%;
-            max-height: 80%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
         }
 
         .logo-text {
-            font-size: 18px;
-            font-weight: 700;
-            color: #c41e3a;
-            margin-bottom: 3px;
+            font-size: 1.125rem;
+            font-weight: var(--font-weight-bold);
+            color: white;
+            margin-bottom: var(--space-1);
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
 
         .logo-subtext {
-            font-size: 12px;
-            color: #999;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: var(--font-weight-semibold);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
             font-style: italic;
         }
 
         .nav-menu {
             flex: 1;
-            padding: 20px 0;
+            padding: var(--space-6) 0;
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--gray-300) transparent;
+        }
+
+        .nav-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .nav-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .nav-menu::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: var(--radius-full);
         }
 
         .nav-item {
-            padding: 15px 25px;
+            padding: var(--space-4) var(--space-6);
+            margin: var(--space-1) var(--space-4);
             display: flex;
             align-items: center;
-            gap: 12px;
-            color: #666;
-            font-size: 14px;
-            font-weight: 500;
+            gap: var(--space-3);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.9375rem;
+            font-weight: var(--font-weight-medium);
             text-decoration: none;
-            transition: all 0.3s;
+            position: relative;
+            border-radius: var(--radius-lg);
+            border-left: 3px solid transparent;
         }
 
-        .nav-item:hover { background: #fff5f5; color: #c41e3a; }
-        .nav-item.active { background: #ffe5e5; color: #c41e3a; border-left: 3px solid #c41e3a; }
-        .nav-item i { width: 20px; text-align: center; }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(4px);
+        }
 
-        /* User Info Bottom */
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            font-weight: var(--font-weight-semibold);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border-left-color: white;
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 60%;
+            background: white;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.125rem;
+            transition: transform var(--transition-base);
+        }
+
+        .nav-item:hover i {
+            transform: scale(1.1);
+        }
+
         .user-info-bottom {
-            padding: 20px;
-            border-top: 2px solid #e0e0e0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: var(--space-6);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            background: transparent;
+            position: relative;
         }
+
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            position: relative;
+            z-index: 1;
         }
+
         .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: white;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            background: var(--surface);
+            border-radius: var(--radius-full);
             display: flex;
             align-items: center;
             justify-content: center;
             color: #667eea;
-            font-weight: 700;
-            font-size: 16px;
+            font-weight: var(--font-weight-bold);
+            font-size: 1.125rem;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
+
         .user-details {
             flex: 1;
             min-width: 0;
         }
+
         .user-name {
-            font-weight: 600;
-            font-size: 14px;
+            font-weight: var(--font-weight-semibold);
+            font-size: 0.9375rem;
             color: white;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            margin-bottom: 2px;
         }
+        
+        .sidebar .user-name {
+            font-weight: var(--font-weight-semibold);
+            font-size: 0.9375rem;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+
         .user-role {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 2px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: var(--font-weight-medium);
         }
+        
+        .sidebar .user-role {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: var(--font-weight-medium);
+        }
+
         .logout-btn {
             width: 100%;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.2);
+            padding: var(--space-3) var(--space-4);
+            background: rgba(255, 255, 255, 0.15);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            font-weight: var(--font-weight-semibold);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all var(--transition-base);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: var(--space-2);
             text-decoration: none;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
         }
+        
+        .sidebar .logout-btn {
+            width: 100%;
+            padding: var(--space-3) var(--space-4);
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            font-weight: var(--font-weight-semibold);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            text-decoration: none;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+
         .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .sidebar .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         /* Main Content */
         .main-content {
-            margin-left: 250px;
-            padding: 32px 48px;
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px;
+            background: var(--bg-body);
             min-height: 100vh;
+            max-width: 1200px;
         }
 
         .back-nav {
@@ -209,7 +424,7 @@
         .back-link {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             color: var(--text-sub);
             font-size: 14px;
             font-weight: 600;
@@ -228,177 +443,120 @@
             transform: translateX(-4px);
         }
 
-        /* Passport Card */
-        .passport-card {
-            background: white;
+        /* Doc Banner (Replacing Passport Card style for consistency) */
+        .doc-banner {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
             border-radius: 16px;
-            padding: 20px 28px;
+            padding: 24px 32px;
             border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 28px;
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            align-items: center;
-            gap: 28px;
-        }
-
-        .pp-profile-group {
+            box-shadow: var(--shadow-md);
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
             display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-
-        .pp-avatar-box {
-            width: 56px;
-            height: 56px;
-            background: var(--bg-body);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            color: var(--text-main);
-            font-size: 20px;
-            border: 1px solid var(--border);
-        }
-
-        .pp-info h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 4px;
-        }
-
-        .pp-info p {
-            font-size: 13px;
-            color: var(--text-sub);
-            font-weight: 500;
-        }
-
-        .pp-meta-group {
-            display: flex;
-            gap: 40px;
-            border-left: 1px solid var(--border);
-            border-right: 1px solid var(--border);
-            padding: 0 40px;
-        }
-
-        .pp-stat-block {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .pp-stat-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-sub);
-            font-weight: 600;
-        }
-
-        .pp-stat-value {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .pp-status-badge {
-            padding: 8px 20px;
-            border-radius: 100px;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.03em;
-            text-transform: uppercase;
-        }
-
-        .status-published { background: #ecfdf5; color: #059669; border: 1px solid #10b981; }
-
-        /* Doc Content */
-        .doc-title-block {
-            background: white;
-            border-radius: 16px 16px 0 0;
-            border: 1px solid var(--border);
-            border-bottom: none;
-            padding: 20px 28px;
-            display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
         }
 
-        .doc-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-sub);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 4px;
+        .doc-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: var(--primary);
         }
 
-        .doc-main-title {
-            font-size: 18px;
+        .doc-banner-left h1 {
+            font-size: 24px;
             font-weight: 800;
             color: var(--text-main);
-            line-height: 1.4;
+            margin-bottom: 12px;
+            line-height: 1.3;
         }
 
-        /* Modern Table */
+        .doc-meta-badge {
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            padding: 6px 12px;
+            border-radius: 100px; 
+            font-size: 12px; 
+            font-weight: 600;
+            background: #f1f5f9;
+            color: var(--text-sub);
+            border: 1px solid var(--border);
+            margin-right: 8px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* Table & Wrapper */
         .table-wrapper {
             background: white;
             border: 1px solid var(--border);
-            border-top: none;
-            border-radius: 0 0 20px 20px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
             overflow-x: auto;
-            position: relative;
-            box-shadow: var(--shadow-lg);
             margin-bottom: 40px;
         }
 
         .excel-table {
-            width: max-content;
-            min-width: 100%;
-            border-collapse: separate;
+            width: 100%;
+            border-collapse: collapse;
             border-spacing: 0;
+            font-size: 11px;
+            table-layout: auto;
         }
 
         .excel-table th {
-            background: #0f172a;
-            color: white;
-            padding: 12px;
+            background: linear-gradient(to bottom, #1e293b 0%, #0f172a 100%);
+            color: var(--header-text);
+            padding: 10px;
             border-right: 1px solid #334155;
             border-bottom: 1px solid #334155;
             text-align: center;
-            font-weight: 600;
-            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.02em;
+            line-height: 1.3;
             white-space: nowrap;
         }
 
         .excel-table td {
-            padding: 14px;
+            padding: 10px;
             border-bottom: 1px solid var(--border);
             border-right: 1px solid var(--border);
             color: var(--text-main);
             vertical-align: top;
             line-height: 1.5;
-            font-size: 13.5px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .excel-table tbody tr:hover {
+            background: linear-gradient(to right, #fef2f3 0%, #ffffff 100%);
         }
 
         .section-border-right { border-right: 3px solid #94a3b8 !important; }
 
-        /* Risk Scoring Boxes */
+        /* Risk Logic */
         .risk-score-box {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 50px;
+            height: 100%;
         }
-        .risk-val { font-size: 16px; font-weight: 800; color: var(--text-main); }
+        .risk-val { font-size: 14px; font-weight: 800; color: var(--text-main); }
         .risk-badge { 
-            font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-top: 4px; 
+            font-size: 10px; padding: 2px 8px; border-radius: 8px; margin-top: 4px; 
             font-weight: 700; color: white; text-transform: uppercase;
         }
         .bg-low { background: #16a34a; }
@@ -406,43 +564,14 @@
         .bg-high { background: #dc2626; }
 
         .cell-checkbox-group { display: flex; flex-direction: column; gap: 4px; }
-        .cell-checkbox-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; }
-        .cell-checkbox-item i { margin-top: 3px; font-size: 10px; }
+        .cell-checkbox-item { display: flex; align-items: flex-start; gap: 6px; font-size: 11px; }
         
-        .doc-meta-badge {
-            display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
-            border-radius: 100px; font-size: 12px; font-weight: 700;
-        }
-        .risk-section { display: flex; flex-direction: column; gap: 4px; }
-        .risk-label { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; }
-        .risk-text { font-size: 13px; color: var(--text-main); font-weight: 500; }
-
-        /* Compliance Checklist */
-        .compliance-card {
+        /* Timeline / History */
+        .history-card {
             background: white;
             border-radius: 16px;
             border: 1px solid var(--border);
-            box-shadow: var(--shadow-md);
-            overflow: hidden;
-            margin-bottom: 30px;
-        }
-        .card-header-slim {
-            padding: 20px 24px;
-            background: #f8fafc;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .card-header-slim h2 { font-size: 16px; font-weight: 700; color: var(--text-main); }
-        .card-header-slim i { color: var(--primary); font-size: 18px; }
-
-        /* Timeline Remake */
-        .history-card {
-            background: white;
-            border-radius: 24px;
-            border: 1px solid var(--border);
-            padding: 40px;
+            padding: 32px;
             margin-top: 40px;
             box-shadow: var(--shadow-sm);
         }
@@ -450,31 +579,33 @@
         .timeline {
             position: relative;
             padding-left: 30px;
-            margin-top: 30px;
+            margin-top: 20px;
         }
 
         .timeline::before {
             content: '';
             position: absolute;
-            left: 5px;
+            left: 7px;
             top: 0;
             bottom: 0;
             background: #e2e8f0;
-            width: 3px;
+            width: 2px;
         }
 
         .timeline-item {
             position: relative;
-            padding-left: 40px;
-            padding-bottom: 40px;
+            padding-left: 30px;
+            padding-bottom: 30px;
         }
+        
+        .timeline-item:last-child { padding-bottom: 0; }
 
         .timeline-dot {
             position: absolute;
-            left: -4px;
-            top: 5px;
-            width: 22px;
-            height: 22px;
+            left: -2px;
+            top: 0;
+            width: 20px;
+            height: 20px;
             background: white;
             border: 4px solid #e2e8f0;
             border-radius: 50%;
@@ -486,9 +617,9 @@
         .timeline-content {
             background: #f8fafc;
             border: 1px solid var(--border);
-            padding: 24px;
-            border-radius: 16px;
-            transition: transform 0.2s;
+            padding: 20px;
+            border-radius: 12px;
+            transition: all 0.2s;
         }
         
         .timeline-content:hover {
@@ -497,13 +628,17 @@
             border-color: #cbd5e1;
         }
 
-        .timeline-date { font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; margin-bottom: 8px; }
-        .timeline-user { font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
-        .timeline-action { margin-top: 8px; }
+        .timeline-user { font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
+        .timeline-date { font-size: 11px; color: var(--text-light); font-weight: 500; margin-bottom: 8px; }
+        .timeline-action { font-size: 13px; color: var(--text-sub); }
 
         @media print {
             .sidebar, .back-nav { display: none !important; }
-            .main-content { margin-left: 0 !important; }
+            .main-content { margin-left: 0 !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; }
+            .excel-table { font-size: 9px; }
+            .doc-banner { box-shadow: none; border: 1px solid #000; }
+            .section-border-right { border-right: 2px solid #000 !important; }
+            @page { size: landscape; margin: 1cm; }
         }
     </style>
 </head>
@@ -552,31 +687,28 @@
                         </a>
                     @endif
                 </nav>
-            @endif
 
-            {{-- User Info Section --}}
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}
+                {{-- User Info Section --}}
+                <div class="user-info-bottom">
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
+                            <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
                         </div>
                     </div>
+                    <a href="{{ route('logout') }}" class="logout-btn"
+                        onclick="event.preventDefault(); document.getElementById('logout-form-published').submit();">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Keluar
+                    </a>
+                    <form id="logout-form-published" action="{{ route('logout') }}" method="POST" style="display: none;">
+                        @csrf
+                    </form>
                 </div>
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form-published').submit();">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Keluar
-                </a>
-                <form id="logout-form-published" action="{{ route('logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
-            </div>
+            @endif
         </aside>
 
         <!-- Main Content -->
@@ -587,52 +719,32 @@
                 </a>
             </div>
 
-            <!-- Passport Card -->
-            <div class="passport-card">
-                <div class="pp-profile-group">
-                    <div class="pp-avatar-box">
-                        {{ optional($document->user)->nama_user ? strtoupper(substr($document->user->nama_user, 0, 2)) : 'U' }}
-                    </div>
-                    <div class="pp-info">
-                        <h2>{{ optional($document->user)->nama_user ?? 'Unknown' }}</h2>
-                        <p>{{ optional($document->unit)->nama_unit ?? 'Unit Tidak Diketahui' }}</p>
-                    </div>
-                </div>
-
-                <div class="pp-meta-group">
-                    <div class="pp-stat-block">
-                        <span class="pp-stat-label">Tanggal Publish</span>
-                        <div class="pp-stat-value">
-                            <i class="far fa-calendar-check" style="color:var(--text-sub);"></i>
-                            {{ $document->published_at ? $document->published_at->format('d M Y') : '-' }}
-                        </div>
-                    </div>
-                    <div class="pp-stat-block">
-                        <span class="pp-stat-label">Seksi</span>
-                        <div class="pp-stat-value">
-                            <i class="far fa-building" style="color:var(--text-sub);"></i>
-                            {{ optional($document->seksi)->nama_seksi ?? '-' }}
-                        </div>
+            <!-- Doc Banner -->
+            <div class="doc-banner">
+                <div class="doc-banner-left">
+                    <div style="font-size: 12px; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Judul Dokumen</div>
+                    <h1>{{ $document->judul_dokumen ?? $document->kolom2_kegiatan }}</h1>
+                    <div style="margin-top: 12px;">
+                        <span class="doc-meta-badge">
+                            <i class="far fa-user"></i> {{ optional($document->user)->nama_user ?? 'Unknown' }}
+                        </span>
+                        <span class="doc-meta-badge">
+                            <i class="far fa-building"></i> {{ optional($document->unit)->nama_unit ?? 'Unit Unknown' }}
+                        </span>
+                        <span class="doc-meta-badge">
+                            <i class="far fa-calendar-check"></i> {{ $document->published_at ? $document->published_at->format('d M Y') : '-' }}
+                        </span>
+                        <span class="doc-meta-badge" style="background: #ecfdf5; color: #059669; border-color: #10b981;">
+                            <i class="fas fa-check-circle"></i> TERPUBLIKASI
+                        </span>
                     </div>
                 </div>
-
-                <div class="pp-status-badge status-published">
-                    TERPUBLIKASI
-                </div>
-            </div>
-
-            <!-- Document Title Block -->
-            <div class="doc-title-block">
-                <div>
-                    <div class="doc-label">Judul Dokumen</div>
-                    <div class="doc-main-title">{{ $document->judul_dokumen ?? $document->kolom2_kegiatan }}</div>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank" style="padding: 6px 12px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
-                        <i class="fas fa-file-pdf" style="margin-right: 5px;"></i> PDF
+                <div class="action-buttons">
+                    <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank" style="padding: 10px 16px; background: #e74c3c; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; transition: all 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
+                        <i class="fas fa-file-pdf" style="margin-right: 8px;"></i> PDF
                     </a>
-                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank" style="padding: 6px 12px; background: #27ae60; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
-                        <i class="fas fa-file-excel" style="margin-right: 5px;"></i> Excel
+                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank" style="padding: 10px 16px; background: #27ae60; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; transition: all 0.2s;" onmouseover="this.style.background='#219150'" onmouseout="this.style.background='#27ae60'">
+                        <i class="fas fa-file-excel" style="margin-right: 8px;"></i> Excel
                     </a>
                 </div>
             </div>
@@ -643,60 +755,69 @@
                     $showSec = $document->hasSecurityContent();
                     
                     // Colspan Calculation
-                    // Start with 1 (Kondisi)
-                    $b2_colspan = 1; 
+                    $b2_colspan = 1; // Kondisi
                     if($showShe) $b2_colspan += 4; // Potensi(1) + Aspek(1) + Risiko(1) + Dampak(1)
                     if($showSec) $b2_colspan += 2; // Ancaman(1) + Celah(1)
+                    // Note: Show blade calculates parts differently, but logic here is to show correct columns.
+                    // Let's stick to the column structure of show.blade.
                 @endphp
                 <table class="excel-table">
                     <thead>
                         <tr>
                             <th rowspan="2" style="width: 40px;">No</th>
                             <th colspan="4" class="section-border-right">BAGIAN 1: Identifikasi Aktivitas</th>
-                            <th colspan="{{ $b2_colspan }}" class="section-border-right">BAGIAN 2: Identifikasi & Risiko</th>
+                            <th colspan="{{ $showShe && $showSec ? 6 : ($showShe ? 4 : 2) }}" class="section-border-right">BAGIAN 2: Identifikasi & Risiko</th>
                             <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal</th>
                             <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
                             <th colspan="8">BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa</th>
                         </tr>
                         <tr>
-                            <th style="width: 180px;">Proses/Kegiatan</th>
-                            <th style="width: 120px;">Lokasi</th>
+                            <th style="width: 150px;">Proses/Kegiatan</th>
+                            <th style="width: 100px;">Lokasi</th>
                             <th style="width: 80px;">Kategori</th>
-                            <th style="width: 90px;" class="section-border-right">Kondisi</th>
+                            <th style="width: 80px;" class="section-border-right">Kondisi</th>
                             
                             @if($showShe)
-                                <th style="width: 150px;">Potensi Bahaya</th>
-                                <th style="width: 150px;">Aspek Lingkungan</th>
+                                <th style="width: 120px;">Potensi Bahaya</th>
+                                <th style="width: 120px;">Aspek Lingkungan</th>
                             @endif
                             
                             @if($showSec)
-                                <th style="width: 150px;">Ancaman Keamanan</th>
+                                <th style="width: 120px;">Ancaman Keamanan</th>
                             @endif
 
                             @if($showShe)
-                                <th style="width: 150px;">RISIKO (K3/KO)</th>
-                                <th style="width: 150px;">DAMPAK (Lingk)</th>
+                                <th style="width: 120px;">RISIKO (K3/KO)</th>
+                                <th style="width: 120px;">DAMPAK (Lingk)</th>
                             @endif
 
                             @if($showSec)
-                                <th style="width: 150px;" class="section-border-right">CELAH (Keam)</th>
+                                <th style="width: 120px;" class="section-border-right">CELAH (Keam)</th>
+                            @else
+                                <!-- Close border on last visible column -->
+                                @if($showShe)
+                                <th style="width: 0; padding:0; border:none;" class="section-border-right"></th>
+                                @endif
                             @endif
-                            <th style="width: 250px;">Hirarki Pengendalian</th>
-                            <th style="width: 250px;">Pengendalian Existing</th>
-                            <th style="width: 50px;">L</th>
-                            <th style="width: 50px;">S</th>
-                            <th style="width: 80px;" class="section-border-right">Level</th>
-                            <th style="width: 200px;">Regulasi</th>
-                            <th style="width: 80px;">Aspek Penting</th>
-                            <th style="width: 200px;" class="section-border-right">Peluang & Risiko</th>
-                            <th style="width: 100px;">Toleransi</th>
-                            <th style="width: 200px;">Pengendalian Lanjut</th>
-                            <th style="width: 50px;">L</th>
-                            <th style="width: 50px;">S</th>
-                            <th style="width: 80px;">Level</th>
-                            <th style="width: 50px;">Residual L</th>
-                            <th style="width: 50px;">Residual S</th>
-                            <th style="width: 80px;">Residual Level</th>
+
+                            <th style="width: 200px;">Hirarki Pengendalian</th>
+                            <th style="width: 200px;">Pengendalian Existing</th>
+                            <th style="width: 40px;">L</th>
+                            <th style="width: 40px;">S</th>
+                            <th style="width: 60px;" class="section-border-right">Level</th>
+                            
+                            <th style="width: 150px;">Regulasi</th>
+                            <th style="width: 70px;">Aspek Penting</th>
+                            <th style="width: 150px;" class="section-border-right">Peluang & Risiko</th>
+                            
+                            <th style="width: 80px;">Toleransi</th>
+                            <th style="width: 150px;">Pengendalian Lanjut</th>
+                            <th style="width: 40px;">L</th>
+                            <th style="width: 40px;">S</th>
+                            <th style="width: 60px;">Level</th>
+                            <th style="width: 40px;">Res L</th>
+                            <th style="width: 40px;">Res S</th>
+                            <th style="width: 60px;">Res Level</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -709,13 +830,10 @@
                                 $isSheItem = in_array($item->kategori, ['K3', 'KO', 'Lingkungan']);
                                 $isSecItem = ($item->kategori == 'Keamanan');
                                 
-                                // Default visible
                                 $isVisible = true;
 
                                 if ($filter == 'SHE') {
                                     if ($isSecItem) $isVisible = false;
-                                    // Make sure we only show SHE items (K3, KO, Lingkungan)
-                                    // If item is 'General'? (Usually not). 
                                 } elseif ($filter == 'Security') {
                                     if ($isSheItem) $isVisible = false;
                                 }
@@ -727,10 +845,10 @@
                             <td>{{ $item->kolom2_kegiatan }}</td>
                             <td>{{ $item->kolom3_lokasi }}</td>
                             <td style="text-align:center;">
-                                <span class="doc-meta-badge" style="background:#e0e7ff; color:#3730a3;">{{ $item->kategori }}</span>
+                                <span class="doc-meta-badge" style="background:#e0e7ff; color:#3730a3; border:none;">{{ $item->kategori }}</span>
                             </td>
                             <td class="section-border-right" style="text-align:center;">
-                                <span class="doc-meta-badge" style="background:#f1f5f9; color:#475569;">{{ $item->kolom5_kondisi }}</span>
+                                <span class="doc-meta-badge" style="background:#f1f5f9; color:#475569; border:none;">{{ $item->kolom5_kondisi }}</span>
                             </td>
 
                             <!-- BAGIAN 2 -->
@@ -745,20 +863,35 @@
                                                     <span>{{ $detail }}</span>
                                                 </div>
                                             @endforeach
+                                            @if(!empty($item->kolom6_bahaya['manual']))
+                                                <div class="cell-checkbox-item">
+                                                    <i class="fas fa-pen" style="color:#ef4444;"></i>
+                                                    <span>{{ $item->kolom6_bahaya['manual'] }}</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     @else - @endif
                                 </td>
                                 <td>
                                     @if($item->kategori == 'Lingkungan')
                                         <div class="cell-checkbox-group">
-                                            @php $col7 = $item->kolom7_aspek_lingkungan ?? []; 
-                                                $details7 = $col7['details'] ?? []; @endphp
+                                            @php 
+                                                $col7 = $item->kolom7_aspek_lingkungan ?? []; 
+                                                $details7 = $col7['details'] ?? ((is_array($col7) && !array_key_exists('details', $col7)) ? $col7 : []);
+                                                $manual7 = $col7['manual'] ?? ''; 
+                                            @endphp
                                             @foreach($details7 as $aspek)
                                                 <div class="cell-checkbox-item">
                                                     <i class="fas fa-leaf" style="color:#22c55e;"></i>
                                                     <span>{{ $aspek }}</span>
                                                 </div>
                                             @endforeach
+                                            @if(!empty($manual7))
+                                                <div class="cell-checkbox-item">
+                                                    <i class="fas fa-pen" style="color:#22c55e;"></i>
+                                                    <span>{{ $manual7 }}</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     @else - @endif
                                 </td>
@@ -768,14 +901,23 @@
                                 <td>
                                     @if($item->kategori == 'Keamanan')
                                         <div class="cell-checkbox-group">
-                                            @php $col8 = $item->kolom8_ancaman ?? []; 
-                                                $details8 = $col8['details'] ?? []; @endphp
+                                            @php 
+                                                $col8 = $item->kolom8_ancaman ?? []; 
+                                                $details8 = $col8['details'] ?? ((is_array($col8) && !array_key_exists('details', $col8)) ? $col8 : []);
+                                                $manual8 = $col8['manual'] ?? ''; 
+                                            @endphp
                                             @foreach($details8 as $threat)
                                                 <div class="cell-checkbox-item">
                                                     <i class="fas fa-shield-alt" style="color:#dc2626;"></i>
                                                     <span>{{ $threat }}</span>
                                                 </div>
                                             @endforeach
+                                            @if(!empty($manual8))
+                                                <div class="cell-checkbox-item">
+                                                    <i class="fas fa-pen" style="color:#dc2626;"></i>
+                                                    <span>{{ $manual8 }}</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     @else - @endif
                                 </td>
@@ -788,6 +930,10 @@
 
                             @if($showSec)
                                 <td class="section-border-right">{{ ($item->kategori == 'Keamanan') ? ($item->kolom9_celah_keamanan ?? $item->kolom9_risiko) : '-' }}</td>
+                            @else
+                                @if($showShe)
+                                <td class="section-border-right" style="width:0; padding:0; border:none;"></td>
+                                @endif
                             @endif
 
                             <!-- BAGIAN 3 -->
@@ -803,8 +949,9 @@
                                 </div>
                             </td>
                             <td>{{ $item->kolom11_existing }}</td>
-                            <td style="text-align:center; font-weight:800;">{{ $item->kolom12_kemungkinan }}</td>
-                            <td style="text-align:center; font-weight:800;">{{ $item->kolom13_konsekuensi }}</td>
+                            
+                            <td style="text-align:center; font-weight:700;">{{ $item->kolom12_kemungkinan }}</td>
+                            <td style="text-align:center; font-weight:700;">{{ $item->kolom13_konsekuensi }}</td>
                             <td class="section-border-right">
                                 <div class="risk-score-box">
                                     <div class="risk-val">{{ $item->kolom14_score }}</div>
@@ -816,39 +963,45 @@
 
                             <!-- BAGIAN 4 -->
                             <td>{{ $item->kolom15_regulasi }}</td>
-                            <td style="text-align:center;">{{ $item->kolom16_aspek ?? '-' }}</td>
+                            <td style="text-align:center;">
+                                @if($item->kolom16_aspek == 'P' && $item->kategori == 'Lingkungan')
+                                    <span class="doc-meta-badge" style="background:#dbeafe; color:#1e40af; border:none;">P</span>
+                                @elseif($item->kolom16_aspek == 'N' && $item->kategori == 'Lingkungan')
+                                    <span class="doc-meta-badge" style="background:#f1f5f9; color:#64748b; border:none;">N</span>
+                                @else - @endif
+                            </td>
                             <td class="section-border-right">
-                                <div class="risk-section">
-                                    @if($item->kolom17_risiko) <div class="risk-label">RISIKO (-):</div> <div class="risk-text">{{ $item->kolom17_risiko }}</div> @endif
-                                    @if($item->kolom17_peluang) <div class="risk-label" style="border-top:1px solid #e2e8f0; margin-top:6px; padding-top:6px;">PELUANG (+):</div> <div class="risk-text">{{ $item->kolom17_peluang }}</div> @endif
-                                </div>
+                                @if($item->kolom17_risiko) <div><strong>(-)</strong> {{ $item->kolom17_risiko }}</div> @endif
+                                @if($item->kolom17_peluang) <div style="margin-top:4px;"><strong>(+)</strong> {{ $item->kolom17_peluang }}</div> @endif
                             </td>
 
                             <!-- BAGIAN 5 -->
                             <td style="text-align:center;">
-                                <div class="doc-meta-badge" style="{{ $item->kolom18_toleransi == 'Ya' ? 'background:#dcfce7; color:#166534;' : 'background:#fee2e2; color:#991b1b;' }}">
-                                    {{ $item->kolom18_toleransi }}
-                                </div>
+                                <span class="doc-meta-badge" style="{{ $item->kolom18_toleransi == 'Ya' ? 'background:#dcfce7; color:#166534;' : 'background:#fee2e2; color:#991b1b;' }} border:none;">
+                                    {{ $item->kolom18_toleransi == 'Ya' ? 'Ya' : 'Tidak' }}
+                                </span>
                             </td>
+
                             @if($item->kolom18_toleransi == 'Tidak')
                                 <td>{{ $item->kolom19_pengendalian_lanjut }}</td>
-                                <td style="text-align:center; font-weight:800;">{{ $item->kolom20_kemungkinan_lanjut }}</td>
-                                <td style="text-align:center; font-weight:800;">{{ $item->kolom21_konsekuensi_lanjut }}</td>
+                                <td style="text-align:center; font-weight:700;">{{ $item->kolom20_kemungkinan_lanjut }}</td>
+                                <td style="text-align:center; font-weight:700;">{{ $item->kolom21_konsekuensi_lanjut }}</td>
                                 <td>
                                     <div class="risk-score-box">
                                         <div class="risk-val">{{ $item->kolom22_tingkat_risiko_lanjut }}</div>
                                         @if($item->kolom22_tingkat_risiko_lanjut)
                                             <div class="risk-badge {{ $item->kolom22_tingkat_risiko_lanjut >= 15 ? 'bg-high' : ($item->kolom22_tingkat_risiko_lanjut >= 8 ? 'bg-med' : 'bg-low') }}">
-                                                {{ $item->kolom22_tingkat_risiko_lanjut >= 15 ? 'HIGH' : ($item->kolom22_tingkat_risiko_lanjut >= 8 ? 'MED' : 'LOW') }}
+                                                {{ $item->kolom22_level_lanjut }}
                                             </div>
                                         @endif
                                     </div>
                                 </td>
                             @else
-                                <td colspan="4" style="text-align:center; color:#94a3b8;">-</td>
+                                <td>-</td><td>-</td><td>-</td><td>-</td>
                             @endif
-                            <td style="text-align:center; font-weight:800;">{{ $item->residual_kemungkinan }}</td>
-                            <td style="text-align:center; font-weight:800;">{{ $item->residual_konsekuensi }}</td>
+
+                            <td style="text-align:center; font-weight:700;">{{ $item->residual_kemungkinan }}</td>
+                            <td style="text-align:center; font-weight:700;">{{ $item->residual_konsekuensi }}</td>
                             <td>
                                 <div class="risk-score-box">
                                     <div class="risk-val">{{ $item->residual_score ?? '-' }}</div>
@@ -866,170 +1019,72 @@
                 </table>
             </div>
 
-            <!-- Compliance Checklist -->
-            @php
-                 // Determine Primary Stream based on ACTUAL FILLED DATA first
-                 // Then fallback to content flags.
-                 // "tabel yang muncul hanya 1... tergantung keluaran she atau security"
-                 
-                 $fullChecklist = $document->compliance_checklist ?? [];
-                 if (!is_array($fullChecklist)) $fullChecklist = json_decode($fullChecklist, true) ?? [];
-                 
-                 $hasSheData = !empty($fullChecklist['she']);
-                 $hasSecData = !empty($fullChecklist['security']);
-                 
-                 $primaryStream = 'general';
-                 
-                 if ($hasSheData) {
-                     $primaryStream = 'she';
-                 } elseif ($hasSecData) {
-                     $primaryStream = 'security';
-                 } else {
-                     // Fallback if neither has data (legacy or just created?)
-                     // Use content flags
-                     if ($showShe) $primaryStream = 'she';
-                     elseif ($showSec) $primaryStream = 'security';
-                 }
-                 
-                 $checklistData = $fullChecklist[$primaryStream] ?? $fullChecklist['general'] ?? [];
-                 $label = ucfirst($primaryStream);
-                 if ($primaryStream == 'she') $label = 'SHE';
-            @endphp
-
-            @if(!empty($checklistData) || in_array($primaryStream, ['she', 'security']))
-            <div class="compliance-card">
-                <div class="card-header-slim">
-                    <i class="fas fa-clipboard-check"></i>
-                    <h2>Tabel Kesesuaian ({{ $label }})</h2>
+            <!-- Approval History -->
+            <div class="history-card" style="margin-top: 40px; background: white; border-radius: 16px; border: 1px solid var(--border); padding: 32px; box-shadow: var(--shadow-sm);">
+                <div class="timeline-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px; font-weight: 700; font-size: 16px; color: var(--text-main);">
+                    <i class="fas fa-history" style="color: var(--primary);"></i> Riwayat Approval & Catatan
                 </div>
-                <div class="doc-body" style="padding: 0;">
-                    <div class="table-wrapper" style="box-shadow: none; border: none; border-radius: 0; margin-bottom: 0;">
-                        <table class="excel-table" style="width: 100%;">
-                            <thead>
-                                <tr>
-                                    <th style="width: 60px; text-align: center;">No</th>
-                                    <th style="text-align: left;">Kriteria</th>
-                                    <th style="width: 200px; text-align: center;">Kesesuaian</th>
-                                    <th style="min-width: 200px; text-align: left;">Keterangan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php
-                                    $complianceCriteria = [
-                                         ['key' => 'format', 'label' => 'Standar Format'],
-                                         ['key' => 'numbering', 'label' => 'Penomoran Dokumen'],
-                                         ['key' => 'revision', 'label' => 'Kemutakhiran Nomor Revisi'],
-                                         ['key' => 'approval', 'label' => 'Approval Dokumen'],
-                                         ['key' => 'identification_coverage', 'label' => 'Ident. sdh mencakup semua proses bisnis/kegiatan/aset'],
-                                         ['key' => 'condition_coverage', 'label' => 'Ident. sdh mencakup semua kondisi (R, NR, N, TN & E)'],
-                                         ['key' => 'mitigation', 'label' => 'Kesesuaian Program Mitigasi']
-                                    ];
-                                @endphp
+                
+                <div class="timeline" style="position: relative; padding-left: 30px; margin-top: 20px; border-left: 2px solid #e2e8f0;">
+                    @php
+                        // Filter Logic based on User Request (SHE/Security) and content
+                        $filterParam = strtolower(request('filter'));
+                        
+                        // Fallback: If no filter param, try to detect from the content shown
+                        // But usually published view shows everything merged.
+                        // Ideally we respect the param if present.
+                        
+                        $filteredApprovals = $document->approvals->sortByDesc('created_at');
 
-                                @foreach($complianceCriteria as $index => $criteria)
-                                    @php
-                                        $savedStatus = $checklistData[$criteria['key']]['status'] ?? '-';
-                                        $savedNote = $checklistData[$criteria['key']]['note'] ?? '-';
-                                        $badgeClass = 'background: #f1f5f9; color: #64748b;';
-                                        if ($savedStatus === 'OK') $badgeClass = 'background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;';
-                                        elseif ($savedStatus === 'NOK') $badgeClass = 'background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;';
-                                    @endphp
-                                    <tr>
-                                        <td style="text-align: center; color: var(--text-light); font-weight: 600;">{{ $index + 1 }}</td>
-                                        <td style="font-weight: 600; color: var(--text-main);">{{ $criteria['label'] }}</td>
-                                        <td style="text-align: center;">
-                                            <span style="display: inline-block; padding: 6px 16px; border-radius: 100px; font-size: 13px; font-weight: 700; {{ $badgeClass }}">
-                                                {{ $savedStatus }}
-                                            </span>
-                                        </td>
-                                        <td style="color: var(--text-sub);">{{ $savedNote }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                        if ($filterParam == 'she') {
+                            // Hide Security (ID 55)
+                            $filteredApprovals = $filteredApprovals->filter(fn($l) => optional($l->approver)->id_unit != 55); 
+                        } elseif ($filterParam == 'security') {
+                            // Hide SHE (ID 56)
+                            $filteredApprovals = $filteredApprovals->filter(fn($l) => optional($l->approver)->id_unit != 56);
+                        }
+                    @endphp
+
+                    @forelse($filteredApprovals as $log)
+                        <div class="timeline-item" style="position: relative; margin-bottom: 24px;">
+                            <div class="timeline-dot" style="position: absolute; left: -38px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--primary); border: 2px solid white; box-shadow: 0 0 0 1px var(--primary);"></div>
+                            <div class="timeline-date" style="font-size: 12px; color: var(--text-sub); margin-bottom: 4px;">{{ $log->created_at->format('d M Y, H:i') }}</div>
+                            <div class="timeline-title" style="font-size: 14px; font-weight: 600; color: var(--text-main);">
+                                @if($log->action == 'approved') <span style="color: #15803d;">Disetujui</span>
+                                @elseif($log->action == 'revised') <span style="color: #b91c1c;">Revisi diminta</span>
+                                @elseif($log->action == 'published') <span style="color: #15803d;">Dipublikasi</span>
+                                @else {{ ucfirst($log->action) }} @endif
+                                @if($log->approver)
+                                    oleh {{ $log->approver->nama_user }}
+                                    @if($log->approver->unit)
+                                        <span style="color: #94a3b8; font-weight: 400; font-size: 13px;">({{ $log->approver->unit->nama_unit }})</span>
+                                    @endif
+                                @else
+                                    oleh System
+                                @endif
+                            </div>
+                            @if($log->catatan)
+                                <div class="timeline-desc" style="margin-top: 8px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; color: #475569; font-style: italic;">
+                                    "{{ $log->catatan }}"
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <div class="timeline-item" style="margin-bottom: 24px;">
+                             <div class="timeline-title" style="color:#94a3b8; font-weight:500;">Belum ada aktivitas approval yang tercatat untuk filter ini.</div>
+                        </div>
+                    @endforelse
+
+                    <!-- Created Log (Always relevant) -->
+                    <div class="timeline-item" style="position: relative;">
+                        <div class="timeline-dot" style="position: absolute; left: -38px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; border: 2px solid white; box-shadow: 0 0 0 1px #cbd5e1;"></div>
+                        <div class="timeline-date" style="font-size: 12px; color: var(--text-sub); margin-bottom: 4px;">{{ $document->created_at->format('d M Y, H:i') }}</div>
+                        <div class="timeline-title" style="font-size: 14px; font-weight: 600; color: var(--text-main);">Form Dibuat</div>
+                        <div class="timeline-desc" style="font-size: 13px; color: var(--text-sub);">Oleh {{ $document->user->nama_user ?? 'Unknown' }}</div>
                     </div>
                 </div>
             </div>
-            @endif
 
-            <!-- History Section -->
-            <div class="history-card">
-                <div class="card-header-slim" style="background: none; border: none; padding: 0; margin-bottom: 20px;">
-                    <i class="fas fa-history"></i>
-                    <h2>Riwayat Persetujuan & Publikasi</h2>
-                </div>
-
-                <div class="timeline">
-                    @php
-                        $createdEvent = (object) [
-                            'created_at' => $document->created_at,
-                            'approver' => $document->user,
-                            'action' => 'created',
-                            'catatan' => 'Form baru diajukan'
-                        ];
-                        $allHistory = collect([$createdEvent])->merge($document->approvals->sortBy('created_at'));
-                        $displayHistory = $allHistory->sortByDesc('created_at')->values();
-                    @endphp
-
-                    @foreach($displayHistory as $index => $log)
-                        @php
-                            // FILTER LOGIC FOR PUBLISHED VIEW
-                            // Filter irrelevant Unit Pengelola Staff actions depending on PRIMARY STREAM
-                            $shouldHide = false;
-                            $approverUnit = optional($log->approver)->id_unit;
-                            
-                            // Check Action type: only Review/Verification by UP Staff are filtered
-                            // Head of UP actions (approved/published) are typically shared or we show them.
-                            // User request: "tetapi untuk riwayat yang telah di isikan oleh staff unti pengelola nya"
-                            
-                            if (in_array($log->action, ['reviewed', 'verified', 'revision'])) {
-                                if ($primaryStream == 'she') {
-                                    // Hide Security Staff (55)
-                                    if ($approverUnit == 55) $shouldHide = true;
-                                } elseif ($primaryStream == 'security') {
-                                    // Hide SHE Staff (56)
-                                    if ($approverUnit == 56) $shouldHide = true;
-                                }
-                            }
-                            
-                            if ($shouldHide) continue;
-                            
-                            $actionLabel = 'Aksi'; $actionColor = '#94a3b8'; $icon = 'fa-circle';
-                            switch($log->action) {
-                                case 'created': $actionLabel = 'Form Dibuat'; $actionColor = '#3b82f6'; $icon = 'fa-file-medical'; break;
-                                case 'approved': $actionLabel = ($log->level == 3 || $document->status == 'published') ? 'Dipublikasikan' : 'Disetujui'; $actionColor = '#10b981'; $icon = 'fa-check-circle'; break;
-                                case 'revision': $actionLabel = 'Revisi'; $actionColor = '#ef4444'; $icon = 'fa-undo'; break;
-                                case 'disposition': $actionLabel = 'Disposisi'; $actionColor = '#f59e0b'; $icon = 'fa-user-clock'; break;
-                                case 'reviewed': $actionLabel = 'Review Staff'; $actionColor = '#8b5cf6'; $icon = 'fa-glasses'; break;
-                                case 'verified': $actionLabel = 'Verifikasi'; $actionColor = '#06b6d4'; $icon = 'fa-clipboard-check'; break;
-                            }
-                        @endphp
-                        <div class="timeline-item {{ $index === 0 ? 'active' : '' }}">
-                            <div class="timeline-dot" style="{{ $index === 0 ? 'border-color:'.$actionColor : '' }}"></div>
-                            <div class="timeline-date">{{ $log->created_at->format('d M Y, H:i') }} WIB</div>
-                            <div class="timeline-content">
-                                <div class="timeline-user">
-                                    {{ optional($log->approver)->nama_user ?? 'System' }} 
-                                    <div style="font-weight:400; color:var(--text-sub); font-size: 12px; margin-top: 2px;">
-                                        {{ optional($log->approver)->role_jabatan_name ?? ($log->action == 'created' ? 'Submitter' : '-') }}
-                                        • {{ optional($log->approver)->unit_or_dept_name ?? '-' }}
-                                    </div>
-                                </div>
-                                <div class="timeline-action">
-                                    <span style="display:inline-flex; align-items:center; gap:8px; padding:6px 14px; background:{{ $actionColor }}15; color:{{ $actionColor }}; border-radius:100px; font-weight:700; font-size:12px; border:1px solid {{ $actionColor }}30;">
-                                        <i class="fas {{ $icon }}"></i> {{ $actionLabel }}
-                                    </span>
-                                </div>
-                                @if($log->catatan)
-                                <div style="margin-top:12px; padding:12px; background:white; border-radius:8px; border:1px solid var(--border); color:var(--text-main); font-size:13.5px; font-style: italic;">
-                                    "{{ $log->catatan }}"
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
         </main>
     </div>
 </body>

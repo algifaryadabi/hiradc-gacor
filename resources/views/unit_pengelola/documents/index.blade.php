@@ -222,7 +222,7 @@
         /* Stats Cards - Synced with Dashboard */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 15px;
             margin-bottom: 30px;
         }
@@ -584,6 +584,18 @@
                     return $st == 'approved' || $st == 'published' || $d->current_level > 2;
                 });
 
+                $revisiDocs = $documents->filter(function ($d) use ($userUnit) {
+                    // Documents that have been revised by this Unit Pengelola
+                    // Check if there's a revision approval record from this unit
+                    $hasRevision = $d->approvals()->where('level', 2)
+                        ->where('action', 'revision')
+                        ->whereHas('approver', function ($q) use ($userUnit) {
+                            $q->where('id_unit', $userUnit);
+                        })
+                        ->exists();
+                    return $hasRevision;
+                });
+
                 // Get staff for disposition
                 // Staff Reviewer: role_jabatan 5 (Band IV) and 6 (Band V)
                 $staffReviewers = \App\Models\User::where('id_unit', Auth::user()->id_unit)
@@ -631,6 +643,15 @@
                     <div class="stat-info">
                         <span class="stat-label">Approve</span>
                         <span class="stat-value">{{ $approveDocs->count() }}</span>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="selectCategory('revisi', this)">
+                    <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+                        <i class="fas fa-undo"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Revisi</span>
+                        <span class="stat-value">{{ $revisiDocs->count() }}</span>
                     </div>
                 </div>
             </div>
@@ -727,6 +748,16 @@
                         elseif ($currentStatus == 'approved' || $doc->current_level > 2) {
                             $docCategory = 'approve';
                         }
+                        // 5. Revisi (Sent back to submitter by this Unit Pengelola)
+                        $hasRevisionByThisUnit = $doc->approvals()->where('level', 2)
+                            ->where('action', 'revision')
+                            ->whereHas('approver', function ($q) use ($userUnit) {
+                                $q->where('id_unit', $userUnit);
+                            })
+                            ->exists();
+                        if ($hasRevisionByThisUnit) {
+                            $docCategory = 'revisi';
+                        }
 
                         // Determine status label
                         $statusLabel = 'Menunggu Disposisi';
@@ -736,6 +767,8 @@
                             $statusLabel = 'Siap Keputusan Akhir';
                         } elseif ($docCategory == 'approve') {
                             $statusLabel = 'Approved / Published';
+                        } elseif ($docCategory == 'revisi') {
+                            $statusLabel = 'Dikembalikan ke Submitter';
                         }
                     @endphp
 

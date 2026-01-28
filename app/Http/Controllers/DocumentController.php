@@ -110,13 +110,13 @@ class DocumentController extends Controller
     {
         // 1. Title
         $title = $document->judul_dokumen ?? $document->kolom2_kegiatan ?? 'Dokumen';
-        
+
         // 2. Unit Input
         $unitInput = $document->unit->nama_unit ?? 'Unit';
-        
+
         // 3. Department
         $dept = $document->user && $document->user->departemen ? $document->user->departemen->nama_dept : 'Dept';
-        
+
         // 4. Managing Unit (SHE/Security) - Logic to infer or default
         // If the document is specifically managed by SHE or Security, we append it.
         // Assuming 'managing_unit' attribute exists or we infer from ID?
@@ -125,19 +125,19 @@ class DocumentController extends Controller
         // Or simply append "SHE" if status_she is active, "Security" if status_security is active?
         // For simplicity and robustness, let's look at the document's type/content flags if available, 
         // OR rely on who is exporting it? No, filename should be consistent.
-        
+
         $suffix = 'HIRADC'; // Default
         if ($document->hasSheContent()) {
             $suffix = 'SHE';
         } elseif ($document->hasSecurityContent()) {
             $suffix = 'Security';
         }
-        
+
         // Sanitize parts
         $safeTitle = $this->sanitizeFilename($title);
         $safeUnit = $this->sanitizeFilename($unitInput);
         $safeDept = $this->sanitizeFilename($dept);
-        
+
         return "{$safeTitle}_{$safeUnit}_{$safeDept}_{$suffix}.{$extension}";
     }
 
@@ -689,9 +689,31 @@ class DocumentController extends Controller
             }
 
             // 3. DELETE REMOVED
+            // logic: If partial revision, only delete items that belong to the Active Revision Category
+            // If SHE revision -> Only delete missing SHE items. Keep Security items.
+            // If Security revision -> Only delete missing Security items. Keep SHE items.
+
             $toDelete = array_diff($existingIds, $processedIds);
+
             if (!empty($toDelete)) {
-                $document->details()->whereIn('id', $toDelete)->delete();
+                // Determine scope
+                $isSheRevision = $document->status_she == 'revision';
+                $isSecRevision = $document->status_security == 'revision';
+
+                // If both are revision (or initial submit), delete all in diff
+                // If only one is revision, we must protect the other.
+
+                $query = $document->details()->whereIn('id', $toDelete);
+
+                if ($isSheRevision && !$isSecRevision) {
+                    // Only delete SHE-related categories
+                    $query->whereIn('kategori', ['K3', 'KO', 'Lingkungan']);
+                } elseif ($isSecRevision && !$isSheRevision) {
+                    // Only delete Security-related categories
+                    $query->where('kategori', 'Keamanan');
+                }
+
+                $query->delete();
             }
 
             // 4. LOG REVISION HISTORY
@@ -747,19 +769,19 @@ class DocumentController extends Controller
         $role = method_exists($user, 'getRoleName') ? $user->getRoleName() : $user->role_user;
 
         // Level Determination
-    // We want to ensure SHE (56) and Security (55) users see ALL documents if they are Approvers (Level 2).
-    // Using broad check: If they are in SHE/Security unit OR have 'approver' role/rank.
-    
-    $isSHE = ($user->id_unit == 56);
-    $isSecurity = ($user->id_unit == 55);
-    
-    // logic: If unit is SHE/Security, they are Level 2 approvers (System Approvers).
-    // Also include if they explicitly have role_jabatan 3 (Kepala Unit) BUT specifically for these units.
-    // Actually, "Approver" role (id_role_user=3) should also count.
-    
-    $isLevel2 = ($isSHE || $isSecurity); // Simplified: explicit SHE/Security units are System Approvers.
-    
-    // Note: If normal Kepala Unit (Level 1) of other units logs in, isLevel2 is false.
+        // We want to ensure SHE (56) and Security (55) users see ALL documents if they are Approvers (Level 2).
+        // Using broad check: If they are in SHE/Security unit OR have 'approver' role/rank.
+
+        $isSHE = ($user->id_unit == 56);
+        $isSecurity = ($user->id_unit == 55);
+
+        // logic: If unit is SHE/Security, they are Level 2 approvers (System Approvers).
+        // Also include if they explicitly have role_jabatan 3 (Kepala Unit) BUT specifically for these units.
+        // Actually, "Approver" role (id_role_user=3) should also count.
+
+        $isLevel2 = ($isSHE || $isSecurity); // Simplified: explicit SHE/Security units are System Approvers.
+
+        // Note: If normal Kepala Unit (Level 1) of other units logs in, isLevel2 is false.
 
 
         $documents = collect([]);
@@ -777,10 +799,10 @@ class DocumentController extends Controller
                 ]);
 
             if ($isSHE) {
-                 // Relaxed to allow viewing all categories as requested
-                 // $query->where('status_she', '!=', 'none');
+                // Relaxed to allow viewing all categories as requested
+                // $query->where('status_she', '!=', 'none');
             } elseif ($isSecurity) {
-                 // $query->where('status_security', '!=', 'none');
+                // $query->where('status_security', '!=', 'none');
             }
 
             $documents = $query->orderBy('created_at', 'desc')->get();
@@ -1314,7 +1336,14 @@ class DocumentController extends Controller
 
         // 4. Save Compliance Checklist
         if ($request->has('compliance_checklist')) {
-            $dataToUpdate['compliance_checklist'] = $request->compliance_checklist;
+            $incoming = is_string($request->compliance_checklist) ? json_decode($request->compliance_checklist, true) : $request->compliance_checklist;
+            if ($user->id_unit == 56) { // SHE
+                $dataToUpdate['compliance_checklist_she'] = $incoming;
+            } elseif ($user->id_unit == 55) { // Security
+                $dataToUpdate['compliance_checklist_security'] = $incoming;
+            } else {
+                $dataToUpdate['compliance_checklist'] = $incoming;
+            }
         }
 
         // 5. Update Database within Transaction
@@ -1603,24 +1632,70 @@ class DocumentController extends Controller
 
         $user = Auth::user();
 
-        if (!$document->canBeApprovedBy($user)) {
+        if ($user->isKepalaDepartemen()) {
+            // Bypass strict level check for Kepala Departemen to allow "Forced Revision" or Partial Revision fixes
+            if ($user->id_dept != $document->id_dept) {
+                abort(403, 'Anda tidak memiliki akses ke dokumen departemen lain.');
+            }
+            // Allow revision as long as it's not draft (level 0)
+            if ($document->status == 'draft') {
+                abort(403, 'Dokumen draft tidak bisa direvisi.');
+            }
+        } elseif (!$document->canBeApprovedBy($user)) {
+            // For other roles (Kepala Unit), keep strict check
             abort(403);
         }
 
-        // Custom Logic for Unit Pengelola (Level 2) Revision -> Back to Level 1 (Kepala Unit)
-        // "kalau unit pengelola merevisi ... balik ke status kepala unit lagi"
+        // Custom Logic for Unit Pengelola (Level 2) Revision -> Back to Submitter
+        // Implement Partial Revision: Only revise the category managed by this Unit Pengelola
         if ($document->current_level == 2) {
-            $document->update([
-                'status' => 'pending_level1',
+            $isShe = ($user->id_unit == 56); // SHE Unit
+            $isSecurity = ($user->id_unit == 55); // Security Unit
+
+            $updateData = [
+                'status' => 'revision',
+                'current_level' => 1 // Back to Submitter
+            ];
+
+            // Partial Revision Logic
+            if ($isShe) {
+                // SHE Unit revising -> Only SHE categories need revision
+                $updateData['status_she'] = 'revision';
+                // Keep status_security as is (might be 'approved', 'pending_head', etc.)
+            } elseif ($isSecurity) {
+                // Security Unit revising -> Only Security category needs revision
+                $updateData['status_security'] = 'revision';
+                // Keep status_she as is
+            } else {
+                // Fallback: If neither SHE nor Security (shouldn't happen), reset both
+                $updateData['status_she'] = 'revision';
+                $updateData['status_security'] = 'revision';
+            }
+
+            $document->update($updateData);
+        }
+        // Kepala Departemen (Level 3) -> Back to Submitter (Level 0/1)
+        // Handle Partial Revision
+        elseif ($document->current_level == 3 || ($document->current_level == 2 && ($document->isSheApproved() || $document->isSecurityApproved()))) {
+            $filter = strtoupper($request->query('filter', 'ALL')); // Normalize to UPPERCASE
+            $updateData = [
+                'status' => 'revision',
                 'current_level' => 1
-            ]);
-        } elseif ($document->current_level == 3) {
-            // Kepala Departemen (Level 3) -> Back to Submitter (Level 0/1)
-            // "jika revisi ... balik lagi ke submitter dan memulai langkah awal"
-            $document->update([
-                'status' => 'revision', // This usually means Submitter needs to edit
-                'current_level' => 1 // Reset workflow to start
-            ]);
+            ];
+
+            if ($filter == 'SHE') {
+                $updateData['status_she'] = 'revision';
+                // Keep status_security as is
+            } elseif ($filter == 'SECURITY') {
+                $updateData['status_security'] = 'revision';
+                // Keep status_she as is
+            } else {
+                // ALL -> Reset Both
+                $updateData['status_she'] = 'revision';
+                $updateData['status_security'] = 'revision';
+            }
+
+            $document->update($updateData);
         }
 
         // Record History (Refactored to handle both levels)
@@ -1628,12 +1703,12 @@ class DocumentController extends Controller
             // Get filter parameter for scoped revision
             $filter = $request->query('filter', 'ALL');
             $catatan = $request->catatan;
-            
+
             // Add track information to revision note
             if ($user->isKepalaDepartemen() && $filter != 'ALL') {
                 $catatan .= ' (Track ' . $filter . ')';
             }
-            
+
             $document->approvals()->create([
                 'approver_id' => $user->id_user,
                 'level' => $user->isKepalaDepartemen() ? 3 : 2,
@@ -1740,7 +1815,7 @@ class DocumentController extends Controller
         } elseif ($filter == 'Security') {
             $catatan .= ' (Track Security)';
         }
-        
+
         $document->approvals()->create([
             'approver_id' => $user->id_user,
             'level' => 3,
@@ -1928,23 +2003,15 @@ class DocumentController extends Controller
         // Save Compliance Checklist if present
         if ($request->has('compliance_checklist')) {
             $user = \Auth::user();
-            $current = $document->compliance_checklist ?? [];
-            if (!is_array($current)) {
-                $current = json_decode($current, true) ?? [];
-            }
-            $incoming = json_decode($request->compliance_checklist, true);
+            $incoming = is_string($request->compliance_checklist) ? json_decode($request->compliance_checklist, true) : $request->compliance_checklist;
 
             if ($user->id_unit == 56) { // SHE
-                $current['she'] = $incoming;
+                $document->update(['compliance_checklist_she' => $incoming]);
             } elseif ($user->id_unit == 55) { // Security
-                $current['security'] = $incoming;
+                $document->update(['compliance_checklist_security' => $incoming]);
             } else {
-                $current['general'] = $incoming;
+                $document->update(['compliance_checklist' => $incoming]);
             }
-            
-            $document->update([
-                'compliance_checklist' => $current
-            ]);
         }
 
         // Check if 'items' is present (Multi-item submission)
@@ -2157,7 +2224,7 @@ class DocumentController extends Controller
                     'details' => is_array($request->kolom6_bahaya) ? $request->kolom6_bahaya : ($request->kolom6_bahaya ? [$request->kolom6_bahaya] : []),
                     'manual' => $request->bahaya_manual ?? '',
                 ],
-                'bahaya_manual' => $request->bahaya_manual, 
+                'bahaya_manual' => $request->bahaya_manual,
 
                 'kolom7_aspek_lingkungan' => [
                     'details' => is_array($request->kolom7_aspek_lingkungan) ? $request->kolom7_aspek_lingkungan : ($request->kolom7_aspek_lingkungan ? [$request->kolom7_aspek_lingkungan] : []),
@@ -2173,7 +2240,7 @@ class DocumentController extends Controller
                 'kolom9_risiko_k3ko' => $riskK3,
                 'kolom9_dampak_lingkungan' => $riskEnv,
                 'kolom9_celah_keamanan' => $riskSec,
-                'kolom9_risiko' => $request->kolom9_risiko, 
+                'kolom9_risiko' => $request->kolom9_risiko,
 
                 'kolom11_existing' => $request->kolom11_existing,
                 'kolom12_kemungkinan' => $chem,
@@ -2181,9 +2248,9 @@ class DocumentController extends Controller
                 'kolom14_score' => $score,
                 'kolom14_level' => $level,
                 'kolom15_regulasi' => $request->kolom15_regulasi,
-                'kolom16_aspek' => $request->kolom16_aspek, 
-                'kolom17_risiko' => $request->kolom17_risiko, 
-                'kolom17_peluang' => $request->kolom17_peluang, 
+                'kolom16_aspek' => $request->kolom16_aspek,
+                'kolom17_risiko' => $request->kolom17_risiko,
+                'kolom17_peluang' => $request->kolom17_peluang,
                 'kolom18_toleransi' => $request->kolom18_toleransi,
                 'kolom19_pengendalian_lanjut' => $request->kolom19_pengendalian_lanjut,
 
@@ -2265,7 +2332,7 @@ class DocumentController extends Controller
         // Filter Details based on Unit
         $filteredDetails = $document->details; // Default all
 
-    if ($user->id_unit == 55) { // Security
+        if ($user->id_unit == 55) { // Security
             // Access Control: Block Staff if document is still pending_head (Not Dispositioned)
             // Staff roles: 4 (Verifikator), 5 (Reviewer), 6 (Reviewer)
             if (in_array($user->role_jabatan, [4, 5, 6])) {
@@ -2273,7 +2340,7 @@ class DocumentController extends Controller
                     abort(403, 'Dokumen belum didisposisikan oleh Kepala Unit.');
                 }
             }
-            
+
             $filteredDetails = $document->details->filter(function ($detail) {
                 return $detail->kategori == 'Keamanan';
             });
@@ -2284,7 +2351,7 @@ class DocumentController extends Controller
                     abort(403, 'Dokumen belum didisposisikan oleh Kepala Unit.');
                 }
             }
-            
+
             $filteredDetails = $document->details->filter(function ($detail) {
                 return in_array($detail->kategori, ['K3', 'KO', 'Lingkungan']);
             });
@@ -2448,7 +2515,7 @@ class DocumentController extends Controller
             } else { // Reviewer
                 $query->where(function ($q) {
                     $q->where('status_security', 'assigned_review');
-                        // REMOVED: ->orWhere('status_security', 'pending_head'); // Staff should NOT see pending_head
+                    // REMOVED: ->orWhere('status_security', 'pending_head'); // Staff should NOT see pending_head
                 });
             }
 
@@ -2473,7 +2540,7 @@ class DocumentController extends Controller
             } else {
                 $query->where(function ($q) {
                     $q->where('status_she', 'assigned_review');
-                        // REMOVED: ->orWhere('status_she', 'pending_head');
+                    // REMOVED: ->orWhere('status_she', 'pending_head');
                 });
             }
 

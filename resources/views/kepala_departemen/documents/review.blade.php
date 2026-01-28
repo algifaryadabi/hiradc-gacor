@@ -1083,7 +1083,7 @@
                                             $complianceField = 'compliance_checklist_security';
                                         }
                                         
-                                        $existingCompliance = $document->$complianceField ? json_decode($document->$complianceField, true) : [];
+                                        $existingCompliance = $document->$complianceField ?? [];
                                     @endphp
 
                                     @foreach($complianceCriteria as $index => $criteria)
@@ -1188,19 +1188,29 @@
                         
                         // Filter history based on filter parameter
                         if (isset($filter) && $filter == 'SHE') {
-                            // Show: created, submitted, Level 1, Unit SHE (id_unit=56), Level 3
                             $allHistory = $allHistory->filter(function($log) {
                                 if ($log->action == 'created' || $log->action == 'submitted') return true;
-                                if ($log->level == 1 || $log->level == 3) return true;
-                                if ($log->level == 2 && optional($log->approver)->id_unit == 56) return true;
+                                if ($log->level == 1) return true;
+                                
+                                $approverUnit = optional($log->approver)->id_unit;
+                                if ($log->level == 2 || $log->level == 3) {
+                                    // Only show if it's NOT the other unit (Security = 55)
+                                    if ($approverUnit == 55) return false;
+                                    return true;
+                                }
                                 return false;
                             });
                         } elseif (isset($filter) && $filter == 'Security') {
-                            // Show: created, submitted, Level 1, Unit Security (id_unit=55), Level 3
                             $allHistory = $allHistory->filter(function($log) {
                                 if ($log->action == 'created' || $log->action == 'submitted') return true;
-                                if ($log->level == 1 || $log->level == 3) return true;
-                                if ($log->level == 2 && optional($log->approver)->id_unit == 55) return true;
+                                if ($log->level == 1) return true;
+
+                                $approverUnit = optional($log->approver)->id_unit;
+                                if ($log->level == 2 || $log->level == 3) {
+                                    // Only show if it's NOT the other unit (SHE = 56)
+                                    if ($approverUnit == 56) return false;
+                                    return true;
+                                }
                                 return false;
                             });
                         }
@@ -1260,6 +1270,9 @@
                                     {{ optional($log->approver)->nama_user ?? 'System' }} 
                                     <span style="font-weight:400; color:var(--text-sub);">
                                         • {{ optional($log->approver)->role_jabatan_name ? $log->approver->role_jabatan_name : ($log->action == 'created' ? 'Submitter' : '-') }}
+                                        @if(optional(optional($log->approver)->unit)->nama_unit)
+                                            • {{ $log->approver->unit->nama_unit }}
+                                        @endif
                                     </span>
                                 </div>
                                 <div class="timeline-action">
