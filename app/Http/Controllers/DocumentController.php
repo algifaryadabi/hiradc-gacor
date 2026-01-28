@@ -858,6 +858,9 @@ class DocumentController extends Controller
                 case 'approved':
                     $status = 'Disetujui';
                     break;
+                case 'published':
+                    $status = 'Terpublikasi';
+                    break;
                 case 'pending_level2': // Treating Pending Level 2 as Approved (by Level 1) for this view
                     $status = 'Disetujui';
                     break;
