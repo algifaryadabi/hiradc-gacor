@@ -7,6 +7,7 @@
     <title>Dashboard - HIRADC System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         * {
             margin: 0;
@@ -646,9 +647,19 @@
                 
                 if (data.success) {
                     document.getElementById('currentPICName').textContent = data.staff_name;
-                    alert(`✅ PIC berhasil diupdate!\n\n${data.staff_name} sekarang memiliki akses pembuatan form.`);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'PIC Updated',
+                        text: `${data.staff_name} sekarang memiliki akses pembuatan form.`,
+                        confirmButtonColor: '#c41e3a'
+                    });
                 } else {
-                    alert(`❌ Gagal update PIC: ${data.message}`);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: data.message,
+                        confirmButtonColor: '#c41e3a'
+                    });
                 }
             })
             .catch(error => {
@@ -657,10 +668,39 @@
                     e.target.textContent = 'Update';
                 }
                 console.error('Error:', error);
-                alert('❌ Terjadi kesalahan. Silakan coba lagi.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan sistem. Silakan coba lagi.',
+                    confirmButtonColor: '#c41e3a'
+                });
             });
         }
     </script>
+    <!-- Flash Messages (SweetAlert) -->
+    @if(session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: "{{ session('success') }}",
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#c41e3a'
+            });
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: "{{ session('error') }}",
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#c41e3a'
+            });
+        </script>
+    @endif
+
 </body>
 
 </html>

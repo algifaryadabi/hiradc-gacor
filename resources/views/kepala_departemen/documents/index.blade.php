@@ -675,6 +675,15 @@
             });
         @endif
 
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: "{{ session('error') }}",
+                confirmButtonColor: '#ef4444'
+            });
+        @endif
+
         const documentsData = @json($documentsData);
 
         function initStats() {
@@ -784,6 +793,7 @@
                             </div>
                             <div class="doc-title">${doc.title}</div>
                             <div class="doc-submitter" style="margin-bottom:4px;"><i class="fas fa-user-edit"></i> ${doc.submitter}</div>
+                            ${doc.category_label ? `<div style="margin-bottom:6px; padding:4px 10px; background:#fef3c7; border:1px solid #f59e0b; border-radius:6px; display:inline-block;"><i class="fas fa-tag" style="color:#d97706;"></i> <span style="font-size:12px; color:#92400e; font-weight:600;">Dari Unit Pengelola ${doc.category_label}</span></div>` : ''}
                             <div style="display:flex; gap:6px; flex-wrap:wrap;">${badgesHtml}</div>
                         </div>
 

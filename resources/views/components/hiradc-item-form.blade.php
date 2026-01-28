@@ -57,7 +57,13 @@
         <div class="k3-ko-field" style="{{ in_array($cat, ['K3','KO']) ? 'display:block' : 'display:none' }}; background: #fffbeb; padding: 20px; border-radius: 8px; border:1px solid #fef3c7; margin-bottom:15px;">
             <label style="font-weight:600; margin-bottom:10px; display:block;">Potensi Bahaya (K3/KO)</label>
             <div class="checkbox-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
-                @php $bahaya = $item->kolom6_bahaya ?? []; $bDetails = $bahaya['details'] ?? []; @endphp
+                @php 
+                    $bahaya = $item->kolom6_bahaya ?? []; 
+                    // Handle String Data (Legacy Fix)
+                    if (is_string($bahaya)) $bDetails = [$bahaya];
+                    else $bDetails = $bahaya['details'] ?? [];
+                    if (!is_array($bDetails)) $bDetails = [$bDetails];
+                @endphp
                 @foreach(['Bahaya Fisika','Bahaya Kimia','Bahaya Biologi','Bahaya Fisiologis/Ergonomi','Bahaya Psikologis','Bahaya dari Prilaku'] as $opt)
                     <label style="display:flex; gap:10px; align-items:center;"><input type="checkbox" name="{{ $prefix }}[{{$index}}][kolom6_bahaya][]" value="{{$opt}}" {{ in_array($opt, $bDetails) ? 'checked' : '' }}> {{$opt}}</label>
                 @endforeach
@@ -71,7 +77,12 @@
         <div class="lingkungan-field" style="{{ $cat == 'Lingkungan' ? 'display:block' : 'display:none' }}; background: #ecfdf5; padding: 20px; border-radius: 8px; border:1px solid #10b981; margin-bottom:15px;">
             <label style="font-weight:600; margin-bottom:10px; display:block;">Aspek Lingkungan</label>
              <div class="checkbox-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
-                @php $aspek = $item->kolom7_aspek_lingkungan ?? []; $aDetails = $aspek['details'] ?? []; @endphp
+                @php 
+                    $aspek = $item->kolom7_aspek_lingkungan ?? []; 
+                    if (is_string($aspek)) $aDetails = [$aspek];
+                    else $aDetails = $aspek['details'] ?? [];
+                     if (!is_array($aDetails)) $aDetails = [$aDetails];
+                @endphp
                 @foreach(['Emisi ke udara','Pembuangan ke air','Pembuangan ke tanah','Penggunaan Bahan Baku dan SDA','Penggunaan energi','Paparan energi','Limbah'] as $opt)
                      <label style="display:flex; gap:10px; align-items:center;"><input type="checkbox" name="{{ $prefix }}[{{$index}}][kolom7_aspek_lingkungan][]" value="{{$opt}}" {{ in_array($opt, $aDetails) ? 'checked' : '' }}> {{$opt}}</label>
                 @endforeach
@@ -85,7 +96,12 @@
         <div class="keamanan-field" style="{{ $cat == 'Keamanan' ? 'display:block' : 'display:none' }}; background: #fef2f2; padding: 20px; border-radius: 8px; border:1px solid #ef4444; margin-bottom:15px;">
             <label style="font-weight:600; margin-bottom:10px; display:block;">Ancaman Keamanan</label>
             <div class="checkbox-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
-                @php $ancaman = $item->kolom8_ancaman ?? []; $anDetails = $ancaman['details'] ?? []; @endphp
+                @php 
+                    $ancaman = $item->kolom8_ancaman ?? []; 
+                    if (is_string($ancaman)) $anDetails = [$ancaman];
+                    else $anDetails = $ancaman['details'] ?? [];
+                    if (!is_array($anDetails)) $anDetails = [$anDetails];
+                @endphp
                 @foreach(['Terorisme','Sabotase','Intimidasi','Pencurian','Perusakan aset'] as $opt)
                      <label style="display:flex; gap:10px; align-items:center;"><input type="checkbox" name="{{ $prefix }}[{{$index}}][kolom8_ancaman][]" value="{{$opt}}" {{ in_array($opt, $anDetails) ? 'checked' : '' }}> {{$opt}}</label>
                 @endforeach

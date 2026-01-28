@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="id">
 
+@php
+    // Ensure filter variables are always defined
+    $filter = $filter ?? 'ALL';
+    $verifyingUnit = $verifyingUnit ?? '';
+@endphp
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -716,6 +722,12 @@
                     <div>
                         <div class="doc-label">Judul Dokumen</div>
                         <div class="doc-main-title">{{ $document->judul_dokumen ?? $document->kolom2_kegiatan }}</div>
+                        @if(!empty($verifyingUnit))
+                            <div style="margin-top: 8px; padding: 6px 12px; background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; display: inline-block;">
+                                <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                                <span style="font-size: 13px; color: #1e40af; font-weight: 600;">Verifikasi: {{ $verifyingUnit }}</span>
+                            </div>
+                        @endif
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank" style="padding: 6px 12px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
@@ -785,10 +797,23 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($document->details as $index => $item)
+                            @php
+                                // Filter items based on filter parameter
+                                $filteredDetails = $document->details;
+                                if (isset($filter) && $filter == 'SHE') {
+                                    $filteredDetails = $document->details->filter(function($item) {
+                                        return in_array($item->kategori, ['K3', 'KO', 'Lingkungan']);
+                                    });
+                                } elseif (isset($filter) && $filter == 'Security') {
+                                    $filteredDetails = $document->details->filter(function($item) {
+                                        return $item->kategori == 'Keamanan';
+                                    });
+                                }
+                            @endphp
+                            @forelse($filteredDetails as $index => $item)
                                 <tr>
                                     <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
-                                        {{ $index + 1 }}
+                                        {{ $loop->iteration }}
                                     </td>
                                     <!-- BAGIAN 1: Identifikasi Aktivitas -->
                                     <td>
@@ -1049,7 +1074,16 @@
                                              ['key' => 'condition_coverage', 'label' => 'Ident. sdh mencakup semua kondisi (R, NR, N, TN & E)'],
                                              ['key' => 'mitigation', 'label' => 'Kesesuaian Program Mitigasi']
                                         ];
-                                        $existingCompliance = $document->compliance_checklist ? json_decode($document->compliance_checklist, true) : [];
+                                        
+                                        // Filter compliance based on filter parameter
+                                        $complianceField = 'compliance_checklist';
+                                        if (isset($filter) && $filter == 'SHE') {
+                                            $complianceField = 'compliance_checklist_she';
+                                        } elseif (isset($filter) && $filter == 'Security') {
+                                            $complianceField = 'compliance_checklist_security';
+                                        }
+                                        
+                                        $existingCompliance = $document->$complianceField ? json_decode($document->$complianceField, true) : [];
                                     @endphp
 
                                     @foreach($complianceCriteria as $index => $criteria)
@@ -1095,7 +1129,22 @@
                 </div>
 
                 <!-- Sticky Action Bar -->
-                @if($document->status === 'pending_level3')
+                @php
+                    // Show action buttons if:
+                    // 1. Filter=SHE and status_she='approved' (SHE track ready)
+                    // 2. Filter=Security and status_security='approved' (Security track ready)
+                    // 3. Filter=ALL and status='pending_level3' (legacy/general)
+                    $showActions = false;
+                    if (isset($filter) && $filter == 'SHE' && $document->status_she == 'approved') {
+                        $showActions = true;
+                    } elseif (isset($filter) && $filter == 'Security' && $document->status_security == 'approved') {
+                        $showActions = true;
+                    } elseif ($document->status === 'pending_level3') {
+                        $showActions = true;
+                    }
+                @endphp
+                
+                @if($showActions)
                 <div class="action-bar">
                     <div class="note-input-wrapper">
                         <input type="text" id="catatan_ui" class="note-input" placeholder="Tulis catatan (Opsional untuk Approve, Wajib untuk Revisi)...">
@@ -1136,6 +1185,26 @@
                         
                         // Merge with actual approvals
                         $allHistory = collect([$createdEvent])->merge($document->approvals->sortBy('created_at'));
+                        
+                        // Filter history based on filter parameter
+                        if (isset($filter) && $filter == 'SHE') {
+                            // Show: created, submitted, Level 1, Unit SHE (id_unit=56), Level 3
+                            $allHistory = $allHistory->filter(function($log) {
+                                if ($log->action == 'created' || $log->action == 'submitted') return true;
+                                if ($log->level == 1 || $log->level == 3) return true;
+                                if ($log->level == 2 && optional($log->approver)->id_unit == 56) return true;
+                                return false;
+                            });
+                        } elseif (isset($filter) && $filter == 'Security') {
+                            // Show: created, submitted, Level 1, Unit Security (id_unit=55), Level 3
+                            $allHistory = $allHistory->filter(function($log) {
+                                if ($log->action == 'created' || $log->action == 'submitted') return true;
+                                if ($log->level == 1 || $log->level == 3) return true;
+                                if ($log->level == 2 && optional($log->approver)->id_unit == 55) return true;
+                                return false;
+                            });
+                        }
+                        
                         // Sort Descending for Timeline (Newest Top)
                         $displayHistory = $allHistory->sortByDesc('created_at')->values();
                     @endphp
@@ -1233,9 +1302,15 @@
 
             const actionText = type === 'approve' ? 'Publikasikan' : 'Kembalikan untuk Revisi';
             const actionColor = type === 'approve' ? '#16a34a' : '#dc2626';
+            
+            // Add filter parameter to URL
+            const filter = "{{ $filter ?? 'ALL' }}";
+            const baseApproveUrl = "{{ route('kepala_departemen.publish', $document->id) }}";
+            const baseReviseUrl = "{{ route('kepala_departemen.revise', $document->id) }}";
+            
             const actionUrl = type === 'approve' 
-                ? "{{ route('kepala_departemen.publish', $document->id) }}"
-                : "{{ route('kepala_departemen.revise', $document->id) }}";
+                ? (filter !== 'ALL' ? baseApproveUrl + '?filter=' + filter : baseApproveUrl)
+                : (filter !== 'ALL' ? baseReviseUrl + '?filter=' + filter : baseReviseUrl);
 
             Swal.fire({
                 title: 'Konfirmasi',
@@ -1254,5 +1329,6 @@
             });
         }
     </script>
+    @include('partials.alerts')
 </body>
 </html>

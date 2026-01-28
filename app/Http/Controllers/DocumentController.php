@@ -103,11 +103,50 @@ class DocumentController extends Controller
     }
 
     /**
+     * Generate Standardized Filename
+     * Format: [Title]_[UnitInput]_[Dept]_[SHE/Security]
+     */
+    private function generateStandardFilename(Document $document, $extension)
+    {
+        // 1. Title
+        $title = $document->judul_dokumen ?? $document->kolom2_kegiatan ?? 'Dokumen';
+        
+        // 2. Unit Input
+        $unitInput = $document->unit->nama_unit ?? 'Unit';
+        
+        // 3. Department
+        $dept = $document->user && $document->user->departemen ? $document->user->departemen->nama_dept : 'Dept';
+        
+        // 4. Managing Unit (SHE/Security) - Logic to infer or default
+        // If the document is specifically managed by SHE or Security, we append it.
+        // Assuming 'managing_unit' attribute exists or we infer from ID?
+        // Let's check if we can infer from the document content or just use a generic logic if not explicit.
+        // Since the prompt says "from unit pengelola she or security", we can maybe check the approvers or the flow?
+        // Or simply append "SHE" if status_she is active, "Security" if status_security is active?
+        // For simplicity and robustness, let's look at the document's type/content flags if available, 
+        // OR rely on who is exporting it? No, filename should be consistent.
+        
+        $suffix = 'HIRADC'; // Default
+        if ($document->hasSheContent()) {
+            $suffix = 'SHE';
+        } elseif ($document->hasSecurityContent()) {
+            $suffix = 'Security';
+        }
+        
+        // Sanitize parts
+        $safeTitle = $this->sanitizeFilename($title);
+        $safeUnit = $this->sanitizeFilename($unitInput);
+        $safeDept = $this->sanitizeFilename($dept);
+        
+        return "{$safeTitle}_{$safeUnit}_{$safeDept}_{$suffix}.{$extension}";
+    }
+
+    /**
      * Export Single Document Detail to PDF
      */
     public function exportDetailPdf(Document $document)
     {
-        // Ensure user has access (Author, Approver, or Admin)
+        // ... (Access Control kept same, abbreviated for brevity in replacer if needed, but here replacing full function)
         // Access Control
         $user = Auth::user();
         if (!$user) {
@@ -127,7 +166,8 @@ class DocumentController extends Controller
         $pdf = Pdf::loadView('documents.export_detail_pdf', compact('document'));
         $pdf->setPaper('a4', 'landscape');
 
-        return $pdf->download('hiradc_document_' . $document->id . '.pdf');
+        $filename = $this->generateStandardFilename($document, 'pdf');
+        return $pdf->download($filename);
     }
 
     /**
@@ -151,26 +191,7 @@ class DocumentController extends Controller
 
         $document->load(['details', 'user', 'unit', 'departemen']);
 
-        // Generate custom filename: JudulDokumen_UnitPenginput_Departemen_UnitPengelola
-        $judulDokumen = $document->judul_dokumen ?? $document->kolom2_kegiatan ?? 'Dokumen';
-        $unitPenginput = $document->unit->nama_unit ?? 'Unit';
-        $departemen = $document->departemen->nama_dept ?? 'Dept';
-
-        // Determine Unit Pengelola based on current user
-        $unitPengelola = 'UnitPengelola';
-        if (Auth::check()) {
-            if (Auth::user()->id_unit == 55) {
-                $unitPengelola = 'Security';
-            } elseif (Auth::user()->id_unit == 56) {
-                $unitPengelola = 'SHE';
-            }
-        }
-
-        // Clean filename (remove special characters)
-        $filename = $this->sanitizeFilename($judulDokumen) . '_' .
-            $this->sanitizeFilename($unitPenginput) . '_' .
-            $this->sanitizeFilename($departemen) . '_' .
-            $unitPengelola . '.xlsx';
+        $filename = $this->generateStandardFilename($document, 'xlsx');
 
         return Excel::download(new DocumentDetailExport($document), $filename);
     }
@@ -540,17 +561,19 @@ class DocumentController extends Controller
             'items' => 'required|array|min:1',
             'items.*.kategori' => 'required|in:K3,KO,Lingkungan,Keamanan',
             'items.*.kolom2_kegiatan' => 'required|string',
+            'revision_comment' => 'required|string|min:5', // Added validation
             // Add other validations as needed
         ]);
 
-        \DB::transaction(function () use ($request, $document) {
+        \DB::transaction(function () use ($request, $document, $user) {
             // 1. UPDATE HEADER (Legacy compatibility with Item #1)
-            // Ideally header should only contain metadata, but we fill it for legacy views
-            $firstItem = $request->items[0];
+            // Use reset() to get the first item regardless of array key (e.g. if index is ID)
+            $items = $request->items;
+            $firstItem = reset($items); // Get first element value
 
             $headerBahaya = [
                 'type' => '',
-                'kategori' => $firstItem['kategori'],
+                'kategori' => $firstItem['kategori'] ?? 'K3',
                 'details' => $firstItem['kolom6_bahaya'] ?? [],
                 'manual' => $firstItem['bahaya_manual'] ?? '',
                 'aspects' => [],
@@ -563,26 +586,28 @@ class DocumentController extends Controller
             ];
 
             $document->update([
-                'kategori' => $firstItem['kategori'],
-                'kolom2_proses' => $firstItem['kolom2_proses'],
-                'kolom2_kegiatan' => $firstItem['kolom2_kegiatan'],
-                'kolom3_lokasi' => $firstItem['kolom3_lokasi'],
-                'kolom5_kondisi' => $firstItem['kolom5_kondisi'],
+                'kategori' => $firstItem['kategori'] ?? 'K3',
+                'kolom2_proses' => $firstItem['kolom2_proses'] ?? '',
+                'kolom2_kegiatan' => $firstItem['kolom2_kegiatan'] ?? '',
+                'kolom3_lokasi' => $firstItem['kolom3_lokasi'] ?? '',
+                'kolom5_kondisi' => $firstItem['kolom5_kondisi'] ?? '',
                 'kolom6_bahaya' => $headerBahaya,
+                // Robust Fallback Chain for Kolom 9
                 'kolom9_risiko' => $firstItem['kolom9_risiko'] ?? $firstItem['kolom9_risiko_k3ko'] ?? $firstItem['kolom9_dampak_lingkungan'] ?? $firstItem['kolom9_celah_keamanan'] ?? '-',
                 'kolom10_pengendalian' => $headerControls,
-                'kolom11_existing' => $firstItem['kolom11_existing'],
-                'kolom12_kemungkinan' => $firstItem['kolom12_kemungkinan'],
-                'kolom13_konsekuensi' => $firstItem['kolom13_konsekuensi'],
-                'kolom14_score' => $firstItem['kolom14_score'] ?? ($firstItem['kolom12_kemungkinan'] * $firstItem['kolom13_konsekuensi']),
+                'kolom11_existing' => $firstItem['kolom11_existing'] ?? '',
+                'kolom12_kemungkinan' => $firstItem['kolom12_kemungkinan'] ?? 1,
+                'kolom13_konsekuensi' => $firstItem['kolom13_konsekuensi'] ?? 1,
+                'kolom14_score' => $firstItem['kolom14_score'] ?? (($firstItem['kolom12_kemungkinan'] ?? 1) * ($firstItem['kolom13_konsekuensi'] ?? 1)),
                 'kolom15_regulasi' => $firstItem['kolom15_regulasi'] ?? null,
                 'kolom16_aspek' => $firstItem['kolom16_aspek'] ?? null,
                 'kolom17_risiko' => $firstItem['kolom17_risiko'] ?? null,
                 'kolom17_peluang' => $firstItem['kolom17_peluang'] ?? null,
-                'kolom18_tindak_lanjut' => $firstItem['kolom18_tindak_lanjut'],
-                'residual_kemungkinan' => $firstItem['residual_kemungkinan'],
-                'residual_konsekuensi' => $firstItem['residual_konsekuensi'],
-                'residual_score' => $firstItem['residual_score'] ?? ($firstItem['residual_kemungkinan'] * $firstItem['residual_konsekuensi']),
+                // 'kolom18_tindak_lanjut' => $firstItem['kolom18_tindak_lanjut'] ?? null, // REMOVED: Column does not exist in DB
+
+                'residual_kemungkinan' => $firstItem['residual_kemungkinan'] ?? 0,
+                'residual_konsekuensi' => $firstItem['residual_konsekuensi'] ?? 0,
+                'residual_score' => $firstItem['residual_score'] ?? (($firstItem['residual_kemungkinan'] ?? 0) * ($firstItem['residual_konsekuensi'] ?? 0)),
 
                 // Reset Status
                 'status' => 'pending_level1',
@@ -668,6 +693,15 @@ class DocumentController extends Controller
             if (!empty($toDelete)) {
                 $document->details()->whereIn('id', $toDelete)->delete();
             }
+
+            // 4. LOG REVISION HISTORY
+            // Log that the unit has submitted the revision
+            $document->approvals()->create([
+                'level' => 1, // Reset to level 1 flow
+                'approver_id' => $user->id_user,
+                'action' => 'resubmitted',
+                'catatan' => $request->revision_comment, // Use user comment
+            ]);
         });
 
 
@@ -713,13 +747,20 @@ class DocumentController extends Controller
         $role = method_exists($user, 'getRoleName') ? $user->getRoleName() : $user->role_user;
 
         // Level Determination
-        $isLevel1 = (in_array($role, ['approver', 'kepala_unit']) || $user->id_role_user == 3 || $user->id_role_jabatan == 3);
-        $isSHE = ($user->id_unit == 56);
-        $isSecurity = ($user->id_unit == 55);
-        $isLevel2 = ($isSHE || $isSecurity) && ($user->role_jabatan >= 3); // Head or Staff? 
-        // Note: Staff (Reviewer/Verificator) also access this?
-        // If staff uses this "Approver Dashboard", we should allow them.
-        // Assuming Staff Reviewer/Verificator are accessing 'approver.check_documents' too.
+    // We want to ensure SHE (56) and Security (55) users see ALL documents if they are Approvers (Level 2).
+    // Using broad check: If they are in SHE/Security unit OR have 'approver' role/rank.
+    
+    $isSHE = ($user->id_unit == 56);
+    $isSecurity = ($user->id_unit == 55);
+    
+    // logic: If unit is SHE/Security, they are Level 2 approvers (System Approvers).
+    // Also include if they explicitly have role_jabatan 3 (Kepala Unit) BUT specifically for these units.
+    // Actually, "Approver" role (id_role_user=3) should also count.
+    
+    $isLevel2 = ($isSHE || $isSecurity); // Simplified: explicit SHE/Security units are System Approvers.
+    
+    // Note: If normal Kepala Unit (Level 1) of other units logs in, isLevel2 is false.
+
 
         $documents = collect([]);
 
@@ -736,9 +777,10 @@ class DocumentController extends Controller
                 ]);
 
             if ($isSHE) {
-                $query->where('status_she', '!=', 'none');
+                 // Relaxed to allow viewing all categories as requested
+                 // $query->where('status_she', '!=', 'none');
             } elseif ($isSecurity) {
-                $query->where('status_security', '!=', 'none');
+                 // $query->where('status_security', '!=', 'none');
             }
 
             $documents = $query->orderBy('created_at', 'desc')->get();
@@ -764,11 +806,12 @@ class DocumentController extends Controller
             $workflowStatus = $doc->status; // Default global
 
             // Determine relevant status based on viewer
+            // Determine relevant status based on viewer
             if ($isLevel2) {
                 if ($isSHE) {
-                    $workflowStatus = $doc->status_she;
+                    $workflowStatus = ($doc->status_she !== 'none') ? $doc->status_she : $doc->status;
                 } elseif ($isSecurity) {
-                    $workflowStatus = $doc->status_security;
+                    $workflowStatus = ($doc->status_security !== 'none') ? $doc->status_security : $doc->status;
                 }
             }
 
@@ -791,6 +834,9 @@ class DocumentController extends Controller
                     $status = 'Menunggu Final Approval';
                     break;
                 case 'approved':
+                    $status = 'Disetujui';
+                    break;
+                case 'pending_level2': // Treating Pending Level 2 as Approved (by Level 1) for this view
                     $status = 'Disetujui';
                     break;
                 case 'revision':
@@ -1155,7 +1201,7 @@ class DocumentController extends Controller
     /**
      * Show review page
      */
-    public function review(Document $document)
+    public function review(Document $document, Request $request = null)
     {
         $document->load(['user', 'approvals.approver', 'direktorat', 'departemen', 'unit', 'seksi']);
 
@@ -1172,11 +1218,23 @@ class DocumentController extends Controller
                 ->get();
         }
 
+        // For Kepala Departemen, add filter support
+        $filter = 'ALL';
+        $verifyingUnit = '';
+        if (auth()->user()->getRoleName() == 'kepala_departemen') {
+            $filter = request()->query('filter', 'ALL');
+            if ($filter == 'SHE') {
+                $verifyingUnit = 'Unit Pengelola SHE';
+            } elseif ($filter == 'Security') {
+                $verifyingUnit = 'Unit Pengelola Keamanan';
+            }
+        }
+
         return view(match (auth()->user()->getRoleName()) {
             'unit_pengelola' => 'unit_pengelola.documents.review',
             'kepala_departemen' => 'kepala_departemen.documents.review',
             default => 'approver.documents.review',
-        }, compact('document', 'staffReviewers', 'staffApprovers'));
+        }, compact('document', 'staffReviewers', 'staffApprovers', 'filter', 'verifyingUnit'));
     }
 
     /**
@@ -1417,15 +1475,21 @@ class DocumentController extends Controller
                 ->with('success', 'Dokumen berhasil dipublikasikan.');
         }
         if ($user->isUnitPengelola() || $document->approvals()->where('level', 2)->where('approver_id', $user->id_user)->exists()) {
+            // Enhanced message for Kepala Unit Pengelola final approval
+            $successMessage = $message;
+            if ($document->fresh()->status_she == 'approved' || $document->fresh()->status_security == 'approved') {
+                $successMessage = 'Approve Final Berhasil! Dokumen telah disetujui dan akan diteruskan ke Kepala Departemen.';
+            }
             return redirect()->route('unit_pengelola.dashboard')
-                ->with('success', $message);
+                ->with('success', $successMessage);
         }
 
         // Fallback Redirects
         if ($user->hasRole('admin'))
             return redirect()->route('admin.dashboard')->with('success', 'Dokumen Disetujui.');
 
-        return redirect()->route('dashboard')->with('success', $message);
+        // Use direct route to prevent session flash loss from double-redirect
+        return redirect()->route($user->getDashboardRoute())->with('success', $message);
     }
 
     /**
@@ -1561,11 +1625,20 @@ class DocumentController extends Controller
 
         // Record History (Refactored to handle both levels)
         if (in_array($document->getOriginal('current_level'), [2, 3])) {
+            // Get filter parameter for scoped revision
+            $filter = $request->query('filter', 'ALL');
+            $catatan = $request->catatan;
+            
+            // Add track information to revision note
+            if ($user->isKepalaDepartemen() && $filter != 'ALL') {
+                $catatan .= ' (Track ' . $filter . ')';
+            }
+            
             $document->approvals()->create([
                 'approver_id' => $user->id_user,
                 'level' => $user->isKepalaDepartemen() ? 3 : 2,
                 'action' => 'revision',
-                'catatan' => $request->catatan,
+                'catatan' => $catatan,
                 'ip_address' => $request->ip()
             ]);
 
@@ -1610,17 +1683,20 @@ class DocumentController extends Controller
             return back()->with('error', 'Dokumen tidak dalam status yang tepat untuk dipublikasi.');
         }
 
-        // Smart Publish Logic: Approve whatever is ready
+        // Get filter parameter to determine which track to approve
+        $filter = $request->query('filter', 'ALL');
+
+        // Smart Publish Logic: Approve based on filter
         $approvedSomething = false;
 
-        // 1. Approve SHE Track
-        if ($document->status_she == 'approved') {
+        // 1. Approve SHE Track (only if filter is SHE or ALL)
+        if (($filter == 'SHE' || $filter == 'ALL') && $document->status_she == 'approved') {
             $document->update(['status_she' => 'published']);
             $approvedSomething = true;
         }
 
-        // 2. Approve Security Track
-        if ($document->status_security == 'approved') {
+        // 2. Approve Security Track (only if filter is Security or ALL)
+        if (($filter == 'Security' || $filter == 'ALL') && $document->status_security == 'approved') {
             $document->update(['status_security' => 'published']);
             $approvedSomething = true;
         }
@@ -1657,12 +1733,19 @@ class DocumentController extends Controller
             return back()->with('warning', 'Tidak ada bagian dokumen yang siap disetujui saat ini.');
         }
 
-        // Log approval history
+        // Log approval history with track information
+        $catatan = $request->catatan ?? 'Dokumen disetujui oleh Kepala Departemen';
+        if ($filter == 'SHE') {
+            $catatan .= ' (Track SHE)';
+        } elseif ($filter == 'Security') {
+            $catatan .= ' (Track Security)';
+        }
+        
         $document->approvals()->create([
             'approver_id' => $user->id_user,
             'level' => 3,
             'action' => 'approved',
-            'catatan' => $request->catatan ?? 'Dokumen disetujui oleh Kepala Departemen',
+            'catatan' => $catatan,
             'ip_address' => $request->ip()
         ]);
 
@@ -1844,8 +1927,23 @@ class DocumentController extends Controller
     {
         // Save Compliance Checklist if present
         if ($request->has('compliance_checklist')) {
+            $user = \Auth::user();
+            $current = $document->compliance_checklist ?? [];
+            if (!is_array($current)) {
+                $current = json_decode($current, true) ?? [];
+            }
+            $incoming = json_decode($request->compliance_checklist, true);
+
+            if ($user->id_unit == 56) { // SHE
+                $current['she'] = $incoming;
+            } elseif ($user->id_unit == 55) { // Security
+                $current['security'] = $incoming;
+            } else {
+                $current['general'] = $incoming;
+            }
+            
             $document->update([
-                'compliance_checklist' => $request->compliance_checklist
+                'compliance_checklist' => $current
             ]);
         }
 
@@ -1973,22 +2071,20 @@ class DocumentController extends Controller
     {
         try {
             $user = Auth::user();
-            // $id is Document ID from Route
-            $document = \App\Models\Document::findOrFail($id);
+            // $id is DocumentDetail ID from Route
+            $detail = \App\Models\DocumentDetail::findOrFail($id);
+            $document = $detail->document; // Get parent document
 
             $request->validate([
-                'detail_id' => 'required|exists:document_details,id',
+                'detail_id' => 'sometimes|exists:document_details,id', // Optional validation since we have ID in route
                 'kategori' => 'required',
                 'kolom2_kegiatan' => 'required|string',
                 'kolom12_kemungkinan' => 'required|numeric|min:1|max:5',
                 'kolom13_konsekuensi' => 'required|numeric|min:1|max:5',
             ]);
 
-            $detail = \App\Models\DocumentDetail::findOrFail($request->detail_id);
-
-            if ($detail->document_id != $document->id) {
-                return response()->json(['success' => false, 'message' => 'Detail mismatch'], 400);
-            }
+            // Redundant check removed since we loaded detail from ID directly
+            // $detail = \App\Models\DocumentDetail::findOrFail($request->detail_id);
 
             // PERMISSION CHECKS
             $isAuthor = $document->id_user == $user->id_user;
@@ -2057,11 +2153,27 @@ class DocumentController extends Controller
                 'kolom3_lokasi' => $request->kolom3_lokasi,
                 'kolom5_kondisi' => $request->kolom5_kondisi,
 
+                'kolom6_bahaya' => [
+                    'details' => is_array($request->kolom6_bahaya) ? $request->kolom6_bahaya : ($request->kolom6_bahaya ? [$request->kolom6_bahaya] : []),
+                    'manual' => $request->bahaya_manual ?? '',
+                ],
+                'bahaya_manual' => $request->bahaya_manual, 
+
+                'kolom7_aspek_lingkungan' => [
+                    'details' => is_array($request->kolom7_aspek_lingkungan) ? $request->kolom7_aspek_lingkungan : ($request->kolom7_aspek_lingkungan ? [$request->kolom7_aspek_lingkungan] : []),
+                    'manual' => $request->aspek_manual ?? '',
+                ],
+
+                'kolom8_ancaman' => [
+                    'details' => is_array($request->kolom8_ancaman) ? $request->kolom8_ancaman : ($request->kolom8_ancaman ? [$request->kolom8_ancaman] : []),
+                    'manual' => $request->ancaman_manual ?? '',
+                ],
+
                 // Maps
                 'kolom9_risiko_k3ko' => $riskK3,
                 'kolom9_dampak_lingkungan' => $riskEnv,
                 'kolom9_celah_keamanan' => $riskSec,
-                'kolom9_risiko' => $request->kolom9_risiko, // Keep generic for search/legacy
+                'kolom9_risiko' => $request->kolom9_risiko, 
 
                 'kolom11_existing' => $request->kolom11_existing,
                 'kolom12_kemungkinan' => $chem,
@@ -2069,8 +2181,23 @@ class DocumentController extends Controller
                 'kolom14_score' => $score,
                 'kolom14_level' => $level,
                 'kolom15_regulasi' => $request->kolom15_regulasi,
+                'kolom16_aspek' => $request->kolom16_aspek, 
+                'kolom17_risiko' => $request->kolom17_risiko, 
+                'kolom17_peluang' => $request->kolom17_peluang, 
                 'kolom18_toleransi' => $request->kolom18_toleransi,
                 'kolom19_pengendalian_lanjut' => $request->kolom19_pengendalian_lanjut,
+
+                // Follow Up Risk
+                'kolom20_kemungkinan_lanjut' => $request->kolom20_kemungkinan_lanjut,
+                'kolom21_konsekuensi_lanjut' => $request->kolom21_konsekuensi_lanjut,
+                'kolom22_tingkat_risiko_lanjut' => $request->kolom22_tingkat_risiko_lanjut,
+                'kolom22_level_lanjut' => ($request->kolom22_tingkat_risiko_lanjut >= 15 ? 'High' : ($request->kolom22_tingkat_risiko_lanjut >= 8 ? 'Medium' : 'Low')),
+
+                // Residual Risk
+                'residual_kemungkinan' => $request->residual_kemungkinan,
+                'residual_konsekuensi' => $request->residual_konsekuensi,
+                'residual_score' => $request->residual_score,
+                'residual_level' => ($request->residual_score >= 15 ? 'High' : ($request->residual_score >= 8 ? 'Medium' : 'Low')),
             ];
 
             $detail->update($updateData);
@@ -2093,11 +2220,11 @@ class DocumentController extends Controller
             $document = $detail->document;
 
             // Auth Check
-            // Fix: Do not require doc unit match
-            $isStaffApprover = ($user->role_jabatan == 4) &&
+            // Allow any Staff in Unit Pengelola (Role 4, 5, 6) in Unit 55/56
+            $isUnitStaff = in_array($user->role_jabatan, [4, 5, 6]) &&
                 in_array($user->id_unit, [55, 56]);
 
-            if ($document->id_user != $user->id_user && !($user->role_jabatan == 3 && $document->id_unit == $user->id_unit) && !$isStaffApprover) {
+            if ($document->id_user != $user->id_user && !($user->role_jabatan == 3 && $document->id_unit == $user->id_unit) && !$isUnitStaff) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
@@ -2138,11 +2265,26 @@ class DocumentController extends Controller
         // Filter Details based on Unit
         $filteredDetails = $document->details; // Default all
 
-        if ($user->id_unit == 55) { // Security
+    if ($user->id_unit == 55) { // Security
+            // Access Control: Block Staff if document is still pending_head (Not Dispositioned)
+            // Staff roles: 4 (Verifikator), 5 (Reviewer), 6 (Reviewer)
+            if (in_array($user->role_jabatan, [4, 5, 6])) {
+                if ($document->status_security === 'pending_head' || $document->status_security === 'none' || empty($document->status_security)) {
+                    abort(403, 'Dokumen belum didisposisikan oleh Kepala Unit.');
+                }
+            }
+            
             $filteredDetails = $document->details->filter(function ($detail) {
                 return $detail->kategori == 'Keamanan';
             });
         } elseif ($user->id_unit == 56) { // SHE
+            // Access Control: Block Staff if document is pending_head
+            if (in_array($user->role_jabatan, [4, 5, 6])) {
+                if ($document->status_she === 'pending_head' || $document->status_she === 'none' || empty($document->status_she)) {
+                    abort(403, 'Dokumen belum didisposisikan oleh Kepala Unit.');
+                }
+            }
+            
             $filteredDetails = $document->details->filter(function ($detail) {
                 return in_array($detail->kategori, ['K3', 'KO', 'Lingkungan']);
             });
@@ -2305,8 +2447,8 @@ class DocumentController extends Controller
                 $query->where('status_security', 'assigned_approval'); // or similar status
             } else { // Reviewer
                 $query->where(function ($q) {
-                    $q->where('status_security', 'assigned_review')
-                        ->orWhere('status_security', 'pending_head'); // Allow seeing fresh docs if pool enabled
+                    $q->where('status_security', 'assigned_review');
+                        // REMOVED: ->orWhere('status_security', 'pending_head'); // Staff should NOT see pending_head
                 });
             }
 
@@ -2330,8 +2472,8 @@ class DocumentController extends Controller
                 $query->where('status_she', 'assigned_approval');
             } else {
                 $query->where(function ($q) {
-                    $q->where('status_she', 'assigned_review')
-                        ->orWhere('status_she', 'pending_head');
+                    $q->where('status_she', 'assigned_review');
+                        // REMOVED: ->orWhere('status_she', 'pending_head');
                 });
             }
 

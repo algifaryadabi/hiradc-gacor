@@ -195,6 +195,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/unit-pengelola/documents/{document}/disposition', [DocumentController::class, 'disposition'])->name('unit_pengelola.disposition');
     Route::post('/unit-pengelola/documents/{document}/submit-review', [DocumentController::class, 'submitReviewUnit'])->name('unit_pengelola.submit_review');
     Route::post('/unit-pengelola/documents/{document}/verify', [DocumentController::class, 'verifyUnit'])->name('unit_pengelola.verify');
+    Route::post('/unit-pengelola/documents/update-detail/{id}', [DocumentController::class, 'updateDetail'])->name('unit_pengelola.update_detail');
+    Route::get('/unit-pengelola/documents/get-item-html/{id}', [DocumentController::class, 'getEditItemHtml'])->name('unit_pengelola.get_edit_item');
 
     // ==================== KEPALA DEPARTEMEN ROUTES ====================
     Route::get('/kepala-departemen/dashboard', function () {
@@ -394,3 +396,4 @@ Route::middleware('auth')->group(function () {
         return view('admin.master');
     })->name('admin.master');
 });
+

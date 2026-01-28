@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary: #c41e3a;
@@ -246,6 +247,8 @@
             transform: translateY(-2px);
             box-shadow: var(--shadow-md);
         }
+
+
 
         .stat-icon {
             width: 56px;
@@ -522,6 +525,8 @@
             </div>
 
             <!-- Stats Grid -->
+            <!-- Stats Grid -->
+            <!-- Stats Grid -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon icon-orange"><i class="fas fa-hourglass-half"></i></div>
@@ -554,14 +559,6 @@
                     <button class="tab-btn" onclick="filterData('Disetujui', this)">Disetujui</button>
                     <button class="tab-btn" onclick="filterData('Revisi', this)">Revisi</button>
                 </div>
-
-                <select class="category-select" id="catFilter" onchange="filterByCategory()">
-                    <option value="All">Semua Kategori</option>
-                    <option value="K3">K3 - Kesehatan & Keselamatan</option>
-                    <option value="KO">KO - Keselamatan Operasional</option>
-                    <option value="Lingkungan">Lingkungan</option>
-                    <option value="Keamanan">Pengamanan</option>
-                </select>
             </div>
 
             <!-- Document List -->
@@ -574,28 +571,27 @@
 
     <script>
         const documents = @json($documentsData);
-        let currentStatusFilter = 'Semua';
+        let activeStatusFilter = 'Semua';
 
-        function renderList() {
+        function renderDocumentList() {
             const container = document.getElementById('documentList');
-            const catFilter = document.getElementById('catFilter').value;
-
             let filtered = documents;
 
-            if (currentStatusFilter !== 'Semua') {
-                if (currentStatusFilter === 'Menunggu') {
-                    // Match any "Menunggu" status
-                    filtered = filtered.filter(d => d.status.includes('Menunggu'));
-                } else if (currentStatusFilter === 'Disetujui') {
-                    filtered = filtered.filter(d => d.status === 'Disetujui');
-                } else if (currentStatusFilter === 'Revisi') {
-                    filtered = filtered.filter(d => d.status === 'Revisi');
+            console.log('Rendering list. Filter:', activeStatusFilter);
+            console.log('Total documents:', documents.length);
+
+            // Filter logic
+            if (activeStatusFilter !== 'Semua') {
+                if (activeStatusFilter === 'Menunggu') {
+                    filtered = documents.filter(d => d.status.includes('Menunggu'));
+                } else if (activeStatusFilter === 'Disetujui') {
+                    filtered = documents.filter(d => d.status === 'Disetujui');
+                } else if (activeStatusFilter === 'Revisi') {
+                    filtered = documents.filter(d => d.status === 'Revisi');
                 }
             }
 
-            if (catFilter !== 'All') {
-                filtered = filtered.filter(d => d.category === catFilter || (catFilter === 'Keamanan' && d.category === 'Pengamanan'));
-            }
+            console.log('Filtered count:', filtered.length);
 
             let html = '';
             if (filtered.length === 0) {
@@ -603,6 +599,7 @@
                     <div class="empty-state">
                         <div class="empty-icon"><i class="far fa-folder-open"></i></div>
                         <div class="empty-text">Tidak ada form yang ditemukan untuk filter ini.</div>
+                        <div style="font-size:12px; color:#94a3b8; margin-top:8px;">Total Data: ${documents.length}, Filter: ${activeStatusFilter}</div>
                     </div>
                 `;
             } else {
@@ -656,26 +653,48 @@
         function filterData(status, btn) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            currentStatusFilter = status;
-            renderList();
-        }
-
-        function filterByCategory() {
-            renderList();
+            activeStatusFilter = status;
+            renderDocumentList();
         }
 
         function updateCounts() {
             const waiting = documents.filter(d => d.status.includes('Menunggu')).length;
             const approved = documents.filter(d => d.status === 'Disetujui').length;
             const revision = documents.filter(d => d.status === 'Revisi').length;
+
             document.getElementById('count-waiting').textContent = waiting;
             document.getElementById('count-approved').textContent = approved;
             document.getElementById('count-revision').textContent = revision;
         }
 
+        // Initialize
         updateCounts();
-        renderList();
+        renderDocumentList();
     </script>
+    <!-- Flash Messages (SweetAlert) -->
+    @if(session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: "{{ session('success') }}",
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#c41e3a'
+            });
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: "{{ session('error') }}",
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#c41e3a'
+            });
+        </script>
+    @endif
+
 </body>
 
 </html>

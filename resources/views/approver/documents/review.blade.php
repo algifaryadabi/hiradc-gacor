@@ -1180,7 +1180,12 @@
                                     <td>
                                         @if($item->kategori == 'K3' || $item->kategori == 'KO')
                                             <div class="cell-checkbox-group">
-                                                @php $bahayaDetails = $item->kolom6_bahaya['details'] ?? []; @endphp
+                                                @php
+                                                    $bahaya = $item->kolom6_bahaya;
+                                                    if (is_string($bahaya)) $bahayaDetails = [$bahaya]; // Fallback for bad data
+                                                    else $bahayaDetails = $bahaya['details'] ?? [];
+                                                    if (!is_array($bahayaDetails)) $bahayaDetails = [$bahayaDetails]; // Ensure array
+                                                @endphp
                                                 @foreach($bahayaDetails as $detail)
                                                     <div class="cell-checkbox-item">
                                                         <i class="fas fa-exclamation-triangle"
@@ -1206,7 +1211,10 @@
                                             <div class="cell-checkbox-group">
                                                 @php
                                                     $col7 = $item->kolom7_aspek_lingkungan ?? [];
-                                                    $details7 = $col7['details'] ?? ((is_array($col7) && !array_key_exists('details', $col7)) ? $col7 : []);
+                                                    // Handle if entire column is string (unlikely for col7 but safe)
+                                                    if (is_string($col7)) $details7 = [$col7];
+                                                    else $details7 = $col7['details'] ?? ((is_array($col7) && !array_key_exists('details', $col7)) ? $col7 : []);
+                                                    if (!is_array($details7)) $details7 = [$details7]; // Ensure array
                                                     $manual7 = $col7['manual'] ?? '';
                                                 @endphp
                                                 @foreach($details7 as $aspek)
@@ -1234,7 +1242,9 @@
                                             <div class="cell-checkbox-group">
                                                 @php
                                                     $col8 = $item->kolom8_ancaman ?? [];
-                                                    $details8 = $col8['details'] ?? ((is_array($col8) && !array_key_exists('details', $col8)) ? $col8 : []);
+                                                    if (is_string($col8)) $details8 = [$col8];
+                                                    else $details8 = $col8['details'] ?? ((is_array($col8) && !array_key_exists('details', $col8)) ? $col8 : []);
+                                                    if (!is_array($details8)) $details8 = [$details8]; // Ensure array
                                                     $manual8 = $col8['manual'] ?? '';
                                                 @endphp
                                                 @foreach($details8 as $threat)
@@ -1467,11 +1477,23 @@
                             default => 'Level ' . $approval->level
                         };
 
+                        $actionText = match ($approval->action) {
+                            'approved' => "Disetujui oleh $levelName",
+                            'revised' => "Dikembalikan untuk Revisi oleh $levelName",
+                            'resubmitted' => "Sudah Direvisi (Perbaikan Selesai)",
+                            default => $approval->action
+                        };
+                        
+                        $type = match ($approval->action) {
+                            'approved' => 'approved',
+                            'revised' => 'revised',
+                            'resubmitted' => 'submitted', // Or 'info'
+                            default => 'info'
+                        };
+
                         $allHistory->push([
-                            'type' => $approval->action == 'approved' ? 'approved' : 'revised',
-                            'action' => $approval->action == 'approved'
-                                ? "Disetujui oleh $levelName"
-                                : "Dikembalikan untuk Revisi oleh $levelName",
+                            'type' => $type,
+                            'action' => $actionText,
                             'user' => $approval->approver->nama_user ?? $approval->approver->username,
                             'date' => $approval->created_at,
                             'comment' => $approval->catatan
@@ -1654,22 +1676,22 @@
             const formData = new FormData(form);
             const payload = {};
 
-            // Very hacky parse: "edit_item[102][kolom2_kegiatan]" -> "kolom2_kegiatan"
+            // Regex parse: "edit_item[102][kolom2_kegiatan]" or "edit_item[102][kolom6_bahaya][]"
             for (let [key, value] of formData.entries()) {
-                if (key.includes('[') && key.includes(']')) {
-                    // Extract field name: edit_item[102][FIELD_NAME]
-                    const parts = key.split('][');
-                    if (parts.length > 1) {
-                        let fieldName = parts[1].replace(']', '');
+                // Match pattern: prefix[index][fieldName]([])?
+                // We just want to capture the fieldName inside the second bracket pair.
+                // Regex: /\[\d+\]\[([^\]]+)\]/ matches [123][fieldName]
+                const match = key.match(/\[\d+\]\[([^\]]+)\]/);
+                
+                if (match && match[1]) {
+                    const fieldName = match[1];
+                    const isArray = key.endsWith('[]');
 
-                        // Handle Arrays (checkboxes) e.g. kolom6_bahaya[]
-                        if (fieldName.includes('[]')) {
-                            fieldName = fieldName.replace('[]', '');
-                            if (!payload[fieldName]) payload[fieldName] = [];
-                            payload[fieldName].push(value);
-                        } else {
-                            payload[fieldName] = value;
-                        }
+                    if (isArray) {
+                        if (!payload[fieldName]) payload[fieldName] = [];
+                        payload[fieldName].push(value);
+                    } else {
+                        payload[fieldName] = value;
                     }
                 }
             }
@@ -1693,7 +1715,14 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire('Sukses', 'Data berhasil diupdate', 'success').then(() => {
+                        closeEditModal(); // Close modal first
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: 'Perubahan berhasil disimpan.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
                             location.reload();
                         });
                     } else {
@@ -1901,6 +1930,7 @@
             if (isFinished) steps[4].classList.add('completed', 'active');
         }
     </script>
+    @include('partials.alerts')
 </body>
 
 </html>

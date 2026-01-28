@@ -867,11 +867,40 @@
             </div>
 
             <!-- Compliance Checklist -->
-            @if(!in_array($role, ['user', 'approver', 'admin', 'kepala_departemen', 'unit_pengelola']))
+            @php
+                 // Determine Primary Stream based on ACTUAL FILLED DATA first
+                 // Then fallback to content flags.
+                 // "tabel yang muncul hanya 1... tergantung keluaran she atau security"
+                 
+                 $fullChecklist = $document->compliance_checklist ?? [];
+                 if (!is_array($fullChecklist)) $fullChecklist = json_decode($fullChecklist, true) ?? [];
+                 
+                 $hasSheData = !empty($fullChecklist['she']);
+                 $hasSecData = !empty($fullChecklist['security']);
+                 
+                 $primaryStream = 'general';
+                 
+                 if ($hasSheData) {
+                     $primaryStream = 'she';
+                 } elseif ($hasSecData) {
+                     $primaryStream = 'security';
+                 } else {
+                     // Fallback if neither has data (legacy or just created?)
+                     // Use content flags
+                     if ($showShe) $primaryStream = 'she';
+                     elseif ($showSec) $primaryStream = 'security';
+                 }
+                 
+                 $checklistData = $fullChecklist[$primaryStream] ?? $fullChecklist['general'] ?? [];
+                 $label = ucfirst($primaryStream);
+                 if ($primaryStream == 'she') $label = 'SHE';
+            @endphp
+
+            @if(!empty($checklistData) || in_array($primaryStream, ['she', 'security']))
             <div class="compliance-card">
                 <div class="card-header-slim">
                     <i class="fas fa-clipboard-check"></i>
-                    <h2>Tabel Kesesuaian (Compliance Checklist)</h2>
+                    <h2>Tabel Kesesuaian ({{ $label }})</h2>
                 </div>
                 <div class="doc-body" style="padding: 0;">
                     <div class="table-wrapper" style="box-shadow: none; border: none; border-radius: 0; margin-bottom: 0;">
@@ -895,13 +924,12 @@
                                          ['key' => 'condition_coverage', 'label' => 'Ident. sdh mencakup semua kondisi (R, NR, N, TN & E)'],
                                          ['key' => 'mitigation', 'label' => 'Kesesuaian Program Mitigasi']
                                     ];
-                                    $existingCompliance = $document->compliance_checklist ? json_decode($document->compliance_checklist, true) : [];
                                 @endphp
 
                                 @foreach($complianceCriteria as $index => $criteria)
                                     @php
-                                        $savedStatus = $existingCompliance[$criteria['key']]['status'] ?? '-';
-                                        $savedNote = $existingCompliance[$criteria['key']]['note'] ?? '-';
+                                        $savedStatus = $checklistData[$criteria['key']]['status'] ?? '-';
+                                        $savedNote = $checklistData[$criteria['key']]['note'] ?? '-';
                                         $badgeClass = 'background: #f1f5f9; color: #64748b;';
                                         if ($savedStatus === 'OK') $badgeClass = 'background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;';
                                         elseif ($savedStatus === 'NOK') $badgeClass = 'background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;';
@@ -945,6 +973,27 @@
 
                     @foreach($displayHistory as $index => $log)
                         @php
+                            // FILTER LOGIC FOR PUBLISHED VIEW
+                            // Filter irrelevant Unit Pengelola Staff actions depending on PRIMARY STREAM
+                            $shouldHide = false;
+                            $approverUnit = optional($log->approver)->id_unit;
+                            
+                            // Check Action type: only Review/Verification by UP Staff are filtered
+                            // Head of UP actions (approved/published) are typically shared or we show them.
+                            // User request: "tetapi untuk riwayat yang telah di isikan oleh staff unti pengelola nya"
+                            
+                            if (in_array($log->action, ['reviewed', 'verified', 'revision'])) {
+                                if ($primaryStream == 'she') {
+                                    // Hide Security Staff (55)
+                                    if ($approverUnit == 55) $shouldHide = true;
+                                } elseif ($primaryStream == 'security') {
+                                    // Hide SHE Staff (56)
+                                    if ($approverUnit == 56) $shouldHide = true;
+                                }
+                            }
+                            
+                            if ($shouldHide) continue;
+                            
                             $actionLabel = 'Aksi'; $actionColor = '#94a3b8'; $icon = 'fa-circle';
                             switch($log->action) {
                                 case 'created': $actionLabel = 'Form Dibuat'; $actionColor = '#3b82f6'; $icon = 'fa-file-medical'; break;

@@ -510,15 +510,50 @@
                         </button>
                     </div>
 
-                    <div class="action-bar">
+                    <div class="action-bar" style="display:flex; justify-content:space-between; align-items:center; gap:20px;">
                         <div class="action-buttons">
                             <!-- Draft save logic if needed -->
                         </div>
-                        <button type="submit" class="btn btn-primary" onclick="return validateForm()">
-                            <i class="fas fa-paper-plane"></i> Submit Revisi
-                        </button>
+                        
+                        <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 15px;">
+                            <div style="flex: 1; max-width: 500px; position: relative;">
+                                <textarea name="revision_comment" class="form-control" rows="1" placeholder="Tulis catatan perbaikan disini (Wajib)..." required style="resize: none; border-radius: 20px; padding: 10px 20px; border: 1px solid #cbd5e1; padding-right: 40px; min-height: 45px;"></textarea>
+                                <i class="fas fa-comment-dots" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" onclick="return validateRevisionComment()">
+                                <i class="fas fa-paper-plane"></i> Submit Revisi
+                            </button>
+                        </div>
                     </div>
                 </form>
+
+    <script>
+        function validateRevisionComment() {
+            const comment = document.querySelector('textarea[name="revision_comment"]').value;
+            if (!comment.trim()) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Catatan Wajib Diisi',
+                    text: 'Mohon isi catatan perbaikan pada kolom di samping tombol submit.',
+                    confirmButtonColor: '#c41e3a'
+                });
+                // Highlight the textarea
+                const textarea = document.querySelector('textarea[name="revision_comment"]');
+                textarea.style.borderColor = '#c41e3a';
+                textarea.style.boxShadow = '0 0 0 3px rgba(196,30,58,0.1)';
+                textarea.focus();
+                
+                setTimeout(() => {
+                    textarea.style.borderColor = '#cbd5e1';
+                    textarea.style.boxShadow = 'none';
+                }, 3000);
+                
+                return false;
+            }
+            return validateForm();
+        }
+    </script>
             </div>
         </main>
     </div>

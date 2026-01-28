@@ -817,7 +817,17 @@
         $isApprover = ($currentApproverId == $user->id_user) || 
                       ($isStaffApprover && $status == 'assigned_approval');
 
-        $canEdit = ($isHead && $document->current_level == 2) ||
+        // Edit Logic:
+        // - Kepala Unit Pengelola can edit EXCEPT when:
+        //   1. status is 'pending_head' (menunggu disposisi)
+        //   2. status is 'staff_verified' or 'returned_to_head' (siap keputusan akhir)
+        //   3. status is 'approved', 'published' (Final) -> READ ONLY
+        // - Staff reviewers and approvers can edit when assigned
+        $isPendingDisposition = ($isHead && $status == 'pending_head');
+        $isFinalDecision = ($isHead && in_array($status, ['staff_verified', 'returned_to_head']));
+        $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
+        
+        $canEdit = ($isHead && $document->current_level == 2 && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished) ||
             ($isReviewer && $status == 'assigned_review') ||
             ($isApprover && $status == 'assigned_approval');
     @endphp
@@ -934,10 +944,10 @@
                                     {{ $index + 1 }}
                                     @if($canEdit)
                                         <div style="margin-top:5px;">
-                                            <button type="button" class="btn-sm"
+                                            <button type="button" class="action-btn-icon" 
                                                 style="background:none; border:none; color:#f59e0b; cursor:pointer;"
-                                                onclick="openEditModal({{ json_encode($item) }})">
-                                                <i class="fas fa-edit"></i>
+                                                onclick="editItem({{ $item->id }})" title="Edit Item">
+                                                <i class="fas fa-pencil-alt"></i>
                                             </button>
                                         </div>
                                     @endif
@@ -1103,9 +1113,14 @@
             <!-- COMPLIANCE CHECKLIST -->
             <!-- Logic: Show if Head (Level 2) OR Reviewer/Approver active -->
             @php
-                $showChecklist = ($isHead && $document->current_level == 2) ||
+                // Show compliance checklist ONLY if NOT in pending_head status
+                // When Kepala Unit Pengelola first receives document (pending_head/menunggu disposisi),
+                // compliance table should be hidden
+                $isPendingDisposition = ($isHead && $status == 'pending_head');
+                
+                $showChecklist = (($isHead && $document->current_level == 2 && !$isPendingDisposition) ||
                                  ($isReviewer && $status == 'assigned_review') || 
-                                 ($isApprover && $status == 'assigned_approval');
+                                 ($isApprover && $status == 'assigned_approval'));
             @endphp
 
             @if($showChecklist)
@@ -1115,11 +1130,9 @@
                             <i class="fas fa-clipboard-check"></i>
                             <h2>Tabel Kesesuaian (Compliance Checklist)</h2>
                         </div>
-                        @if(!$isHead)
-                        <button type="button" onclick="toggleComplianceEdit()" class="btn-sm" style="background:none; border:none; cursor:pointer; color:#f59e0b; font-size:16px;" title="Edit Checklist">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        @endif
+                        {{-- Compliance checklist should always be disabled for Kepala Unit Pengelola --}}
+                        {{-- Only staff can edit via toggle button --}}
+
                     </div>
                     <div class="doc-body">
                         <div style="overflow-x: auto;">
@@ -1144,36 +1157,51 @@
                                             ['key' => 'condition_coverage', 'label' => 'Ident. mencakup semua kondisi (R/NR/E)'],
                                             ['key' => 'mitigation', 'label' => 'Kesesuaian Program Mitigasi']
                                         ];
-                                        $existing = $document->compliance_checklist ? json_decode($document->compliance_checklist, true) : [];
+                                        $fullChecklist = $document->compliance_checklist ?? [];
+                                        if (!is_array($fullChecklist)) $fullChecklist = json_decode($fullChecklist, true) ?? [];
+                                        
+                                        $existing = [];
+                                        if ($user->id_unit == 56) {
+                                            $existing = $fullChecklist['she'] ?? [];
+                                        } elseif ($user->id_unit == 55) {
+                                            $existing = $fullChecklist['security'] ?? [];
+                                        } else {
+                                            // View only or fallback: Show merged or primary?
+                                            // For now, if we are reviewing, we likely match one of above.
+                                            // If view only, show general or maybe SHE preference?
+                                            // Let's show SHE if available, else Security.
+                                            $existing = $fullChecklist['she'] ?? $fullChecklist['security'] ?? $fullChecklist['general'] ?? [];
+                                        }
                                     @endphp
                                     @foreach($criteriaList as $idx => $c)
                                         @php
                                             $s = $existing[$c['key']]['status'] ?? '';
                                             $n = $existing[$c['key']]['note'] ?? '';
-                                            $disabled = 'disabled'; 
-                                            // Initially disabled (Global Edit Off)
+                                            
+                                            // Default: ALWAYS DISABLED initially
+                                            // Staff will enable it via JS Toggle Button
+                                            $disabled = 'disabled';  
                                             $noteDisabled = 'disabled';
                                             $noteStyle = 'background:#f1f5f9;cursor:not-allowed;'; 
                                             
-                                            // Enable for Head of Unit Pengelola (Always Editable) OR Staff Verifikator
-                                            // Staff Verifikator (isApprover) can edit when they toggle the button
+                                            // Logic: 
+                                            // 1. Head of Unit Pengelola: Can edit except when pending/final.
+                                            // 2. Staff (Reviewer/Approver): Can edit when assigned (and NOW directly editable).
                                             
-                                            // LOGIC FIX: Explicitly allow Head to edit if status is suitable
-                                            // Head can edit if it's pending them or returned to them
-                                            $headCanEdit = ($isHead && $document->current_level == 2 && in_array($status, ['pending_head', 'pending_level2', 'staff_verified', 'returned_to_head']));
+                                            $isPendingDisposition = ($isHead && $status == 'pending_head');
+                                            $isFinalDecision = ($isHead && in_array($status, ['staff_verified', 'returned_to_head']));
+                                            $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
+                                            
+                                            $headCanEdit = ($isHead && $document->current_level == 2 && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished);
                                             $staffCanEdit = ($isApprover && $status == 'assigned_approval') || ($isReviewer && $status == 'assigned_review');
 
                                             if ($headCanEdit || $staffCanEdit) {
-                                                if ($headCanEdit) {
-                                                    // Head: Enabled by default
-                                                    $disabled = '';
-                                                    if ($s == 'NOK' || $s == 'Tdk Penting') {
-                                                        $noteDisabled = '';
-                                                        $noteStyle = 'background:white;cursor:text;';
-                                                    }
-                                                } 
-                                                // Staff: Still relies on JS toggle, but we set base condition here if needed
-                                                // (The JS toggleComplianceEdit simply removes 'disabled' attribute, so start disabled is fine for staff)
+                                                $disabled = '';
+                                                // If already filled NOK/Tdk Penting, enable note
+                                                if ($s == 'NOK' || $s == 'Tdk Penting') {
+                                                    $noteDisabled = '';
+                                                    $noteStyle = 'background:white;cursor:text;';
+                                                }
                                             }
                                         @endphp
                                         <tr style="border-bottom:1px solid #e2e8f0;">
@@ -1213,12 +1241,27 @@
                 
                 <div class="timeline-container">
                 @php
-                    // Filter Duplicates based on action and created_at (minute precision)
-                    $uniqueHistory = $document->approvals->unique(function ($item) {
-                        return $item->action . $item->created_at->format('YmdHi');
-                    });
+                    // Show ALL approval history without filtering duplicates
+                    // User requested to show complete history
+                    $uniqueHistory = $document->approvals;
                 @endphp
                 @foreach($uniqueHistory as $hist)
+                    @php
+                        // FILTER LOGIC: Hide parallel history for Unit Pengelola Head during Final Decision
+                        $isParallelHidden = false;
+                        if ($isHead && in_array($status, ['staff_verified', 'returned_to_head'])) {
+                            $histUnit = optional($hist->approver)->id_unit;
+                            // If I am SHE (56), hide Security (55)
+                            if ($user->id_unit == 56 && $histUnit == 55) {
+                                $isParallelHidden = true;
+                            }
+                            // If I am Security (55), hide SHE (56)
+                            if ($user->id_unit == 55 && $histUnit == 56) {
+                                $isParallelHidden = true;
+                            }
+                        }
+                        if ($isParallelHidden) continue;
+                    @endphp
                     @php
                         $action = strtolower($hist->action);
                         $colorClass = 'tm-blue';
@@ -1252,6 +1295,7 @@
                         <div class="tm-content">
                             <div class="tm-header">
                                 <span class="tm-user">{{ $hist->approver->nama_user ?? 'System' }}</span>
+                                <span class="tm-badge" style="background: #f1f5f9; color: #64748b;">{{ $hist->approver->unit->nama_unit ?? '-' }}</span>
                                 <span class="tm-badge">{{ $hist->level }}</span>
                                 <span class="tm-date">{{ $hist->created_at->format('d M Y, H:i') }} WIB</span>
                             </div>
@@ -1305,7 +1349,8 @@
             
             {{-- 1. KEPALA UNIT PENGELOLA --}}
             @if($isHead && $document->current_level == 2)
-                @if(in_array($status, ['returned_to_head', 'staff_verified', 'pending_head', 'pending_level2']))
+                {{-- STRICT: Only show Action Buttons if "Ready for Final Decision" --}}
+                @if(in_array($status, ['returned_to_head', 'staff_verified']))
                     <!-- Final Approval by Head -->
                     <form id="headApproveForm" method="POST" action="{{ route('unit_pengelola.approve', $document->id) }}"
                         style="width:100%; display:flex; flex-direction:column; gap:15px;">
@@ -1505,7 +1550,17 @@
                     }
                 });
             } else {
-                // Approve
+                // Approve - REQUIRE COMMENT
+                if (noteValue.length < 5) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Komentar Wajib Diisi',
+                        text: 'Mohon isi komentar minimal 5 karakter sebelum melakukan approve.',
+                        confirmButtonColor: '#f59e0b'
+                    });
+                    return;
+                }
+                
                 Swal.fire({
                     title: 'Approve Dokumen?',
                     text: "Dokumen akan dipublikasikan/diteruskan.",
@@ -1678,7 +1733,19 @@
             }
         }
 
-        let isComplianceEditing = false;
+        @php
+            // Calculate Global Edit Permission for JS Logic
+            $isPendingDisposition = ($isHead && $status == 'pending_head');
+            $isFinalDecision = ($isHead && in_array($status, ['staff_verified', 'returned_to_head']));
+            $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
+            
+            $headCanEditCompliance = ($isHead && $document->current_level == 2 && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished);
+            $staffCanEditCompliance = ($isApprover && $status == 'assigned_approval') || ($isReviewer && $status == 'assigned_review');
+            
+            $globalComplianceEdit = ($headCanEditCompliance || $staffCanEditCompliance);
+        @endphp
+
+        let isComplianceEditing = {{ $globalComplianceEdit ? 'true' : 'false' }};
 
         function toggleComplianceEdit() {
             isComplianceEditing = !isComplianceEditing;
@@ -1735,35 +1802,7 @@
             }
         }
     </script>
-    <!-- Edit Modal -->
-    <div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; overflow:auto;">
-        <div style="position:relative; width:95%; max-width:1200px; margin:20px auto; background:white; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto;">
-            <!-- Modal Header -->
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 30px; border-bottom:2px solid #e5e7eb; background:#f9fafb; border-radius:12px 12px 0 0; position:sticky; top:0; z-index:10;">
-                <h2 style="margin:0; font-size:20px; font-weight:700; color:#1f2937;">
-                    <i class="fas fa-edit"></i> Edit Detail Item
-                </h2>
-                <button onclick="closeEditModal()" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; transition:all 0.2s;">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <!-- Modal Body with Edit Form -->
-            <div id="editFormContainer" style="padding:30px;">
-                <p style="text-align:center; color:#6b7280;">Pilih item untuk diedit</p>
-            </div>
-            
-            <!-- Modal Footer -->
-            <div style="padding:20px 30px; border-top:2px solid #e5e7eb; background:#f9fafb; border-radius:0 0 12px 12px; display:flex; justify-content:flex-end; gap:10px; position:sticky; bottom:0;">
-                <button onclick="closeEditModal()" class="btn" style="background:#6b7280; color:white;">
-                    <i class="fas fa-times"></i> Batal
-                </button>
-                <button onclick="saveEditForm()" class="btn" style="background:#3b82f6; color:white;">
-                    <i class="fas fa-save"></i> Simpan Perubahan
-                </button>
-            </div>
-        </div>
-    </div>
+
 
     <style>
         @keyframes spin {
@@ -1804,161 +1843,169 @@
         }
     </style>
 
+
+
+    <!-- Professional Edit Modal (Based on Approver View) -->
+    <div id="editUnitModal" class="modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-content" style="background-color: #fefefe; margin: 5vh auto; padding: 0; border: 1px solid #888; width: 80%; max-width: 900px; border-radius: 12px; position: relative;">
+            <div class="modal-header" style="padding: 20px 30px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 18px; color: #1e293b;">Edit Detail Item</h2>
+                <span class="close" onclick="closeModal()" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            </div>
+            <form id="editUnitForm">
+            <div class="modal-body" id="editUnitModalBody" style="padding: 30px; max-height: 70vh; overflow-y: auto;">
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 30px; color: #c41e3a;"></i>
+                    <p style="margin-top: 15px; color: #64748b;">Memuat data...</p>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 20px 30px; border-top: 1px solid #e2e8f0; text-align: right; background: #f8fafc; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                <button type="button" onclick="closeModal()" style="padding: 10px 20px; background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 600; color: #475569; margin-right: 10px;">Batal</button>
+                <button type="button" onclick="saveItem()" style="padding: 10px 20px; background: #16a34a; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; color: white;">
+                    <i class="fas fa-save" style="margin-right: 8px;"></i> Simpan Perubahan
+                </button>
+            </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        let currentEditItem = null;
-        
-        function openEditModal(item = null) {
-            const modal = document.getElementById('editModal');
-            const formContainer = document.getElementById('editFormContainer');
+        function editItem(id) {
+            console.log('Opening Edit Modal for Item:', id);
+            const modal = document.getElementById('editUnitModal');
+            const modalBody = document.getElementById('editUnitModalBody');
             
-            if (!item) {
-                // If open without item (e.g. from header button), assume we want to edit something?
-                // Or maybe just show empty state
-                // But the header button calls openEditModal() without args
-                // For now, let's just show alert if no item
-                // Ideally header button should not be there if we editing per row
-                // Or user meant "Edit Table" = "Table with editable cells" which is different.
-                // But user asked for "pop up edit form".
-                
-                // Let's try to find the first item if none provided, or just show alert
-                // Or maybe "Mode Edit" logic is confusing.
-                
-                // Wait, if item is passed as object, great.
-                // The header button calls openEditModal() with no args.
-                // Maybe we should remove the header button action or make it clear.
-                
-                // For now, handle null item gracefully
-                 alert('Silakan klik icon pensil di tabel untuk mengedit baris tertentu.');
-                 return;
-            }
-            
-            currentEditItem = item;
-            
-            // Build edit form HTML
-            const formHTML = `
-                <form id="editItemForm">
-                    <input type="hidden" name="item_id" value="${item.id}">
-                    
-                    <div class="form-group">
-                        <label class="form-label">Proses/Kegiatan (Kolom 2)</label>
-                        <textarea name="kolom2_kegiatan" class="form-textarea">${item.kolom2_kegiatan || ''}</textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Lokasi (Kolom 3)</label>
-                        <input type="text" name="kolom3_lokasi" class="form-input" value="${item.kolom3_lokasi || ''}">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Kategori (Kolom 4)</label>
-                        <select name="kategori" class="form-select">
-                            <option value="K3" ${item.kategori == 'K3' ? 'selected' : ''}>K3</option>
-                            <option value="KO" ${item.kategori == 'KO' ? 'selected' : ''}>KO</option>
-                            <option value="Lingkungan" ${item.kategori == 'Lingkungan' ? 'selected' : ''}>Lingkungan</option>
-                            <option value="Keamanan" ${item.kategori == 'Keamanan' ? 'selected' : ''}>Keamanan</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Kondisi (Kolom 5)</label>
-                        <select name="kolom5_kondisi" class="form-select">
-                            <option value="Normal" ${item.kolom5_kondisi == 'Normal' ? 'selected' : ''}>Normal</option>
-                            <option value="Abnormal" ${item.kolom5_kondisi == 'Abnormal' ? 'selected' : ''}>Abnormal</option>
-                            <option value="Emergency" ${item.kolom5_kondisi == 'Emergency' ? 'selected' : ''}>Emergency</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Risiko/Dampak/Celah (Kolom 9)</label>
-                        <textarea name="kolom9_risiko" class="form-textarea">${item.kolom9_risiko_k3ko || item.kolom9_dampak_lingkungan || item.kolom9_celah_keamanan || item.kolom9_risiko || ''}</textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Pengendalian Existing (Kolom 11)</label>
-                        <textarea name="kolom11_existing" class="form-textarea">${item.kolom11_existing || ''}</textarea>
-                    </div>
-                    
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                        <div class="form-group">
-                            <label class="form-label">Kemungkinan (L) - Kolom 12</label>
-                            <input type="number" name="kolom12_kemungkinan" class="form-input" value="${item.kolom12_kemungkinan || ''}" min="1" max="5">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Konsekuensi (S) - Kolom 13</label>
-                            <input type="number" name="kolom13_konsekuensi" class="form-input" value="${item.kolom13_konsekuensi || ''}" min="1" max="5">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Regulasi (Kolom 15)</label>
-                        <textarea name="kolom15_regulasi" class="form-textarea">${item.kolom15_regulasi || ''}</textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Toleransi (Kolom 18)</label>
-                        <select name="kolom18_toleransi" class="form-select">
-                            <option value="Ya" ${item.kolom18_toleransi == 'Ya' ? 'selected' : ''}>Ya</option>
-                            <option value="Tidak" ${item.kolom18_toleransi == 'Tidak' ? 'selected' : ''}>Tidak</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Pengendalian Lanjut (Kolom 19)</label>
-                        <textarea name="kolom19_pengendalian_lanjut" class="form-textarea">${item.kolom19_pengendalian_lanjut || ''}</textarea>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:15px;">
-                        <div class="form-group">
-                            <label class="form-label">Kemungkinan Lanjut (L) - Kolom 20</label>
-                            <input type="number" name="kolom20_kemungkinan_lanjut" class="form-input" value="${item.kolom20_kemungkinan_lanjut || ''}" min="1" max="5">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Konsekuensi Lanjut (S) - Kolom 21</label>
-                            <input type="number" name="kolom21_konsekuensi_lanjut" class="form-input" value="${item.kolom21_konsekuensi_lanjut || ''}" min="1" max="5">
-                        </div>
-                    </div>
-                </form>
-            `;
-            
-            formContainer.innerHTML = formHTML;
-            modal.style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeEditModal() {
-            const modal = document.getElementById('editModal');
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-            currentEditItem = null;
-        }
-        
-        function saveEditForm() {
-            if (!currentEditItem) {
-                alert('Tidak ada item yang sedang diedit');
+            if (!modal || !modalBody) {
+                console.error('Modal elements not found!', modal, modalBody);
+                alert('Error: Modal element not found in DOM');
                 return;
             }
-            
-            const form = document.getElementById('editItemForm');
-            const formData = new FormData(form);
-            
-            // Show loading
-            const formContainer = document.getElementById('editFormContainer');
-            formContainer.innerHTML = '<div style="text-align:center; padding:40px;"><div style="width:60px; height:60px; border:4px solid #e5e7eb; border-top:4px solid #3b82f6; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 15px;"></div><p>Menyimpan...</p></div>';
-            
-            // Send AJAX request
-            fetch('{{ route("documents.update_detail", $document->id) }}', {
-                method: 'PUT',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    detail_id: currentEditItem.id,
-                    ...Object.fromEntries(formData)
+
+            modal.style.display = "block";
+            modalBody.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 30px; color: #c41e3a;"></i>
+                    <p style="margin-top: 15px; color: #64748b;">Memuat data... (ID: ${id})</p>
+                </div>
+            `;
+
+            const url = `/unit-pengelola/documents/get-item-html/${id}`;
+            console.log('Fetching:', url);
+
+            fetch(url)
+                .then(response => {
+                    console.log('Response Status:', response.status);
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`Server Error: ${response.status} - ${text.substring(0, 100)}...`);
+                        });
+                    }
+                    return response.json();
                 })
+                .then(data => {
+                    console.log('Data Received:', data);
+                    if (data.success) {
+                        modalBody.innerHTML = data.html;
+                        
+                        // Re-initialize scripts if needed (e.g. auto-grow)
+                        // Note: inline onchange functions work globally, so no re-init needed for them.
+                    } else {
+                        modalBody.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                        Swal.fire('Gagal Memuat', data.message, 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    modalBody.innerHTML = `<div class="alert alert-danger" style="color:red; text-align:center;">
+                        <strong>Terjadi Kesalahan!</strong><br>
+                        ${error.message}
+                    </div>`;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error Loading Form',
+                        text: error.message,
+                        footer: 'Silakan Refresh (Ctrl+F5) atau Hubungi Admin'
+                    });
+                });
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('editUnitModal');
+            if(modal) modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('editUnitModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        function saveItem() {
+            const form = document.getElementById('editUnitForm');
+            if(!form) return;
+            
+            const formData = new FormData(form);
+            const payload = {};
+            let itemId = null;
+
+            for (const [key, value] of formData.entries()) {
+                const match = key.match(/edit_item\[(\d+)\]\[(.*?)\]/);
+                if (match) {
+                    if (!itemId) itemId = match[1];
+                    const fieldName = match[2];
+                    
+                    if (fieldName.endsWith('[]')) {
+                        const realName = fieldName.slice(0, -2);
+                        if (!payload[realName]) payload[realName] = [];
+                        payload[realName].push(value);
+                    } else {
+                        payload[fieldName] = value;
+                    }
+                }
+            }
+
+            if (!itemId) {
+                // Try alternate parsing if prefix is missing
+                 for (const [key, value] of formData.entries()) {
+                     if(!key.includes('[')) payload[key] = value;
+                 }
+                 // If ID still missing, maybe grab from button attr?
+                 // Let's assume fetch url ID matches.
+                 // We need to pass the ID to the save function from the onclick logic
+                 // But let's trust the form for now.
+            }
+
+            // Fallback: If we can't get ID from form names, drag it from the form action or data attribute?
+            // Since we don't have that easily, let's ensure we used the right ID. 
+            // In getEditItemHtml, we set prefix edit_item.
+            
+            if (!itemId) {
+                // Try getting it from the `editItem` call context? No.
+                // Hack: Grab it from the first hidden input ID?
+                // The form usually has <input type="hidden" name="detail_id" value="..."> if standard.
+                // But HIRADC component relies on prefix names structure.
+                // Let's look for a key like edit_item[123]...
+                const keys = Array.from(formData.keys()); 
+                const firstKey = keys.find(k => k.startsWith('edit_item['));
+                if(firstKey) {
+                    const m = firstKey.match(/edit_item\[(\d+)\]/);
+                    if(m) itemId = m[1];
+                }
+            }
+
+            if (!itemId) {
+                Swal.fire('Error', 'ID Item tidak ditemukan', 'error');
+                return;
+            }
+
+            fetch(`/unit-pengelola/documents/update-detail/${itemId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(payload)
             })
             .then(response => response.json())
             .then(data => {
@@ -1966,33 +2013,22 @@
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil',
-                        text: 'Data berhasil diupdate',
-                        timer: 2000,
+                        text: 'Data berhasil diperbarui',
+                        timer: 1500,
                         showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
                     });
-                    closeEditModal();
-                    setTimeout(() => location.reload(), 2000);
+                    closeModal();
                 } else {
-                    throw new Error(data.message || 'Gagal menyimpan data');
+                    Swal.fire('Gagal', data.message || 'Gagal menyimpan perubahan', 'error');
                 }
             })
             .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'Terjadi kesalahan saat menyimpan data'
-                });
-                // Restore form
-                openEditModal(currentEditItem);
+                console.error('Error:', error);
+                Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
             });
         }
-
-        // Close modal when clicking outside
-        document.getElementById('editModal')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeEditModal();
-            }
-        });
     </script>
 </body>
 
