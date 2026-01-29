@@ -11,26 +11,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Dokumen - Kepala Departemen</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             /* Palette Modern (Slate & Primary Red) */
-            --primary: #e11d48; /* Rose 600 */
-            --primary-hover: #be123c; /* Rose 700 */
-            --primary-light: #fff1f2; /* Rose 50 */
-            --primary-soft: #ffe4e6; /* Rose 100 */
-            
-            --bg-body: #f8fafc; /* Slate 50 */
+            --primary: #e11d48;
+            /* Rose 600 */
+            --primary-hover: #be123c;
+            /* Rose 700 */
+            --primary-light: #fff1f2;
+            /* Rose 50 */
+            --primary-soft: #ffe4e6;
+            /* Rose 100 */
+
+            --bg-body: #f8fafc;
+            /* Slate 50 */
             --surface: #ffffff;
-            
-            --text-main: #0f172a; /* Slate 900 */
-            --text-sub: #64748b; /* Slate 500 */
-            --text-light: #94a3b8; /* Slate 400 */
-            
-            --border: #e2e8f0; /* Slate 200 */
-            
+
+            --text-main: #0f172a;
+            /* Slate 900 */
+            --text-sub: #64748b;
+            /* Slate 500 */
+            --text-light: #94a3b8;
+            /* Slate 400 */
+
+            --border: #e2e8f0;
+            /* Slate 200 */
+
             /* Modern Status Colors */
             --success: #10b981;
             --success-bg: #ecfdf5;
@@ -40,7 +51,7 @@
             --danger-bg: #fef2f2;
             --info: #3b82f6;
             --info-bg: #eff6ff;
-            
+
             /* Shadows for Depth */
             --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
@@ -367,9 +378,23 @@
             text-transform: uppercase;
         }
 
-        .status-pending { background: var(--warning-bg); color: #d97706; border: 1px solid var(--warning); }
-        .status-approved { background: var(--success-bg); color: #059669; border: 1px solid var(--success); }
-        .status-revision { background: var(--danger-bg); color: #dc2626; border: 1px solid var(--danger); }
+        .status-pending {
+            background: var(--warning-bg);
+            color: #d97706;
+            border: 1px solid var(--warning);
+        }
+
+        .status-approved {
+            background: var(--success-bg);
+            color: #059669;
+            border: 1px solid var(--success);
+        }
+
+        .status-revision {
+            background: var(--danger-bg);
+            color: #dc2626;
+            border: 1px solid var(--danger);
+        }
 
         /* Document Styling */
         .doc-card {
@@ -508,7 +533,7 @@
             border-bottom: 1px solid #334155;
             white-space: nowrap;
         }
-        
+
         .hiradc-table td {
             padding: 14px;
             border-bottom: 1px solid var(--border);
@@ -521,6 +546,7 @@
         .hiradc-table tr:hover td {
             background: #f8fafc;
         }
+
         .section-divider {
             border-right: 4px solid #cbd5e1 !important;
         }
@@ -529,12 +555,13 @@
         .action-bar {
             position: fixed;
             bottom: 0;
-            left: 280px; /* Updated to match sidebar width */
+            left: 280px;
+            /* Updated to match sidebar width */
             right: 0;
             background: linear-gradient(to top, #ffffff 0%, #fefefe 100%);
             padding: 20px 48px;
             border-top: 1px solid var(--border);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.08), 0 -1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.05);
             display: flex;
             align-items: center;
             gap: 20px;
@@ -636,7 +663,7 @@
             background: #fffbeb;
             transform: translateY(-2px);
         }
-        
+
         .btn-disabled {
             background: #e2e8f0;
             color: #94a3b8;
@@ -682,7 +709,7 @@
             height: 22px;
             border-width: 4px;
         }
-        
+
         .timeline-content {
             background: #f8fafc;
             border: 1px solid var(--border);
@@ -690,7 +717,7 @@
             border-radius: 16px;
             transition: transform 0.2s;
         }
-        
+
         .timeline-content:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-md);
@@ -705,33 +732,108 @@
             justify-content: center;
             min-height: 50px;
         }
-        .risk-val { font-size: 16px; font-weight: 800; color: var(--text-main); }
-        .risk-badge { 
-            font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-top: 4px; 
-            font-weight: 700; color: white; text-transform: uppercase;
+
+        .risk-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-main);
         }
-        .bg-low { background: #16a34a; }
-        .bg-med { background: #ca8a04; }
-        .bg-high { background: #dc2626; }
-        
-        .cell-checkbox-group { display: flex; flex-direction: column; gap: 4px; }
-        .cell-checkbox-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; }
-        .cell-checkbox-item i { margin-top: 3px; font-size: 10px; }
-        
+
+        .risk-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 4px;
+            font-weight: 700;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .bg-low {
+            background: #16a34a;
+        }
+
+        .bg-med {
+            background: #ca8a04;
+        }
+
+        .bg-high {
+            background: #dc2626;
+        }
+
+        .cell-checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .cell-checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .cell-checkbox-item i {
+            margin-top: 3px;
+            font-size: 10px;
+        }
+
         .doc-meta-badge {
-            display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
-            border-radius: 100px; font-size: 12px; font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 700;
         }
-        .cell-text { font-size: 13.5px; line-height: 1.5; color: var(--text-main); }
-        
-        .risk-section { display: flex; flex-direction: column; gap: 4px; }
-        .risk-label { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; }
-        .risk-text { font-size: 13px; color: var(--text-main); font-weight: 500; }
-        
-        .excel-table { width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; }
-        .excel-table th { background: #0f172a; color: white; padding: 12px; border-right: 1px solid #334155; border-bottom: 1px solid #334155; text-align: center; font-weight: 600; }
-        .section-border-right { border-right: 3px solid #94a3b8 !important; }
-        
+
+        .cell-text {
+            font-size: 13.5px;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        .risk-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .risk-label {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-sub);
+            text-transform: uppercase;
+        }
+
+        .risk-text {
+            font-size: 13px;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .excel-table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .excel-table th {
+            background: #0f172a;
+            color: white;
+            padding: 12px;
+            border-right: 1px solid #334155;
+            border-bottom: 1px solid #334155;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .section-border-right {
+            border-right: 3px solid #94a3b8 !important;
+        }
     </style>
 </head>
 
@@ -759,7 +861,7 @@
                         <div class="user-name">{{ Auth::user()->nama_user }}</div>
                         <div class="user-role">{{ Auth::user()->departemen->nama_dept ?? 'Kepala Departemen' }}</div>
                         <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }} 
+                            {{ Auth::user()->unit_or_dept_name }}
                         </div>
                     </div>
                 </div>
@@ -835,17 +937,21 @@
                         <div class="doc-label">Judul Dokumen</div>
                         <div class="doc-main-title">{{ $document->judul_dokumen ?? $document->kolom2_kegiatan }}</div>
                         @if(!empty($verifyingUnit))
-                            <div style="margin-top: 8px; padding: 6px 12px; background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; display: inline-block;">
+                            <div
+                                style="margin-top: 8px; padding: 6px 12px; background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; display: inline-block;">
                                 <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
-                                <span style="font-size: 13px; color: #1e40af; font-weight: 600;">Verifikasi: {{ $verifyingUnit }}</span>
+                                <span style="font-size: 13px; color: #1e40af; font-weight: 600;">Verifikasi:
+                                    {{ $verifyingUnit }}</span>
                             </div>
                         @endif
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank" style="padding: 6px 12px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                        <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank"
+                            style="padding: 6px 12px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
                             <i class="fas fa-file-pdf" style="margin-right: 5px;"></i> PDF
                         </a>
-                        <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank" style="padding: 6px 12px; background: #27ae60; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                        <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank"
+                            style="padding: 6px 12px; background: #27ae60; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
                             <i class="fas fa-file-excel" style="margin-right: 5px;"></i> Excel
                         </a>
                         <div class="risk-pill" style="background:var(--primary); font-size:13px; padding:6px 12px;">
@@ -862,7 +968,8 @@
                                 <th rowspan="2" style="width: 40px;">No</th>
                                 <th colspan="4" class="section-border-right">BAGIAN 1: Identifikasi Aktivitas</th>
                                 <th colspan="6" class="section-border-right">BAGIAN 2: Identifikasi</th>
-                                <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal</th>
+                                <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal
+                                </th>
                                 <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
                                 <th colspan="8">BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa</th>
                             </tr>
@@ -872,7 +979,8 @@
                                 <th style="width: 180px;">Proses/Kegiatan<br><small>(Kol 2)</small></th>
                                 <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
                                 <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
-                                <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol 5)</small></th>
+                                <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol 5)</small>
+                                </th>
 
                                 <!-- BAGIAN 2 (Kolom 6-9) -->
                                 <th style="width: 150px;">Potensi Bahaya<br><small>(Kol 6)</small></th>
@@ -889,7 +997,8 @@
                                 <th style="width: 250px;">Pengendalian Existing<br><small>(Kol 11)</small></th>
                                 <th style="width: 50px;">L<br><small>(Kol 12)</small></th>
                                 <th style="width: 50px;">S<br><small>(Kol 13)</small></th>
-                                <th style="width: 80px;" class="section-border-right">Level<br><small>(Kol 14)</small></th>
+                                <th style="width: 80px;" class="section-border-right">Level<br><small>(Kol 14)</small>
+                                </th>
 
                                 <!-- BAGIAN 4 (Kolom 15-17) -->
                                 <th style="width: 200px;">Regulasi<br><small>(Kol 15)</small></th>
@@ -913,11 +1022,11 @@
                                 // Filter items based on filter parameter
                                 $filteredDetails = $document->details;
                                 if (isset($filter) && $filter == 'SHE') {
-                                    $filteredDetails = $document->details->filter(function($item) {
+                                    $filteredDetails = $document->details->filter(function ($item) {
                                         return in_array($item->kategori, ['K3', 'KO', 'Lingkungan']);
                                     });
                                 } elseif (isset($filter) && $filter == 'Security') {
-                                    $filteredDetails = $document->details->filter(function($item) {
+                                    $filteredDetails = $document->details->filter(function ($item) {
                                         return $item->kategori == 'Keamanan';
                                     });
                                 }
@@ -961,7 +1070,8 @@
                                                     </div>
                                                 @endforeach
                                                 @if(!empty($item->kolom6_bahaya['manual']))
-                                                    <div style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
                                                         <strong>Lainnya:</strong> {{ $item->kolom6_bahaya['manual'] }}
                                                     </div>
                                                 @endif
@@ -986,7 +1096,8 @@
                                                     </div>
                                                 @endforeach
                                                 @if(!empty($manual7))
-                                                    <div style="font-size:13px; margin-top:8px; padding:6px; background:#f0fdf4; border:1px dashed #22c55e; border-radius:4px; color:#15803d;">
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#f0fdf4; border:1px dashed #22c55e; border-radius:4px; color:#15803d;">
                                                         <strong>Lainnya:</strong> {{ $manual7 }}
                                                     </div>
                                                 @endif
@@ -1011,7 +1122,8 @@
                                                     </div>
                                                 @endforeach
                                                 @if(!empty($manual8))
-                                                    <div style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
                                                         <strong>Lainnya:</strong> {{ $manual8 }}
                                                     </div>
                                                 @endif
@@ -1031,7 +1143,8 @@
 
                                     <td>
                                         @if($item->kategori == 'Lingkungan')
-                                            <div class="cell-text">{{ $item->kolom9_dampak_lingkungan ?? $item->kolom9_risiko }}</div>
+                                            <div class="cell-text">{{ $item->kolom9_dampak_lingkungan ?? $item->kolom9_risiko }}
+                                            </div>
                                         @else
                                             <div style="color:#94a3b8; text-align:center;">-</div>
                                         @endif
@@ -1039,7 +1152,8 @@
 
                                     <td class="section-border-right">
                                         @if($item->kategori == 'Keamanan')
-                                            <div class="cell-text">{{ $item->kolom9_celah_keamanan ?? $item->kolom9_risiko }}</div>
+                                            <div class="cell-text">{{ $item->kolom9_celah_keamanan ?? $item->kolom9_risiko }}
+                                            </div>
                                         @else
                                             <div style="color:#94a3b8; text-align:center;">-</div>
                                         @endif
@@ -1069,7 +1183,8 @@
                                     <td class="section-border-right" style="vertical-align:middle;">
                                         <div class="risk-score-box">
                                             <div class="risk-val">{{ $item->kolom14_score }}</div>
-                                            <div class="risk-badge {{ $item->kolom14_score >= 15 ? 'bg-high' : ($item->kolom14_score >= 8 ? 'bg-med' : 'bg-low') }}">
+                                            <div
+                                                class="risk-badge {{ $item->kolom14_score >= 15 ? 'bg-high' : ($item->kolom14_score >= 8 ? 'bg-med' : 'bg-low') }}">
                                                 {{ $item->kolom14_score >= 15 ? 'TINGGI' : ($item->kolom14_score >= 8 ? 'SEDANG' : 'RENDAH') }}
                                             </div>
                                         </div>
@@ -1081,7 +1196,8 @@
                                     </td>
                                     <td style="text-align:center; vertical-align:middle;">
                                         @if($item->kategori == 'Lingkungan' && $item->kolom16_aspek)
-                                            <div class="doc-meta-badge" style="{{ $item->kolom16_aspek == 'P' ? 'background:#dbeafe; color:#1e40af;' : 'background:#f1f5f9; color:#64748b;' }}">
+                                            <div class="doc-meta-badge"
+                                                style="{{ $item->kolom16_aspek == 'P' ? 'background:#dbeafe; color:#1e40af;' : 'background:#f1f5f9; color:#64748b;' }}">
                                                 {{ $item->kolom16_aspek }}
                                             </div>
                                         @else
@@ -1095,7 +1211,9 @@
                                                 <div class="risk-text">{{ $item->kolom17_risiko }}</div>
                                             @endif
                                             @if($item->kolom17_peluang)
-                                                <div class="risk-label" style="border-top:1px solid #e2e8f0; margin-top:6px; padding-top:6px;">PELUANG (+):</div>
+                                                <div class="risk-label"
+                                                    style="border-top:1px solid #e2e8f0; margin-top:6px; padding-top:6px;">
+                                                    PELUANG (+):</div>
                                                 <div class="risk-text">{{ $item->kolom17_peluang }}</div>
                                             @endif
                                         </div>
@@ -1103,46 +1221,63 @@
 
                                     <!-- BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa -->
                                     <td style="text-align:center; vertical-align:middle;">
-                                        <div class="doc-meta-badge" style="{{ $item->kolom18_toleransi == 'Ya' ? 'background:#dcfce7; color:#166534;' : 'background:#fee2e2; color:#991b1b;' }}">
+                                        <div class="doc-meta-badge"
+                                            style="{{ $item->kolom18_toleransi == 'Ya' ? 'background:#dcfce7; color:#166534;' : 'background:#fee2e2; color:#991b1b;' }}">
                                             {{ $item->kolom18_toleransi }}
                                         </div>
                                     </td>
                                     @if($item->kolom18_toleransi == 'Tidak')
-                                        <td><div class="cell-text">{{ $item->kolom19_pengendalian_lanjut }}</div></td>
-                                        <td style="vertical-align:middle; text-align:center;">
-                                            <div style="font-weight:800; font-size:16px;">{{ $item->kolom20_kemungkinan_lanjut }}</div>
+                                        <td>
+                                            <div class="cell-text">{{ $item->kolom19_pengendalian_lanjut }}</div>
                                         </td>
                                         <td style="vertical-align:middle; text-align:center;">
-                                            <div style="font-weight:800; font-size:16px;">{{ $item->kolom21_konsekuensi_lanjut }}</div>
+                                            <div style="font-weight:800; font-size:16px;">
+                                                {{ $item->kolom20_kemungkinan_lanjut }}</div>
+                                        </td>
+                                        <td style="vertical-align:middle; text-align:center;">
+                                            <div style="font-weight:800; font-size:16px;">
+                                                {{ $item->kolom21_konsekuensi_lanjut }}</div>
                                         </td>
                                         <td>
                                             <div class="risk-score-box">
                                                 <div class="risk-val">{{ $item->kolom22_tingkat_risiko_lanjut }}</div>
                                                 @if($item->kolom22_tingkat_risiko_lanjut)
-                                                    <div class="risk-badge {{ $item->kolom22_tingkat_risiko_lanjut >= 15 ? 'bg-high' : ($item->kolom22_tingkat_risiko_lanjut >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                    <div
+                                                        class="risk-badge {{ $item->kolom22_tingkat_risiko_lanjut >= 15 ? 'bg-high' : ($item->kolom22_tingkat_risiko_lanjut >= 8 ? 'bg-med' : 'bg-low') }}">
                                                         {{ $item->kolom14_score >= 15 ? 'HIGH' : ($item->kolom14_score >= 8 ? 'MED' : 'LOW') }}
                                                     </div>
                                                 @endif
                                             </div>
                                         </td>
                                     @else
-                                        <td><div style="color:#94a3b8; text-align:center;">-</div></td>
-                                        <td><div style="color:#94a3b8; text-align:center;">-</div></td>
-                                        <td><div style="color:#94a3b8; text-align:center;">-</div></td>
-                                        <td><div style="color:#94a3b8; text-align:center;">-</div></td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
                                     @endif
 
                                     <td style="vertical-align:middle; text-align:center;">
-                                        <div style="font-weight:800; font-size:16px;">{{ $item->residual_kemungkinan }}</div>
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->residual_kemungkinan }}
+                                        </div>
                                     </td>
                                     <td style="vertical-align:middle; text-align:center;">
-                                        <div style="font-weight:800; font-size:16px;">{{ $item->residual_konsekuensi }}</div>
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->residual_konsekuensi }}
+                                        </div>
                                     </td>
                                     <td style="vertical-align:middle;">
                                         <div class="risk-score-box">
                                             <div class="risk-val">{{ $item->residual_score ?? '-' }}</div>
                                             @if($item->residual_score)
-                                                <div class="risk-badge {{ $item->residual_score >= 15 ? 'bg-high' : ($item->residual_score >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                <div
+                                                    class="risk-badge {{ $item->residual_score >= 15 ? 'bg-high' : ($item->residual_score >= 8 ? 'bg-med' : 'bg-low') }}">
                                                     {{ $item->residual_score >= 15 ? 'HIGH' : ($item->residual_score >= 8 ? 'MED' : 'LOW') }}
                                                 </div>
                                             @endif
@@ -1178,15 +1313,15 @@
                                 <tbody>
                                     @php
                                         $complianceCriteria = [
-                                             ['key' => 'format', 'label' => 'Standar Format'],
-                                             ['key' => 'numbering', 'label' => 'Penomoran Dokumen'],
-                                             ['key' => 'revision', 'label' => 'Kemutakhiran Nomor Revisi'],
-                                             ['key' => 'approval', 'label' => 'Approval Dokumen'],
-                                             ['key' => 'identification_coverage', 'label' => 'Ident. sdh mencakup semua proses bisnis/kegiatan/aset'],
-                                             ['key' => 'condition_coverage', 'label' => 'Ident. sdh mencakup semua kondisi (R, NR, N, TN & E)'],
-                                             ['key' => 'mitigation', 'label' => 'Kesesuaian Program Mitigasi']
+                                            ['key' => 'format', 'label' => 'Standar Format'],
+                                            ['key' => 'numbering', 'label' => 'Penomoran Dokumen'],
+                                            ['key' => 'revision', 'label' => 'Kemutakhiran Nomor Revisi'],
+                                            ['key' => 'approval', 'label' => 'Approval Dokumen'],
+                                            ['key' => 'identification_coverage', 'label' => 'Ident. sdh mencakup semua proses bisnis/kegiatan/aset'],
+                                            ['key' => 'condition_coverage', 'label' => 'Ident. sdh mencakup semua kondisi (R, NR, N, TN & E)'],
+                                            ['key' => 'mitigation', 'label' => 'Kesesuaian Program Mitigasi']
                                         ];
-                                        
+
                                         // Filter compliance based on filter parameter
                                         $complianceField = 'compliance_checklist';
                                         if (isset($filter) && $filter == 'SHE') {
@@ -1194,7 +1329,7 @@
                                         } elseif (isset($filter) && $filter == 'Security') {
                                             $complianceField = 'compliance_checklist_security';
                                         }
-                                        
+
                                         $existingCompliance = $document->$complianceField ?? [];
                                     @endphp
 
@@ -1202,10 +1337,10 @@
                                         @php
                                             $savedStatus = $existingCompliance[$criteria['key']]['status'] ?? '-';
                                             $savedNote = $existingCompliance[$criteria['key']]['note'] ?? '-';
-                                            
+
                                             $badgeClass = 'background: #f1f5f9; color: #64748b;';
                                             $statusIcon = '';
-                                            
+
                                             if ($savedStatus === 'OK') {
                                                 $badgeClass = 'background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;';
                                                 $statusIcon = '✓';
@@ -1225,7 +1360,8 @@
                                                 {{ $criteria['label'] }}
                                             </td>
                                             <td style="text-align: center;">
-                                                <span style="display: inline-block; padding: 6px 16px; border-radius: 100px; font-size: 13px; font-weight: 700; {{ $badgeClass }}">
+                                                <span
+                                                    style="display: inline-block; padding: 6px 16px; border-radius: 100px; font-size: 13px; font-weight: 700; {{ $badgeClass }}">
                                                     {{ $statusIcon }} {{ $savedStatus }}
                                                 </span>
                                             </td>
@@ -1255,30 +1391,32 @@
                         $showActions = true;
                     }
                 @endphp
-                
+
                 @if($showActions)
-                <div class="action-bar">
-                    <div class="note-input-wrapper">
-                        <label class="note-label" for="catatan_ui">
-                            <i class="fas fa-comment-dots"></i> Catatan Review
-                        </label>
-                        <textarea id="catatan_ui" class="note-input" placeholder="Tulis catatan (Opsional untuk Approve, Wajib untuk Revisi)..." rows="2"></textarea>
+                    <div class="action-bar">
+                        <div class="note-input-wrapper">
+                            <label class="note-label" for="catatan_ui">
+                                <i class="fas fa-comment-dots"></i> Catatan Review
+                            </label>
+                            <textarea id="catatan_ui" class="note-input"
+                                placeholder="Tulis catatan (Opsional untuk Approve, Wajib untuk Revisi)..."
+                                rows="2"></textarea>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="button" class="btn-action btn-revise" onclick="submitAction('revise')">
+                                <i class="fas fa-undo"></i> Minta Revisi
+                            </button>
+                            <button type="button" class="btn-action btn-approve" onclick="submitAction('approve')">
+                                <i class="fas fa-check-circle"></i> Publikasikan
+                            </button>
+                        </div>
                     </div>
-                    <div class="action-buttons">
-                        <button type="button" class="btn-action btn-revise" onclick="submitAction('revise')">
-                            <i class="fas fa-undo"></i> Minta Revisi
-                        </button>
-                        <button type="button" class="btn-action btn-approve" onclick="submitAction('approve')">
-                            <i class="fas fa-check-circle"></i> Publikasikan
-                        </button>
-                    </div>
-                </div>
                 @else
-                <div class="action-bar" style="justify-content:center;">
-                    <button type="button" class="btn-action btn-disabled" disabled>
-                        <i class="fas fa-lock"></i> Mode Read Only ({{ $statusLabel }})
-                    </button>
-                </div>
+                    <div class="action-bar" style="justify-content:center;">
+                        <button type="button" class="btn-action btn-disabled" disabled>
+                            <i class="fas fa-lock"></i> Mode Read Only ({{ $statusLabel }})
+                        </button>
+                    </div>
                 @endif
             </form>
 
@@ -1299,39 +1437,45 @@
                             'catatan' => 'Dokumen baru diajukan',
                             'is_first' => true
                         ];
-                        
+
                         // Merge with actual approvals
                         $allHistory = collect([$createdEvent])->merge($document->approvals->sortBy('created_at'));
-                        
+
                         // Filter history based on filter parameter
                         if (isset($filter) && $filter == 'SHE') {
-                            $allHistory = $allHistory->filter(function($log) {
-                                if ($log->action == 'created' || $log->action == 'submitted') return true;
-                                if ($log->level == 1) return true;
-                                
+                            $allHistory = $allHistory->filter(function ($log) {
+                                if ($log->action == 'created' || $log->action == 'submitted')
+                                    return true;
+                                if ($log->level == 1)
+                                    return true;
+
                                 $approverUnit = optional($log->approver)->id_unit;
                                 if ($log->level == 2 || $log->level == 3) {
                                     // Only show if it's NOT the other unit (Security = 55)
-                                    if ($approverUnit == 55) return false;
+                                    if ($approverUnit == 55)
+                                        return false;
                                     return true;
                                 }
                                 return false;
                             });
                         } elseif (isset($filter) && $filter == 'Security') {
-                            $allHistory = $allHistory->filter(function($log) {
-                                if ($log->action == 'created' || $log->action == 'submitted') return true;
-                                if ($log->level == 1) return true;
+                            $allHistory = $allHistory->filter(function ($log) {
+                                if ($log->action == 'created' || $log->action == 'submitted')
+                                    return true;
+                                if ($log->level == 1)
+                                    return true;
 
                                 $approverUnit = optional($log->approver)->id_unit;
                                 if ($log->level == 2 || $log->level == 3) {
                                     // Only show if it's NOT the other unit (SHE = 56)
-                                    if ($approverUnit == 56) return false;
+                                    if ($approverUnit == 56)
+                                        return false;
                                     return true;
                                 }
                                 return false;
                             });
                         }
-                        
+
                         // Sort Descending for Timeline (Newest Top)
                         $displayHistory = $allHistory->sortByDesc('created_at')->values();
                     @endphp
@@ -1343,7 +1487,7 @@
                             $actionColor = 'var(--text-sub)';
                             $icon = 'fa-circle';
 
-                            switch($log->action) {
+                            switch ($log->action) {
                                 case 'created':
                                     $actionLabel = 'Form Dibuat';
                                     $actionColor = '#3b82f6'; // Blue
@@ -1380,27 +1524,30 @@
                         @endphp
 
                         <div class="timeline-item {{ $isFirst ? 'active' : '' }}">
-                            <div class="timeline-dot" style="{{ $isFirst ? 'border-color:'.$actionColor : '' }}"></div>
+                            <div class="timeline-dot" style="{{ $isFirst ? 'border-color:' . $actionColor : '' }}"></div>
                             <div class="timeline-date">{{ $log->created_at->format('d M Y, H:i') }} WIB</div>
                             <div class="timeline-content">
                                 <div class="timeline-user">
-                                    {{ optional($log->approver)->nama_user ?? 'System' }} 
+                                    {{ optional($log->approver)->nama_user ?? 'System' }}
                                     <span style="font-weight:400; color:var(--text-sub);">
-                                        • {{ optional($log->approver)->role_jabatan_name ? $log->approver->role_jabatan_name : ($log->action == 'created' ? 'Submitter' : '-') }}
+                                        •
+                                        {{ optional($log->approver)->role_jabatan_name ? $log->approver->role_jabatan_name : ($log->action == 'created' ? 'Submitter' : '-') }}
                                         @if(optional(optional($log->approver)->unit)->nama_unit)
                                             • {{ $log->approver->unit->nama_unit }}
                                         @endif
                                     </span>
                                 </div>
                                 <div class="timeline-action">
-                                    <span style="display:inline-flex; align-items:center; gap:8px; padding:6px 14px; background:{{ $actionColor }}15; color:{{ $actionColor }}; border-radius:100px; font-weight:700; font-size:12px; border:1px solid {{ $actionColor }}30;">
+                                    <span
+                                        style="display:inline-flex; align-items:center; gap:8px; padding:6px 14px; background:{{ $actionColor }}15; color:{{ $actionColor }}; border-radius:100px; font-weight:700; font-size:12px; border:1px solid {{ $actionColor }}30;">
                                         <i class="fas {{ $icon }}"></i> {{ $actionLabel }}
                                     </span>
                                 </div>
                                 @if($log->catatan)
-                                <div class="timeline-note" style="margin-top:12px; padding:12px; background:white; border-radius:8px; border:1px solid var(--border); color:var(--text-main); font-style:normal;">
-                                    "{{ $log->catatan }}"
-                                </div>
+                                    <div class="timeline-note"
+                                        style="margin-top:12px; padding:12px; background:white; border-radius:8px; border:1px solid var(--border); color:var(--text-main); font-style:normal;">
+                                        "{{ $log->catatan }}"
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -1432,13 +1579,13 @@
 
             const actionText = type === 'approve' ? 'Publikasikan' : 'Kembalikan untuk Revisi';
             const actionColor = type === 'approve' ? '#16a34a' : '#dc2626';
-            
+
             // Add filter parameter to URL
             const filter = "{{ $filter ?? 'ALL' }}";
             const baseApproveUrl = "{{ route('kepala_departemen.publish', $document->id) }}";
             const baseReviseUrl = "{{ route('kepala_departemen.revise', $document->id) }}";
-            
-            const actionUrl = type === 'approve' 
+
+            const actionUrl = type === 'approve'
                 ? (filter !== 'ALL' ? baseApproveUrl + '?filter=' + filter : baseApproveUrl)
                 : (filter !== 'ALL' ? baseReviseUrl + '?filter=' + filter : baseReviseUrl);
 
@@ -1461,4 +1608,5 @@
     </script>
     @include('partials.alerts')
 </body>
+
 </html>

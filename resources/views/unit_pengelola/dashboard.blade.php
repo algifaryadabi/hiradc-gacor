@@ -551,23 +551,23 @@
                 </a>
 
                 @if(Auth::user()->can_create_documents)
-                <a href="{{ route('documents.create') }}" class="nav-item">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Buat Dokumen</span>
-                </a>
+                    <a href="{{ route('documents.create') }}" class="nav-item">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Buat Dokumen</span>
+                    </a>
                 @endif
 
                 @if(Auth::user()->role_jabatan == 3 || Auth::user()->is_reviewer || Auth::user()->is_verifier)
-                <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item">
-                    <i class="fas fa-file-contract"></i>
-                    <span>Review Dokumen</span>
-                    @if(isset($pendingCount) && $pendingCount > 0)
-                        <span
-                            style="background: white; color: var(--primary); padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: auto; font-weight: bold;">
-                            {{ $pendingCount }}
-                        </span>
-                    @endif
-                </a>
+                    <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item">
+                        <i class="fas fa-file-contract"></i>
+                        <span>Review Dokumen</span>
+                        @if(isset($pendingCount) && $pendingCount > 0)
+                            <span
+                                style="background: white; color: var(--primary); padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: auto; font-weight: bold;">
+                                {{ $pendingCount }}
+                            </span>
+                        @endif
+                    </a>
                 @endif
             </nav>
 
@@ -612,9 +612,9 @@
                         <i class="fas fa-chart-pie" style="margin-right: 8px;"></i>Dashboard Utama
                     </div>
                     @if(Auth::user()->role_jabatan == 3)
-                    <div class="nav-link" onclick="switchTab('users')">
-                        <i class="fas fa-users-cog" style="margin-right: 8px;"></i>Manajemen Staff
-                    </div>
+                        <div class="nav-link" onclick="switchTab('users')">
+                            <i class="fas fa-users-cog" style="margin-right: 8px;"></i>Manajemen Staff
+                        </div>
                     @endif
                 </div>
 
