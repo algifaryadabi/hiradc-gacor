@@ -65,118 +65,143 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Sidebar */
+        /* Sidebar - Twin Design */
         .sidebar {
-            width: 250px;
-            background: white;
-            border-right: 1px solid #e0e0e0;
+            width: 280px;
+            background: #5b6fd8;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             position: fixed;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            font-family: 'Inter', sans-serif;
+            z-index: 100;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
         }
 
         .logo-section {
-            padding: 30px 20px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             text-align: center;
+            position: relative;
+        }
+
+        .logo-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
         }
 
         .logo-circle {
-            width: 70px;
-            height: 70px;
-            background: #fff;
-            border-radius: 50%;
-            margin: 0 auto 15px;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 1.25rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: white;
+            border-radius: 50%;
             overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .logo-circle:hover {
+            transform: scale(1.05);
         }
 
         .logo-circle img {
-            max-width: 80%;
-            max-height: 80%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
 
         .logo-text {
-            font-size: 18px;
+            font-size: 1.125rem;
             font-weight: 700;
-            color: #c41e3a;
-            margin-bottom: 3px;
+            color: white;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.02em;
         }
 
         .logo-subtext {
-            font-size: 12px;
-            color: #999;
-            font-style: italic;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .nav-menu {
             flex: 1;
-            padding: 20px 0;
+            padding: 1.5rem 0;
             overflow-y: auto;
         }
 
         .nav-item {
-            padding: 15px 25px;
+            padding: 1rem 1.5rem;
+            margin: 0.25rem 1rem;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 0.75rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            color: #666;
-            font-size: 14px;
+            transition: all 0.2s;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.9375rem;
             font-weight: 500;
             text-decoration: none;
+            border-radius: 0.75rem;
             position: relative;
         }
 
         .nav-item:hover {
-            background: #fff5f5;
-            color: #c41e3a;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(4px);
         }
 
         .nav-item.active {
-            background: #ffe5e5;
-            color: #c41e3a;
-            border-left: 3px solid #c41e3a;
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         .nav-item i {
             width: 20px;
             text-align: center;
-            font-size: 16px;
+            font-size: 1.125rem;
         }
 
         /* User Info at Bottom */
         .user-info-bottom {
-            padding: 20px;
-            border-top: 2px solid #e0e0e0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
         }
 
         .user-avatar {
-            width: 45px;
-            height: 45px;
+            width: 48px;
+            height: 48px;
             background: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #667eea;
+            color: #5b6fd8;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 1.125rem;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .user-details {
@@ -186,7 +211,7 @@
 
         .user-name {
             font-weight: 600;
-            font-size: 14px;
+            font-size: 0.9375rem;
             color: white;
             white-space: nowrap;
             overflow: hidden;
@@ -194,37 +219,37 @@
         }
 
         .user-role {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 2px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
         }
 
         .logout-btn {
             width: 100%;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.2);
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.15);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 0.5rem;
             text-decoration: none;
         }
 
         .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
         }
 
         /* Main Content */
         .main-content {
-            margin-left: 250px;
+            margin-left: 280px;
             padding: 32px 48px;
             min-height: 100vh;
         }
@@ -418,6 +443,50 @@
             box-shadow: var(--shadow-lg);
         }
 
+        /* Excel-Style Table (Reference Design) */
+        .excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+            font-size: 11px;
+            table-layout: auto;
+        }
+
+        .excel-table th {
+            background: linear-gradient(to bottom, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 10px;
+            border-right: 1px solid #334155;
+            border-bottom: 1px solid #334155;
+            text-align: center;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.02em;
+            line-height: 1.3;
+            white-space: nowrap;
+        }
+
+        .excel-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            color: var(--text-main);
+            vertical-align: top;
+            line-height: 1.5;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .excel-table tbody tr:hover {
+            background: linear-gradient(to right, #fef2f3 0%, #ffffff 100%);
+        }
+
+        .section-border-right {
+            border-right: 3px solid #94a3b8 !important;
+        }
+
+        /* Legacy table support */
         .hiradc-table {
             width: 100%;
             border-collapse: separate;
@@ -452,81 +521,120 @@
         .hiradc-table tr:hover td {
             background: #f8fafc;
         }
-
         .section-divider {
             border-right: 4px solid #cbd5e1 !important;
         }
 
-        /* Action Bar */
+        /* Action Bar - Fixed positioning */
         .action-bar {
             position: fixed;
             bottom: 0;
-            left: 250px;
+            left: 280px; /* Updated to match sidebar width */
             right: 0;
-            background: white;
-            padding: 18px 48px;
+            background: linear-gradient(to top, #ffffff 0%, #fefefe 100%);
+            padding: 20px 48px;
             border-top: 1px solid var(--border);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08), 0 -1px 3px rgba(0,0,0,0.05);
             display: flex;
             align-items: center;
             gap: 20px;
             z-index: 100;
+            backdrop-filter: blur(10px);
         }
 
         .note-input-wrapper {
             flex: 1;
+            max-width: 600px;
+        }
+
+        .note-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .note-input {
             width: 100%;
             padding: 12px 16px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            font-family: inherit;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
             font-size: 14px;
-            background: var(--bg-body);
+            font-family: inherit;
+            color: var(--text-main);
             transition: all 0.2s;
+            background: white;
+            resize: vertical;
+            min-height: 60px;
         }
 
         .note-input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px var(--primary-soft);
+            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+            outline: none;
         }
 
-        .btn {
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            border: none;
+        .note-input::placeholder {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .action-buttons {
             display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-action {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+        }
+
+        .btn-approve:hover {
+            background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(22, 163, 74, 0.4);
+        }
+
+        .btn-reject {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-reject:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
         }
 
         .btn-revise {
             background: white;
-            color: var(--danger);
-            border: 1px solid var(--danger);
+            color: #f59e0b;
+            border: 2px solid #f59e0b;
         }
 
         .btn-revise:hover {
-            background: var(--danger-bg);
+            background: #fffbeb;
             transform: translateY(-2px);
-        }
-
-        .btn-approve {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4);
-        }
-
-        .btn-approve:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(225, 29, 72, 0.5);
         }
         
         .btn-disabled {
@@ -535,6 +643,10 @@
             cursor: not-allowed;
             border: none;
             box-shadow: none;
+        }
+
+        .btn-disabled:hover {
+            transform: none;
         }
 
         /* Timeline Remake */
@@ -1147,19 +1259,24 @@
                 @if($showActions)
                 <div class="action-bar">
                     <div class="note-input-wrapper">
-                        <input type="text" id="catatan_ui" class="note-input" placeholder="Tulis catatan (Opsional untuk Approve, Wajib untuk Revisi)...">
+                        <label class="note-label" for="catatan_ui">
+                            <i class="fas fa-comment-dots"></i> Catatan Review
+                        </label>
+                        <textarea id="catatan_ui" class="note-input" placeholder="Tulis catatan (Opsional untuk Approve, Wajib untuk Revisi)..." rows="2"></textarea>
                     </div>
-                    <button type="button" class="btn btn-revise" onclick="submitAction('revise')">
-                        <i class="fas fa-undo"></i> Minta Revisi
-                    </button>
-                    <button type="button" class="btn btn-approve" onclick="submitAction('approve')">
-                        <i class="fas fa-check"></i> Publikasikan Dokumen
-                    </button>
+                    <div class="action-buttons">
+                        <button type="button" class="btn-action btn-revise" onclick="submitAction('revise')">
+                            <i class="fas fa-undo"></i> Minta Revisi
+                        </button>
+                        <button type="button" class="btn-action btn-approve" onclick="submitAction('approve')">
+                            <i class="fas fa-check-circle"></i> Publikasikan
+                        </button>
+                    </div>
                 </div>
                 @else
                 <div class="action-bar" style="justify-content:center;">
-                    <button type="button" class="btn btn-disabled" disabled>
-                        <i class="fas fa-lock"></i> Mode Read Opsional ({{ $statusLabel }})
+                    <button type="button" class="btn-action btn-disabled" disabled>
+                        <i class="fas fa-lock"></i> Mode Read Only ({{ $statusLabel }})
                     </button>
                 </div>
                 @endif

@@ -30,6 +30,14 @@ class User extends Authenticatable
         'id_role_user',
         'user_aktif',
         'can_create_documents',
+        'is_reviewer',
+        'is_verifier',
+    ];
+
+    protected $casts = [
+        'can_create_documents' => 'boolean',
+        'is_reviewer' => 'boolean',
+        'is_verifier' => 'boolean',
     ];
 
     protected $hidden = [

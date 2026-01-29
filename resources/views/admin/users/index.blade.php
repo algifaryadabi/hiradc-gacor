@@ -10,302 +10,459 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        :root {
+            --primary: #5b6fd8;
+            --primary-dark: #4759c5;
+            --secondary: #64748b;
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
         * {
             box-sizing: border-box;
+            outline: none;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #f4f6f9;
+            background: var(--bg-body);
+            color: var(--text-main);
             margin: 0;
             display: flex;
         }
 
-        /* Layout */
+        /* Sidebar - Twin Design */
         .sidebar {
-            width: 250px;
-            background: white;
-            height: 100vh;
+            width: 280px;
+            background: linear-gradient(180deg, #5b6fd8 0%, #4759c5 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             position: fixed;
-            border-right: 1px solid #e0e0e0;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            z-index: 10;
+            z-index: 100;
+            box-shadow: 4px 0 24px rgba(91, 111, 216, 0.15);
         }
+
+        /* Logo & User styles handled by partials/sidebar.blade.php style injection or global */
+        /* Since dashboard has styles, we should copy them here for consistency or use a layout file */
+        /* For now I will include necessary Sidebar styles here to be safe */
 
         .logo-section {
-            padding: 25px;
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             text-align: center;
-            border-bottom: 1px solid #eee;
         }
 
-        .logo-section img {
-            width: 50px;
-            margin-bottom: 10px;
+        .logo-circle {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            background: transparent;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-text {
+            color: white;
+            font-weight: 700;
+            font-size: 1.125rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .logo-subtext {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.875rem;
         }
 
         .nav-menu {
-            padding: 20px 0;
+            padding: 1.5rem 1rem;
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
-            padding: 12px 25px;
-            color: #555;
+            gap: 1rem;
+            padding: 0.875rem 1rem;
+            color: rgba(255, 255, 255, 0.7);
             text-decoration: none;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
             font-weight: 500;
-            transition: 0.3s;
-        }
-
-        .nav-item i {
-            width: 25px;
-            text-align: center;
-            margin-right: 10px;
         }
 
         .nav-item:hover,
         .nav-item.active {
-            background: #fee2e2;
-            color: #c41e3a;
-            border-left: 4px solid #c41e3a;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(4px);
         }
 
-        .user-section {
-            padding: 20px;
-            border-top: 1px solid #eee;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .nav-item.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.125rem;
+        }
+
+        .user-info {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9375rem;
             color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
         }
 
         .logout-btn {
-            display: block;
-            text-align: center;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
             text-decoration: none;
-            font-size: 14px;
-            margin-top: 10px;
         }
 
         .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
         }
 
         .main-content {
-            margin-left: 250px;
+            margin-left: 280px;
             flex: 1;
-            padding: 30px;
+            padding: 40px;
+            width: calc(100% - 280px);
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 32px;
         }
 
         .header h1 {
-            font-size: 24px;
-            color: #333;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
             margin: 0;
         }
 
         /* Controls */
         .controls {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
         }
 
         .btn {
             padding: 10px 20px;
-            border-radius: 6px;
+            border-radius: 10px;
             border: none;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: 0.2s;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-primary {
-            background: #c41e3a;
+            background: var(--primary);
             color: white;
         }
 
         .btn-primary:hover {
-            background: #a01830;
+            background: var(--primary-dark);
         }
 
         .btn-secondary {
-            background: #2f3542;
-            color: white;
+            background: white;
+            color: var(--text-main);
+            border: 1px solid var(--border);
         }
 
         .btn-secondary:hover {
-            background: #1e272e;
+            background: #f8fafc;
+            border-color: #cbd5e1;
         }
 
-        .btn-success {
-            background: #27ae60;
-            color: white;
+        /* Filter Section */
+        .filter-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
         }
 
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(91, 111, 216, 0.1);
         }
 
         /* Table */
         .table-container {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
             overflow-x: auto;
+            /* Allow horizontal scroll */
+            border: 1px solid var(--border);
+            padding-bottom: 5px;
+            /* Prevent scrollbar overlapping content */
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1000px;
+            white-space: nowrap;
+            /* Prevent wrapping */
         }
 
         th {
-            background: #f8f9fa;
-            padding: 15px;
+            background: #f8fafc;
+            padding: 16px 24px;
             text-align: left;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            color: #666;
-            border-bottom: 2px solid #eee;
+            color: var(--text-sub);
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         td {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
             font-size: 14px;
-            color: #333;
+            color: var(--text-main);
             vertical-align: middle;
         }
 
         tr:hover {
-            background: #fafafa;
+            background: #f8fafc;
         }
 
-        /* Inputs in Table */
-        .input-text {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
-        }
-
-        .input-select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
-            background: white;
+        /* Status & Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .badge-active {
-            background: #e8f5e9;
-            color: #2e7d32;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
+            background: #dcfce7;
+            color: #166534;
         }
 
         .badge-inactive {
-            background: #ffebee;
-            color: #c62828;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
+            background: #fee2e2;
+            color: #991b1b;
         }
 
+        /* Action Buttons */
         .action-btns {
             display: flex;
-            gap: 5px;
+            gap: 6px;
         }
 
         .btn-icon {
             width: 32px;
             height: 32px;
-            border-radius: 4px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             border: none;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            transform: translateY(-2px);
         }
 
         .btn-edit {
-            background: #f39c12;
+            background: var(--warning);
         }
 
         .btn-delete {
-            background: #e74c3c;
+            background: var(--danger);
         }
 
         .btn-save {
-            background: #27ae60;
+            background: var(--success);
         }
 
         .btn-cancel {
-            background: #95a5a6;
+            background: var(--secondary);
         }
 
-        /* Hidden File Input */
-        #fileInput {
-            display: none;
+        /* Inputs in Table */
+        .input-text,
+        .input-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            min-width: 130px; /* Ensure inputs are usable */
         }
 
-        /* Pagination Styles */
+        .input-text:focus,
+        .input-select:focus {
+            border-color: var(--primary);
+        }
+
+        /* Pagination */
         .pagination {
             display: flex;
             padding-left: 0;
             list-style: none;
-            border-radius: 0.25rem;
+            gap: 4px;
+            justify-content: flex-end;
+            margin-top: 24px;
         }
 
-        .page-item .page-link {
-            position: relative;
-            display: block;
-            padding: 0.5rem 0.75rem;
-            margin-left: -1px;
-            line-height: 1.25;
-            color: #c41e3a;
-            background-color: #fff;
-            border: 1px solid #dee2e6;
+        .page-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-main);
+            background: white;
+            border: 1px solid var(--border);
             text-decoration: none;
+            transition: all 0.2s;
         }
 
         .page-item.active .page-link {
-            z-index: 3;
-            color: #fff;
-            background-color: #c41e3a;
-            border-color: #c41e3a;
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .page-link:hover:not(.active) {
+            background: #f1f5f9;
         }
 
         .page-item.disabled .page-link {
-            color: #6c757d;
+            color: #94a3b8;
             pointer-events: none;
-            cursor: auto;
-            background-color: #fff;
-            border-color: #dee2e6;
+            background: #f8fafc;
         }
     </style>
 </head>
@@ -320,7 +477,7 @@
         <div class="header">
             <div>
                 <h1>Manajemen User</h1>
-                <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                <div style="font-size: 14px; color: #64748b; margin-top: 5px;">
                     Total User: <strong>{{ number_format($users->total()) }}</strong>
                 </div>
             </div>
@@ -332,37 +489,30 @@
         </div>
 
         <!-- Filter & Search Section -->
-        <div
-            style="background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 25px;">
-            <div
-                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: end;">
-
+        <div class="filter-card">
+            <div class="filter-grid">
                 <!-- Search Box -->
                 <div style="grid-column: span 2;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
-                        <i class="fas fa-search" style="color: #c41e3a; margin-right: 5px;"></i> Cari User
-                    </label>
-                    <div style="position: relative;">
-                        <input type="text" id="searchInput" placeholder="Cari username, email, atau nama..."
-                            style="width: 100%; padding: 12px 15px; padding-left: 40px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s;"
-                            onfocus="this.style.borderColor='#c41e3a'; this.style.boxShadow='0 0 0 3px rgba(196, 30, 58, 0.1)'"
-                            onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'"
-                            oninput="handleFilter()">
-                        <i class="fas fa-search"
-                            style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa;"></i>
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-search" style="color: var(--primary); margin-right: 5px;"></i> Cari User
+                        </label>
+                        <div style="position: relative;">
+                            <input type="text" id="searchInput" class="form-control"
+                                placeholder="Cari username, email, atau nama..." style="padding-left: 40px;"
+                                oninput="handleFilter()">
+                            <i class="fas fa-search"
+                                style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Filter Unit -->
-                <div>
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
-                        <i class="fas fa-building" style="color: #c41e3a; margin-right: 5px;"></i> Unit
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-building" style="color: var(--primary); margin-right: 5px;"></i> Unit
                     </label>
-                    <select id="unitFilter"
-                        style="width: 100%; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white; cursor: pointer; transition: all 0.3s;"
-                        onfocus="this.style.borderColor='#c41e3a'; this.style.boxShadow='0 0 0 3px rgba(196, 30, 58, 0.1)'"
-                        onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'"
-                        onchange="handleFilter()">
+                    <select id="unitFilter" class="form-control" onchange="handleFilter()">
                         <option value="">Semua Unit</option>
                         @foreach($units as $unit)
                             <option value="{{ $unit->id_unit }}">{{ $unit->nama_unit }}</option>
@@ -371,15 +521,11 @@
                 </div>
 
                 <!-- Filter Departemen -->
-                <div>
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
-                        <i class="fas fa-sitemap" style="color: #c41e3a; margin-right: 5px;"></i> Departemen
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-sitemap" style="color: var(--primary); margin-right: 5px;"></i> Departemen
                     </label>
-                    <select id="deptFilter"
-                        style="width: 100%; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white; cursor: pointer; transition: all 0.3s;"
-                        onfocus="this.style.borderColor='#c41e3a'; this.style.boxShadow='0 0 0 3px rgba(196, 30, 58, 0.1)'"
-                        onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'"
-                        onchange="handleFilter()">
+                    <select id="deptFilter" class="form-control" onchange="handleFilter()">
                         <option value="">Semua Departemen</option>
                         @foreach($departemens as $dept)
                             <option value="{{ $dept->id_dept }}">{{ $dept->nama_dept }}</option>
@@ -388,15 +534,11 @@
                 </div>
 
                 <!-- Filter Jabatan -->
-                <div>
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
-                        <i class="fas fa-user-tie" style="color: #c41e3a; margin-right: 5px;"></i> Jabatan
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-user-tie" style="color: var(--primary); margin-right: 5px;"></i> Jabatan
                     </label>
-                    <select id="jabatanFilter"
-                        style="width: 100%; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white; cursor: pointer; transition: all 0.3s;"
-                        onfocus="this.style.borderColor='#c41e3a'; this.style.boxShadow='0 0 0 3px rgba(196, 30, 58, 0.1)'"
-                        onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'"
-                        onchange="handleFilter()">
+                    <select id="jabatanFilter" class="form-control" onchange="handleFilter()">
                         <option value="">Semua Jabatan</option>
                         @foreach($roleJabatans as $jabatan)
                             <option value="{{ $jabatan->id_role_jabatan }}">{{ $jabatan->nama_role_jabatan }}</option>
@@ -407,8 +549,8 @@
                 <!-- Reset Button -->
                 <div style="display: flex; justify-content: flex-end;">
                     <button class="btn btn-secondary" onclick="resetFilters()" title="Reset Filter"
-                        style="height: 45px; width: 100%; justify-content: center; background: #f8f9fa; color: #333; border: 1px solid #e0e0e0; transition: all 0.2s;">
-                        <i class="fas fa-redo" style="font-size: 14px; color: #666;"></i> <span
+                        style="width: 100%; justify-content: center;">
+                        <i class="fas fa-redo" style="font-size: 14px; color: var(--text-sub);"></i> <span
                             style="margin-left: 8px;">Reset</span>
                     </button>
                 </div>
@@ -439,7 +581,7 @@
         </div>
 
         <!-- Pagination Links -->
-        <div id="paginationContainer" style="margin-top: 20px; display: flex; justify-content: flex-end;">
+        <div id="paginationContainer" class="pagination-container">
             {{ $users->links('pagination::bootstrap-4') }}
         </div>
     </main>

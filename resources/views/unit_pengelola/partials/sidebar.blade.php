@@ -20,7 +20,7 @@
         </a>
     </nav>
 
-    <div class="user-info-bottom">
+    <div class="user-info">
         <div class="user-profile">
             <div class="user-avatar">
                 {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
@@ -28,9 +28,6 @@
             <div class="user-details">
                 <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
                 <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                    {{ Auth::user()->unit_or_dept_name }}
-                </div>
             </div>
         </div>
         <a href="{{ route('logout') }}" class="logout-btn"

@@ -8,144 +8,369 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #5b6fd8;
+            --primary-dark: #4759c5;
+            --secondary: #64748b;
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
         * {
             box-sizing: border-box;
+            outline: none;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #f4f6f9;
+            background: var(--bg-body);
+            color: var(--text-main);
             margin: 0;
-            display: flex; /* Flex layout directly on body like admin/users */
+            display: flex;
         }
 
-        /* Sidebar from admin/users */
+        /* Sidebar - Twin Design */
         .sidebar {
-            width: 250px;
-            background: white;
-            height: 100vh;
+            width: 280px;
+            background: linear-gradient(180deg, #5b6fd8 0%, #4759c5 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             position: fixed;
-            border-right: 1px solid #e0e0e0;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            z-index: 10;
+            z-index: 100;
+            box-shadow: 4px 0 24px rgba(91, 111, 216, 0.15);
         }
 
         .logo-section {
-            padding: 25px;
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             text-align: center;
-            border-bottom: 1px solid #eee;
         }
 
-        .logo-section img {
-            width: 50px;
-            margin-bottom: 10px;
+        .logo-circle {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            background: transparent;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-text {
+            color: white;
+            font-weight: 700;
+            font-size: 1.125rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .logo-subtext {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.875rem;
         }
 
         .nav-menu {
-            padding: 20px 0;
+            padding: 1.5rem 1rem;
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
-            padding: 12px 25px;
-            color: #555;
+            gap: 1rem;
+            padding: 0.875rem 1rem;
+            color: rgba(255, 255, 255, 0.7);
             text-decoration: none;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
             font-weight: 500;
-            transition: 0.3s;
-        }
-
-        .nav-item i {
-            width: 25px;
-            text-align: center;
-            margin-right: 10px;
         }
 
         .nav-item:hover,
         .nav-item.active {
-            background: #fee2e2;
-            color: #c41e3a;
-            border-left: 4px solid #c41e3a;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(4px);
         }
 
-        .user-section {
-            padding: 20px;
-            border-top: 1px solid #eee;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .nav-item.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.125rem;
+        }
+
+        .user-info {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9375rem;
             color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
         }
 
         .logout-btn {
-            display: block;
-            text-align: center;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
             text-decoration: none;
-            font-size: 14px;
-            margin-top: 10px;
         }
 
         .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
         }
 
         /* Main Content */
         .main-content {
-            margin-left: 250px;
+            margin-left: 280px;
             flex: 1;
-            padding: 30px;
+            padding: 40px;
+            width: calc(100% - 280px);
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 32px;
         }
 
         .header h1 {
-            font-size: 24px;
-            color: #333;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
             margin: 0;
         }
 
-        /* Accordion Styles (from unit-pengelola) */
-        .accordion-container { max-width: 100%; margin-top: 20px; }
-        .accordion-item { background: white; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; overflow: hidden; transition: all 0.3s; }
-        .accordion-item:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
-        .accordion-header { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: #fff; transition: background 0.2s; }
-        .accordion-header:hover { background: #f8f9fa; }
-        .accordion-header.active { background: #f0f7ff; border-bottom: 1px solid #e0e0e0; }
-        .dept-info { display: flex; align-items: center; gap: 15px; }
-        .dept-icon { width: 36px; height: 36px; background: #e3f2fd; color: #1565c0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-        .dept-name { font-weight: 600; color: #333; font-size: 15px; }
-        .accordion-icon { color: #999; transition: transform 0.3s; }
-        .accordion-header.active .accordion-icon { transform: rotate(180deg); color: #1565c0; }
-        .accordion-body { display: none; background: #fafafa; border-top: 1px solid #f0f0f0; }
-        .accordion-body.show { display: block; animation: slideDown 0.3s ease-out; }
-        .unit-list { list-style: none; padding: 0; margin: 0; }
-        .unit-item { padding: 12px 20px 12px 60px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #555; transition: all 0.2s; }
-        .unit-item:last-child { border-bottom: none; }
-        .unit-item:hover { background: #fff; color: #c41e3a; padding-left: 65px; }
-        .unit-item i { opacity: 0; transition: opacity 0.2s; }
-        .unit-item:hover i { opacity: 1; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Breadcrumb */
-        .breadcrumb { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 14px; color: #666; }
-        .breadcrumb-item { cursor: pointer; transition: color 0.2s; }
-        .breadcrumb-item:hover { color: #c41e3a; text-decoration: underline; }
-        .breadcrumb-item.active { font-weight: 600; color: #333; cursor: default; text-decoration: none; }
-        .breadcrumb-separator { color: #ccc; font-size: 12px; }
+        /* Stats Widgets */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
 
-         /* Table Section */
-        .table-section { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #eee; animation: fadeIn 0.3s ease-out; margin-top: 20px;}
-        .table-header { padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; background-color: #fbfbfb; }
-        .btn-action { padding: 6px 14px; background: #c41e3a; color: white; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 500; transition: background 0.2s; cursor: pointer; display: inline-block;}
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--secondary);
+            margin-bottom: 16px;
+        }
+
+        .stat-card.primary .stat-icon { background: #e0e7ff; color: #4f46e5; }
+        .stat-card.success .stat-icon { background: #dcfce7; color: #16a34a; }
+        .stat-card.warning .stat-icon { background: #fef9c3; color: #ca8a04; }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+        /* Existing Components Styling Update */
+        .accordion-container {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            background: white;
+            margin-top: 24px;
+        }
+        
+        .accordion-item {
+            border: none;
+            border-bottom: 1px solid var(--border);
+            border-radius: 0;
+            margin: 0;
+        }
+        
+        .accordion-header {
+            padding: 20px 24px;
+        }
+        
+        .accordion-header:hover {
+            background: #f8fafc;
+        }
+        
+        .accordion-header.active {
+            background: #f1f5f9;
+        }
+        
+        .dept-icon {
+            border-radius: 10px;
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px rgba(91, 111, 216, 0.2);
+        }
+        
+        .dept-name {
+            font-size: 16px;
+        }
+        
+        .unit-item {
+            padding: 16px 24px 16px 76px;
+        }
+        
+        .unit-item:hover {
+            background: #f8fafc;
+            color: var(--primary);
+            padding-left: 80px;
+        }
+        
+        .breadcrumb {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 99px;
+            border: 1px solid var(--border);
+            display: inline-flex;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .breadcrumb-item:hover {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .breadcrumb-item.active {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .table-section {
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            background: white;
+        }
+        
+        .table-header {
+            background: #f8fafc;
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--text-main);
+        }
+
+        .btn-action {
+            background: var(--primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            box-shadow: 0 2px 4px rgba(91, 111, 216, 0.2);
+        }
+        
+        .btn-action:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+    </style>
     </style>
 </head>
 
@@ -159,23 +384,99 @@
         <div class="header">
             <div>
                 <h1>Dashboard Admin</h1>
-                <div style="font-size: 14px; color: #666; margin-top: 5px;">
-                    Navigasi Dokumen per Unit Kerja
+                <div style="font-size: 14px; color: #64748b; margin-top: 5px;">
+                    Selamat datang kembali, {{ Auth::user()->nama_user }}
                 </div>
             </div>
-            <!-- User Profile removed from header since it is in sidebar user-section now -->
+            
+            <div id="breadcrumb">
+                <!-- Breadcrumb will be rendered here by JS -->
+            </div>
         </div>
 
-        <div class="content-area" style="padding: 0;"> <!-- Remove padding here if handled by main-content -->
-
-            <!-- Breadcrumb & Actions -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div class="breadcrumb" id="breadcrumb" style="margin-bottom: 0;">
-                    <span class="breadcrumb-item active" onclick="resetView()">Home</span>
-                </div>
-
+        <!-- Stats Widgets -->
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+                <div class="stat-value">{{ $totalDocuments ?? 0 }}</div>
+                <div class="stat-label">Total Dokumen</div>
             </div>
+            <div class="stat-card success">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-value">{{ $publishedDocuments ?? 0 }}</div>
+                <div class="stat-label">Terpublikasi</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-icon"><i class="fas fa-building"></i></div>
+                <div class="stat-value">{{ $departemens->count() ?? 0 }}</div>
+                <div class="stat-label">Departemen</div>
+            </div>
+            <div class="stat-card" style="border-bottom: 4px solid #0ea5e9;">
+                <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;"><i class="fas fa-layer-group"></i></div>
+                <div class="stat-value">{{ $units->count() ?? 0 }}</div>
+                <div class="stat-label">Unit Kerja</div>
+            </div>
+        </div>
 
+        <!-- All Published Documents Table -->
+        <div class="table-section" style="margin-bottom: 40px;">
+            <div class="table-header">
+                <h3>Semua Dokumen Terpublikasi</h3>
+                <div style="font-size: 13px; color: #64748b;">
+                    Total: {{ $documents->count() }} Dokumen
+                </div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse: collapse;">
+                    <thead style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                        <tr>
+                            <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase;">Judul ID</th>
+                            <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase;">Judul Dokumen</th>
+                            <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase;">Unit Kerja</th>
+                            <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase;">Kategori</th>
+                            <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase;">Tanggal</th>
+                            <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($documents as $doc)
+                        <tr style="border-bottom:1px solid #f1f5f9; transition:background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                            <td style="padding:16px 24px; color:#64748b; font-size:12px;">#{{ $doc['id'] }}</td>
+                            <td style="padding:16px 24px; font-weight:500; color:#334155;">{{ $doc['title'] }}</td>
+                            <td style="padding:16px 24px;">{{ $doc['unit'] }}</td>
+                            <td style="padding:16px 24px;">
+                                <span style="background: {{ ($doc['category'] == 'SHE') ? '#dcfce7' : '#e0f2fe' }}; 
+                                             color: {{ ($doc['category'] == 'SHE') ? '#166534' : '#075985' }}; 
+                                             padding:4px 10px; border-radius:99px; font-size:11px; font-weight:600;">
+                                    {{ $doc['category'] ?? '-' }}
+                                </span>
+                            </td>
+                            <td style="padding:16px 24px; color:#64748b;">{{ $doc['date'] }}</td>
+                            <td style="padding:16px 24px;">
+                                <div class="action-btns" style="display:flex; gap:6px;">
+                                    <a href="/documents/{{ $doc['id'] }}/published?filter={{ $doc['category'] }}" class="btn-icon" style="background:#3b82f6; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; color:white; text-decoration:none;" title="Lihat Detail"><i class="fas fa-eye"></i></a>
+                                    <a href="#" class="btn-icon" style="background:#ef4444; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; color:white; text-decoration:none;" title="Download PDF"><i class="fas fa-file-pdf"></i></a>
+                                    <a href="#" class="btn-icon" style="background:#10b981; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; color:white; text-decoration:none;" title="Download Excel"><i class="fas fa-file-excel"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" style="padding:40px; text-align:center; color:#94a3b8;">Tidak ada dokumen terpublikasi saat ini</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination if available -->
+            @if(method_exists($documents, 'links'))
+            <div style="padding: 16px 24px; border-top: 1px solid #e2e8f0;">
+                {{ $documents->links('pagination::bootstrap-4') }}
+            </div>
+            @endif
+        </div>
+
+        <div class="content-area"> 
             <!-- Dynamic Content (Accordion) -->
             <div id="dynamicContent"></div>
         </div>
@@ -185,8 +486,8 @@
 
     <script>
         @php
-             // Preparing data for JS
-             $departmentsData = $departemens->map(fn($d) => [
+            // Preparing data for JS
+            $departmentsData = $departemens->map(fn($d) => [
                 'id_dept' => is_array($d) ? $d['id_dept'] : $d->id_dept,
                 'nama_dept' => is_array($d) ? $d['nama_dept'] : $d->nama_dept
             ]);
@@ -209,7 +510,7 @@
         let selectedDept = null;
         let selectedUnit = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
+       document.addEventListener('DOMContentLoaded', () => {
              // Init with departments
             renderDepartments();
         });
@@ -220,17 +521,17 @@
             selectedUnit = null;
             updateBreadcrumb();
 
-            const container = document.getElementById('dynamicContent');
+const container = document.getElementById('dynamicContent');
             
-            if (departments.length === 0) {
-                 container.innerHTML = `<div style="text-align:center; padding:50px; color:#999;"><i class="fas fa-building" style="font-size:40px; margin-bottom:15px;"></i><p>Tidak ada departemen ditemukan.</p></div>`;
+           if (departments.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:50px; color:#999;"><i class="fas fa-building" style="font-size:40px; margin-bottom:15px;"></i><p>Tidak ada departemen ditemukan.</p></div>`;
                  return;
             }
 
-            let html = '<div class="accordion-container">';
+let html = '<div class="accordion-container">';
             
             // 1. Regular Departments
-            const regularDepts = departments.filter(d => d.id_dept != 0 && d.id_dept != 93);
+const regularDepts = departments.filter(d => d.id_dept != 0 && d.id_dept != 93);
             
             regularDepts.forEach(dept => {
                 const deptUnits = units.filter(u => u.id_dept == dept.id_dept);
@@ -273,7 +574,7 @@
             const unassignedDept = departments.find(d => d.id_dept == 0);
             if (unassignedDept) {
                 const directUnits = units.filter(u => u.id_dept == 0 && u.id_unit != 0);
-                if (directUnits.length > 0) {
+               if (directUnits.length > 0) {
                      directUnits.forEach(unit => {
                         html += `
                             <div class="accordion-item" onclick="selectUnit(${unit.id_unit}, '${unit.nama_unit.replace(/'/g, "\\'")}', 0)" style="cursor:pointer;">
@@ -297,9 +598,9 @@
         function toggleDepartment(id) {
             const body = document.getElementById(`dept-${id}`);
             if (!body) return;
-            const header = body.previousElementSibling;
+const header = body.previousElementSibling;
             
-            const isShown = body.classList.contains('show');
+const isShown = body.classList.contains('show');
             
             document.querySelectorAll('.accordion-body').forEach(el => el.classList.remove('show'));
             document.querySelectorAll('.accordion-header').forEach(el => el.classList.remove('active'));
@@ -313,11 +614,11 @@
         function selectDepartment(id, name) {
             renderDepartments();
             setTimeout(() => {
-                const body = document.getElementById(`dept-${id}`);
+                co nst body = document.getElementById(`dept-${id}`);
                 if(body) {
                     body.classList.add('show');
-                    body.previousElementSibling.classList.add('active');
-                    body.parentElement.scrollIntoView({behavior: 'smooth'});
+                    body.previousElementSibling.classLi st.add('active');
+                     body.parentElement.scrollIntoView({behavior: 'smooth'});
                 }
             }, 50);
         }
@@ -329,8 +630,8 @@
             currentLevel = 'docs';
             updateBreadcrumb();
 
-            const container = document.getElementById('dynamicContent');
-            
+const container = document.getElementById('dynamicContent');
+           
              // Show Loading
             container.innerHTML = `<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin" style="font-size: 30px; color: #c41e3a;"></i><br><br>Memuat dokumen...</div>`;
 
@@ -344,7 +645,7 @@
                         if (!documents.some(d => d.id === newDoc.id)) {
                             documents.push(newDoc);
                         }
-                    });
+});
                     
                     // After fetching, render the documents with the new function
                     renderUnitDocs(id, name, deptId, 'ALL');
@@ -353,6 +654,34 @@
                     console.error('Error fetching docs:', error);
                     container.innerHTML = `<div style="text-align: center; padding: 20px; color: red;">Gagal memuat dokumen. Silakan coba lagi.</div>`;
                 });
+        }
+
+        function updateBreadcrumb() {
+            const bc = document.getElementById('breadcrumb');
+            let html = `<div class="breadcrumb">`; // Added wrapper with class
+            html += `<span class="breadcrumb-item" onclick="renderDepartments()"><i class="fas fa-home"></i> Home</span>`;
+
+            if (currentLevel === 'unit' || currentLevel === 'docs') {
+                 if (selectedDept) {
+                     html += `
+                        <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                        <span class="breadcrumb-item" onclick="selectDepartment(${selectedDept.id}, '${selectedDept.name.replace(/'/g, "\\'")}')">
+                            <i class="fas fa-building" style="margin-right:5px; opacity:0.7;"></i> ${selectedDept.name}
+                        </span>
+                    `;
+                 }
+            }
+
+            if (currentLevel === 'docs' && selectedUnit) {
+                html += `
+                    <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                    <span class="breadcrumb-item active">
+                        <i class="fas fa-layer-group" style="margin-right:5px; opacity:0.7;"></i> ${selectedUnit.name}
+                    </span>
+                `;
+            }
+            html += `</div>`; // Close wrapper
+            bc.innerHTML = html;
         }
 
         function renderUnitDocs(id, name, deptId, filterCategory = 'ALL') {
@@ -384,38 +713,44 @@
  
              let html = `
                  <div class="table-section">
-                     <div class="table-header" style="flex-wrap: wrap; gap: 10px;">
+                     <div class="table-header">
                          <div>
-                             <h2 style="margin-bottom:5px;">Dokumen Terpublikasi - ${name}</h2>
-                             <div style="font-size:12px; color:#666;">Menampilkan kategori: <b>${filterCategory}</b></div>
+                             <h2 style="margin:0 0 5px 0; font-size:18px;">Dokumen Terpublikasi - ${name}</h2>
+                             <div style="font-size:13px; color:#64748b;">Menampilkan kategori: <b>${filterCategory}</b></div>
                          </div>
-                         <div style="display:flex; gap:10px; align-items:center;">
-                             <select onchange="renderUnitDocs(${id}, '${name.replace(/'/g, "\\'")}', ${deptId}, this.value)" style="padding:6px 12px; border-radius:6px; border:1px solid #ddd; font-size:13px; color:#333; cursor:pointer;">
+                         <div style="display:flex; gap:12px; align-items:center;">
+                             <select onchange="renderUnitDocs(${id}, '${name.replace(/'/g, "\\'")}', ${deptId}, this.value)" 
+                                style="padding:8px 16px; border-radius:8px; border:1px solid #e2e8f0; font-size:13px; color:#1e293b; cursor:pointer; background:white; outline:none;">
                                  <option value="ALL" ${filterCategory === 'ALL' ? 'selected' : ''}>Semua Kategori</option>
                                  ${categories.map(c => `<option value="${c}" ${filterCategory === c ? 'selected' : ''}>${c}</option>`).join('')}
                              </select>
-                             <button class="btn-action" style="background:#666;" onclick="selectDepartment(${deptId})"><i class="fas fa-arrow-left"></i> Kembali</button>
+                             <button class="btn-action" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; box-shadow:none;" onclick="selectDepartment(${deptId})">
+                                <i class="fas fa-arrow-left"></i> Kembali
+                             </button>
                          </div>
                      </div>
              `;
  
              if (unitDocs.length === 0) {
                  html += `
-                     <div style="text-align: center; padding: 40px; color: #999;">
-                         <i class="fas fa-filter" style="font-size:30px; margin-bottom:10px;"></i>
-                         <p>Tidak ada dokumen terpublikasi untuk kategori <b>${filterCategory}</b>.</p>
+                     <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
+                         <div style="background:#f1f5f9; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                            <i class="fas fa-filter" style="font-size:24px; color:#cbd5e1;"></i>
+                         </div>
+                         <p style="margin:0;">Tidak ada dokumen terpublikasi untuk kategori ini.</p>
                      </div>`;
              } else {
                  html += `
-                     <table class="custom-table" style="width:100%; border-collapse: collapse;">
-                         <thead style="background:#fff; border-bottom:2px solid #f0f0f0;">
+                     <div style="overflow-x:auto;">
+                     <table style="width:100%; border-collapse: collapse;">
+                         <thead style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
                              <tr>
-                                 <th style="padding:15px; text-align:left;">Judul Dokumen</th>
-                                 <th style="padding:15px; text-align:left;">Unit Pengelola</th>
-                                 <th style="padding:15px; text-align:left;">Penulis</th>
-                                 <th style="padding:15px; text-align:left;">Tanggal</th>
-                                 <th style="padding:15px; text-align:left;">Status</th>
-                                 <th style="padding:15px; text-align:left;">Aksi</th>
+                                 <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Judul Dokumen</th>
+                                 <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Kategori</th>
+                                 <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Penulis</th>
+                                 <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Tanggal</th>
+                                 <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Status</th>
+                                 <th style="padding:16px 24px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Aksi</th>
                              </tr>
                          </thead>
                          <tbody>
@@ -423,20 +758,20 @@
  
                  unitDocs.forEach(doc => {
                      // Category Badge Color
-                     let catColor = '#e0e0e0';
-                     let catText = '#333';
+                     let catColor = '#f1f5f9';
+                     let catText = '#475569';
                      if(doc.category == 'SHE') { catColor = '#dcfce7'; catText = '#166534'; }
                      else if(doc.category == 'Security') { catColor = '#e0f2fe'; catText = '#075985'; }
  
                      html += `
-                         <tr style="border-bottom:1px solid #eee;">
-                             <td style="padding:15px;">${doc.title}</td>
-                             <td style="padding:15px;"><span class="status-pill" style="background:${catColor}; color:${catText};">${doc.category || '-'}</span></td>
-                             <td style="padding:15px;">${doc.author}</td>
-                             <td style="padding:15px;">${doc.date}</td>
-                             <td style="padding:15px;"><span class="status-pill" style="background:#e8f5e9; color:#2e7d32; padding:4px 12px; border-radius:15px; font-size:11px; font-weight:700;">DISETUJUI</span></td>
-                             <td style="padding:15px;">
-                                 <a href="/documents/${doc.id}/published?filter=${doc.category}" class="btn-action">
+                         <tr style="border-bottom:1px solid #f1f5f9; transition:background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                             <td style="padding:16px 24px; font-weight:500; color:#334155;">${doc.title}</td>
+                             <td style="padding:16px 24px;"><span style="background:${catColor}; color:${catText}; padding:4px 10px; border-radius:99px; font-size:11px; font-weight:600;">${doc.category || '-'}</span></td>
+                             <td style="padding:16px 24px; color:#64748b;">${doc.author}</td>
+                             <td style="padding:16px 24px; color:#64748b;">${doc.date}</td>
+                             <td style="padding:16px 24px;"><span style="background:#dcfce7; color:#166534; padding:4px 10px; border-radius:99px; font-size:11px; font-weight:700;">DISETUJUI</span></td>
+                             <td style="padding:16px 24px;">
+                                 <a href="/documents/${doc.id}/published?filter=${doc.category}" class="btn-action" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
                                      <i class="fas fa-eye"></i> Detail
                                  </a>
                              </td>
@@ -447,33 +782,9 @@
                  html += `</tbody></table></div>`;
              }
              
-             html += `</div>`;
+             html += `</div></div>`; // Close Header and container
              container.innerHTML = html;
          }
-
-        function updateBreadcrumb() {
-            const bc = document.getElementById('breadcrumb');
-            let html = `<span class="breadcrumb-item" onclick="renderDepartments()">Home</span>`;
-
-            if (currentLevel === 'unit' || currentLevel === 'docs') {
-                 if (selectedDept) {
-                     html += `
-                        <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
-                        <span class="breadcrumb-item" onclick="selectDepartment(${selectedDept.id}, '${selectedDept.name.replace(/'/g, "\\'")}')">
-                            ${selectedDept.name}
-                        </span>
-                    `;
-                 }
-            }
-
-            if (currentLevel === 'docs' && selectedUnit) {
-                html += `
-                    <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
-                    <span class="breadcrumb-item active">${selectedUnit.name}</span>
-                `;
-            }
-            bc.innerHTML = html;
-        }
 
         function resetView() {
             renderDepartments();

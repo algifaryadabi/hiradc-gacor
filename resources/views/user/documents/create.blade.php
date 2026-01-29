@@ -446,6 +446,27 @@
             border-color: #cbd5e1;
         }
 
+        .form-control:disabled,
+        .form-control:read-only {
+            background: #f8fafc;
+            color: #64748b;
+            cursor: not-allowed;
+            border-color: #e2e8f0;
+        }
+
+        /* Select elements should have pointer cursor when enabled */
+        select.form-control:not(:disabled) {
+            cursor: pointer;
+            background: white;
+            color: #0f172a;
+        }
+
+        select.form-control:disabled {
+            cursor: not-allowed;
+            background: #f8fafc;
+            color: #64748b;
+        }
+
         .form-control:focus {
             outline: none;
             border-color: var(--primary-color);
@@ -456,14 +477,6 @@
         .form-control::placeholder {
             color: #94a3b8;
             font-weight: 400;
-        }
-
-        .form-control:disabled,
-        .form-control:read-only {
-            background: #f8fafc;
-            color: #64748b;
-            cursor: not-allowed;
-            border-color: #e2e8f0;
         }
 
         textarea.form-control {
@@ -881,16 +894,27 @@
                                 <select class="form-control category-select" name="items[{index}][kategori]" required
                                     onchange="updateConditions(this)">
                                     <option value="">-- Pilih --</option>
-                                    <option value="K3">K3 - Kesehatan & Keselamatan</option>
-                                    <option value="KO">KO - Keselamatan Operasional</option>
-                                    <option value="Lingkungan">Lingkungan</option>
-                                    <option value="Keamanan">Keamanan</option>
+                                    @if(Auth::user()->id_unit == 55)
+                                        {{-- Security Unit: Only Keamanan --}}
+                                        <option value="Keamanan">Keamanan</option>
+                                    @elseif(Auth::user()->id_unit == 56)
+                                        {{-- SHE Unit: Only K3, KO, Lingkungan --}}
+                                        <option value="K3">K3 - Kesehatan & Keselamatan</option>
+                                        <option value="KO">KO - Keselamatan Operasional</option>
+                                        <option value="Lingkungan">Lingkungan</option>
+                                    @else
+                                        {{-- Other Units: All categories --}}
+                                        <option value="K3">K3 - Kesehatan & Keselamatan</option>
+                                        <option value="KO">KO - Keselamatan Operasional</option>
+                                        <option value="Lingkungan">Lingkungan</option>
+                                        <option value="Keamanan">Keamanan</option>
+                                    @endif
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Kondisi <span class="required">*</span></label>
                                 <select class="form-control condition-select" name="items[{index}][kolom5_kondisi]"
-                                    required>
+                                    required disabled>
                                     <option value="">-- Pilih Kategori Dulu --</option>
                                 </select>
                             </div>
@@ -1349,12 +1373,35 @@
         const autoProbis = document.getElementById('auto_probis_value').value;
 
         // Static Options Data
-        const categories = {
+        const userUnitId = {{ Auth::user()->id_unit }};
+
+        // Complete Categories Data
+        const allCategories = {
             'K3': { label: 'K3', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
             'KO': { label: 'KO', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
             'Lingkungan': { label: 'Lingkungan', conditions: ['Normal', 'Abnormal', 'Emergency'] },
             'Keamanan': { label: 'Keamanan', conditions: ['Emergency'] }
         };
+
+        // Filter Categories based on User Unit (Cross-Audit Rule)
+        let categories = {};
+
+        if (userUnitId == 55) {
+            // Unit Security (55) -> Only Keamanan
+            categories = {
+                'Keamanan': allCategories['Keamanan']
+            };
+        } else if (userUnitId == 56) {
+            // Unit SHE (56) -> Only K3, KO, Lingkungan
+            categories = {
+                'K3': allCategories['K3'],
+                'KO': allCategories['KO'],
+                'Lingkungan': allCategories['Lingkungan']
+            };
+        } else {
+            // Normal Users -> All Categories
+            categories = allCategories;
+        }
 
 
 
@@ -1513,6 +1560,7 @@
 
             // 3. Populate Conditions Dropdown
             if (categories[cat]) {
+                condSelect.disabled = false; // Enable the dropdown
                 categories[cat].conditions.forEach(c => {
                     const opt = document.createElement('option');
                     opt.value = c;
@@ -1570,6 +1618,8 @@
                     if (k3KoField) k3KoField.querySelectorAll('input').forEach(i => i.disabled = true);
                     if (lingkunganField) lingkunganField.querySelectorAll('input').forEach(i => i.disabled = true);
                 }
+            } else {
+                condSelect.disabled = true; // Keep disabled if no category selected
             }
         }
 

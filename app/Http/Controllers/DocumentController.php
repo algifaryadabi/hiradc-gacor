@@ -1355,22 +1355,33 @@ class DocumentController extends Controller
             $document->update($dataToUpdate);
 
             // B. Handle Approval Workflow
+            // B. Handle Approval Workflow
             if ($document->current_level == 1) {
-                // Level 1 Approval (Kepala Unit Asal) -> Move to Level 2 (Unit Pengelola)
+                // Level 1 Approval (Kepala Unit Asal)
+                $owner = $document->user; // or $document->user()->first() if relation
 
-                // Ensure we have fresh data (especially if details were updated indirectly or headers changed)
-                $document->refresh();
+                // BYPASS RULE 1: Unit Pengelola (SHE/Security) Creators with No Dept -> Publish Immediately
+                $isUnitPengelolaCreator = in_array($owner->id_unit, [55, 56]) && $owner->id_dept == 0;
 
-                // Initialize Split Statuses
-                $sheStatus = $document->hasSheContent() ? 'pending_head' : 'none';
-                $secStatus = $document->hasSecurityContent() ? 'pending_head' : 'none';
+                if ($isUnitPengelolaCreator) {
+                    $document->update([
+                        'status' => 'published',
+                        'published_at' => now(),
+                        'current_level' => 4 // Finished
+                    ]);
+                } else {
+                    // Normal Flow -> Move to Level 2
+                    $document->refresh();
+                    $sheStatus = $document->hasSheContent() ? 'pending_head' : 'none';
+                    $secStatus = $document->hasSecurityContent() ? 'pending_head' : 'none';
 
-                $document->update([
-                    'current_level' => 2,
-                    'status' => 'pending_level2', // Global status
-                    'status_she' => $sheStatus,
-                    'status_security' => $secStatus,
-                ]);
+                    $document->update([
+                        'current_level' => 2,
+                        'status' => 'pending_level2',
+                        'status_she' => $sheStatus,
+                        'status_security' => $secStatus,
+                    ]);
+                }
 
                 // Create History Record
                 $document->approvals()->create([
@@ -1428,14 +1439,22 @@ class DocumentController extends Controller
                 $document->refresh();
 
                 if ($document->isSheApproved() && $document->isSecurityApproved()) {
-                    // IF both are done, we CAN move to 3, or we can keep it 2 and let Level 3 finish individually.
-                    // User request: "Partial approval".
-                    // So we DON'T strictly force level 3 here unless we want to signal "Both Ready".
-                    // Let's keep curr_level 2 but status 'partial_ready' or just rely on status_she/sec.
-                    // Actually, let's set a flag or just leave it. The Head Dept Query handles curr_level=2 + status_she=approved.
-
-                    // Optional: If both ready, maybe update main status?
-                    $document->update(['status' => 'pending_level3_ready']);
+                    // BYPASS RULE 2: Non-Dept Units (id_dept = 0) -> Publish Immediately after L2
+                    $owner = $document->user;
+                    if ($owner->id_dept == 0) {
+                        $document->update([
+                            'status' => 'published',
+                            'published_at' => now(),
+                            'current_level' => 4
+                        ]);
+                    } else {
+                        // Normal Flow -> Move to Level 3 (Kepala Departemen)
+                        $document->update(['status' => 'pending_level3_ready']);
+                        // Note: We don't auto-increment current_level to 3 here due to "Parallel Partial" logic preference,
+                        // BUT standard flow usually implies moving to 3. If "pending_level3_ready" is picked up by L3 view, it's fine.
+                        // However, to ensure it appears in L3 pending list, usually we might set current_level=3 if strict.
+                        // For now, let's keep status update.
+                    }
                 }
 
                 // Create History Record (Level 2)
@@ -2454,12 +2473,22 @@ class DocumentController extends Controller
             return false;
         });
 
+        // 5. My Unit Internal Stats (Dokumen Internal)
+        // Documents created by users in THIS unit
+        $myUnitDocs = Document::where('id_unit', $user->id_unit)->get();
+        $myUnitStats = [
+            'pending' => $myUnitDocs->whereNotIn('status', ['published', 'approved'])->count(), // Waiting
+            'approved' => $myUnitDocs->where('status', 'approved')->count(), // Approved (but maybe not published?)
+            'published' => $myUnitDocs->where('status', 'published')->count(), // Final
+        ];
+
         return view('unit_pengelola.documents.index', compact(
             'documents',
             'pendingDocuments',
             'inProgressDocuments',
             'finalDecisionDocuments',
-            'approvedByMe'
+            'approvedByMe',
+            'myUnitStats'
         ));
     }
 
@@ -2583,7 +2612,14 @@ class DocumentController extends Controller
         $direktorats = \App\Models\Direktorat::where('status_aktif', 1)->get();
         $departemens = \App\Models\Departemen::all();
         $units = \App\Models\Unit::all();
+        $units = \App\Models\Unit::all();
         $seksis = \App\Models\Seksi::all();
+
+        // 1b. Fetch Users in My Unit (For Management Tab)
+        $unitUsers = \App\Models\User::where('id_unit', $user->id_unit)
+            ->where('id_user', '!=', $user->id_user) // Exclude myself
+            ->orderBy('nama_user')
+            ->get();
 
         // 2. Fetch Pending Documents (Waiting for Unit Pengelola Head)
         $allowedCategories = [];
@@ -2667,9 +2703,12 @@ class DocumentController extends Controller
             'direktorats',
             'departemens',
             'units',
-            'seksis'
+            'seksis',
+            'unitUsers'
         ));
     }
+
+
 
     // NEW: Unit Pengelola Dashboard Data (AJAX)
     public function getUnitPengelolaDashboardData(Request $request)
@@ -2814,5 +2853,34 @@ class DocumentController extends Controller
             'status' => $document->status,
             'status_label' => $statusLabel
         ]);
+    }
+    // NEW: Update Unit Permissions (AJAX)
+    public function updateUnitPermissions(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id_user',
+            'is_reviewer' => 'sometimes|boolean',
+            'is_verifier' => 'sometimes|boolean',
+            'can_create_documents' => 'sometimes|boolean',
+        ]);
+
+        $currentUser = Auth::user();
+        $targetUser = \App\Models\User::findOrFail($request->user_id);
+
+        // Security Check: User must be Unit Head of same unit
+        if ($currentUser->id_unit != $targetUser->id_unit || !$currentUser->isKepalaUnit()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        if ($request->has('is_reviewer'))
+            $targetUser->is_reviewer = $request->is_reviewer;
+        if ($request->has('is_verifier'))
+            $targetUser->is_verifier = $request->is_verifier;
+        if ($request->has('can_create_documents'))
+            $targetUser->can_create_documents = $request->can_create_documents;
+
+        $targetUser->save();
+
+        return response()->json(['success' => true]);
     }
 }

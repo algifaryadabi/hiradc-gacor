@@ -198,6 +198,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/unit-pengelola/documents/{document}/submit-review', [DocumentController::class, 'submitReviewUnit'])->name('unit_pengelola.submit_review');
     Route::post('/unit-pengelola/documents/{document}/verify', [DocumentController::class, 'verifyUnit'])->name('unit_pengelola.verify');
     Route::post('/unit-pengelola/documents/update-detail/{id}', [DocumentController::class, 'updateDetail'])->name('unit_pengelola.update_detail');
+    Route::post('/unit-pengelola/update-permissions', [DocumentController::class, 'updateUnitPermissions'])->name('unit_pengelola.update_permissions');
     Route::get('/unit-pengelola/documents/get-item-html/{id}', [DocumentController::class, 'getEditItemHtml'])->name('unit_pengelola.get_edit_item');
 
     // ==================== KEPALA DEPARTEMEN ROUTES ====================

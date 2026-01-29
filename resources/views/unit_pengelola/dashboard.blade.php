@@ -4,11 +4,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - HIRADC System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Dashboard Unit Pengelola | HIRADC System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* ========================================
+           DESIGN SYSTEM - CSS CUSTOM PROPERTIES
+           ======================================== */
+        :root {
+            /* Brand Colors - PT Semen Padang */
+            --primary: #c41e3a;
+            --primary-dark: #9a1829;
+            --primary-light: #e63950;
+            --primary-50: #fef2f3;
+            --primary-100: #fce7e9;
+            --primary-200: #f9d0d4;
+            --primary-600: #c41e3a;
+
+            /* Neutral Palette */
+            --gray-50: #fafafa;
+            --gray-100: #f5f5f5;
+            --gray-200: #e5e5e5;
+            --gray-300: #d4d4d4;
+            --gray-400: #a3a3a3;
+            --gray-500: #737373;
+            --gray-600: #525252;
+            --gray-700: #404040;
+            --gray-800: #262626;
+            --gray-900: #171717;
+
+            /* Surface & Background */
+            --bg-body: #f1f5f9;
+            --surface: #ffffff;
+            --surface-hover: #f9fafb;
+            --border: #e2e8f0;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+            /* Spacing */
+            --space-4: 1rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+
+            /* Border Radius */
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --radius-full: 9999px;
+
+            /* Fonts */
+            --font-sans: 'Plus Jakarta Sans', sans-serif;
+            --font-weight-bold: 700;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -16,9 +69,14 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #f5f5f5;
-            color: #333;
+            font-family: var(--font-sans);
+            background: var(--bg-body);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(196, 30, 58, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--gray-900);
+            min-height: 100vh;
         }
 
         .container {
@@ -26,128 +84,144 @@
             min-height: 100vh;
         }
 
-        /* Sidebar */
+        /* Sidebar - Exact Clone of User Dashboard */
         .sidebar {
-            width: 250px;
-            background: white;
-            border-right: 1px solid #e0e0e0;
+            width: 280px;
+            background: #5b6fd8;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             position: fixed;
             height: 100vh;
             display: flex;
             flex-direction: column;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
         }
 
         .logo-section {
-            padding: 30px 20px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: var(--space-8) var(--space-6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             text-align: center;
+            background: transparent;
+            position: relative;
+        }
+
+        .logo-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
         }
 
         .logo-circle {
-            width: 70px;
-            height: 70px;
-            background: #fff;
-            border-radius: 50%;
-            margin: 0 auto 15px;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 1.25rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: white;
+            border-radius: 50%;
             overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .logo-circle:hover {
+            transform: scale(1.05);
         }
 
         .logo-circle img {
-            max-width: 80%;
-            max-height: 80%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
 
         .logo-text {
-            font-size: 18px;
+            font-size: 1.125rem;
             font-weight: 700;
-            color: #c41e3a;
-            margin-bottom: 3px;
+            color: white;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.02em;
         }
 
         .logo-subtext {
-            font-size: 12px;
-            color: #999;
-            font-style: italic;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .nav-menu {
             flex: 1;
-            padding: 20px 0;
+            padding: 1.5rem 0;
             overflow-y: auto;
         }
 
         .nav-item {
-            padding: 15px 25px;
+            padding: 1rem 1.5rem;
+            margin: 0.25rem 1rem;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 0.75rem;
             cursor: pointer;
-            transition: all 0.3s;
-            color: #666;
-            font-size: 14px;
+            transition: all 0.2s;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.9375rem;
             font-weight: 500;
             text-decoration: none;
             position: relative;
+            border-radius: 0.75rem;
         }
 
         .nav-item:hover {
-            background: #fff5f5;
-            color: #c41e3a;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(4px);
         }
 
         .nav-item.active {
-            background: #ffe5e5;
-            color: #c41e3a;
-            border-left: 3px solid #c41e3a;
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         .nav-item i {
             width: 20px;
             text-align: center;
-            font-size: 16px;
+            font-size: 1.125rem;
         }
 
-        .badge {
-            position: absolute;
-            right: 20px;
-            background: #c41e3a;
-            color: white;
-            font-size: 10px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-
-        /* User Info at Bottom */
         .user-info-bottom {
-            padding: 20px;
-            border-top: 2px solid #e0e0e0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            background: transparent;
         }
 
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
         }
 
         .user-avatar {
-            width: 45px;
-            height: 45px;
+            width: 48px;
+            height: 48px;
             background: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #667eea;
+            color: #5b6fd8;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 1.125rem;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .user-details {
@@ -157,7 +231,7 @@
 
         .user-name {
             font-weight: 600;
-            font-size: 14px;
+            font-size: 0.9375rem;
             color: white;
             white-space: nowrap;
             overflow: hidden;
@@ -165,184 +239,111 @@
         }
 
         .user-role {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 2px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
         }
 
         .logout-btn {
             width: 100%;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.2);
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.15);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 0.5rem;
             text-decoration: none;
         }
 
         .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
         }
 
         /* Main Content */
         .main-content {
             flex: 1;
-            margin-left: 250px;
+            margin-left: 280px;
+            padding: 0;
+            background: var(--bg-body);
         }
 
         .header {
-            background: white;
-            padding: 25px 40px;
-            border-bottom: 1px solid #e0e0e0;
+            background: linear-gradient(135deg, #ffffff 0%, #fef2f3 100%);
+            padding: var(--space-8) var(--space-10);
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
         .header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            letter-spacing: -0.02em;
         }
 
         .content-area {
-            padding: 30px 40px;
+            padding: var(--space-10);
+            max-width: 1600px;
+            margin: 0 auto;
         }
 
-
-        /* ADD Accordion Styles */
-        .accordion-container {
-            max-width: 100%;
-            margin-top: 20px;
-        }
-
-        .accordion-item {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            overflow: hidden;
-            transition: all 0.3s;
-        }
-
-        .accordion-item:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .accordion-header {
-            padding: 15px 20px;
-            cursor: pointer;
+        /* Tabs System */
+        .nav-tabs {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #fff;
-            transition: background 0.2s;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1px;
         }
 
-        .accordion-header:hover {
-            background: #f8f9fa;
-        }
-
-        .accordion-header.active {
-            background: #f0f7ff;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .dept-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .dept-icon {
-            width: 36px;
-            height: 36px;
-            background: #e3f2fd;
-            color: #1565c0;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-
-        .dept-name {
+        .nav-link {
+            padding: 0.75rem 1.5rem;
             font-weight: 600;
-            color: #333;
-            font-size: 15px;
-        }
-
-        .accordion-icon {
-            color: #999;
-            transition: transform 0.3s;
-        }
-
-        .accordion-header.active .accordion-icon {
-            transform: rotate(180deg);
-            color: #1565c0;
-        }
-
-        .accordion-body {
-            display: none;
-            background: #fafafa;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .accordion-body.show {
-            display: block;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .unit-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .unit-item {
-            padding: 12px 20px 12px 60px;
-            border-bottom: 1px solid #eee;
+            color: var(--gray-500);
             cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            color: #555;
+            border-bottom: 3px solid transparent;
             transition: all 0.2s;
         }
 
-        .unit-item:last-child {
-            border-bottom: none;
+        .nav-link:hover {
+            color: var(--primary);
+            background: rgba(196, 30, 58, 0.05);
+            border-radius: 0.5rem 0.5rem 0 0;
         }
 
-        .unit-item:hover {
-            background: #fff;
-            color: #c41e3a;
-            padding-left: 65px;
+        .nav-link.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
         }
 
-        .unit-item i {
-            opacity: 0;
-            transition: opacity 0.2s;
+        /* Containers to Toggle */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
         }
 
-        .unit-item:hover i {
-            opacity: 1;
+        .tab-content.active {
+            display: block;
         }
 
-        @keyframes slideDown {
+        @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(-10px);
+                transform: translateY(10px);
             }
 
             to {
@@ -351,240 +352,182 @@
             }
         }
 
-        /* Breadcrumb */
-        .breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 25px;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .breadcrumb-item {
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .breadcrumb-item:hover {
-            color: #c41e3a;
-            text-decoration: underline;
-        }
-
-        .breadcrumb-item.active {
-            font-weight: 600;
-            color: #333;
-            cursor: default;
-            text-decoration: none;
-        }
-
-        .breadcrumb-separator {
-            color: #ccc;
-            font-size: 12px;
-        }
-
-        /* Table Section */
+        /* Table Components (Shared) */
         .table-section {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
             overflow: hidden;
-            border: 1px solid #eee;
-            animation: fadeIn 0.3s ease-out;
-            margin-top: 20px;
+            border: 1px solid var(--border);
         }
 
-        .table-header {
-            padding: 20px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eee;
-            background-color: #fbfbfb;
-        }
-
-        .table-header h2 {
-            margin: 0;
-            font-size: 18px;
-            color: #333;
-        }
-
-        table {
+        .custom-table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        th,
-        td {
-            padding: 15px 25px;
+        .custom-table th {
+            background: var(--gray-50);
+            padding: 1rem 1.5rem;
             text-align: left;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        th {
-            background: #fafafa;
-            font-weight: 600;
-            color: #666;
-            font-size: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
             text-transform: uppercase;
+            color: var(--gray-500);
+            border-bottom: 1px solid var(--border);
         }
 
-        td {
-            font-size: 14px;
-            color: #333;
+        .custom-table td {
+            padding: 1rem 1.5rem;
+            font-size: 0.9375rem;
+            color: var(--gray-900);
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
         }
 
-        .badge-status {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
+        .custom-table tr:hover {
+            background: var(--surface-hover);
         }
 
-        .btn-action {
-            padding: 6px 14px;
-            background: #c41e3a;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 500;
-            transition: background 0.2s;
-            cursor: pointer;
-            display: inline-block;
-        }
-
-        .btn-action:hover {
-            background: #a01729;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 9999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-            font-family: 'Inter', sans-serif;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 0;
-            border: 1px solid #888;
-            width: 600px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        /* Toggle Switch */
+        .switch {
             position: relative;
-            animation: slideDown 0.3s ease-out;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
         }
 
-        .modal-header {
-            padding: 20px 30px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
         }
 
-        .modal-header h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #333;
-            margin: 0;
-        }
-
-        .close-btn {
-            color: #aaa;
-            font-size: 24px;
-            font-weight: bold;
+        .slider {
+            position: absolute;
             cursor: pointer;
-            transition: color 0.2s;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 34px;
         }
 
-        .close-btn:hover {
-            color: #c41e3a;
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        .modal-body {
-            padding: 30px;
+        input:checked+.slider {
+            background-color: var(--primary);
         }
 
-        .section-title {
-            font-size: 14px;
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
             font-weight: 700;
-            color: #c41e3a;
-            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-badge.reviewer {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .status-badge.verifier {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .status-badge.user {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .permission-label {
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .section-title.green {
-            color: #2e7d32;
-        }
-
-        .info-row {
-            display: flex;
-            margin-bottom: 15px;
-            align-items: flex-start;
-        }
-
-        .info-label {
-            width: 140px;
-            font-size: 14px;
-            color: #888;
-            font-weight: 500;
-        }
-
-        .info-value {
-            flex: 1;
-            font-size: 14px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .risk-high {
-            color: #c41e3a;
-            font-weight: 700;
-        }
-
-        .status-pill {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .approval-box {
-            background-color: #f1f8e9;
-            border-left: 4px solid #2e7d32;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-        .approval-text {
-            font-size: 13px;
-            color: #33691e;
-            line-height: 1.5;
-        }
-
-        .approval-header {
-            font-weight: 700;
             margin-bottom: 5px;
-            color: #1b5e20;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        /* Accordion Styles (Migrated) */
+        .accordion-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .accordion-header {
+            padding: 1.25rem 1.5rem;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            background: white;
+        }
+
+        .accordion-header:hover {
+            background: var(--gray-50);
+        }
+
+        .accordion-header.active {
+            background: #eff6ff;
+        }
+
+        .dept-icon {
+            width: 40px;
+            height: 40px;
+            background: #dbeafe;
+            color: #3b82f6;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-right: 1rem;
+        }
+
+        .unit-list {
+            list-style: none;
+        }
+
+        .unit-item {
+            padding: 1rem 1.5rem 1rem 4rem;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9375rem;
+        }
+
+        .unit-item:hover {
+            background: var(--surface-hover);
+            color: var(--primary);
+            padding-left: 4.5rem;
         }
     </style>
 </head>
@@ -606,14 +549,26 @@
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
+
+                @if(Auth::user()->can_create_documents)
+                <a href="{{ route('documents.create') }}" class="nav-item">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Buat Dokumen</span>
+                </a>
+                @endif
+
+                @if(Auth::user()->role_jabatan == 3 || Auth::user()->is_reviewer || Auth::user()->is_verifier)
                 <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item">
                     <i class="fas fa-file-contract"></i>
                     <span>Review Dokumen</span>
                     @if(isset($pendingCount) && $pendingCount > 0)
-                        <span class="badge"
-                            style="background:#c41e3a; color:white; padding:2px 6px; border-radius:10px; font-size:10px; margin-left:auto;">{{ $pendingCount }}</span>
+                        <span
+                            style="background: white; color: var(--primary); padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: auto; font-weight: bold;">
+                            {{ $pendingCount }}
+                        </span>
                     @endif
                 </a>
+                @endif
             </nav>
 
             <div class="user-info-bottom">
@@ -629,6 +584,7 @@
                         </div>
                     </div>
                 </div>
+                <!-- Standard Logout Logic using Form -->
                 <a href="{{ route('logout') }}" class="logout-btn"
                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="fas fa-sign-out-alt"></i>
@@ -644,83 +600,119 @@
         <main class="main-content">
             <div class="header">
                 <h1>Dashboard Unit Pengelola</h1>
+                <div style="font-size: 0.875rem; color: var(--gray-500); font-weight: 500;">
+                    {{ Carbon\Carbon::now()->format('l, d F Y') }}
+                </div>
             </div>
 
             <div class="content-area">
-                <!-- Breadcrumb & Actions -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div class="breadcrumb" id="breadcrumb" style="margin-bottom: 0;">
-                        <span class="breadcrumb-item active" onclick="resetView()">Home</span>
+                <!-- Navigation Tabs -->
+                <div class="nav-tabs">
+                    <div class="nav-link active" onclick="switchTab('dashboard')">
+                        <i class="fas fa-chart-pie" style="margin-right: 8px;"></i>Dashboard Utama
                     </div>
-
+                    @if(Auth::user()->role_jabatan == 3)
+                    <div class="nav-link" onclick="switchTab('users')">
+                        <i class="fas fa-users-cog" style="margin-right: 8px;"></i>Manajemen Staff
+                    </div>
+                    @endif
                 </div>
 
-                <!-- Dynamic Content (Accordion) -->
-                <div id="dynamicContent"></div>
+                <!-- Tab 1: Dashboard Content -->
+                <div id="tab-dashboard" class="tab-content active">
+                    <!-- Standard Accordion Content (Retained logic from previous dashboard) -->
+                    <div id="dynamicContent"></div>
+                </div>
+
+                <!-- Tab 2: User Management -->
+                <div id="tab-users" class="tab-content">
+                    <div class="table-section">
+                        <div
+                            style="padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--gray-900);">Daftar Staff
+                                    Unit</h2>
+                                <p style="font-size: 0.875rem; color: var(--gray-500); margin-top: 4px;">Kelola hak
+                                    akses pembuatan dokumen, reviewer, dan verifikator.</p>
+                            </div>
+                        </div>
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama User</th>
+                                    <th>Jabatan</th>
+                                    <th>Create Access</th>
+                                    <th>Reviewer</th>
+                                    <th>Verifier</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($unitUsers as $staff)
+                                    <tr>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <div
+                                                    style="width: 36px; height: 36px; background: var(--primary-50); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                                    {{ strtoupper(substr($staff->nama_user, 0, 2)) }}
+                                                </div>
+                                                <div>
+                                                    <div style="font-weight: 600; color: var(--gray-900);">
+                                                        {{ $staff->nama_user }}</div>
+                                                    <div style="font-size: 0.75rem; color: var(--gray-500);">
+                                                        {{ $staff->email_user ?? $staff->username }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge user">{{ $staff->role_jabatan_name }}</span>
+                                        </td>
+                                        <!-- Toggle: Can Create -->
+                                        <td>
+                                            <label class="switch">
+                                                <input type="checkbox"
+                                                    onchange="updatePermission({{ $staff->id_user }}, 'can_create_documents', this.checked)"
+                                                    {{ $staff->can_create_documents ? 'checked' : '' }}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </td>
+                                        <!-- Toggle: Is Reviewer -->
+                                        <td>
+                                            <label class="switch">
+                                                <input type="checkbox"
+                                                    onchange="updatePermission({{ $staff->id_user }}, 'is_reviewer', this.checked)"
+                                                    {{ $staff->is_reviewer ? 'checked' : '' }}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </td>
+                                        <!-- Toggle: Is Verifier -->
+                                        <td>
+                                            <label class="switch">
+                                                <input type="checkbox"
+                                                    onchange="updatePermission({{ $staff->id_user }}, 'is_verifier', this.checked)"
+                                                    {{ $staff->is_verifier ? 'checked' : '' }}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; padding: 3rem; color: var(--gray-500);">
+                                            <i class="fas fa-users-slash"
+                                                style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                                            Tidak ada staff lain di unit ini.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- DETAIL MODAL -->
-    <div id="detailModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Detail Dokumen</h2>
-                <span class="close-btn" onclick="closeModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <!-- Section 1 -->
-                <div class="section-title">
-                    <i class="fas fa-file-alt"></i> Informasi Dokumen
-                </div>
-
-                <div class="info-row">
-                    <div class="info-label">Judul Dokumen:</div>
-                    <div class="info-value" id="m_title"></div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Status:</div>
-                    <div class="info-value"><span class="status-pill" id="m_status"></span></div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Unit Pengelola:</div>
-                    <div class="info-value" id="m_category"></div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Unit Kerja:</div>
-                    <div class="info-value" id="m_unit"></div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Tanggal Terbit:</div>
-                    <div class="info-value" id="m_date"></div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Penulis:</div>
-                    <div class="info-value" id="m_author"></div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Tingkat Risiko:</div>
-                    <div class="info-value risk-high" id="m_risk"></div>
-                </div>
-
-                <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;">
-
-                <!-- Section 2 -->
-                <div class="section-title green">
-                    <i class="fas fa-check-circle"></i> Informasi Persetujuan
-                </div>
-
-                <div class="approval-box">
-                    <div class="approval-header">
-                        <i class="fas fa-check"></i> <span id="m_approval_header"></span>
-                    </div>
-                    <div class="approval-text" id="m_approval_note"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     @php
+        // Prepare Data for JS
         $departmentsData = $departemens->map(fn($d) => [
             'id_dept' => is_array($d) ? $d['id_dept'] : $d->id_dept,
             'nama_dept' => is_array($d) ? $d['nama_dept'] : $d->nama_dept
@@ -733,329 +725,126 @@
     @endphp
 
     <script>
-
-        // Processed Data
+        // Data for Accordion
         const departments = @json($departmentsData);
         const units = @json($unitsData);
-        // Published Data for Browsing
-        const documents = @json($publishedData);
-        // Pending Actions for User
-        const pendingDocs = @json($pendingData ?? []);
 
-        // State
-        let currentLevel = 'dept';
-        let selectedDept = null;
-        let selectedUnit = null;
+        // Tab Switching Logic
+        function switchTab(tabName) {
+            // Hide all
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
 
+            // Show Target
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            // Highlight Tab
+            const buttons = document.querySelectorAll('.nav-link');
+            if (tabName === 'dashboard') buttons[0].classList.add('active');
+            if (tabName === 'users') buttons[1].classList.add('active');
+        }
+
+        // Accordion Render Logic (Same as before but styled)
         document.addEventListener('DOMContentLoaded', () => {
             renderDepartments();
         });
 
         function renderDepartments() {
-            currentLevel = 'dept';
-            selectedDept = null;
-            selectedUnit = null;
-            updateBreadcrumb();
-
             const container = document.getElementById('dynamicContent');
-
             if (departments.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding:50px; color:#999;"><i class="fas fa-building" style="font-size:40px; margin-bottom:15px;"></i><p>Tidak ada departemen ditemukan.</p></div>`;
+                container.innerHTML = `<div style="text-align:center;color:#999;">No data</div>`;
                 return;
             }
 
             let html = '';
+            const regularDepts = departments.filter(d => d.id_dept != 0);
 
-
-            // 1. Separate "Unassigned" and Regular Departments
-            const unassignedDeptId = 0; // ID for "Unassigned / Non-Dept"
-            const directUnits = units.filter(u => u.id_dept == unassignedDeptId);
-            const regularDepts = departments.filter(d => d.id_dept != unassignedDeptId);
-
-            html += `<div class="accordion-container">`;
-
-            // A. Regular Departments
             regularDepts.forEach(dept => {
                 const deptUnits = units.filter(u => u.id_dept == dept.id_dept);
-
                 html += `
                     <div class="accordion-item">
-                        <div class="accordion-header" onclick="toggleAccordion(this, '${dept.id_dept}')">
-                            <div class="dept-info">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <div style="display:flex; align-items:center;">
                                 <div class="dept-icon"><i class="fas fa-building"></i></div>
-                                <div class="dept-name">${dept.nama_dept}</div>
+                                <div style="font-weight:600; color:#333;">${dept.nama_dept}</div>
                             </div>
-                            <i class="fas fa-chevron-down accordion-icon"></i>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
                         </div>
-                        <div class="accordion-body" id="body-${dept.id_dept}">
+                        <div class="accordion-body" style="display:none; padding:0;">
                             <ul class="unit-list">
                 `;
 
                 if (deptUnits.length === 0) {
-                    html += `<li class="unit-item" style="color:#999; cursor:default;">Tidak ada unit</li>`;
+                    html += `<li class="unit-item" style="color:#999;">Tidak ada unit</li>`;
                 } else {
                     deptUnits.forEach(unit => {
                         html += `
-                            <li class="unit-item" onclick="selectUnit('${unit.id_unit}', '${unit.nama_unit.replace(/'/g, "\\'")}', '${dept.nama_dept.replace(/'/g, "\\'")}', '${dept.id_dept}')">
+                            <li class="unit-item" onclick="viewUnitDocs(${unit.id_unit})">
                                 <span>${unit.nama_unit}</span>
-                                <i class="fas fa-arrow-right"></i>
+                                <i class="fas fa-arrow-right text-gray-300"></i>
                             </li>
                         `;
                     });
                 }
-
-                html += `
-                            </ul>
-                        </div>
-                    </div>
-                `;
+                html += `</ul></div></div>`;
             });
-
-            // B. Direct Units (from Unassigned)
-            directUnits.forEach(unit => {
-                html += `
-                    <div class="accordion-item">
-                         <!-- Similar style to header but no drop icon and clickable to go to details directly -->
-                        <div class="accordion-header" onclick="selectUnit('${unit.id_unit}', '${unit.nama_unit.replace(/'/g, "\\'")}', 'Unit', '${unassignedDeptId}')">
-                            <div class="dept-info">
-                                <div class="dept-icon" style="background:#f3e8ff; color:#7e22ce;"><i class="fas fa-layer-group"></i></div>
-                                <div class="dept-name">${unit.nama_unit}</div>
-                            </div>
-                            <!-- Arrow right to indicate actionable -->
-                            <i class="fas fa-arrow-right" style="color:#ccc; font-size:12px;"></i>
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += `</div>`;
             container.innerHTML = html;
         }
 
-        function toggleAccordion(header, deptId) {
-            const body = document.getElementById(`body-${deptId}`);
-            const isActive = header.classList.contains('active');
-
-            // Close all
-            document.querySelectorAll('.accordion-header').forEach(h => h.classList.remove('active'));
-            document.querySelectorAll('.accordion-body').forEach(b => b.classList.remove('show'));
-
-            if (!isActive) {
-                header.classList.add('active');
-                body.classList.add('show');
-            }
+        function toggleAccordion(header) {
+            const body = header.nextElementSibling;
+            const isOpen = body.style.display === 'block';
+            body.style.display = isOpen ? 'none' : 'block';
+            header.classList.toggle('active', !isOpen);
         }
 
-        function selectUnit(unitId, unitName, deptName, deptId) {
-            selectedDept = { id: deptId, name: deptName };
-            selectedUnit = { id: unitId, name: unitName };
-            currentLevel = 'unit';
-            updateBreadcrumb();
-            renderDocuments(unitId, 'ALL');
-        }
-
-        function selectDepartment(id) {
-            renderDepartments();
-            setTimeout(() => {
-                const body = document.getElementById(`body-${id}`);
-                if (body) {
-                    body.classList.add('show');
-                    body.previousElementSibling.classList.add('active');
-                    body.parentElement.scrollIntoView({ behavior: 'smooth' });
-                }
-            }, 50);
-        }
-
-        function renderDocuments(unitId, filterCategory = 'ALL') {
-            // Need to fetch or filter documents for this unit.
-            // Client-side filtering of 'documents' (publishedData)
-            const unitDocsRaw = documents.filter(d => d.unit_id == unitId);
-            const unitName = selectedUnit ? selectedUnit.name : '-';
-            const deptId = selectedDept ? selectedDept.id : 0;
-
-            // SPLIT MULTI-CATEGORY DOCS
-            let unitDocs = [];
-            unitDocsRaw.forEach(doc => {
-                if (doc.category && doc.category.includes(',')) {
-                    const cats = doc.category.split(',').map(c => c.trim());
-                    cats.forEach(c => {
-                        unitDocs.push({ ...doc, category: c });
-                    });
-                } else {
-                    unitDocs.push(doc);
-                }
-            });
-
-            // Filter by Category
-            if (filterCategory !== 'ALL') {
-                unitDocs = unitDocs.filter(doc => doc.category === filterCategory);
-            }
-
-            const categories = ['SHE', 'Security'];
-
-            const container = document.getElementById('dynamicContent');
-
-            let html = `
-                <div class="table-section">
-                    <div class="table-header" style="flex-wrap: wrap; gap: 10px;">
-                        <div>
-                            <h2 style="margin-bottom:5px;">Laporan Terpublikasi - ${unitName}</h2>
-                            <div style="font-size:12px; color:#666;">Menampilkan kategori: <b>${filterCategory}</b></div>
-                        </div>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <select onchange="renderDocuments(${unitId}, this.value)" style="padding:6px 12px; border-radius:6px; border:1px solid #ddd; font-size:13px; color:#333; cursor:pointer;">
-                                <option value="ALL" ${filterCategory === 'ALL' ? 'selected' : ''}>Semua Kategori</option>
-                                ${categories.map(c => `<option value="${c}" ${filterCategory === c ? 'selected' : ''}>${c}</option>`).join('')}
-                            </select>
-                            <button class="btn-action" style="background:#666;" onclick="selectDepartment(${deptId})"><i class="fas fa-arrow-left"></i> Kembali</button>
-                        </div>
-                    </div>
-            `;
-
-            if (unitDocs.length === 0) {
-                html += `
-                    <div style="text-align: center; padding: 40px; color: #999;">
-                        <i class="fas fa-filter" style="font-size:30px; margin-bottom:10px;"></i>
-                        <p>Tidak ada dokumen terpublikasi untuk kategori <b>${filterCategory}</b>.</p>
-                    </div>`;
-            } else {
-                html += `
-                    <table class="custom-table">
-                        <thead>
-                            <tr>
-                                <th>Judul Form</th>
-                                <th>Kategori</th>
-                                <th>Penulis</th>
-                                <th>Tanggal Publish</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                unitDocs.forEach(doc => {
-                    // Category Badge Color
-                    let catColor = '#e0e0e0';
-                    let catText = '#333';
-                    if (doc.category == 'K3') { catColor = '#fee2e2'; catText = '#991b1b'; }
-                    else if (doc.category == 'Lingkungan') { catColor = '#dcfce7'; catText = '#166534'; }
-                    else if (doc.category == 'Keamanan') { catColor = '#e0f2fe'; catText = '#075985'; }
-                    else if (doc.category == 'KO') { catColor = '#ffedd5'; catText = '#9a3412'; }
-                    // Fallback for SHE / Security
-                    if (doc.category === 'SHE') { catColor = '#dcfce7'; catText = '#166534'; }
-                    if (doc.category === 'Security') { catColor = '#fee2e2'; catText = '#991b1b'; }
-
-                    html += `
-                        <tr>
-                            <td>${doc.title}</td>
-                            <td><span class="status-pill" style="background:${catColor}; color:${catText};">${doc.category || '-'}</span></td>
-                            <td>${doc.author}</td>
-                            <td>${doc.date}</td>
-                            <td><span class="status-pill" style="background:#e8f5e9; color:#2e7d32; padding:4px 12px; border-radius:15px; font-size:11px; font-weight:700;">DISETUJUI</span></td>
-                            <td>
-                                <a href="/documents/${doc.id}/published?filter=${doc.category}" class="btn-action">
-                                    <i class="fas fa-eye"></i> Detail
-                                </a>
-                            </td>
-                        </tr>
-                    `;
+        // Permission Update Logic
+        function updatePermission(userId, field, value) {
+            fetch("{{ route('unit_pengelola.update_permissions') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    [field]: value
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                        Toast.fire({ icon: 'success', title: 'Akses diperbarui' });
+                    } else {
+                        Swal.fire("Gagal", data.message, "error");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire("Error", "Gagal menghubungi server", "error");
                 });
-
-                html += `</tbody></table>`;
-            }
-
-            html += `</div>`;
-            container.innerHTML = html;
         }
 
-        // Breadcrumb Logic
-        function updateBreadcrumb() {
-            const bc = document.getElementById('breadcrumb');
-            let html = `<span class="breadcrumb-item ${currentLevel === 'dept' ? 'active' : ''}" onclick="resetView()">Home</span>`;
-
-            if (selectedDept) {
-                html += `
-                    <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
-                    <span class="breadcrumb-item" onclick="resetView()">${selectedDept.name}</span>
-                `;
-            }
-
-            if (selectedUnit) {
-                html += `
-                    <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
-                    <span class="breadcrumb-item active">${selectedUnit.name}</span>
-                `;
-            }
-
-            bc.innerHTML = html;
-        }
-
-        function resetView() {
-            renderDepartments();
-        }
-
-        // Modal Logic (Kept for consistency if needed, but Table uses Link now)
-        function showDetail(id) {
-            // ... (unused by table now)
-        }
-
-        function closeModal() {
-            document.getElementById('detailModal').style.display = 'none';
-        }
-
-        window.onclick = function (event) {
-            const modal = document.getElementById('detailModal');
-            if (event.target == modal) {
-                closeModal();
-            }
+        // Placeholder for view unit docs
+        function viewUnitDocs(unitId) {
+            // In real logic, this might filter the table or charts below
+            console.log("Viewing unit:", unitId);
+            // Could trigger an AJAX call to load docs for that unit
         }
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Close Modal Logic -->
     <script>
-        @if(session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil',
-                text: "{{ session('success') }}",
-                timer: 3000,
-                showConfirmButton: false
-            });
-        @endif
-
-        @if(session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: "{{ session('error') }}",
-            });
-        @endif
+        function closeModal() {
+            document.getElementById('detailModal').style.display = "none";
+        }
     </script>
-    <!-- Flash Messages (SweetAlert) -->
-    @if(session('success'))
-        <script>
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil',
-                text: "{{ session('success') }}",
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#c41e3a'
-            });
-        </script>
-    @endif
-    @if(session('error'))
-        <script>
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal',
-                text: "{{ session('error') }}",
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#c41e3a'
-            });
-        </script>
-    @endif
-
 </body>
 
 </html>

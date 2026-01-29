@@ -4,22 +4,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inbox Dokumen - Unit Pengelola</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Review Dokumen - Unit Pengelola | HIRADC System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
+        /* ========================================
+           DESIGN SYSTEM - TWIN DESIGN
+           ======================================== */
         :root {
+            /* Brand Colors - PT Semen Padang */
             --primary: #c41e3a;
-            --primary-hover: #a01830;
-            --bg-body: #f5f5f5;
+            --primary-dark: #9a1829;
+            --primary-light: #e63950;
+            --primary-50: #fef2f3;
+            --primary-100: #fce7e9;
+            --primary-200: #f9d0d4;
+            --primary-600: #c41e3a;
+
+            /* Neutral Palette */
+            --gray-50: #fafafa;
+            --gray-100: #f5f5f5;
+            --gray-200: #e5e5e5;
+            --gray-300: #d4d4d4;
+            --gray-400: #a3a3a3;
+            --gray-500: #737373;
+            --gray-600: #525252;
+            --gray-700: #404040;
+            --gray-800: #262626;
+            --gray-900: #171717;
+
+            /* Surface & Background */
+            --bg-body: #f1f5f9;
             --surface: #ffffff;
-            --text-main: #333;
-            --text-sub: #666;
-            --border: #e0e0e0;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --surface-hover: #f9fafb;
+            --border: #e2e8f0;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+            /* Spacing */
+            --space-4: 1rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+
+            /* Border Radius */
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --radius-full: 9999px;
+
+            /* Fonts */
+            --font-sans: 'Plus Jakarta Sans', sans-serif;
+            --font-weight-bold: 700;
         }
 
         * {
@@ -29,123 +69,160 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-sans);
             background: var(--bg-body);
-            color: var(--text-main);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(196, 30, 58, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--gray-900);
             min-height: 100vh;
         }
 
-        /* Sidebar - Original Dashboard Style */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar - Exact Clone */
         .sidebar {
-            width: 250px;
-            background: white;
-            border-right: 1px solid #e0e0e0;
+            width: 280px;
+            background: #5b6fd8;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             position: fixed;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            z-index: 50;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
         }
 
         .logo-section {
-            padding: 30px 20px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: var(--space-8) var(--space-6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             text-align: center;
+            background: transparent;
+            position: relative;
+        }
+
+        .logo-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
         }
 
         .logo-circle {
-            width: 70px;
-            height: 70px;
-            background: #fff;
-            border-radius: 50%;
-            margin: 0 auto 15px;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 1.25rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: white;
+            border-radius: 50%;
             overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .logo-circle:hover {
+            transform: scale(1.05);
         }
 
         .logo-circle img {
-            max-width: 80%;
-            max-height: 80%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
 
         .logo-text {
-            font-size: 18px;
+            font-size: 1.125rem;
             font-weight: 700;
-            color: #c41e3a;
-            margin-bottom: 3px;
+            color: white;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.02em;
         }
 
         .logo-subtext {
-            font-size: 12px;
-            color: #999;
-            font-style: italic;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .nav-menu {
             flex: 1;
-            padding: 20px 0;
+            padding: 1.5rem 0;
             overflow-y: auto;
         }
 
         .nav-item {
-            padding: 15px 25px;
+            padding: 1rem 1.5rem;
+            margin: 0.25rem 1rem;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 0.75rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            color: #666;
-            font-size: 14px;
+            transition: all 0.2s;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.9375rem;
             font-weight: 500;
             text-decoration: none;
             position: relative;
+            border-radius: 0.75rem;
         }
 
         .nav-item:hover {
-            background: #fff5f5;
-            color: #c41e3a;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(4px);
         }
 
         .nav-item.active {
-            background: #ffe5e5;
-            color: #c41e3a;
-            border-left: 3px solid #c41e3a;
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         .nav-item i {
             width: 20px;
             text-align: center;
-            font-size: 16px;
+            font-size: 1.125rem;
         }
 
+        /* User Info */
         .user-info-bottom {
-            padding: 20px;
-            border-top: 2px solid #e0e0e0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            background: transparent;
         }
 
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
         }
 
         .user-avatar {
-            width: 45px;
-            height: 45px;
+            width: 48px;
+            height: 48px;
             background: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #667eea;
+            color: #5b6fd8;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 1.125rem;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .user-details {
@@ -155,7 +232,7 @@
 
         .user-name {
             font-weight: 600;
-            font-size: 14px;
+            font-size: 0.9375rem;
             color: white;
             white-space: nowrap;
             overflow: hidden;
@@ -163,343 +240,301 @@
         }
 
         .user-role {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 2px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
         }
 
         .logout-btn {
             width: 100%;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.2);
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.15);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 0.5rem;
             text-decoration: none;
         }
 
         .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
         }
 
         /* Main Content */
-        .container {
-            display: flex;
-            min-height: 100vh;
-        }
-
         .main-content {
-            margin-left: 250px;
             flex: 1;
-            padding: 30px 40px;
+            margin-left: 280px;
+            padding: 0;
+            background: var(--bg-body);
         }
 
-        .page-header {
-            margin-bottom: 30px;
+        .header {
+            background: linear-gradient(135deg, #ffffff 0%, #fef2f3 100%);
+            padding: var(--space-8) var(--space-10);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
-        .page-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 5px;
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            letter-spacing: -0.02em;
         }
 
-        .page-subtitle {
-            font-size: 14px;
-            color: #666;
+        .content-area {
+            padding: var(--space-10);
+            max-width: 1600px;
+            margin: 0 auto;
         }
 
-        /* Stats Cards - Synced with Dashboard */
+        /* Stats Grid / Filter Tabs */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(5, 1fr);
+            /* 5 Columns now */
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .stat-card {
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.2s;
+            background: var(--surface);
+            padding: 1.25rem;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 120px;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: transparent;
+            transition: background 0.2s;
         }
 
         .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
         }
 
         .stat-card.active {
-            border-color: #c41e3a;
-            background: #fff5f5;
+            background: #fffafa;
+            /* Tinted red very lightly */
+            border-color: var(--primary);
+        }
+
+        .stat-card.active::before {
+            background: var(--primary);
         }
 
         .stat-icon {
             width: 40px;
             height: 40px;
+            background: var(--gray-50);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 1.125rem;
+            color: var(--gray-500);
+            margin-bottom: 1rem;
+            transition: all 0.2s;
         }
 
-        .stat-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .stat-label {
-            font-size: 10px;
-            color: #888;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .stat-card.active .stat-icon {
+            background: var(--primary);
+            color: white;
         }
 
         .stat-value {
-            font-size: 20px;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
             font-weight: 700;
-            color: #333;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .icon-blue {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .icon-orange {
-            background: #fff3e0;
-            color: #f57c00;
-        }
-
-        .icon-red {
-            background: #ffebee;
-            color: #d32f2f;
-        }
-
-        .icon-green {
-            background: #e8f5e9;
-            color: #388e3c;
-        }
-
-        .icon-purple {
-            background: #f3e5f5;
-            color: #7b1fa2;
-        }
-
-        /* Staff Assignment Card */
+        /* Bulk Action Card */
         .staff-selection-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 2px dashed #3b82f6;
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius-xl);
+            margin-bottom: 2rem;
+            border: 1px solid #dbeafe;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.05);
+            background: linear-gradient(to right, #eff6ff, white);
         }
 
         .staff-selection-card h4 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
         .staff-selection-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
         }
 
-        .staff-selection-grid label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: #666;
-            margin-bottom: 6px;
-        }
-
-        .staff-selection-grid select {
+        .form-select {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            font-family: var(--font-sans);
+            font-size: 0.9375rem;
+            background: white;
+            transition: all 0.2s;
         }
 
-        .staff-info-text {
-            font-size: 12px;
-            color: #666;
-            margin-top: 10px;
-            font-style: italic;
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        /* Modern Document Card List */
+        /* Document List */
         .doc-list {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 1rem;
         }
 
         .doc-item {
             background: white;
-            border-radius: 12px;
-            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
             display: grid;
             grid-template-columns: auto 1fr auto auto;
             align-items: center;
-            gap: 20px;
-            border: 1px solid #e0e0e0;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            gap: 1.5rem;
+            transition: all 0.2s;
         }
 
         .doc-item:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            border-color: #cbd5e1;
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-200);
         }
 
-        .doc-date-box {
+        .date-box {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 10px;
-            background: #f8fafc;
-            border-radius: 8px;
-            min-width: 60px;
-            border: 1px solid #e0e0e0;
+            width: 70px;
+            height: 70px;
+            background: var(--gray-50);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            flex-shrink: 0;
         }
 
-        .doc-day {
-            font-size: 16px;
-            font-weight: 700;
-            color: #333;
+        .date-day {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--gray-900);
             line-height: 1;
         }
 
-        .doc-month {
-            font-size: 10px;
-            font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
-            margin-top: 2px;
-        }
-
-        .doc-info {
-            min-width: 0;
-            /* Prevent overflow */
-        }
-
-        .doc-title {
-            font-size: 16px;
+        .date-month {
+            font-size: 0.75rem;
             font-weight: 700;
-            color: #333;
-            margin-bottom: 6px;
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            margin-top: 0.25rem;
+        }
+
+        .doc-info h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
         }
 
         .doc-meta {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--gray-500);
         }
 
-        .meta-pill {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: #666;
-            font-weight: 500;
+        .status-pill {
+            padding: 0.375rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .badge-status {
-            padding: 5px 12px;
-            background: #ecfdf5;
-            color: #059669;
-            border: 1px solid #d1fae5;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            display: flex;
+        .btn-action {
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
-            white-space: nowrap;
-        }
-
-        .badge-status::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: currentColor;
-            border-radius: 50%;
-        }
-
-        .btn-review {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: white;
-            color: #333;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            background: var(--gray-900);
+            color: white;
+            border-radius: var(--radius-lg);
             font-weight: 600;
-            font-size: 13px;
+            font-size: 0.875rem;
             text-decoration: none;
             transition: all 0.2s;
-            white-space: nowrap;
         }
 
-        .btn-review:hover {
-            background: #333;
-            color: white;
-            border-color: #333;
+        .btn-action:hover {
+            background: black;
+            transform: translateY(-1px);
         }
 
         /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 50px 20px;
+            padding: 4rem 2rem;
             background: white;
-            border-radius: 12px;
-            border: 1px dashed #e0e0e0;
-        }
-
-        .empty-icon {
-            font-size: 40px;
-            color: #cbd5e1;
-            margin-bottom: 15px;
-        }
-
-        /* Save Preferences Button */
-        .btn-save-preferences:hover {
-            background: #059669 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+            border-radius: var(--radius-xl);
+            border: 2px dashed var(--border);
         }
     </style>
 </head>
@@ -521,9 +556,9 @@
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('unit_pengelola.documents.index') }}" class="nav-item active">
-                    <i class="fas fa-file-alt"></i> <!-- Original Icon -->
-                    <span>Inbox Dokumen</span>
+                <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item active">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Review Dokumen</span>
                 </a>
             </nav>
 
@@ -540,6 +575,7 @@
                         </div>
                     </div>
                 </div>
+                <!-- Standard Logout Logic -->
                 <a href="{{ route('logout') }}" class="logout-btn"
                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="fas fa-sign-out-alt"></i>
@@ -553,129 +589,148 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <div class="page-header">
-                <h1 class="page-title">Inbox Disposisi</h1>
-                <p class="page-subtitle">Daftar dokumen yang telah disetujui Kepala Unit Kerja dan perlu tindak lanjut.
-                </p>
-            </div>
-
-            @php
-                // Categorize documents
-                $allDocs = $documents;
-                $userUnit = Auth::user()->id_unit;
-
-                $disposisiDocs = $documents->filter(function ($d) use ($userUnit) {
-                    $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
-                    return $d->current_level == 2 && ($st == 'pending_head' || empty($st));
-                });
-
-                $dalamReviewDocs = $documents->filter(function ($d) use ($userUnit) {
-                    $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
-                    return in_array($st, ['assigned_review', 'assigned_approval']);
-                });
-
-                $keputusanAkhirDocs = $documents->filter(function ($d) use ($userUnit) {
-                    $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
-                    return $st == 'returned_to_head' || $st == 'staff_verified';
-                });
-
-                $approveDocs = $documents->filter(function ($d) use ($userUnit) {
-                    $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
-                    return $st == 'approved' || $st == 'published' || $d->current_level > 2;
-                });
-
-                $revisiDocs = $documents->filter(function ($d) use ($userUnit) {
-                    // Documents that have been revised by this Unit Pengelola
-                    // Check if there's a revision approval record from this unit
-                    $hasRevision = $d->approvals()->where('level', 2)
-                        ->where('action', 'revision')
-                        ->whereHas('approver', function ($q) use ($userUnit) {
-                            $q->where('id_unit', $userUnit);
-                        })
-                        ->exists();
-                    return $hasRevision;
-                });
-
-                // Get staff for disposition
-                // Staff Reviewer: role_jabatan 5 (Band IV) and 6 (Band V)
-                $staffReviewers = \App\Models\User::where('id_unit', Auth::user()->id_unit)
-                    ->whereIn('role_jabatan', [5, 6])
-                    ->get();
-
-                // Staff Verifikator: role_jabatan 4 (Band III)
-                $staffApprovers = \App\Models\User::where('id_unit', Auth::user()->id_unit)
-                    ->where('role_jabatan', 4)
-                    ->get();
-            @endphp
-
-            <!-- Stats Summary -->
-            <div class="stats-grid">
-                <div class="stat-card active" onclick="selectCategory('semua', this)">
-                    <div class="stat-icon icon-blue"><i class="fas fa-file-alt"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-label">Semua</span>
-                        <span class="stat-value">{{ $documents->count() }}</span>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="selectCategory('disposisi', this)">
-                    <div class="stat-icon icon-red"><i class="fas fa-file-import"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-label">Disposisi</span>
-                        <span class="stat-value">{{ $disposisiDocs->count() }}</span>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="selectCategory('dalam_review_staff', this)">
-                    <div class="stat-icon icon-purple"><i class="fas fa-user-clock"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-label">Diperiksa Staff</span>
-                        <span class="stat-value">{{ $dalamReviewDocs->count() }}</span>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="selectCategory('keputusan_akhir', this)">
-                    <div class="stat-icon icon-orange"><i class="fas fa-clock"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-label">Keputusan Akhir</span>
-                        <span class="stat-value">{{ $keputusanAkhirDocs->count() }}</span>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="selectCategory('approve', this)">
-                    <div class="stat-icon icon-green"><i class="fas fa-check-circle"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-label">Approve</span>
-                        <span class="stat-value">{{ $approveDocs->count() }}</span>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="selectCategory('revisi', this)">
-                    <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
-                        <i class="fas fa-undo"></i>
-                    </div>
-                    <div class="stat-info">
-                        <span class="stat-label">Revisi</span>
-                        <span class="stat-value">{{ $revisiDocs->count() }}</span>
-                    </div>
+            <div class="header">
+                <h1>Review Dokumen</h1>
+                <div style="font-size: 0.875rem; color: var(--gray-500); font-weight: 500;">
+                    Inbox & Persetujuan
                 </div>
             </div>
 
-            <!-- Disposition Card (Inline) - Shows when there are pending documents -->
-            @if($disposisiDocs->count() > 0)
-                <div class="staff-selection-card" style="margin-bottom: 25px;">
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
-                        <i class="fas fa-paper-plane" style="color:#3b82f6; font-size:18px;"></i>
-                        <h4 style="margin:0; font-size:16px; font-weight:700; color:#333;">Disposisi Dokumen ke Staff</h4>
-                    </div>
-                    <p style="font-size:13px; color:#666; margin-bottom:20px;">
-                        Pilih staff untuk mereview dan memverifikasi dokumen yang masuk. Anda dapat memilih staff yang sama
-                        untuk semua dokumen pending.
-                    </p>
+            <div class="content-area">
 
-                    <form id="bulkDispositionForm" method="POST" action="">
-                        @csrf
-                        <input type="hidden" name="document_ids" id="document_ids" value="">
+                @php
+                    $allDocs = $documents;
+                    $userUnit = Auth::user()->id_unit;
+
+                    // Filtering Logic (retained)
+                    $disposisiDocs = $documents->filter(function ($d) use ($userUnit) {
+                        $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
+                        return $d->current_level == 2 && ($st == 'pending_head' || empty($st));
+                    });
+
+                    $dalamReviewDocs = $documents->filter(function ($d) use ($userUnit) {
+                        $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
+                        return in_array($st, ['assigned_review', 'assigned_approval']);
+                    });
+
+                    $keputusanAkhirDocs = $documents->filter(function ($d) use ($userUnit) {
+                        $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
+                        return $st == 'returned_to_head' || $st == 'staff_verified';
+                    });
+
+                    $approveDocs = $documents->filter(function ($d) use ($userUnit) {
+                        $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
+                        return $st == 'approved' || $st == 'published' || $d->current_level > 2;
+                    });
+
+                    // Staff Fetching (retained)
+                    $staffReviewers = \App\Models\User::where('id_unit', Auth::user()->id_unit)
+                        // ->where('is_reviewer', true) // Updated to use new flag if preferred, or fallback to Roles
+                        ->whereIn('role_jabatan', [5, 6]) // Fallback
+                        ->where('id_unit', Auth::user()->id_unit)
+                        ->distinct()->get();
+
+                    $staffApprovers = \App\Models\User::where('id_unit', Auth::user()->id_unit)
+                        // ->where('is_verifier', true)
+                        ->where('role_jabatan', 4)
+                        ->where('id_unit', Auth::user()->id_unit)
+                        ->distinct()->get();
+                @endphp
+
+                <!-- Internal Unit Stats (Newly Added) -->
+                <div style="margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px dashed var(--border);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 1rem;">
+                        <h3
+                            style="font-size: 0.875rem; color: var(--gray-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Dokumen Internal Unit ({{ Auth::user()->unit_or_dept_name }})
+                        </h3>
+                        <a href="{{ route('documents.index') }}"
+                            style="font-size: 0.875rem; font-weight: 600; color: var(--primary); text-decoration: none;">
+                            Lihat Semua <i class="fas fa-arrow-right" style="margin-left: 4px;"></i>
+                        </a>
+                    </div>
+                    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 0;">
+                        <div class="stat-card" style="cursor: default; background: white;">
+                            <div class="stat-icon" style="background: #eff6ff; color: #3b82f6;"><i
+                                    class="fas fa-hourglass-half"></i></div>
+                            <div>
+                                <div class="stat-value">{{ $myUnitStats['pending'] }}</div>
+                                <div class="stat-label">Menunggu</div>
+                            </div>
+                        </div>
+                        <div class="stat-card" style="cursor: default; background: white;">
+                            <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;"><i
+                                    class="fas fa-thumbs-up"></i></div>
+                            <div>
+                                <div class="stat-value">{{ $myUnitStats['approved'] }}</div>
+                                <div class="stat-label">Disetujui</div>
+                            </div>
+                        </div>
+                        <div class="stat-card" style="cursor: default; background: white;">
+                            <div class="stat-icon" style="background: #faf5ff; color: #9333ea;"><i
+                                    class="fas fa-globe"></i></div>
+                            <div>
+                                <div class="stat-value">{{ $myUnitStats['published'] }}</div>
+                                <div class="stat-label">Approve / Published</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Tabs (Stats Grid) -->
+                <h3
+                    style="font-size: 0.875rem; color: var(--gray-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                    Inbox Review (Dokumen Masuk)
+                </h3>
+                <div class="stats-grid">
+                    <div class="stat-card active" onclick="filterDocs('all', this)">
+                        <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+                        <div>
+                            <div class="stat-value">{{ $documents->count() }}</div>
+                            <div class="stat-label">Semua</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" onclick="filterDocs('disposisi', this)">
+                        <div class="stat-icon"><i class="fas fa-inbox"></i></div>
+                        <div>
+                            <div class="stat-value">{{ $disposisiDocs->count() }}</div>
+                            <div class="stat-label">Perlu Disposisi</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" onclick="filterDocs('review', this)">
+                        <div class="stat-icon"><i class="fas fa-user-clock"></i></div>
+                        <div>
+                            <div class="stat-value">{{ $dalamReviewDocs->count() }}</div>
+                            <div class="stat-label">Review Staff</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" onclick="filterDocs('final', this)">
+                        <div class="stat-icon"><i class="fas fa-gavel"></i></div>
+                        <div>
+                            <div class="stat-value">{{ $keputusanAkhirDocs->count() }}</div>
+                            <div class="stat-label">Keputusan Akhir</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" onclick="filterDocs('approved', this)">
+                        <div class="stat-icon"><i class="fas fa-check-double"></i></div>
+                        <div>
+                            <div class="stat-value">{{ $approveDocs->count() }}</div>
+                            <div class="stat-label">Selesai</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulk Disposition Section -->
+                @if($disposisiDocs->count() > 0)
+                    <div class="staff-selection-card">
+                        <h4><i class="fas fa-share-square" style="color:#3b82f6;"></i> Disposisi Dokumen (Bulk Action)</h4>
+                        <p style="font-size:0.875rem; color:var(--gray-500);">Pilih staff untuk menangani dokumen Pending
+                            Disposisi. Klik "Kirim" pada dokumen untuk menerapkan.</p>
 
                         <div class="staff-selection-grid">
                             <div>
-                                <label>Staff Reviewer (Band IV/V)</label>
-                                <select name="reviewer_id" id="bulk_reviewer_id" required>
+                                <label class="stat-label" style="display:block; margin-bottom:8px;">Pilih Reviewer</label>
+                                <select id="bulk_reviewer_id" class="form-select">
                                     <option value="">-- Pilih Reviewer --</option>
                                     @foreach($staffReviewers as $s)
                                         <option value="{{ $s->id_user }}">{{ $s->nama_user }}</option>
@@ -683,8 +738,9 @@
                                 </select>
                             </div>
                             <div>
-                                <label>Staff Verifikator (Band III)</label>
-                                <select name="approver_id" id="bulk_approver_id" required>
+                                <label class="stat-label" style="display:block; margin-bottom:8px;">Pilih
+                                    Verifikator</label>
+                                <select id="bulk_approver_id" class="form-select">
                                     <option value="">-- Pilih Verifikator --</option>
                                     @foreach($staffApprovers as $s)
                                         <option value="{{ $s->id_user }}">{{ $s->nama_user }}</option>
@@ -692,353 +748,137 @@
                                 </select>
                             </div>
                         </div>
-
-
-                        <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:13px; color:#666;">
-                                <i class="fas fa-info-circle"></i>
-                                Klik tombol "Kirim" pada dokumen untuk mendisposisikan
-                            </span>
-                            <button type="button" onclick="saveStaffPreferences()" class="btn-save-preferences"
-                                style="padding:8px 16px; background:#10b981; color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all 0.2s;">
-                                <i class="fas fa-save"></i>
-                                Simpan Pilihan
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            @endif
-
-            <!-- Success Message Container -->
-            <div id="saveSuccessMessage"
-                style="display:none; margin-bottom:20px; padding:12px 20px; background:#dcfce7; border-left:4px solid #10b981; border-radius:6px; color:#166534; font-size:14px; font-weight:500;">
-                <i class="fas fa-check-circle"></i> Pilihan staff berhasil disimpan!
-            </div>
-
-            <!-- Document List Container -->
-
-            <div class="doc-list">
-                @foreach($documents as $doc)
-                    @php
-                        // Determine Unit Specific Status
-                        $currentStatus = $doc->level2_status; // Default
-                        $userUnit = Auth::user()->id_unit;
-                        if ($userUnit == 55) {
-                            $currentStatus = $doc->status_security;
-                        } elseif ($userUnit == 56) {
-                            $currentStatus = $doc->status_she;
-                        }
-
-                        // Categorize documents using $currentStatus
-                        $docCategory = 'semua';
-
-                        // 1. Disposisi (Fresh)
-                        if ($doc->current_level == 2 && ($currentStatus == 'pending_head' || empty($currentStatus))) {
-                            $docCategory = 'disposisi';
-                        }
-                        // 2. Dalam Review Staff (Assigned)
-                        elseif (in_array($currentStatus, ['assigned_review', 'assigned_approval'])) {
-                            $docCategory = 'dalam_review_staff';
-                        }
-                        // 3. Keputusan Akhir (Verified by Staff)
-                        elseif ($currentStatus == 'returned_to_head' || $currentStatus == 'staff_verified') {
-                            $docCategory = 'keputusan_akhir';
-                        }
-                        // 4. Approved (Finalized)
-                        elseif ($currentStatus == 'approved' || $doc->current_level > 2) {
-                            $docCategory = 'approve';
-                        }
-                        // 5. Revisi (Sent back to submitter by this Unit Pengelola)
-                        $hasRevisionByThisUnit = $doc->approvals()->where('level', 2)
-                            ->where('action', 'revision')
-                            ->whereHas('approver', function ($q) use ($userUnit) {
-                                $q->where('id_unit', $userUnit);
-                            })
-                            ->exists();
-                        if ($hasRevisionByThisUnit) {
-                            $docCategory = 'revisi';
-                        }
-
-                        // Determine status label
-                        $statusLabel = 'Menunggu Disposisi';
-                        if ($docCategory == 'dalam_review_staff') {
-                            $statusLabel = 'Lagi Diperiksa Staff';
-                        } elseif ($docCategory == 'keputusan_akhir') {
-                            $statusLabel = 'Siap Keputusan Akhir';
-                        } elseif ($docCategory == 'approve') {
-                            $statusLabel = 'Approved / Published';
-                        } elseif ($docCategory == 'revisi') {
-                            $statusLabel = 'Dikembalikan ke Submitter';
-                        }
-                    @endphp
-
-                    <div class="doc-item" data-category="{{ $docCategory }}" data-doc-id="{{ $doc->id }}"
-                        style="display: grid;">
-                        <!-- Date Box -->
-                        <div class="doc-date-box">
-                            <span class="doc-day">{{ $doc->created_at->format('d') }}</span>
-                            <span class="doc-month">{{ $doc->created_at->format('M Y') }}</span>
-                        </div>
-
-                        <!-- Info -->
-                        <div class="doc-info">
-                            <h3 class="doc-title">{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}</h3>
-                            <div class="doc-meta">
-                                <span class="meta-pill"><i class="fas fa-building"></i>
-                                    {{ $doc->unit->nama_unit ?? '-' }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Status -->
-                        <div>
-                            <span class="badge-status"
-                                style="{{ $docCategory == 'approve' ? 'background:#dcfce7; color:#166534;' : ($docCategory == 'disposisi' ? 'background:#fee2e2; color:#991b1b;' : 'background:#e0f2fe; color:#0369a1;') }}">
-                                {{ $statusLabel }}
-                            </span>
-                        </div>
-
-                        <!-- Action -->
-                        <div style="display: flex; gap: 8px;">
-                            @if($docCategory == 'disposisi')
-                                <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-review"
-                                    style="background: #6b7280;">
-                                    <span>Tindak Lanjut</span>
-                                    <i class="fas fa-eye" style="font-size:11px;"></i>
-                                </a>
-                                <button onclick="sendToStaff({{ $doc->id }})" class="btn-review"
-                                    style="background: #3b82f6; border: none; cursor: pointer; color:white;">
-                                    <span>Kirim</span>
-                                    <i class="fas fa-paper-plane" style="font-size:11px;"></i>
-                                </button>
-                            @elseif($docCategory == 'approve')
-                                <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-review"
-                                    style="background: #10b981; color:white;">
-                                    <span>Lihat</span>
-                                    <i class="fas fa-eye" style="font-size:11px;"></i>
-                                </a>
-                            @else
-                                <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-review">
-                                    <span>Tindak Lanjut</span>
-                                    <i class="fas fa-arrow-right" style="font-size:11px;"></i>
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
-
-                <!-- Persistent Empty State (Hidden by default, shown by JS filter) -->
-                <div class="empty-state"
-                    style="display:none; flex-direction:column; align-items:center; justify-content:center; padding:50px;">
-                    <i class="fas fa-filter empty-icon" style="font-size:40px; color:#cbd5e1; margin-bottom:15px;"></i>
-                    <h3 style="font-size:18px; font-weight:600; color:#333; margin-bottom:8px;">Tidak ada dokumen di
-                        kategori ini</h3>
-                    <p style="color:#666;">Silakan pilih kategori lain.</p>
-                </div>
-
-                @if($documents->isEmpty())
-                    <!-- Initial Empty State if NO docs at all in database for this level -->
-                    <div class="initial-empty-state" style="text-align:center; padding:50px;">
-                        <i class="fas fa-inbox" style="font-size:40px; color:#cbd5e1; margin-bottom:15px;"></i>
-                        <h3>Inbox Kosong</h3>
-                        <p>Belum ada dokumen yang perlu diproses.</p>
                     </div>
                 @endif
+
+                <!-- Document List -->
+                <div class="doc-list">
+                    @forelse($documents as $doc)
+                        @php
+                            // Status Logic (Same as before)
+                            $currentStatus = $doc->level2_status;
+                            if ($userUnit == 55)
+                                $currentStatus = $doc->status_security;
+                            elseif ($userUnit == 56)
+                                $currentStatus = $doc->status_she;
+
+                            $cat = 'all';
+                            $statusText = 'Unknown';
+                            $statusColor = '#94a3b8'; // gray default
+
+                            if ($doc->current_level == 2 && ($currentStatus == 'pending_head' || empty($currentStatus))) {
+                                $cat = 'disposisi';
+                                $statusText = 'Menunggu Disposisi';
+                                $statusColor = '#ef4444'; // red
+                            } elseif (in_array($currentStatus, ['assigned_review', 'assigned_approval'])) {
+                                $cat = 'review';
+                                $statusText = 'Proses Staff';
+                                $statusColor = '#3b82f6'; // blue
+                            } elseif ($currentStatus == 'returned_to_head' || $currentStatus == 'staff_verified') {
+                                $cat = 'final';
+                                $statusText = 'Verifikasi Selesai';
+                                $statusColor = '#f59e0b'; // orange
+                            } elseif ($currentStatus == 'approved' || $currentStatus == 'published' || $doc->current_level > 2) {
+                                $cat = 'approved';
+                                $statusText = 'Disetujui';
+                                $statusColor = '#10b981'; // green
+                            }
+                        @endphp
+
+                        <div class="doc-item" data-category="{{ $cat }}">
+                            <div class="date-box">
+                                <span class="date-day">{{ $doc->created_at->format('d') }}</span>
+                                <span class="date-month">{{ $doc->created_at->format('M') }}</span>
+                            </div>
+                            <div class="doc-info">
+                                <h3>{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}</h3>
+                                <div class="doc-meta">
+                                    <span><i class="fas fa-building"></i> {{ $doc->unit->nama_unit ?? '-' }}</span>
+                                    <span><i class="fas fa-user"></i> {{ $doc->user->nama_user ?? 'Unknown' }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="status-pill"
+                                    style="background: {{ $statusColor }}20; color: {{ $statusColor }}">
+                                    {{ $statusText }}
+                                </span>
+                            </div>
+                            <div>
+                                @if($cat == 'disposisi')
+                                    <button onclick="applyDisposition({{ $doc->id }})" class="btn-action">
+                                        <i class="fas fa-paper-plane"></i> Kirim
+                                    </button>
+                                @else
+                                    <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-action"
+                                        style="background:white; color:var(--gray-900); border:1px solid var(--border);">
+                                        <i class="fas fa-eye"></i> Detail
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="empty-state">
+                            <i class="fas fa-folder-open"
+                                style="font-size: 3rem; color: var(--gray-300); margin-bottom: 1rem;"></i>
+                            <h3 style="font-size: 1.125rem; font-weight: 700; color: var(--gray-900);">Tidak ada dokumen
+                            </h3>
+                            <p style="color: var(--gray-500);">Belum ada dokumen yang perlu ditinjau saat ini.</p>
+                        </div>
+                    @endforelse
+                </div>
+
             </div>
         </main>
     </div>
 
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        @if(session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil',
-                text: "{{ session('success') }}",
-                showConfirmButton: false,
-                timer: 2000
+        function filterDocs(category, el) {
+            // Update UI
+            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+
+            // Filter List
+            document.querySelectorAll('.doc-item').forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'grid';
+                } else {
+                    item.style.display = 'none';
+                }
             });
-        @endif
-    </script>
+        }
 
-    <script>
-            // Category filtering
-            function selectCategory(category, element) {
-                // Update active state
-                document.querySelectorAll('.stat-card').forEach(card => {
-                    card.classList.remove('active');
-                });
-                element.classList.add('active');
+        function applyDisposition(docId) {
+            // Logic to submit form via AJAX or form
+            const reviewer = document.getElementById('bulk_reviewer_id').value;
+            const approver = document.getElementById('bulk_approver_id').value;
 
-                // Filter documents
-                const allDocs = document.querySelectorAll('.doc-item');
-                let count = 0;
+            if (!reviewer || !approver) {
+                Swal.fire('Eits!', 'Pilih Reviewer dan Verifikator terlebih dahulu di bagian atas.', 'warning');
+                return;
+            }
 
-                allDocs.forEach(doc => {
-                    const docCategory = doc.getAttribute('data-category');
-                    if (category === 'semua' || docCategory === category) {
-                        doc.style.display = 'grid';
-                        count++;
+            // Perform Disposition POST
+            fetch("{{ route('unit_pengelola.disposition', '') }}/" + docId, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    reviewer_id: reviewer,
+                    approver_id: approver
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Berhasil', 'Dokumen didisposisikan.', 'success').then(() => location.reload());
                     } else {
-                        doc.style.display = 'none';
+                        Swal.fire('Gagal', data.message, 'error');
                     }
                 });
-
-                // Update empty state visibility
-                const emptyState = document.querySelector('.empty-state');
-                const initialEmpty = document.querySelector('.initial-empty-state');
-
-                // Only show filter empty state if initial empty state is NOT present (meaning we have docs but filtered out)
-                if (emptyState && !initialEmpty) {
-                    emptyState.style.display = count === 0 ? 'flex' : 'none';
-                }
-            }
-
-        // --- DISPOSITION INLINE CARD LOGIC ---
-        function sendToStaff(documentId) {
-            // Get selected staff from the inline form
-            const reviewerId = document.getElementById('bulk_reviewer_id').value;
-            const approverId = document.getElementById('bulk_approver_id').value;
-
-            if (!reviewerId || !approverId) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Pilih Staff',
-                    text: 'Silakan pilih Reviewer dan Verifikator terlebih dahulu di form atas.',
-                    confirmButtonColor: '#c41e3a'
-                });
-                return;
-            }
-
-            // Create a temporary form and submit
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/unit-pengelola/documents/' + documentId + '/disposition';
-
-            // Add CSRF token
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = '{{ csrf_token() }}';
-            form.appendChild(csrfInput);
-
-            // Add reviewer_id
-            const reviewerInput = document.createElement('input');
-            reviewerInput.type = 'hidden';
-            reviewerInput.name = 'reviewer_id';
-            reviewerInput.value = reviewerId;
-            form.appendChild(reviewerInput);
-
-            // Add approver_id
-            const approverInput = document.createElement('input');
-            approverInput.type = 'hidden';
-            approverInput.name = 'approver_id';
-            approverInput.value = approverId;
-            form.appendChild(approverInput);
-
-            // Save to localStorage for next time
-            localStorage.setItem('last_reviewer_id', reviewerId);
-            localStorage.setItem('last_approver_id', approverId);
-
-            // Submit form
-            document.body.appendChild(form);
-            form.submit();
         }
-
-        // Save staff preferences
-        function saveStaffPreferences() {
-            const reviewerId = document.getElementById('bulk_reviewer_id').value;
-            const approverId = document.getElementById('bulk_approver_id').value;
-
-            if (!reviewerId || !approverId) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Pilihan Belum Lengkap',
-                    text: 'Silakan pilih Reviewer dan Verifikator terlebih dahulu.',
-                    confirmButtonColor: '#c41e3a'
-                });
-                return;
-            }
-
-            // Save to localStorage
-            localStorage.setItem('last_reviewer_id', reviewerId);
-            localStorage.setItem('last_approver_id', approverId);
-
-            // Get staff names for display
-            const reviewerSelect = document.getElementById('bulk_reviewer_id');
-            const approverSelect = document.getElementById('bulk_approver_id');
-            const reviewerName = reviewerSelect.options[reviewerSelect.selectedIndex].text;
-            const approverName = approverSelect.options[approverSelect.selectedIndex].text;
-
-            // Show success message
-            Swal.fire({
-                icon: 'success',
-                title: 'Pilihan Tersimpan!',
-                html: `<div style="text-align:left; font-size:14px;">
-                    <p><strong>Reviewer:</strong> ${reviewerName}</p>
-                    <p><strong>Verifikator:</strong> ${approverName}</p>
-                    <p style="margin-top:10px; color:#666;">Pilihan ini akan digunakan untuk disposisi dokumen selanjutnya.</p>
-                </div>`,
-                confirmButtonColor: '#10b981',
-                timer: 3000
-            });
-        }
-
-        // Load saved staff assignment on page load
-        document.addEventListener('DOMContentLoaded', function () {
-            // Initialize default view (Semua)
-            const activeCard = document.querySelector('.stat-card.active');
-            if (activeCard) {
-                // Determine category from onclick attribute to match filter behavior
-                // onclick="selectCategory('semua', this)"
-                const onclickVal = activeCard.getAttribute('onclick');
-                const match = onclickVal.match(/'([^']+)'/);
-                if (match) {
-                    selectCategory(match[1], activeCard);
-                } else {
-                    selectCategory('semua', activeCard);
-                }
-            }
-
-            // Load previous staff selections from localStorage
-            const savedReviewer = localStorage.getItem('last_reviewer_id');
-            const savedApprover = localStorage.getItem('last_approver_id');
-
-            const reviewerSelect = document.getElementById('bulk_reviewer_id');
-            const approverSelect = document.getElementById('bulk_approver_id');
-
-            if (savedReviewer && reviewerSelect) {
-                reviewerSelect.value = savedReviewer;
-            }
-            if (savedApprover && approverSelect) {
-                approverSelect.value = savedApprover;
-            }
-        });
     </script>
-    <!-- Flash Messages (SweetAlert) -->
-    @if(session('success'))
-        <script>
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil',
-                text: "{{ session('success') }}",
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#c41e3a'
-            });
-        </script>
-    @endif
-    @if(session('error'))
-        <script>
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal',
-                text: "{{ session('error') }}",
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#c41e3a'
-            });
-        </script>
-    @endif
-
 </body>
 
 </html>
