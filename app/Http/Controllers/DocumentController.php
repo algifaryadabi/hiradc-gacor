@@ -1859,49 +1859,111 @@ class DocumentController extends Controller
     public function disposition(Request $request, Document $document)
     {
         $request->validate([
-            'reviewer_id' => 'required|exists:users,id_user',
-            'approver_id' => 'required|exists:users,id_user',
+            'reviewer_id' => 'nullable|exists:users,id_user',
+            'approver_id' => 'nullable|exists:users,id_user',
         ]);
 
         $user = Auth::user();
 
+        // DEBUG LOGGING
+        \Illuminate\Support\Facades\Log::info("Disposition Request", [
+            'user_id' => $user->id_user,
+            'unit_id' => $user->id_unit,
+            'doc_id' => $document->id,
+            'doc_level' => $document->current_level
+        ]);
+
         // Ensure user is authorized (Head of Unit Pengelola)
         if (!$user->isUnitPengelola() || $document->current_level != 2) {
+            \Illuminate\Support\Facades\Log::error("Disposition Unauthorized", ['is_up' => $user->isUnitPengelola(), 'level' => $document->current_level]);
             abort(403, 'Unauthorized disposition.');
+        }
+
+        // Auto-Assign Logic: If IDs are null, try to find the designated staff from Dashboard permissions
+        $reviewerId = $request->reviewer_id;
+        $approverId = $request->approver_id;
+
+        if (!$reviewerId) {
+            $activeReviewers = \App\Models\User::where('id_unit', $user->id_unit)
+                ->where('is_reviewer', true)
+                ->get();
+            if ($activeReviewers->count() === 1) {
+                $reviewerId = $activeReviewers->first()->id_user;
+            }
+        }
+
+        if (!$approverId) {
+            $activeApprovers = \App\Models\User::where('id_unit', $user->id_unit)
+                ->where('is_verifier', true)
+                ->get();
+            if ($activeApprovers->count() === 1) {
+                $approverId = $activeApprovers->first()->id_user;
+            }
         }
 
         // Parallel Workflow: Update Specific Columns based on Unit
         if ($user->id_unit == 55) { // Security
-            $document->update([
-                'status_security' => 'assigned_review',
-                'security_reviewer_id' => $request->reviewer_id,
-                'security_verificator_id' => $request->approver_id,
-                // 'level2_assignment_date' => now(), // Optional tracking
-            ]);
+            \Illuminate\Support\Facades\Log::info("Disposition Logic: SECURITY Block");
+            $document->status_security = 'assigned_review';
+            if ($reviewerId)
+                $document->security_reviewer_id = $reviewerId;
+            if ($approverId)
+                $document->security_verificator_id = $approverId;
+            $document->save();
         } elseif ($user->id_unit == 56) { // SHE
-            $document->update([
-                'status_she' => 'assigned_review',
-                'she_reviewer_id' => $request->reviewer_id,
-                'she_verificator_id' => $request->approver_id,
-            ]);
+            \Illuminate\Support\Facades\Log::info("Disposition Logic: SHE Block");
+            $document->status_she = 'assigned_review';
+            if ($reviewerId)
+                $document->she_reviewer_id = $reviewerId;
+            if ($approverId)
+                $document->she_verificator_id = $approverId;
+            $document->save();
         } else {
             // Fallback
-            $document->update([
-                'level2_status' => 'assigned_review',
-                'level2_reviewer_id' => $request->reviewer_id,
-                'level2_approver_id' => $request->approver_id,
-                'level2_assignment_date' => now(),
-            ]);
+            \Illuminate\Support\Facades\Log::info("Disposition Logic: FALLBACK Block");
+            $document->level2_status = 'assigned_review';
+            $document->level2_assignment_date = now();
+            if ($reviewerId)
+                $document->level2_reviewer_id = $reviewerId;
+            if ($approverId)
+                $document->level2_approver_id = $approverId;
+            $document->save();
         }
 
         // Log History for Disposition
+        $logMessage = 'Disposisi ke Staff';
+        if ($reviewerId)
+            $logMessage .= ' (Reviewer Assigned)';
+        if ($approverId)
+            $logMessage .= ' (Approver Assigned)';
+        if (!$reviewerId && !$approverId)
+            $logMessage .= ' (Pool)';
+
         $document->approvals()->create([
             'approver_id' => $user->id_user,
             'level' => 2,
             'action' => 'disposition',
-            'catatan' => 'Disposisi ke Reviewer & Approver',
+            'catatan' => $logMessage,
             'ip_address' => $request->ip()
         ]);
+
+        if ($request->wantsJson()) {
+            $msg = 'Dokumen berhasil didisposisikan.';
+            if ($reviewerId && $approverId) {
+                $msg = 'Dokumen dikirim ke Reviewer dan Verifikator terpilih.';
+            } elseif ($reviewerId) {
+                $msg = 'Dokumen dikirim ke Reviewer terpilih (Verifikator: Pool).';
+            } else {
+                $msg = 'Dokumen dikirim ke Verifikator terpilih (Reviewer: Pool).';
+            }
+
+            // Append Debug Info to Message for verification
+            $freshDoc = $document->fresh();
+            $debugStatus = ($user->id_unit == 56) ? $freshDoc->status_she : (($user->id_unit == 55) ? $freshDoc->status_security : $freshDoc->level2_status);
+            $msg .= " [Status: $debugStatus]";
+
+            return response()->json(['success' => true, 'message' => $msg]);
+        }
 
         return back()->with('success', 'Dokumen berhasil didisposisikan kepada staff.');
     }
@@ -2524,15 +2586,14 @@ class DocumentController extends Controller
                 // Assigned to ME as Reviewer or Verificator
                 $q->where('security_reviewer_id', $user->id_user)
                     ->orWhere('security_verificator_id', $user->id_user)
-                    // OR Unassigned (Pool) AND Status is Pending Head (Wait, Head logic needs check)
-                    // Actually, generic pool logic:
+                    // OR Unassigned (Pool)
                     ->orWhere(function ($sub) use ($allowedCategories) {
                         $sub->whereNull('security_reviewer_id')
                             // Ensure status is appropriate for pool (e.g. pending_head or just assigned_review?)
                             // If Head hasn't assigned yet, it might not be visible to staff? 
                             // Logic: Head assigns. So usually not null? 
                             // If Unassigned Pool is allowed:
-                            ->whereIn('status_security', ['pending_head', 'pending_level2']) // Adjust based on flow
+                            ->whereIn('status_security', ['pending_head', 'pending_level2', 'assigned_review']) // Adjust based on flow
                             ->where(function ($c) use ($allowedCategories) {
                                 $c->whereIn('kategori', $allowedCategories)
                                     ->orWhereHas('details', function ($d) use ($allowedCategories) {
@@ -2557,7 +2618,7 @@ class DocumentController extends Controller
                     ->orWhere('she_verificator_id', $user->id_user)
                     ->orWhere(function ($sub) use ($allowedCategories) {
                         $sub->whereNull('she_reviewer_id')
-                            ->whereIn('status_she', ['pending_head', 'pending_level2'])
+                            ->whereIn('status_she', ['pending_head', 'pending_level2', 'assigned_review'])
                             ->where(function ($c) use ($allowedCategories) {
                                 $c->whereIn('kategori', $allowedCategories)
                                     ->orWhereHas('details', function ($d) use ($allowedCategories) {
@@ -2857,30 +2918,60 @@ class DocumentController extends Controller
     // NEW: Update Unit Permissions (AJAX)
     public function updateUnitPermissions(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id_user',
-            'is_reviewer' => 'sometimes|boolean',
-            'is_verifier' => 'sometimes|boolean',
-            'can_create_documents' => 'sometimes|boolean',
-        ]);
+        try {
+            $request->validate([
+                'user_id' => 'required|exists:users,id_user',
+                'is_reviewer' => 'sometimes|boolean',
+                'is_verifier' => 'sometimes|boolean',
+                'can_create_documents' => 'sometimes|boolean',
+            ]);
 
-        $currentUser = Auth::user();
-        $targetUser = \App\Models\User::findOrFail($request->user_id);
+            $currentUser = Auth::user();
+            $targetUser = \App\Models\User::findOrFail($request->user_id);
 
-        // Security Check: User must be Unit Head of same unit
-        if ($currentUser->id_unit != $targetUser->id_unit || !$currentUser->isKepalaUnit()) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            // Security Check: User must be Unit Head of same unit
+            if ($currentUser->id_unit != $targetUser->id_unit || !$currentUser->isKepalaUnit()) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized: You must be the Head of this Unit.'], 403);
+            }
+
+            if ($request->has('is_reviewer')) {
+                // Enforce Single Reviewer: If setting to true, unset others
+                if ($request->is_reviewer) {
+                    \App\Models\User::where('id_unit', $currentUser->id_unit)
+                        ->where('id_user', '!=', $targetUser->id_user)
+                        ->update(['is_reviewer' => 0]);
+                }
+                $targetUser->is_reviewer = $request->is_reviewer;
+            }
+
+            if ($request->has('is_verifier')) {
+                // Enforce Single Verifier: If setting to true, unset others
+                if ($request->is_verifier) {
+                    \App\Models\User::where('id_unit', $currentUser->id_unit)
+                        ->where('id_user', '!=', $targetUser->id_user)
+                        ->update(['is_verifier' => 0]);
+                }
+                $targetUser->is_verifier = $request->is_verifier;
+            }
+
+            if ($request->has('can_create_documents')) {
+                // Enforce Single Create Access: If setting to true, unset others
+                if ($request->can_create_documents) {
+                    \App\Models\User::where('id_unit', $currentUser->id_unit)
+                        ->where('id_user', '!=', $targetUser->id_user)
+                        ->update(['can_create_documents' => 0]);
+                }
+                $targetUser->can_create_documents = $request->can_create_documents;
+            }
+
+            $targetUser->save();
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Server Error: ' . $e->getMessage()
+            ], 500);
         }
-
-        if ($request->has('is_reviewer'))
-            $targetUser->is_reviewer = $request->is_reviewer;
-        if ($request->has('is_verifier'))
-            $targetUser->is_verifier = $request->is_verifier;
-        if ($request->has('can_create_documents'))
-            $targetUser->can_create_documents = $request->can_create_documents;
-
-        $targetUser->save();
-
-        return response()->json(['success' => true]);
     }
 }

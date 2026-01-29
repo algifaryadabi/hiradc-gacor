@@ -17,6 +17,23 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+Route::get('/debug-log', function () {
+    $content = file_get_contents(storage_path('logs/laravel.log'));
+    $lines = explode("\n", $content);
+    $filtered = array_filter($lines, function ($line) {
+        return str_contains($line, 'Disposition');
+    });
+    return implode("\n", array_slice($filtered, -20)); // Return last 20 matches
+});
+
+Route::get('/check-units', function () {
+    return \App\Models\Unit::all();
+});
+
+Route::get('/debug-user', function () {
+    return \Illuminate\Support\Facades\Auth::user();
+});
+
 // Authentication Routes (Guest only)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');

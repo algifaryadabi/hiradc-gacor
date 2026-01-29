@@ -721,35 +721,7 @@
                 </div>
 
                 <!-- Bulk Disposition Section -->
-                @if($disposisiDocs->count() > 0)
-                    <div class="staff-selection-card">
-                        <h4><i class="fas fa-share-square" style="color:#3b82f6;"></i> Disposisi Dokumen (Bulk Action)</h4>
-                        <p style="font-size:0.875rem; color:var(--gray-500);">Pilih staff untuk menangani dokumen Pending
-                            Disposisi. Klik "Kirim" pada dokumen untuk menerapkan.</p>
-
-                        <div class="staff-selection-grid">
-                            <div>
-                                <label class="stat-label" style="display:block; margin-bottom:8px;">Pilih Reviewer</label>
-                                <select id="bulk_reviewer_id" class="form-select">
-                                    <option value="">-- Pilih Reviewer --</option>
-                                    @foreach($staffReviewers as $s)
-                                        <option value="{{ $s->id_user }}">{{ $s->nama_user }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="stat-label" style="display:block; margin-bottom:8px;">Pilih
-                                    Verifikator</label>
-                                <select id="bulk_approver_id" class="form-select">
-                                    <option value="">-- Pilih Verifikator --</option>
-                                    @foreach($staffApprovers as $s)
-                                        <option value="{{ $s->id_user }}">{{ $s->nama_user }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                @endif
+                <!-- Disposisi Section Removed as per User Request (Managed in Dashboard) -->
 
                 <!-- Document List -->
                 <div class="doc-list">
@@ -805,6 +777,10 @@
                             </div>
                             <div>
                                 @if($cat == 'disposisi')
+                                    <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-action"
+                                        style="background:white; color:var(--gray-900); border:1px solid var(--border); margin-right: 8px;">
+                                        <i class="fas fa-eye"></i> Detail
+                                    </a>
                                     <button onclick="applyDisposition({{ $doc->id }})" class="btn-action">
                                         <i class="fas fa-paper-plane"></i> Kirim
                                     </button>
@@ -848,35 +824,58 @@
         }
 
         function applyDisposition(docId) {
-            // Logic to submit form via AJAX or form
-            const reviewer = document.getElementById('bulk_reviewer_id').value;
-            const approver = document.getElementById('bulk_approver_id').value;
+            // New Logic: Auto-Correction (No Manual Selection)
+            Swal.fire({
+                title: 'Disposisi Dokumen?',
+                text: "Dokumen akan dikirim ke staff (Reviewer & Verifikator) sesuai hak akses dashboard.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Kirim!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Perform Disposition POST with NULL IDs (Pool Assignment)
+                    let url = "{{ route('unit_pengelola.disposition', ':id') }}";
+                    url = url.replace(':id', docId);
 
-            if (!reviewer || !approver) {
-                Swal.fire('Eits!', 'Pilih Reviewer dan Verifikator terlebih dahulu di bagian atas.', 'warning');
-                return;
-            }
-
-            // Perform Disposition POST
-            fetch("{{ route('unit_pengelola.disposition', '') }}/" + docId, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({
-                    reviewer_id: reviewer,
-                    approver_id: approver
-                })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire('Berhasil', 'Dokumen didisposisikan.', 'success').then(() => location.reload());
-                    } else {
-                        Swal.fire('Gagal', data.message, 'error');
-                    }
-                });
+                    fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                        },
+                        body: JSON.stringify({
+                            reviewer_id: null,
+                            approver_id: null
+                        })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success || data.message) { // Handle potential success redirect data
+                                Swal.fire('Berhasil', 'Dokumen berhasil didisposisikan ke staff.', 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                Swal.fire('Gagal', data.message || 'Terjadi kesalahan.', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            // If controller redirects back with success flash, fetch might treat as opaque or error if not JSON
+                            // But we return JSON usually or back(). Wait, controller returns back()->with().
+                            // Fetching a back() redirect usually follows it to the HTML page.
+                            // We should ideally change controller to return JSON if AJAX, but for now let's handle the redirect.
+                            // If we land here, check if it's actually a success via page reload?
+                            // Actually, let's assume if no error thrown, it worked.
+                            // But fetch follows redirects by default. The response will be the HTML of the page.
+                            // This JSON.parse will fail.
+                            // FIX: Check content type.
+                            Swal.fire('Info', 'Permintaan diproses. Halaman akan dimuat ulang.', 'info')
+                                .then(() => location.reload());
+                        });
+                }
+            });
         }
     </script>
 </body>

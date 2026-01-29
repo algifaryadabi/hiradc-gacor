@@ -35,101 +35,155 @@
             min-height: 100vh;
         }
 
-        /* Sidebar */
+        /* Sidebar - Reference Design from Dashboard */
         .sidebar {
-            width: 250px;
-            background: white;
-            border-right: 1px solid #e0e0e0;
+            width: 280px;
+            background: #5b6fd8;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             position: fixed;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            z-index: 50;
+            z-index: 100;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
         .logo-section {
-            padding: 30px 20px;
-            border-bottom: 2px solid #e0e0e0;
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             text-align: center;
+            position: relative;
+        }
+
+        .logo-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
         }
 
         .logo-circle {
-            width: 80px;
-            height: 80px;
-            background: white;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 1.25rem;
+            background: transparent;
             border-radius: 50%;
-            margin: 0 auto 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border: 2px solid #e0e0e0;
+            transition: all 0.2s;
+        }
+
+        .logo-circle:hover {
+            transform: scale(1.05);
         }
 
         .logo-circle img {
-            max-width: 70%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
         }
 
         .logo-text {
-            font-size: 16px;
+            font-size: 1.125rem;
             font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 5px;
+            color: white;
+            margin-bottom: 0.25rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
 
         .logo-subtext {
-            font-size: 11px;
-            color: #999;
-            font-weight: 500;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .nav-menu {
             flex: 1;
-            padding: 20px 15px;
+            padding: 1.5rem 0;
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #d4d4d4 transparent;
         }
 
         .nav-item {
-            padding: 12px 15px;
+            padding: 1rem 1.5rem;
+            margin: 0.25rem 1rem;
             display: flex;
             align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: var(--text-sub);
-            font-size: 14px;
+            gap: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
             font-weight: 500;
             text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 5px;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+            font-size: 0.9375rem;
+            position: relative;
         }
 
-        .nav-item:hover,
-        .nav-item.active {
-            background: #fff1f2;
-            color: var(--primary);
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(4px);
         }
 
         .nav-item.active {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
             font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 60%;
+            background: white;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .nav-item i {
+            width: 24px;
+            text-align: center;
+            font-size: 1.125rem;
+        }
+
+        .badge {
+            background: white;
+            color: #c41e3a;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-weight: 700;
+            margin-left: auto;
         }
 
         .user-info-bottom {
-            padding: 20px;
-            border-top: 2px solid #e0e0e0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            background: transparent;
         }
 
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             background: white;
             border-radius: 50%;
             display: flex;
@@ -137,7 +191,9 @@
             justify-content: center;
             color: #667eea;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 1.125rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             flex-shrink: 0;
         }
 
@@ -148,36 +204,47 @@
 
         .user-name {
             font-weight: 600;
-            font-size: 13px;
+            font-size: 0.9375rem;
             color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
         }
 
         .user-role {
-            font-size: 11px;
+            font-size: 0.75rem;
             color: rgba(255, 255, 255, 0.85);
-            margin-top: 2px;
         }
 
         .logout-btn {
             width: 100%;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.2);
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.15);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         /* Main Content */
         .main-content {
-            margin-left: 250px;
+            margin-left: 280px;
             padding: 40px;
             min-height: 100vh;
         }
@@ -387,7 +454,7 @@
                 <a href="{{ route('unit_pengelola.dashboard') }}" class="nav-item"><i
                         class="fas fa-th-large"></i><span>Dashboard</span></a>
                 <a href="{{ route('unit_pengelola.staff.index') }}" class="nav-item active"><i
-                        class="fas fa-file-signature"></i><span>Inbox Dokumen</span></a>
+                        class="fas fa-file-contract"></i><span>Review Dokumen</span></a>
             </nav>
             <div class="user-info-bottom">
                 <div class="user-profile">

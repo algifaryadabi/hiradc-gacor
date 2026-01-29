@@ -131,7 +131,7 @@
         }
 
         /* ========================================
-           SIDEBAR - Enhanced Design
+           SIDEBAR - Enhanced Design (Matched to Dashboard)
            ======================================== */
         .sidebar {
             width: 280px;
@@ -143,7 +143,7 @@
             flex-direction: column;
             z-index: 100;
             box-shadow: var(--shadow-md);
-            font-family: 'Inter', sans-serif;
+            /* font-family: 'Inter', sans-serif; REMOVED to match Dashboard */
         }
 
         .logo-section {
@@ -168,15 +168,14 @@
             width: 90px;
             height: 90px;
             margin: 0 auto var(--space-5);
+            background: transparent; /* Changed from white to match dashboard if needed, or keep white? Dashboard says background: transparent but img inside? Dashboard code: .logo-circle { ... background: transparent ... } */
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all var(--transition-base);
-            background: white;
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
         }
+        /* Dashboard code had background: transparent. Published had background: white. */
 
         .logo-circle:hover {
             transform: scale(1.05);
@@ -191,20 +190,18 @@
 
         .logo-text {
             font-size: 1.125rem;
-            font-weight: var(--font-weight-bold);
+            font-weight: 700; /* Dashboard uses 700 */
             color: white;
             margin-bottom: var(--space-1);
-            letter-spacing: -0.02em;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
 
         .logo-subtext {
             font-size: 0.75rem;
             color: rgba(255, 255, 255, 0.9);
-            font-weight: var(--font-weight-semibold);
+            font-weight: 600; /* Dashboard uses 600 */
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            font-style: italic;
         }
 
         .nav-menu {
@@ -215,34 +212,21 @@
             scrollbar-color: var(--gray-300) transparent;
         }
 
-        .nav-menu::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .nav-menu::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .nav-menu::-webkit-scrollbar-thumb {
-            background: var(--gray-300);
-            border-radius: var(--radius-full);
-        }
-
+        /* Nav Item - Exact Match from Dashboard */
         .nav-item {
             padding: var(--space-4) var(--space-6);
             margin: var(--space-1) var(--space-4);
             display: flex;
             align-items: center;
             gap: var(--space-3);
-            cursor: pointer;
-            transition: all var(--transition-base);
             color: rgba(255, 255, 255, 0.85);
-            font-size: 0.9375rem;
-            font-weight: var(--font-weight-medium);
+            font-weight: 500;
             text-decoration: none;
-            position: relative;
             border-radius: var(--radius-lg);
-            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            font-size: 0.9375rem;
+            position: relative;
+            border-left: 0; /* Clear previous border-left style */
         }
 
         .nav-item:hover {
@@ -254,9 +238,8 @@
         .nav-item.active {
             background: rgba(255, 255, 255, 0.25);
             color: white;
-            font-weight: var(--font-weight-semibold);
+            font-weight: 600;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            border-left-color: white;
         }
 
         .nav-item.active::before {
@@ -268,25 +251,25 @@
             width: 4px;
             height: 60%;
             background: white;
-            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            border-radius: 0 4px 4px 0; /* Dashboard style */
         }
 
         .nav-item i {
-            width: 20px;
+            width: 24px; /* Dashboard uses 24px */
             text-align: center;
             font-size: 1.125rem;
-            transition: transform var(--transition-base);
         }
 
         .nav-item:hover i {
             transform: scale(1.1);
         }
 
+        /* User Info - Exact Match */
         .user-info-bottom {
             padding: var(--space-6);
             border-top: 1px solid rgba(255, 255, 255, 0.15);
             background: transparent;
-            position: relative;
+            position: relative; /* Kept relative if needed, dashboard didn't specify */
         }
 
         .user-profile {
@@ -294,7 +277,7 @@
             align-items: center;
             gap: var(--space-3);
             margin-bottom: var(--space-4);
-            position: relative;
+            position: relative; /* Kept relative */
             z-index: 1;
         }
 
@@ -302,12 +285,12 @@
             width: 48px;
             height: 48px;
             background: var(--surface);
-            border-radius: var(--radius-full);
+            border-radius: 50%; /* Dashboard used 50% mixed with radius-full, but 50% is safer */
             display: flex;
             align-items: center;
             justify-content: center;
             color: #667eea;
-            font-weight: var(--font-weight-bold);
+            font-weight: 700;
             font-size: 1.125rem;
             flex-shrink: 0;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -320,7 +303,7 @@
         }
 
         .user-name {
-            font-weight: var(--font-weight-semibold);
+            font-weight: 600; /* Dashboard used 600 */
             font-size: 0.9375rem;
             color: white;
             white-space: nowrap;
@@ -330,7 +313,7 @@
         }
         
         .sidebar .user-name {
-            font-weight: var(--font-weight-semibold);
+            font-weight: 600;
             font-size: 0.9375rem;
             color: white;
             white-space: nowrap;
@@ -342,30 +325,30 @@
         .user-role {
             font-size: 0.75rem;
             color: rgba(255, 255, 255, 0.85);
-            font-weight: var(--font-weight-medium);
+            font-weight: 500; /* Dashboard uses default? Let's keep 500 */
         }
         
         .sidebar .user-role {
             font-size: 0.75rem;
             color: rgba(255, 255, 255, 0.85);
-            font-weight: var(--font-weight-medium);
+            font-weight: 500;
         }
 
         .logout-btn {
             width: 100%;
-            padding: var(--space-3) var(--space-4);
+            padding: var(--space-3); /* Dashboard uses --space-3 only (no side padding specified separately) */
             background: rgba(255, 255, 255, 0.15);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.25);
             border-radius: var(--radius-lg);
             font-size: 0.875rem;
-            font-weight: var(--font-weight-semibold);
+            font-weight: 600; /* Dashboard uses 600 */
             cursor: pointer;
-            transition: all var(--transition-base);
+            transition: all 0.2s; /* Dashboard 0.2s */
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: var(--space-2);
+            gap: 8px; /* Dashboard uses 8px (space-2 is 0.5rem=8px) */
             text-decoration: none;
             position: relative;
             z-index: 1;
@@ -374,19 +357,19 @@
         
         .sidebar .logout-btn {
             width: 100%;
-            padding: var(--space-3) var(--space-4);
+            padding: var(--space-3);
             background: rgba(255, 255, 255, 0.15);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.25);
             border-radius: var(--radius-lg);
             font-size: 0.875rem;
-            font-weight: var(--font-weight-semibold);
+            font-weight: 600;
             cursor: pointer;
-            transition: all var(--transition-base);
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: var(--space-2);
+            gap: 8px;
             text-decoration: none;
             position: relative;
             z-index: 1;
@@ -395,7 +378,7 @@
 
         .logout-btn:hover {
             background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.4); /* Dashboard style? */
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
@@ -652,63 +635,110 @@
         @endphp
 
         <aside class="sidebar">
-            @if($role == 'approver')
-                @include('approver.partials.sidebar')
-            @elseif($role == 'user')
-                @include('user.partials.sidebar')
-            @elseif($role == 'admin')
-                @include('admin.partials.sidebar')
-            @else
-                {{-- Fallback sidebar for Unit Pengelola, Kepala Departemen, and others --}}
-                <div class="logo-section">
-                    <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
-                    <div class="logo-text">PT Semen Padang</div>
-                    <div class="logo-subtext">HIRADC System</div>
-                </div>
+            <div class="logo-section">
+                <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
+                <div class="logo-text">PT Semen Padang</div>
+                <div class="logo-subtext">HIRADC System</div>
+            </div>
 
-                <nav class="nav-menu">
-                    @if($role == 'unit_pengelola')
-                        <a href="{{ route('unit_pengelola.dashboard') }}" class="nav-item">
-                            <i class="fas fa-th-large"></i><span>Dashboard</span>
+            <nav class="nav-menu">
+                {{-- 1. USER / STAFF (Role 4,5,6 with Create) --}}
+                @if($role == 'user' || ($role == 'staff' && Auth::user()->can_create_documents == 1))
+                    <a href="{{ route('user.dashboard') }}" class="nav-item">
+                        <i class="fas fa-th-large"></i><span>Dashboard</span>
+                    </a>
+                    <a href="{{ route('documents.index') }}" class="nav-item">
+                        <i class="fas fa-folder-open"></i><span>Form Saya</span>
+                    </a>
+                    <a href="{{ route('documents.create') }}" class="nav-item">
+                        <i class="fas fa-plus-circle"></i><span>Buat Form Baru</span>
+                    </a>
+                @endif
+
+                {{-- 2. UNIT PENGELOLA (Head & Staff) --}}
+                @if($role == 'unit_pengelola')
+                    <a href="{{ route('unit_pengelola.dashboard') }}" class="nav-item">
+                        <i class="fas fa-th-large"></i><span>Dashboard</span>
+                    </a>
+
+                    {{-- If Staff/Head has Create Access (PIC) --}}
+                    @if(Auth::user()->can_create_documents == 1)
+                        <a href="{{ route('documents.index') }}" class="nav-item">
+                            <i class="fas fa-folder-open"></i><span>Form Saya</span>
                         </a>
-                        <a href="{{ route('unit_pengelola.documents.index') }}" class="nav-item">
-                            <i class="fas fa-file-alt"></i><span>Inbox Dokumen</span>
+                        <a href="{{ route('documents.create') }}" class="nav-item">
+                            <i class="fas fa-plus-circle"></i><span>Buat Form Baru</span>
                         </a>
-                    @elseif($role == 'kepala_departemen')
-                        <a href="{{ route('kepala_departemen.dashboard') }}" class="nav-item">
-                            <i class="fas fa-th-large"></i><span>Dashboard</span>
-                        </a>
-                        <a href="{{ route('kepala_departemen.check_documents') }}" class="nav-item">
+                    @endif
+
+                    {{-- Review Link (Head vs Staff) --}}
+                    @if(Auth::user()->role_jabatan == 3)
+                        {{-- Head --}}
+                        <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item">
                             <i class="fas fa-file-contract"></i><span>Review Dokumen</span>
                         </a>
                     @else
-                        <a href="{{ route(auth()->user()->getDashboardRoute()) }}" class="nav-item active">
-                            <i class="fas fa-th-large"></i><span>Dashboard</span>
+                        {{-- Staff --}}
+                        <a href="{{ route('unit_pengelola.staff.index') }}" class="nav-item">
+                            <i class="fas fa-file-contract"></i><span>Review Dokumen</span>
                         </a>
                     @endif
-                </nav>
+                @endif
+                
+                {{-- 3. APPROVER (Head of Unit - Not Unit Pengelola) --}}
+                @if($role == 'approver')
+                    <a href="{{ route('approver.check_documents') }}" class="nav-item">
+                        <i class="fas fa-file-contract"></i><span>Review Dokumen</span>
+                    </a>
+                @endif
 
-                {{-- User Info Section --}}
-                <div class="user-info-bottom">
-                    <div class="user-profile">
-                        <div class="user-avatar">
-                            {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
-                        </div>
-                        <div class="user-details">
-                            <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                            <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
+                {{-- 4. KEPALA DEPARTEMEN --}}
+                @if($role == 'kepala_departemen')
+                     <a href="{{ route('kepala_departemen.dashboard') }}" class="nav-item">
+                        <i class="fas fa-th-large"></i><span>Dashboard</span>
+                    </a>
+                     <a href="{{ route('kepala_departemen.check_documents') }}" class="nav-item">
+                        <i class="fas fa-check-double"></i><span>Review Dokumen</span>
+                    </a>
+                @endif
+
+                {{-- 5. ADMIN --}}
+                @if($role == 'admin')
+                    <a href="{{ route('admin.dashboard') }}" class="nav-item">
+                        <i class="fas fa-th-large"></i><span>Dashboard</span>
+                    </a>
+                    <a href="{{ route('admin.users') }}" class="nav-item">
+                        <i class="fas fa-users-cog"></i><span>User Management</span>
+                    </a>
+                     <a href="{{ route('admin.master') }}" class="nav-item">
+                        <i class="fas fa-database"></i><span>Master Data</span>
+                    </a>
+                @endif
+            </nav>
+
+            {{-- User Info Section --}}
+            <div class="user-info-bottom">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
+                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
+                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
+                             {{ Auth::user()->unit ? Auth::user()->unit->nama_unit : (Auth::user()->departemen ? Auth::user()->departemen->nama_dept : '-') }}
                         </div>
                     </div>
-                    <a href="{{ route('logout') }}" class="logout-btn"
-                        onclick="event.preventDefault(); document.getElementById('logout-form-published').submit();">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Keluar
-                    </a>
-                    <form id="logout-form-published" action="{{ route('logout') }}" method="POST" style="display: none;">
-                        @csrf
-                    </form>
                 </div>
-            @endif
+                <a href="{{ route('logout') }}" class="logout-btn"
+                    onclick="event.preventDefault(); document.getElementById('logout-form-published').submit();">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Keluar
+                </a>
+                <form id="logout-form-published" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
+            </div>
         </aside>
 
         <!-- Main Content -->
