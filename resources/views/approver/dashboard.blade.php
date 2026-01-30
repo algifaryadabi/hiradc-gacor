@@ -246,17 +246,7 @@
                 </div>
 
                 <!-- Stats Grid (Added) -->
-                @if(isset($pendingCount))
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon warning"><i class="fas fa-clock"></i></div>
-                        <div class="stat-info">
-                            <h3>Menunggu Approval</h3>
-                            <div class="value">{{ $pendingCount }}</div>
-                        </div>
-                    </div>
-                </div>
-                @endif
+                <!-- Stats Grid Removed as per request -->
 
                 <!-- PIC Card (Only for Kepala Unit) -->
                  @if(isset($currentPIC) || isset($staffList))
@@ -604,6 +594,27 @@
                 Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan sistem.', confirmButtonColor: '#c41e3a' });
             });
         }
+    </script>
+    <script>
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: "{{ session('success') }}",
+                timer: 2000,
+                showConfirmButton: false
+            });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: "{{ session('error') }}",
+                timer: 2000,
+                showConfirmButton: false
+            });
+        @endif
     </script>
 </body>
 </html>

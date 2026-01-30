@@ -514,7 +514,13 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer" style="padding: 20px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; text-align: right;">
+            <div class="modal-footer" style="padding: 20px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; display: flex; justify-content: flex-end; gap: 12px;">
+                <a id="btn_modal_pdf" href="#" target="_blank" style="padding: 10px 24px; background: #c41e3a; color: white; border: none; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.2s;">
+                    <i class="fas fa-file-pdf" style="margin-right: 8px;"></i> Export PDF
+                </a>
+                <a id="btn_modal_excel" href="#" target="_blank" style="padding: 10px 24px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.2s;">
+                    <i class="fas fa-file-excel" style="margin-right: 8px;"></i> Export Excel
+                </a>
                 <button onclick="closeModal()" style="padding: 10px 24px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; color: #475569; font-weight: 600; cursor: pointer; transition: all 0.2s;">Tutup</button>
             </div>
         </div>
@@ -735,12 +741,18 @@
                              <td><div style="font-size: 0.875rem; color: var(--text-secondary);">${doc.date}</div></td>
                              <td><span class="status-pill" style="background: #ecfdf5; color: #059669;">DISETUJUI</span></td>
                              <td>
-                                 <div style="display:flex; gap:6px;">
+                                    <div style="display:flex; gap:6px;">
                                      <button class="btn-action" style="background: #be123c;" onclick="openDetail(${doc.id})">
-                                         <i class="fas fa-eye"></i> Detail
+                                         <i class="fas fa-eye"></i>
                                      </button>
                                      <a href="{{ url('/documents') }}/${doc.id}/published?filter=${doc.category}" class="btn-action" style="background: #2563eb;">
-                                         <i class="fas fa-external-link-alt"></i> Buka
+                                         <i class="fas fa-external-link-alt"></i>
+                                     </a>
+                                     <a href="{{ url('/documents') }}/${doc.id}/export-detail-pdf" target="_blank" class="btn-action" style="background: #c41e3a;" title="Export PDF">
+                                         <i class="fas fa-file-pdf"></i>
+                                     </a>
+                                     <a href="{{ url('/documents') }}/${doc.id}/export/excel" target="_blank" class="btn-action" style="background: #10b981;" title="Export Excel">
+                                         <i class="fas fa-file-excel"></i>
                                      </a>
                                  </div>
                              </td>
@@ -762,6 +774,11 @@
                  document.getElementById('m_author').innerText = doc.author;
                  document.getElementById('m_date').innerText = doc.date;
                  document.getElementById('m_approver').innerText = doc.approver || '-'; // Need approver data?
+                 
+                 // Update Export Links
+                 document.getElementById('btn_modal_pdf').href = `{{ url('/documents') }}/${doc.id}/export-detail-pdf`;
+                 document.getElementById('btn_modal_excel').href = `{{ url('/documents') }}/${doc.id}/export/excel`;
+                 
                  document.getElementById('detailModal').style.display = 'block';
             }
         }

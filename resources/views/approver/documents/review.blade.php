@@ -10,19 +10,61 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* ========================================
+           DESIGN SYSTEM - CSS CUSTOM PROPERTIES
+           ======================================== */
         :root {
+            /* Brand Colors - PT Semen Padang */
             --primary: #c41e3a;
-            --primary-light: #fff1f2;
-            --secondary: #64748b;
+            --primary-dark: #9a1829;
+            --primary-light: #e63950;
+            --primary-50: #fef2f3;
+            --primary-100: #fce7e9;
+            --primary-200: #f9d0d4;
+            --primary-600: #c41e3a;
+
+            /* Neutral Palette */
+            --gray-50: #fafafa;
+            --gray-100: #f5f5f5;
+            --gray-200: #e5e5e5;
+            --gray-300: #d4d4d4;
+            --gray-400: #a3a3a3;
+            --gray-500: #737373;
+            --gray-600: #525252;
+            --gray-700: #404040;
+            --gray-800: #262626;
+            --gray-900: #171717;
+
+            /* Surface & Background */
             --bg-body: #f1f5f9;
             --surface: #ffffff;
-            --text-main: #1e293b;
-            --text-sub: #64748b;
+            --surface-hover: #f9fafb;
             --border: #e2e8f0;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --border-light: #f1f5f9;
+            --border-radius: 16px;
+
+            /* Spacing */
+            --space-4: 1rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --radius-full: 9999px;
+
+            --sidebar-bg: #5b6fd8;
+            
+            /* Legacy Variables Support */
+            --header-bg: #1e293b;
+            --header-text: #ffffff;
+            --border-color: #cbd5e1;
+            --row-hover: #f1f5f9;
+            --risk-section-bg: #ffffff;
+            --input-bg: #f8fafc;
         }
 
+        /* Base Styles */
         * {
             margin: 0;
             padding: 0;
@@ -33,7 +75,11 @@
         body {
             font-family: 'Inter', sans-serif;
             background: var(--bg-body);
-            color: var(--text-main);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(196, 30, 58, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--gray-900);
             padding-bottom: 120px;
         }
 
@@ -42,158 +88,183 @@
             min-height: 100vh;
         }
 
-        /* Sidebar */
+        /* Essential Sidebar Styles for Partial (Blue Theme) */
         .sidebar {
-            width: 250px;
-            background: white;
-            border-right: 1px solid #e0e0e0;
+            width: 280px;
+            background: #5b6fd8;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             position: fixed;
             height: 100vh;
             display: flex;
             flex-direction: column;
             z-index: 100;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .logo-section {
-            padding: 30px 20px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: var(--space-8) var(--space-6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             text-align: center;
+            position: relative;
+        }
+
+        .logo-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
         }
 
         .logo-circle {
-            width: 70px;
-            height: 70px;
-            background: #fff;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 1.25rem;
+            background: transparent;
             border-radius: 50%;
-            margin: 0 auto 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
         }
-
+        
         .logo-circle img {
-            max-width: 80%;
-            max-height: 80%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
         }
 
         .logo-text {
-            font-size: 18px;
+            font-size: 1.125rem;
             font-weight: 700;
-            color: #c41e3a;
-            margin-bottom: 3px;
+            color: white;
+            margin-bottom: 0.25rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
 
         .logo-subtext {
-            font-size: 12px;
-            color: #999;
-            font-style: italic;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .nav-menu {
             flex: 1;
-            padding: 20px 0;
+            padding: var(--space-6) 0;
             overflow-y: auto;
         }
 
         .nav-item {
-            padding: 15px 25px;
+            padding: 1rem 1.5rem;
+            margin: 0.25rem 1rem;
             display: flex;
             align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: #666;
-            font-size: 14px;
+            gap: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
             font-weight: 500;
             text-decoration: none;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+            font-size: 0.9375rem;
             position: relative;
         }
 
         .nav-item:hover {
-            background: #fff5f5;
-            color: #c41e3a;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(4px);
         }
 
         .nav-item.active {
-            background: #ffe5e5;
-            color: #c41e3a;
-            border-left: 3px solid #c41e3a;
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border-left: none; /* Override existing */
         }
-
-        .nav-item i {
-            width: 20px;
-            text-align: center;
-            font-size: 16px;
+        
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 60%;
+            background: white;
+            border-radius: 0 4px 4px 0;
         }
 
         .badge {
-            position: absolute;
-            right: 20px;
-            background: #c41e3a;
+            background: #ef4444;
             color: white;
-            font-size: 10px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-weight: 600;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-weight: 700;
+            margin-left: auto;
+            right: auto; /* Reset */
+            position: relative; /* Reset */
         }
 
         .user-info-bottom {
-            padding: 20px;
-            border-top: 2px solid #e0e0e0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            background: transparent;
         }
 
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: white;
+            width: 48px;
+            height: 48px;
+            background: var(--surface);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #667eea;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 1.125rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             flex-shrink: 0;
-        }
-
-        .user-details {
-            flex: 1;
-            min-width: 0;
         }
 
         .user-name {
             font-weight: 600;
-            font-size: 13px;
+            font-size: 0.9375rem;
             color: white;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            margin-bottom: 2px;
         }
 
         .user-role {
-            font-size: 11px;
+            font-size: 0.75rem;
             color: rgba(255, 255, 255, 0.85);
-            margin-top: 2px;
+            margin-top: 0;
         }
 
         .logout-btn {
             width: 100%;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.2);
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.15);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -202,20 +273,57 @@
             justify-content: center;
             gap: 8px;
             text-decoration: none;
+            backdrop-filter: blur(10px);
         }
 
         .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
-
-        /* Main Content */
+        
         .main-content {
             flex: 1;
-            margin-left: 250px;
+            margin-left: 280px;
             padding: 32px 48px;
             max-width: 1400px;
         }
-
+        
+        /* Laptop Optimization (max-width: 1440px) */
+        @media (max-width: 1440px) {
+            .sidebar {
+                width: 220px;
+            }
+            .main-content {
+                margin-left: 220px;
+                padding: 24px 32px;
+            }
+            
+            /* Compact Sidebar Elements */
+            .logo-section { padding: 20px 15px; }
+            .logo-circle { width: 55px; height: 55px; margin-bottom: 10px; }
+            .logo-text { font-size: 16px; margin-bottom: 2px; }
+            .logo-subtext { font-size: 11px; }
+            .nav-item { padding: 10px 18px; font-size: 13px; gap: 10px; }
+            .user-info-bottom { padding: 15px; }
+            
+            /* Compact Content Elements */
+            .page-header { margin-bottom: 20px; }
+            .header-title h1 { font-size: 20px; }
+            .doc-card { margin-bottom: 20px; }
+            .doc-header { padding: 15px 24px; }
+            .doc-title-value { font-size: 16px; }
+            
+            /* Compact Table */
+            .excel-table th, .excel-table td { padding: 6px 8px; }
+            .excel-table { font-size: 12px; }
+            .cell-textarea, .cell-input { padding: 6px 8px; min-height: 70px; font-size: 12px; }
+            
+            /* Compact Footer */
+            .review-footer { left: 240px; padding: 10px 20px; bottom: 15px; }
+            .notes-input { padding: 8px 12px; font-size: 13px; }
+            .action-btns .btn { padding: 8px 16px; font-size: 13px; }
+        }
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -1002,7 +1110,7 @@
 
             <!-- Header Card (Summary) -->
             <div class="doc-card">
-                <div class="doc-header" style="justify-content: flex-start; gap: 30px;">
+                <div class="doc-header" style="justify-content: flex-start; gap: 30px; align-items: center;">
                     <div>
                         <div class="doc-title-label">Judul Form</div>
                         <div class="doc-title-value">{{ $document->judul_dokumen ?? $document->kolom2_kegiatan }}</div>
@@ -1014,16 +1122,17 @@
                             {{ $document->seksi->nama_seksi ?? '-' }}
                         </div>
                     </div>
-                </div>
-                <div style="margin-left: auto; display: flex; gap: 10px;">
-                    <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank"
-                        style="padding: 8px 12px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
-                        <i class="fas fa-file-pdf" style="margin-right: 5px;"></i> PDF
-                    </a>
-                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank"
-                        style="padding: 8px 12px; background: #27ae60; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
-                        <i class="fas fa-file-excel" style="margin-right: 5px;"></i> Excel
-                    </a>
+
+                    <div style="margin-left: auto; display: flex; gap: 10px;">
+                        <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank"
+                            style="padding: 8px 16px; background: #c41e3a; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(196, 30, 58, 0.2); transition: all 0.2s;" onmouseover="this.style.background='#9a1829'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#c41e3a'; this.style.transform='none'">
+                            <i class="fas fa-file-pdf" style="margin-right: 6px;"></i> PDF
+                        </a>
+                        <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank"
+                            style="padding: 8px 16px; background: #10b981; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); transition: all 0.2s;" onmouseover="this.style.background='#059669'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#10b981'; this.style.transform='none'">
+                            <i class="fas fa-file-excel" style="margin-right: 6px;"></i> Excel
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -1858,6 +1967,12 @@
             const notes = document.getElementById('notes').value.trim();
             if (type === 'revise' && notes.length < 5) {
                 Swal.fire({ icon: 'warning', title: 'Catatan Wajib', text: 'Untuk revisi, wajib memberikan catatan saran.' });
+                return;
+            }
+
+            // Validation for Approve: Notes Required
+            if (type === 'approve' && notes === '') {
+                Swal.fire({ icon: 'warning', title: 'Catatan Wajib', text: 'Isikan catatan terlebih dahulu.' });
                 return;
             }
 

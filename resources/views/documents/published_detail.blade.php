@@ -647,12 +647,15 @@
                     <a href="{{ route('user.dashboard') }}" class="nav-item">
                         <i class="fas fa-th-large"></i><span>Dashboard</span>
                     </a>
-                    <a href="{{ route('documents.index') }}" class="nav-item">
-                        <i class="fas fa-folder-open"></i><span>Form Saya</span>
-                    </a>
-                    <a href="{{ route('documents.create') }}" class="nav-item">
-                        <i class="fas fa-plus-circle"></i><span>Buat Form Baru</span>
-                    </a>
+                    
+                    @if(Auth::user()->can_create_documents == 1)
+                        <a href="{{ route('documents.index') }}" class="nav-item">
+                            <i class="fas fa-folder-open"></i><span>Form Saya</span>
+                        </a>
+                        <a href="{{ route('documents.create') }}" class="nav-item">
+                            <i class="fas fa-plus-circle"></i><span>Buat Form Baru</span>
+                        </a>
+                    @endif
                 @endif
 
                 {{-- 2. UNIT PENGELOLA (Head & Staff) --}}
@@ -687,8 +690,11 @@
                 
                 {{-- 3. APPROVER (Head of Unit - Not Unit Pengelola) --}}
                 @if($role == 'approver')
+                    <a href="{{ route('approver.dashboard') }}" class="nav-item">
+                        <i class="fas fa-th-large"></i><span>Dashboard</span>
+                    </a>
                     <a href="{{ route('approver.check_documents') }}" class="nav-item">
-                        <i class="fas fa-file-contract"></i><span>Review Dokumen</span>
+                        <i class="fas fa-file-contract"></i><span>Cek Form</span>
                     </a>
                 @endif
 
@@ -744,9 +750,9 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="back-nav">
-                <a href="{{ route(auth()->user()->getDashboardRoute()) }}" class="back-link">
-                    <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
-                </a>
+                <button onclick="history.back()" class="back-link" style="border:none; cursor:pointer;">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </button>
             </div>
 
             <!-- Doc Banner -->
@@ -770,6 +776,7 @@
                     </div>
                 </div>
                 <div class="action-buttons">
+                    {{-- Export Buttons (Visible to All Viewers) --}}
                     <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank" style="padding: 10px 16px; background: #e74c3c; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; transition: all 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
                         <i class="fas fa-file-pdf" style="margin-right: 8px;"></i> PDF
                     </a>
