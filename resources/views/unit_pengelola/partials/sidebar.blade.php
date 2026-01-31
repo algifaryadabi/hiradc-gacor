@@ -16,7 +16,7 @@
         <a href="{{ route('unit_pengelola.documents.index') }}"
             class="nav-item {{ request()->routeIs('unit_pengelola.documents.*') ? 'active' : '' }}">
             <i class="fas fa-file-alt"></i>
-            <span>Inbox Dokumen</span>
+            <span>Review Dokumen</span>
         </a>
     </nav>
 

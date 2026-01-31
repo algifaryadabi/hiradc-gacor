@@ -83,9 +83,14 @@ Route::middleware('auth')->group(function () {
         // Load published documents (General View)
         // Load published documents (General View)
         // Load published documents (General View)
-        $rawDocuments = \App\Models\Document::published()
+        // Load published documents (General View) - Inclusive of partial tracks
+        $rawDocuments = \App\Models\Document::where(function ($q) {
+                $q->where('status', 'published')
+                  ->orWhere('status_she', 'published')
+                  ->orWhere('status_security', 'published');
+            })
             ->with(['user', 'unit', 'approvals.approver', 'details'])
-            ->orderBy('published_at', 'desc')
+            ->orderBy('updated_at', 'desc')
             ->get();
 
         $documents = $rawDocuments->map(function ($doc) {
@@ -100,11 +105,11 @@ Route::middleware('auth')->group(function () {
                 $approvalNote = $lastApproval->catatan ?? '-';
             }
 
-            // Revert to Broad Categories (SHE, Security)
+            // Revert to Broad Categories (SHE, Security), but only if published
             $cats = [];
-            if ($doc->hasSheContent())
+            if ($doc->hasSheContent() && ($doc->status == 'published' || $doc->status_she == 'published'))
                 $cats[] = 'SHE';
-            if ($doc->hasSecurityContent())
+            if ($doc->hasSecurityContent() && ($doc->status == 'published' || $doc->status_security == 'published'))
                 $cats[] = 'Security';
             $categoryLabel = empty($cats) ? '-' : implode(', ', $cats);
 
@@ -221,45 +226,98 @@ Route::middleware('auth')->group(function () {
     // ==================== KEPALA DEPARTEMEN ROUTES ====================
     Route::get('/kepala-departemen/dashboard', function () {
         $user = Auth::user();
-        $pendingDocuments = \App\Models\Document::where('current_level', 3)
-            ->where('status', 'pending_level3')
-            // Temporarily remove strict Department filtering if user data is incomplete for testing? 
-            // Better to keep it but ensure user knows.
-            ->where('id_dept', $user->id_dept)
+
+        // 1. Fetch Pending Documents (Flexible Query for Parallel Workflow)
+        $pendingDocuments = \App\Models\Document::where('id_dept', $user->id_dept)
+            ->where(function ($q) {
+                $q->where('current_level', 3) // Standard Level 3
+                    ->orWhere(function ($sub) {
+                        // Parallel Persistence: Show if ANY track is approved/published
+                        // This covers:
+                        // - Revision (Level 1)
+                        // - Resubmitted (Pending Level 1)
+                        // - Processing (Pending Level 2)
+                        $sub->where(function ($p) {
+                             $p->whereIn('status_she', ['approved', 'published'])
+                               ->orWhereIn('status_security', ['approved', 'published']);
+                        });
+                    })
+                    ->orWhere('status', 'approved') // Published Global
+                    ->orWhere('status', 'published');
+            })
             ->with(['user', 'unit'])
-            ->orderBy('created_at', 'desc')
+            ->orderBy('updated_at', 'desc')
             ->get();
 
         $pendingCount = $pendingDocuments->count();
 
-        $publishedDocuments = \App\Models\Document::published()
+        $publishedDocuments = \App\Models\Document::where('id_dept', $user->id_dept)
+            ->where(function ($q) {
+                 $q->where('status', 'published')
+                   ->orWhere('status_she', 'published')
+                   ->orWhere('status_security', 'published');
+            })
             ->with(['user', 'unit', 'details'])
-            ->orderBy('published_at', 'desc')
+            ->orderBy('updated_at', 'desc') // Use updated_at since published_at might differ per track
             ->limit(10)
             ->get();
+            
+        // Transform for View (JSON) - Support Split Cards
+        $pendingData = $pendingDocuments->flatMap(function ($doc) {
+            $items = [];
+            
+            // Helper
+            $buildItem = function ($filter, $label, $isPublished = false) use ($doc) {
+                return [
+                    'id' => $doc->id,
+                    'title' => $doc->kolom2_kegiatan,
+                    'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
+                    'date' => $doc->created_at->format('d M Y'),
+                    'risk_level' => $doc->risk_level ?? 'High',
+                    'status' => $label,
+                    'filter' => $filter, // Passed to specific review link
+                    'is_published' => $isPublished 
+                ];
+            };
 
-        // Transform for View (JSON)
-        $pendingData = $pendingDocuments->map(function ($doc) {
-            return [
-                'id' => $doc->id,
-                'title' => $doc->kolom2_kegiatan,
-                'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
-                'date' => $doc->created_at->format('d M Y'),
-                'risk_level' => $doc->risk_level ?? 'High',
-                'status' => 'Menunggu Approval'
-            ];
+            // Check SHE
+            if ($doc->hasSheContent()) {
+                if ($doc->status_she == 'approved') {
+                    $items[] = $buildItem('SHE', 'Menunggu Approval (SHE)');
+                } elseif ($doc->status_she == 'published') {
+                     $items[] = $buildItem('SHE', 'Terpublikasi (SHE)', true);
+                }
+            }
+            // Check Security
+            if ($doc->hasSecurityContent()) {
+                if ($doc->status_security == 'approved') {
+                    $items[] = $buildItem('Security', 'Menunggu Approval (Security)');
+                } elseif ($doc->status_security == 'published') {
+                     $items[] = $buildItem('Security', 'Terpublikasi (Security)', true);
+                }
+            }
+
+            // Fallback for Legacy/Standard
+            if (empty($items)) {
+                // If it was fetched but matches neither specific approved condition
+                // e.g. strictly pending_level3 with no sub-status used yet
+                if ($doc->current_level == 3) {
+                     $items[] = $buildItem('ALL', 'Menunggu Approval');
+                }
+                // Also show if global revision but visible? No, logic above handles status check from query.
+            }
+
+            return $items;
         });
 
         $publishedData = $publishedDocuments->map(function ($doc) {
             $lastApproval = $doc->approvals()->latest()->first();
 
-            // Revert to Broad Categories (SHE, Security) as requested
-            // We use the same logic as managing_unit but manually here if needed, or just managing_unit attribute.
-            // But we want to ensure it works for the Split logic later.
+            // Revert to Broad Categories (SHE, Security) as requested, but ONLY if they are published
             $cats = [];
-            if ($doc->hasSheContent())
+            if ($doc->hasSheContent() && ($doc->status == 'published' || $doc->status_she == 'published'))
                 $cats[] = 'SHE';
-            if ($doc->hasSecurityContent())
+            if ($doc->hasSecurityContent() && ($doc->status == 'published' || $doc->status_security == 'published'))
                 $cats[] = 'Security';
             $categoryLabel = empty($cats) ? '-' : implode(', ', $cats);
 
@@ -305,8 +363,12 @@ Route::middleware('auth')->group(function () {
         $totalDocuments = \App\Models\Document::whereNotIn('status', ['draft'])->count();
 
         // Published Documents
-        $publishedDocuments = \App\Models\Document::where('status', 'published')
-            ->whereNotNull('published_at')
+        // Published Documents - Inclusive
+        $publishedDocuments = \App\Models\Document::where(function ($q) {
+                $q->where('status', 'published')
+                  ->orWhere('status_she', 'published')
+                  ->orWhere('status_security', 'published');
+            })
             ->count();
 
         // Pending Approval (all levels)
@@ -320,19 +382,23 @@ Route::middleware('auth')->group(function () {
         $revisionDocuments = \App\Models\Document::where('status', 'revision')->count();
 
         // Get published documents for table
-        $rawDocuments = \App\Models\Document::where('status', 'published')
-            ->whereNotNull('published_at')
+        // Get published documents for table - Inclusive
+        $rawDocuments = \App\Models\Document::where(function ($q) {
+                $q->where('status', 'published')
+                  ->orWhere('status_she', 'published')
+                  ->orWhere('status_security', 'published');
+            })
             ->with(['user', 'unit', 'details'])
-            ->orderBy('published_at', 'desc')
+            ->orderBy('updated_at', 'desc')
             ->limit(20)
             ->get();
 
         $documents = $rawDocuments->map(function ($doc) {
-            // Revert to Broad Categories (SHE, Security)
+            // Revert to Broad Categories (SHE, Security), but only if published
             $cats = [];
-            if ($doc->hasSheContent())
+            if ($doc->hasSheContent() && ($doc->status == 'published' || $doc->status_she == 'published'))
                 $cats[] = 'SHE';
-            if ($doc->hasSecurityContent())
+            if ($doc->hasSecurityContent() && ($doc->status == 'published' || $doc->status_security == 'published'))
                 $cats[] = 'Security';
             $categoryLabel = empty($cats) ? '-' : implode(', ', $cats);
 

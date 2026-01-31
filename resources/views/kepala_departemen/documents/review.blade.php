@@ -876,8 +876,8 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="back-nav">
-                <a href="{{ route('kepala_departemen.check_documents') }}" class="back-link">
-                    <i class="fas fa-arrow-left"></i> Kembali ke Daftar Dokumen
+                <a href="#" onclick="history.back(); return false;" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Kembali
                 </a>
             </div>
 
@@ -1402,13 +1402,36 @@
                                 placeholder="Tulis catatan (Opsional untuk Approve, Wajib untuk Revisi)..."
                                 rows="2"></textarea>
                         </div>
-                        <div class="action-buttons">
-                            <button type="button" class="btn-action btn-revise" onclick="submitAction('revise')">
-                                <i class="fas fa-undo"></i> Minta Revisi
-                            </button>
-                            <button type="button" class="btn-action btn-approve" onclick="submitAction('approve')">
-                                <i class="fas fa-check-circle"></i> Publikasikan
-                            </button>
+                        <div class="action-buttons" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                            @if(isset($filter) && ($filter == 'SHE' || $filter == 'Security'))
+                                {{-- SCOPED ACTIONS --}}
+                                <button type="button" class="btn-action btn-revise" onclick="submitAction('revise', '{{ $filter }}')">
+                                    <i class="fas fa-undo"></i> Minta Revisi ({{ $filter }})
+                                </button>
+                                <button type="button" class="btn-action btn-approve" onclick="submitAction('approve', '{{ $filter }}')">
+                                    <i class="fas fa-check-circle"></i> Publikasikan ({{ $filter }})
+                                </button>
+                            @else
+                                {{-- SPLIT ACTIONS (When Filter is ALL) --}}
+                                <div style="display:flex; gap:5px; border-right:1px solid #ccc; padding-right:10px;">
+                                    <span style="align-self:center; font-weight:bold; color:#666; font-size:0.8rem;">SHE:</span>
+                                    <button type="button" class="btn-action btn-revise" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('revise', 'SHE')">
+                                        <i class="fas fa-undo"></i> Revisi
+                                    </button>
+                                    <button type="button" class="btn-action btn-approve" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('approve', 'SHE')">
+                                        <i class="fas fa-check"></i> Publikasi
+                                    </button>
+                                </div>
+                                <div style="display:flex; gap:5px;">
+                                    <span style="align-self:center; font-weight:bold; color:#666; font-size:0.8rem;">Security:</span>
+                                    <button type="button" class="btn-action btn-revise" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('revise', 'Security')">
+                                        <i class="fas fa-undo"></i> Revisi
+                                    </button>
+                                    <button type="button" class="btn-action btn-approve" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('approve', 'Security')">
+                                        <i class="fas fa-check"></i> Publikasi
+                                    </button>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @else
@@ -1561,8 +1584,14 @@
     </div>
 
     <script>
-        function submitAction(type) {
+        function submitAction(type, forcedFilter = null) {
             const noteUI = document.getElementById('catatan_ui');
+            // If the element doesn't exist (locked mode), fail gracefully or handle
+            if (!noteUI) {
+                console.error("Note input element not found. Form might be locked.");
+                return;
+            }
+
             const noteCommon = noteUI.value.trim();
             const form = document.getElementById('reviewForm');
             const noteHidden = document.getElementById('catatan_hidden');
@@ -1577,17 +1606,24 @@
                 return;
             }
 
-            const actionText = type === 'approve' ? 'Publikasikan' : 'Kembalikan untuk Revisi';
+            // Determine effective filter
+            const filter = forcedFilter || "{{ $filter ?? 'ALL' }}";
+            
+            const actionText = type === 'approve' ? 'Publikasikan (' + filter + ')' : 'Kembalikan untuk Revisi (' + filter + ')';
             const actionColor = type === 'approve' ? '#16a34a' : '#dc2626';
 
-            // Add filter parameter to URL
-            const filter = "{{ $filter ?? 'ALL' }}";
+            // Construct URLs
             const baseApproveUrl = "{{ route('kepala_departemen.publish', $document->id) }}";
             const baseReviseUrl = "{{ route('kepala_departemen.revise', $document->id) }}";
 
-            const actionUrl = type === 'approve'
-                ? (filter !== 'ALL' ? baseApproveUrl + '?filter=' + filter : baseApproveUrl)
-                : (filter !== 'ALL' ? baseReviseUrl + '?filter=' + filter : baseReviseUrl);
+            let actionUrl = type === 'approve' ? baseApproveUrl : baseReviseUrl;
+            
+            // Append Filter
+            if (filter !== 'ALL') {
+                actionUrl += '?filter=' + filter;
+            }
+
+            console.log('Action URL:', actionUrl);
 
             Swal.fire({
                 title: 'Konfirmasi',

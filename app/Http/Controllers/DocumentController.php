@@ -911,9 +911,13 @@ class DocumentController extends Controller
 
         $pendingCount = $pendingDocuments->count();
 
-        $publishedDocuments = Document::published()
+        $publishedDocuments = Document::where(function ($q) {
+                $q->where('status', 'published')
+                  ->orWhere('status_she', 'published')
+                  ->orWhere('status_security', 'published');
+            })
             ->with(['user', 'unit', 'approvals.approver'])
-            ->orderBy('published_at', 'desc')
+            ->orderBy('updated_at', 'desc')
             ->limit(10)
             ->get();
 
@@ -943,9 +947,13 @@ class DocumentController extends Controller
     // NEW: Realtime Data for Dashboard Table
     public function getApproverDashboardData(Request $request)
     {
-        $query = Document::published()
+        $query = Document::where(function ($q) {
+                $q->where('status', 'published')
+                  ->orWhere('status_she', 'published')
+                  ->orWhere('status_security', 'published');
+            })
             ->with(['user', 'unit', 'details', 'approvals.approver'])
-            ->orderBy('published_at', 'desc');
+            ->orderBy('updated_at', 'desc');
 
         // Filter by Unit if provided
         if ($request->has('unit_id') && $request->unit_id != '') {
@@ -967,11 +975,11 @@ class DocumentController extends Controller
         $data = $publishedDocuments->map(function ($doc) {
             $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
 
-            // Revert to Broad Categories (SHE, Security)
+            // Revert to Broad Categories (SHE, Security) - Strict Check
             $cats = [];
-            if ($doc->hasSheContent())
+            if ($doc->hasSheContent() && ($doc->status == 'published' || $doc->status_she == 'published'))
                 $cats[] = 'SHE';
-            if ($doc->hasSecurityContent())
+            if ($doc->hasSecurityContent() && ($doc->status == 'published' || $doc->status_security == 'published'))
                 $cats[] = 'Security';
             $categoryLabel = empty($cats) ? '-' : implode(', ', $cats);
 
@@ -1253,6 +1261,20 @@ class DocumentController extends Controller
             } elseif ($filter == 'Security') {
                 $verifyingUnit = 'Unit Pengelola Keamanan';
             }
+        } elseif (auth()->user()->role_jabatan == 3) { // Kepala Unit (Approver) Filter
+             $excludedCategories = [];
+             // If SHE is done, hide SHE rows
+             if (in_array($document->status_she, ['approved', 'published'])) {
+                 $excludedCategories = array_merge($excludedCategories, ['K3', 'KO', 'Lingkungan']);
+             }
+             // If Security is done, hide Security rows
+             if (in_array($document->status_security, ['approved', 'published'])) {
+                 $excludedCategories = array_merge($excludedCategories, ['Keamanan']);
+             }
+             
+             if (!empty($excludedCategories)) {
+                 $document->setRelation('details', $document->details->whereNotIn('kategori', $excludedCategories));
+             }
         }
 
         return view(match (auth()->user()->getRoleName()) {
@@ -1372,8 +1394,21 @@ class DocumentController extends Controller
                 } else {
                     // Normal Flow -> Move to Level 2
                     $document->refresh();
-                    $sheStatus = $document->hasSheContent() ? 'pending_head' : 'none';
-                    $secStatus = $document->hasSecurityContent() ? 'pending_head' : 'none';
+                    
+                    // SMART STATUS UPDATE: Only reset status if not already approved/published
+                    $currentShe = $document->status_she;
+                    if (in_array($currentShe, ['approved', 'published'])) {
+                        $sheStatus = $currentShe; // Keep as is
+                    } else {
+                        $sheStatus = $document->hasSheContent() ? 'pending_head' : 'none';
+                    }
+
+                    $currentSec = $document->status_security;
+                    if (in_array($currentSec, ['approved', 'published'])) {
+                        $secStatus = $currentSec; // Keep as is
+                    } else {
+                        $secStatus = $document->hasSecurityContent() ? 'pending_head' : 'none';
+                    }
 
                     $document->update([
                         'current_level' => 2,
@@ -1563,16 +1598,16 @@ class DocumentController extends Controller
             ->where(function ($q) {
                 $q->where('current_level', 3) // Fully Pending
                     ->orWhere(function ($sub) {
-                        // Parallel Entry: Level 2 but at least one unit approved
-                        $sub->where('current_level', 2)
-                            ->where(function ($p) {
-                            $p->where('status_she', 'approved')
-                                ->orWhere('status_security', 'approved');
+                        // Parallel Entry OR Revision Visibility
+                        // We want to show the document IF at least one track is 'approved' OR 'published'
+                        // regardless of global status (even if 'revision' or 'pending_level1' or 'pending_level2')
+                        $sub->where(function ($p) {
+                             $p->whereIn('status_she', ['approved', 'published'])
+                               ->orWhereIn('status_security', ['approved', 'published']);
                         });
                     })
-                    ->orWhere('status', 'approved') // Published
-                    ->orWhere('status', 'published')
-                    ->orWhere('status', 'revision'); // Revisions
+                    ->orWhere('status', 'approved') // Published Global
+                    ->orWhere('status', 'published');
             })
             ->with(['user', 'unit', 'approvals'])
             ->orderBy('updated_at', 'desc')
@@ -1582,7 +1617,7 @@ class DocumentController extends Controller
             $items = [];
 
             // Helper to build item
-            $buildItem = function ($catType, $statusLabel) use ($doc) {
+            $buildItem = function ($catType, $statusLabel, $isPublished = false) use ($doc) {
                 // Friendly Unit Name & Department
                 $unitName = $doc->unit->nama_unit ?? '-';
                 $submitterName = $doc->user->nama_user ?? $doc->user->username ?? 'Unknown';
@@ -1600,39 +1635,32 @@ class DocumentController extends Controller
                     'category_label' => $catType, // SHE or Security
                     'current_level' => $doc->current_level,
                     // Pass filter param to review page
-                    'viewUrl' => route('kepala_departemen.review', ['document' => $doc->id, 'filter' => $catType])
+                    'viewUrl' => route('kepala_departemen.review', ['document' => $doc->id, 'filter' => $catType]),
+                    'is_published' => $isPublished
                 ];
             };
 
-            // 1. CHECKS FOR PENDING TASKS
-            $showShe = false;
-            $showSec = false;
-
-            // If Document is fully published/approved, we might show history here? 
-            // The query filters for Pending OR Approved.
-            // If Approved, we probably show one merged card or split?
-            // User request implies "Daftar Tugas" (Pending).
-            // Let's assume this list is primarily for "Pending/Actionable".
-
+            // 1. CHECKS FOR PENDING/VISIBLE TASKS
             // Check SHE Status
             if ($doc->hasSheContent()) {
-                // Ready if Unit approved (L2) AND not yet Dept Published (L3)
                 if ($doc->status_she == 'approved') {
                     $items[] = $buildItem('SHE', 'Verified by Kepala Unit SHE');
+                } elseif ($doc->status_she == 'published') {
+                    $items[] = $buildItem('SHE', 'Terpublikasi (SHE)', true);
                 }
             }
 
             // Check Security Status
             if ($doc->hasSecurityContent()) {
-                // Ready if Unit approved (L2) AND not yet Dept Published
                 if ($doc->status_security == 'approved') {
                     $items[] = $buildItem('Security', 'Verified by Kepala Unit Keamanan');
+                } elseif ($doc->status_security == 'published') {
+                    $items[] = $buildItem('Security', 'Terpublikasi (Security)', true);
                 }
             }
 
             // FALLBACK: If standard Level 3 (legacy) or just created
             if (empty($items) && $doc->current_level == 3 && $doc->status == 'pending_level3') {
-                // Show as generic if not using split status
                 $items[] = $buildItem('ALL', 'Menunggu Approval');
             }
 
@@ -1670,7 +1698,8 @@ class DocumentController extends Controller
 
         // Custom Logic for Unit Pengelola (Level 2) Revision -> Back to Submitter
         // Implement Partial Revision: Only revise the category managed by this Unit Pengelola
-        if ($document->current_level == 2) {
+        // EXCLUDE Kepala Departemen (Role 2) because they might be accessing L2 docs but should use L3 logic
+        if ($document->current_level == 2 && !$user->isKepalaDepartemen()) {
             $isShe = ($user->id_unit == 56); // SHE Unit
             $isSecurity = ($user->id_unit == 55); // Security Unit
 
@@ -2722,10 +2751,14 @@ class DocumentController extends Controller
         })->values();
 
 
-        // 3. Fetch Published/Approved Data (Top 10)
-        $publishedDocuments = Document::published()
+        // 3. Fetch Published/Approved Data (Top 10) - Inclusive
+        $publishedDocuments = Document::where(function ($q) {
+                $q->where('status', 'published')
+                  ->orWhere('status_she', 'published')
+                  ->orWhere('status_security', 'published');
+            })
             ->with(['user', 'unit', 'details', 'approvals.approver'])
-            ->orderBy('published_at', 'desc')
+            ->orderBy('updated_at', 'desc')
             ->limit(10)
             ->get();
 
@@ -2733,9 +2766,11 @@ class DocumentController extends Controller
             $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
             // Broad Categories
             $cats = [];
-            if ($doc->hasSheContent())
+            // Broad Categories - Strict Check
+            $cats = [];
+            if ($doc->hasSheContent() && ($doc->status == 'published' || $doc->status_she == 'published'))
                 $cats[] = 'SHE';
-            if ($doc->hasSecurityContent())
+            if ($doc->hasSecurityContent() && ($doc->status == 'published' || $doc->status_security == 'published'))
                 $cats[] = 'Security';
             $categoryLabel = empty($cats) ? '-' : implode(', ', $cats);
 
@@ -2793,10 +2828,13 @@ class DocumentController extends Controller
         //     $categoryFilter = ['Keamanan', 'keamanan', 'Security', 'security'];
         // }
 
-        $query = Document::published()
-            // ->whereIn('kategori', $categoryFilter) // Removed restriction
+        $query = Document::where(function ($q) {
+                $q->where('status', 'published')
+                  ->orWhere('status_she', 'published')
+                  ->orWhere('status_security', 'published');
+            })
             ->with(['user', 'unit', 'approvals.approver'])
-            ->orderBy('published_at', 'desc');
+            ->orderBy('updated_at', 'desc');
 
         // Filter by Unit if provided
         if ($request->has('unit_id') && $request->unit_id != '') {
@@ -2813,11 +2851,11 @@ class DocumentController extends Controller
         $data = $publishedDocuments->map(function ($doc) {
             $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
 
-            // Revert to Broad Categories (SHE, Security)
+            // Revert to Broad Categories (SHE, Security) - Strict Check
             $cats = [];
-            if ($doc->hasSheContent())
+            if ($doc->hasSheContent() && ($doc->status == 'published' || $doc->status_she == 'published'))
                 $cats[] = 'SHE';
-            if ($doc->hasSecurityContent())
+            if ($doc->hasSecurityContent() && ($doc->status == 'published' || $doc->status_security == 'published'))
                 $cats[] = 'Security';
             $categoryLabel = empty($cats) ? '-' : implode(', ', $cats);
 
@@ -2973,5 +3011,57 @@ class DocumentController extends Controller
                 'message' => 'Server Error: ' . $e->getMessage()
             ], 500);
         }
+    }
+    public function reviseDetail(Request $request, \App\Models\DocumentDetail $detail)
+    {
+        $request->validate([
+            'catatan' => 'required|string|min:5'
+        ]);
+
+        $document = $detail->document;
+        $user = Auth::user();
+
+        // Check Permissions
+        // Allow HoD to revise specific items
+        if ($user->isKepalaDepartemen()) {
+            if ($user->id_dept != $document->id_dept) {
+                abort(403);
+            }
+        } elseif (!$document->canBeApprovedBy($user)) {
+             abort(403);
+        }
+
+        // 1. Update Detail Status
+        $detail->update([
+            'status' => 'revision',
+            'revision_note' => $request->catatan
+        ]);
+
+        // 2. Update Parent Document Status (Trigger Revision Mode)
+        // Only update the specific track status
+        $cat = $detail->kategori;
+        $updateData = [
+            'status' => 'revision',
+            'current_level' => 1
+        ];
+
+        if (in_array($cat, ['K3', 'KO', 'Lingkungan'])) {
+            $updateData['status_she'] = 'revision';
+        } elseif ($cat == 'Keamanan') {
+            $updateData['status_security'] = 'revision';
+        }
+
+        $document->update($updateData);
+
+        // 3. Record History
+        $document->approvals()->create([
+            'approver_id' => $user->id_user,
+            'level' => $user->isKepalaDepartemen() ? 3 : 2,
+            'action' => 'revision', 
+            'catatan' => "Revisi Item #{$detail->id} ({$detail->kolom2_kegiatan}): " . $request->catatan,
+            'ip_address' => $request->ip()
+        ]);
+
+        return back()->with('success', 'Item berhasil direvisi. Dokumen dikembalikan ke penyusun.');
     }
 }

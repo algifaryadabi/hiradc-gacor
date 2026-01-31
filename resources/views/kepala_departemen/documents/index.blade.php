@@ -829,8 +829,8 @@
                         </div>
 
                         <!-- Action Button -->
-                        <button class="btn-review">
-                            Review <i class="fas fa-arrow-right"></i>
+                        <button class="btn-review" style="${doc.is_published ? 'background:#64748b;' : ''}">
+                            ${doc.is_published ? 'Detail' : 'Review'} <i class="fas ${doc.is_published ? 'fa-eye' : 'fa-arrow-right'}"></i>
                         </button>
                     </a>
                 `;

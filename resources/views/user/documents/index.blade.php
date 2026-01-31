@@ -967,123 +967,153 @@
                 <div class="doc-grid" id="gridView">
                     @foreach($documents as $doc)
                         @php
-                            $statusKey = 'draft';
-                            if (in_array($doc->status, ['pending_level1', 'pending_level2', 'pending_level3'])) {
-                                $statusKey = 'pending';
-                            } elseif ($doc->status == 'revision') {
-                                $statusKey = 'revision';
-                            } elseif ($doc->status == 'approved' || $doc->status == 'published') {
-                                $statusKey = 'approved';
+                            // Determine Contexts (Normal or Split Revision)
+                            $contexts = [];
+                            if ($doc->status == 'revision') {
+                                if ($doc->status_she == 'revision') $contexts[] = 'she_rev';
+                                if ($doc->status_security == 'revision') $contexts[] = 'sec_rev';
+                                // Fallback if general revision
+                                if (empty($contexts)) $contexts[] = 'general_rev';
+                            } else {
+                                $contexts[] = 'normal';
                             }
                         @endphp
-                        <div class="doc-card animate-item searchable-item"
-                            data-title="{{ strtolower($doc->kolom2_kegiatan) }}" data-status="{{ $statusKey }}">
 
-                            <div class="card-top">
-                                <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                                    <span
-                                        class="cat-badge {{ $doc->kategori == 'K3' ? 'cat-k3' : ($doc->kategori == 'Lingkungan' ? 'cat-lingkungan' : 'cat-keamanan') }}">
-                                        {{ $doc->kategori }}
-                                    </span>
-                                    <span
-                                        style="font-size:11px; padding:6px 10px; border-radius:8px; background:#f8fafc; color:#64748b; font-weight:600; display:flex; align-items:center; gap:4px; border:1px solid #e2e8f0;">
-                                        <i class="fas fa-building" style="font-size:10px;"></i>
-                                        {{ Str::limit($doc->unit->nama_unit ?? '-', 15) }}
-                                    </span>
+                        @foreach($contexts as $ctx)
+                            @php
+                                $statusKey = 'draft';
+                                if (in_array($doc->status, ['pending_level1', 'pending_level2', 'pending_level3'])) {
+                                    $statusKey = 'pending';
+                                } elseif ($doc->status == 'revision') {
+                                    $statusKey = 'revision';
+                                } elseif ($doc->status == 'approved' || $doc->status == 'published') {
+                                    $statusKey = 'approved';
+                                }
+
+                                // Override Labels based on Context
+                                $ctxLabel = '';
+                                $ctxClass = ''; // Use for styling overrides?
+                                if ($ctx == 'she_rev') {
+                                    $ctxLabel = 'Revisi SHE';
+                                } elseif ($ctx == 'sec_rev') {
+                                    $ctxLabel = 'Revisi Security';
+                                }
+                            @endphp
+
+                            <div class="doc-card animate-item searchable-item"
+                                data-title="{{ strtolower($doc->kolom2_kegiatan) }}" data-status="{{ $statusKey }}">
+
+                                <div class="card-top">
+                                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                        <span
+                                            style="font-size:11px; padding:6px 10px; border-radius:8px; background:#f8fafc; color:#64748b; font-weight:600; display:flex; align-items:center; gap:4px; border:1px solid #e2e8f0;">
+                                            <i class="fas fa-building" style="font-size:10px;"></i>
+                                            {{ Str::limit($doc->unit->nama_unit ?? '-', 15) }}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="doc-title" title="{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}">
-                                {{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan ?? 'Tanpa Judul' }}
-                            </div>
-
-                            <div class="doc-meta">
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <i class="far fa-calendar-alt"></i> {{ $doc->created_at->format('d M Y') }}
-                                    <span style="color:#e2e8f0;">|</span>
-                                    <i class="far fa-clock"></i> {{ $doc->created_at->format('H:i') }}
+                                <div class="doc-title" title="{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}">
+                                    {{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan ?? 'Tanpa Judul' }}
                                 </div>
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <i class="far fa-user-circle"></i> {{ $doc->user->nama_user ?? 'Unknown' }}
+
+                                <div class="doc-meta">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <i class="far fa-calendar-alt"></i> {{ $doc->created_at->format('d M Y') }}
+                                        <span style="color:#e2e8f0;">|</span>
+                                        <i class="far fa-clock"></i> {{ $doc->created_at->format('H:i') }}
+                                    </div>
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <i class="far fa-user-circle"></i> {{ $doc->user->nama_user ?? 'Unknown' }}
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="status-container">
-                                @php
-                                    $step = 1;
-                                    $waitingFor = 'Anda';
-                                    $position = 'Submitter';
-
-                                    if ($statusKey == 'pending') {
-                                        if ($doc->current_level == 1) {
-                                            $position = 'Kepala Unit';
-                                            $waitingFor = 'Ka. Unit ' . ($doc->unit->nama_unit ?? '');
-                                            $step = 2;
-                                        } elseif ($doc->current_level == 2) {
-                                            $position = 'Unit Pengelola';
-                                            $waitingFor = ($doc->kategori == 'Keamanan') ? 'Unit Keamanan' : 'Unit SHE';
-                                            $step = 2;
-                                        } elseif ($doc->current_level == 3) {
-                                            $position = 'Kepala Dept';
-                                            $waitingFor = 'Ka. Dept ' . ($doc->user->departemen->nama_dept ?? '');
-                                            $step = 3;
-                                        }
-                                    } elseif ($statusKey == 'revision') {
-                                        $position = 'Draft';
-                                        $waitingFor = 'Anda (Revisi)';
+                                <div class="status-container">
+                                    @php
                                         $step = 1;
-                                    } elseif ($statusKey == 'approved') {
-                                        $position = 'Final';
-                                        $waitingFor = '-';
-                                        $step = 4;
-                                    }
-                                @endphp
+                                        $waitingFor = 'Anda';
+                                        $position = 'Submitter';
 
-                                <!-- Stepper -->
-                                <div
-                                    style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 0 10px;">
-                                    @foreach(['Draft', 'Unit', 'Dept', 'Final'] as $index => $label)
-                                        @php $i = $index + 1;
-                                            $isActive = ($i <= $step);
-                                        $isCurrent = ($i == $step); @endphp
-                                        <div
-                                            style="display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; width: 25%;">
-                                            @if($i > 1)
-                                                <div
-                                                    style="position: absolute; left: -50%; top: 5px; width: 100%; height: 2px; background: {{ $isActive ? '#c41e3a' : '#eaeaea' }}; z-index: 0;">
-                                                </div>
-                                            @endif
+                                        if ($statusKey == 'pending') {
+                                            if ($doc->current_level == 1) {
+                                                $position = 'Kepala Unit';
+                                                $waitingFor = 'Ka. Unit ' . ($doc->unit->nama_unit ?? '');
+                                                $step = 2;
+                                            } elseif ($doc->current_level == 2) {
+                                                $position = 'Unit Pengelola';
+                                                $waitingFor = ($doc->kategori == 'Keamanan') ? 'Unit Keamanan' : 'Unit SHE';
+                                                $step = 2;
+                                            } elseif ($doc->current_level == 3) {
+                                                $position = 'Kepala Dept';
+                                                $waitingFor = 'Ka. Dept ' . ($doc->user->departemen->nama_dept ?? '');
+                                                $step = 3;
+                                            }
+                                        } elseif ($statusKey == 'revision') {
+                                            $position = 'Draft';
+                                            $waitingFor = 'Anda (Revisi)';
+                                            $step = 1;
+                                        } elseif ($statusKey == 'approved') {
+                                            $position = 'Final';
+                                            $waitingFor = '-';
+                                            $step = 4;
+                                        }
+                                    @endphp
+
+                                    <!-- Stepper -->
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 0 10px;">
+                                        @foreach(['Draft', 'Unit', 'Dept', 'Final'] as $index => $label)
+                                            @php $i = $index + 1;
+                                                $isActive = ($i <= $step);
+                                            $isCurrent = ($i == $step); @endphp
                                             <div
-                                                style="width:{{ $isCurrent ? '12px' : '10px' }}; height:{{ $isCurrent ? '12px' : '10px' }}; border-radius: 50%; background: {{ $isActive ? '#c41e3a' : '#e5e7eb' }}; z-index: 1; border: 2px solid white; box-shadow: 0 0 0 1px {{ $isActive ? '#c41e3a' : '#e5e7eb' }};">
+                                                style="display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; width: 25%;">
+                                                @if($i > 1)
+                                                    <div
+                                                        style="position: absolute; left: -50%; top: 5px; width: 100%; height: 2px; background: {{ $isActive ? '#c41e3a' : '#eaeaea' }}; z-index: 0;">
+                                                    </div>
+                                                @endif
+                                                <div
+                                                    style="width:{{ $isCurrent ? '12px' : '10px' }}; height:{{ $isCurrent ? '12px' : '10px' }}; border-radius: 50%; background: {{ $isActive ? '#c41e3a' : '#e5e7eb' }}; z-index: 1; border: 2px solid white; box-shadow: 0 0 0 1px {{ $isActive ? '#c41e3a' : '#e5e7eb' }};">
+                                                </div>
+                                                <span
+                                                    style="font-size: 10px; font-weight: {{ $isCurrent ? '700' : '500' }}; color: {{ $isActive ? '#0f172a' : '#9ca3af' }};">{{ $label }}</span>
                                             </div>
-                                            <span
-                                                style="font-size: 10px; font-weight: {{ $isCurrent ? '700' : '500' }}; color: {{ $isActive ? '#0f172a' : '#9ca3af' }};">{{ $label }}</span>
-                                        </div>
-                                    @endforeach
-                                </div>
-
-                                <!-- Action -->
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <div style="font-size: 11px; line-height: 1.4;">
-                                        @if($statusKey == 'approved')
-                                            <div style="color:#059669; font-weight:700;"><i class="fas fa-check-circle"></i>
-                                                Selesai</div>
-                                        @elseif($statusKey == 'revision')
-                                            <div style="color:#dc2626; font-weight:700;"><i
-                                                    class="fas fa-exclamation-circle"></i> Revisi</div>
-                                        @else
-                                            <div style="color:#d97706; font-weight:700;"><i class="fas fa-spinner fa-spin"></i>
-                                                Proses</div>
-                                        @endif
+                                        @endforeach
                                     </div>
 
-                                    <a href="{{ route('documents.show', $doc->id) }}" class="view-link">
+                                    <!-- Action -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div style="font-size: 11px; line-height: 1.4;">
+                                            @if($statusKey == 'approved')
+                                                <div style="color:#059669; font-weight:700;"><i class="fas fa-check-circle"></i>
+                                                    Selesai</div>
+                                            @elseif($statusKey == 'revision')
+                                                <div style="color:#dc2626; font-weight:700;">
+                                                    <i class="fas fa-exclamation-circle"></i> {{ $ctxLabel ?: 'Perlu Revisi' }}
+                                                </div>
+                                            @else
+                                                <div style="color:#d97706; font-weight:700;"><i class="fas fa-spinner fa-spin"></i>
+                                                    Proses</div>
+                                            @endif
+                                        </div>
+
+                                    @php
+                                        // Determine Filter Param for URL
+                                        $filterParam = [];
+                                        if ($statusKey == 'revision') {
+                                            if ($ctx == 'she_rev') $filterParam['filter'] = 'she';
+                                            if ($ctx == 'sec_rev') $filterParam['filter'] = 'security';
+                                        }
+                                    @endphp
+                                    <a href="{{ route('documents.show', array_merge(['document' => $doc->id], $filterParam)) }}" class="view-link">
                                         {{ $statusKey == 'revision' ? 'Perbaiki' : 'Detail' }} <i
                                             class="fas fa-arrow-right"></i>
                                     </a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        @endforeach
                     @endforeach
                 </div>
 

@@ -275,44 +275,64 @@
 
         .category-card {
             background: white;
-            padding: 20px;
-            border-radius: 12px;
-            border: 2px solid #e0e0e0;
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
             cursor: pointer;
             transition: all 0.3s ease;
-            text-align: center;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            background: #e5e7eb;
+            transition: background 0.3s;
         }
 
         .category-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .category-card.active {
-            border-color: #3b82f6;
-            background: #eff6ff;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
         .category-card h3 {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .category-card.active h3 {
-            color: #3b82f6;
+            color: #64748b;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .category-card .count {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: 700;
-            color: #333;
+            color: #1e293b;
+            line-height: 1;
         }
 
-        .category-card.active .count {
-            color: #3b82f6;
-        }
+        /* Color Variants */
+        .card-blue::before { background: #3b82f6; }
+        .card-blue .count { color: #3b82f6; }
+        .card-blue h3 i { color: #3b82f6; }
+        
+        .card-green::before { background: #10b981; }
+        .card-green .count { color: #10b981; }
+        .card-green h3 i { color: #10b981; }
+
+        .card-blue.active { background: #eff6ff; border-color: #3b82f6; }
+        .card-green.active { background: #ecfdf5; border-color: #10b981; }
 
         /* Document List */
         .doc-list {
@@ -416,27 +436,33 @@
         }
 
         .empty-state {
-            text-align: center;
-            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
             background: white;
-            border-radius: 12px;
-            border: 2px dashed #e0e0e0;
+            border-radius: 16px;
+            border: 2px dashed #cbd5e1;
+            margin-top: 20px;
         }
 
         .empty-state i {
-            font-size: 48px;
-            color: #ccc;
-            margin-bottom: 15px;
+            font-size: 64px;
+            color: #cbd5e1;
+            margin-bottom: 24px;
         }
 
         .empty-state h3 {
-            font-size: 18px;
-            color: var(--text-sub);
+            font-size: 20px;
+            font-weight: 700;
+            color: #334155;
             margin-bottom: 8px;
         }
 
         .empty-state p {
-            color: #999;
+            color: #64748b;
+            font-size: 15px;
         }
     </style>
 </head>
@@ -570,29 +596,41 @@
             <div class="category-filters">
                 @if(in_array(Auth::user()->role_jabatan, [5, 6]))
                     <!-- Review category only for Staff Reviewer (Band IV/V) -->
-                    <div class="category-card active" onclick="showMainDocList(); selectCategory('review', this)">
-                        <h3>Review</h3>
-                        <div class="count">{{ $reviewDocs->count() }}</div>
+                    <div class="category-card card-blue active" onclick="showMainDocList(); selectCategory('review', this)">
+                        <div>
+                            <h3><i class="fas fa-edit"></i> Perlu Review</h3>
+                            <div class="count">{{ $reviewDocs->count() }}</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#bfdbfe; font-size:24px;"></i>
                     </div>
 
                     <!-- History Review Card -->
-                    <div class="category-card" onclick="toggleHistoryCard()" style="border-color:#10b981; cursor:pointer;">
-                        <h3 style="color:#10b981;"><i class="fas fa-history"></i> History Review</h3>
-                        <div class="count" style="color:#10b981;">{{ $historyReviews->count() }}</div>
+                    <div class="category-card card-green" onclick="toggleHistoryCard()">
+                        <div>
+                            <h3><i class="fas fa-history"></i> History Review</h3>
+                            <div class="count">{{ $historyReviews->count() }}</div>
+                        </div>
+                         <i class="fas fa-chevron-right" style="color:#bbf7d0; font-size:24px;"></i>
                     </div>
                 @endif
 
                 @if(Auth::user()->role_jabatan == 4)
                     <!-- Keputusan Akhir category only for Staff Verifikator (Band III) -->
-                    <div class="category-card active" onclick="selectCategory('keputusan_akhir', this)">
-                        <h3>Keputusan Akhir</h3>
-                        <div class="count">{{ $keputusanAkhirDocs->count() }}</div>
+                    <div class="category-card card-blue active" onclick="selectCategory('keputusan_akhir', this)">
+                        <div>
+                            <h3><i class="fas fa-gavel"></i> Keputusan Akhir</h3>
+                            <div class="count">{{ $keputusanAkhirDocs->count() }}</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#bfdbfe; font-size:24px;"></i>
                     </div>
 
                     <!-- History Review Card for Verifikator -->
-                    <div class="category-card" onclick="toggleHistoryCard()" style="border-color:#10b981; cursor:pointer;">
-                        <h3 style="color:#10b981;"><i class="fas fa-history"></i> History Verifikator</h3>
-                        <div class="count" style="color:#10b981;">{{ $historyReviews->count() }}</div>
+                    <div class="category-card card-green" onclick="toggleHistoryCard()">
+                        <div>
+                            <h3><i class="fas fa-history"></i> History Verifikator</h3>
+                            <div class="count">{{ $historyReviews->count() }}</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#bbf7d0; font-size:24px;"></i>
                     </div>
                 @endif
             </div>
