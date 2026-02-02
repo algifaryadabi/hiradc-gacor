@@ -894,11 +894,17 @@
                                 <select class="form-control category-select" name="items[{index}][kategori]" required
                                     onchange="updateConditions(this)">
                                     <option value="">-- Pilih --</option>
-                                    @if(Auth::user()->id_unit == 55)
-                                        {{-- Security Unit: Only Keamanan --}}
+                                    @if(in_array(Auth::user()->id_unit, [55, 56]) && Auth::user()->can_create_documents)
+                                        {{-- SHE/Security staff with create access: All categories --}}
+                                        <option value="K3">K3 - Kesehatan & Keselamatan</option>
+                                        <option value="KO">KO - Keselamatan Operasional</option>
+                                        <option value="Lingkungan">Lingkungan</option>
+                                        <option value="Keamanan">Keamanan</option>
+                                    @elseif(Auth::user()->id_unit == 55)
+                                        {{-- Security Unit without create access: Only Keamanan --}}
                                         <option value="Keamanan">Keamanan</option>
                                     @elseif(Auth::user()->id_unit == 56)
-                                        {{-- SHE Unit: Only K3, KO, Lingkungan --}}
+                                        {{-- SHE Unit without create access: Only K3, KO, Lingkungan --}}
                                         <option value="K3">K3 - Kesehatan & Keselamatan</option>
                                         <option value="KO">KO - Keselamatan Operasional</option>
                                         <option value="Lingkungan">Lingkungan</option>

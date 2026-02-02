@@ -8,11 +8,25 @@
     </div>
 
     <nav class="nav-menu">
-        <a href="{{ route('user.dashboard') }}" 
-           class="nav-item {{ Request::routeIs('dashboard') || Request::routeIs('user.dashboard') ? 'active' : '' }}">
+        <a href="{{ Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard') }}" 
+           class="nav-item {{ Request::routeIs('dashboard') || Request::routeIs('user.dashboard') || Request::routeIs('admin.dashboard') ? 'active' : '' }}">
             <i class="fas fa-th-large"></i>
             <span>Dashboard</span>
         </a>
+        
+        @if(Auth::user()->isAdmin())
+            <a href="{{ route('admin.users') }}" 
+               class="nav-item {{ Request::routeIs('admin.users*') ? 'active' : '' }}">
+                <i class="fas fa-users-cog"></i>
+                <span>Manajemen User</span>
+            </a>
+            <a href="{{ route('admin.master_data') }}" 
+               class="nav-item {{ Request::routeIs('admin.master_data') || Request::routeIs('admin.direktorat*') || Request::routeIs('admin.departemen*') || Request::routeIs('admin.unit*') || Request::routeIs('admin.seksi*') || Request::routeIs('admin.probis*') ? 'active' : '' }}">
+                <i class="fas fa-database"></i>
+                <span>Master Data</span>
+            </a>
+        @endif
+        
         @if(Auth::user()->can_create_documents == 1)
             <a href="{{ route('documents.index') }}" 
                class="nav-item {{ Request::routeIs('documents.index') ? 'active' : '' }}">

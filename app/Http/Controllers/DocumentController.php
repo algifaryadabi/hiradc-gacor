@@ -1383,9 +1383,16 @@ class DocumentController extends Controller
                 $owner = $document->user; // or $document->user()->first() if relation
 
                 // BYPASS RULE 1: Unit Pengelola (SHE/Security) Creators with No Dept -> Publish Immediately
-                $isUnitPengelolaCreator = in_array($owner->id_unit, [55, 56]) && $owner->id_dept == 0;
+                $isUnitPengelolaCreator = in_array($owner->id_unit, [55, 56]) && ($owner->id_dept == 0 || $owner->id_dept === null);
 
                 if ($isUnitPengelolaCreator) {
+                    \Log::info('Bypassing Level 2 & 3 - Unit Pengelola creator with no department', [
+                        'document_id' => $document->id,
+                        'unit_id' => $owner->id_unit,
+                        'unit_name' => $owner->unit->nama_unit ?? 'Unknown',
+                        'dept_id' => $owner->id_dept
+                    ]);
+
                     $document->update([
                         'status' => 'published',
                         'published_at' => now(),
@@ -1489,9 +1496,16 @@ class DocumentController extends Controller
                 $document->refresh();
 
                 if ($document->isSheApproved() && $document->isSecurityApproved()) {
-                    // BYPASS RULE 2: Non-Dept Units (id_dept = 0) -> Publish Immediately after L2
+                    // BYPASS RULE 2: Non-Dept Units (id_dept = 0 or NULL) -> Publish Immediately after L2
                     $owner = $document->user;
-                    if ($owner->id_dept == 0) {
+                    if ($owner->id_dept == 0 || $owner->id_dept === null) {
+                        \Log::info('Bypassing Level 3 - Unit has no department', [
+                            'document_id' => $document->id,
+                            'unit_id' => $owner->id_unit,
+                            'unit_name' => $owner->unit->nama_unit ?? 'Unknown',
+                            'dept_id' => $owner->id_dept
+                        ]);
+
                         $document->update([
                             'status' => 'published',
                             'published_at' => now(),
@@ -1564,10 +1578,20 @@ class DocumentController extends Controller
         });
 
         // 6. Redirect with Success Message
+        $document->refresh();
         $message = 'Dokumen berhasil disetujui.';
-        if ($document->fresh()->status == 'published') {
-            $message .= ' Dokumen telah dipublikasikan.';
-        } elseif ($document->fresh()->current_level == 3) {
+        
+        // Check if document was auto-published due to no department
+        $wasAutoPublished = false;
+        if ($document->status == 'published' && $document->current_level == 4) {
+            $owner = $document->user;
+            if ($owner->id_dept == 0 || $owner->id_dept === null) {
+                $wasAutoPublished = true;
+                $message = '✅ Dokumen berhasil disetujui dan LANGSUNG TERPUBLIKASI! Unit tidak memiliki departemen, sehingga approval Kepala Departemen (Level 3) dilewati.';
+            } else {
+                $message .= ' Dokumen telah dipublikasikan.';
+            }
+        } elseif ($document->current_level == 3) {
             $message .= ' Dokumen diteruskan ke Kepala Departemen (Level 3).';
         }
 
@@ -1578,9 +1602,14 @@ class DocumentController extends Controller
         if ($user->isUnitPengelola() || $document->approvals()->where('level', 2)->where('approver_id', $user->id_user)->exists()) {
             // Enhanced message for Kepala Unit Pengelola final approval
             $successMessage = $message;
-            if ($document->fresh()->status_she == 'approved' || $document->fresh()->status_security == 'approved') {
+            
+            // Override message if auto-published
+            if ($wasAutoPublished) {
+                $successMessage = '✅ DOKUMEN BERHASIL TERPUBLIKASI! Unit tidak memiliki departemen, approval Kepala Departemen (Level 3) dilewati secara otomatis.';
+            } elseif ($document->status_she == 'approved' || $document->status_security == 'approved') {
                 $successMessage = 'Approve Final Berhasil! Dokumen telah disetujui dan akan diteruskan ke Kepala Departemen.';
             }
+            
             return redirect()->route('unit_pengelola.dashboard')
                 ->with('success', $successMessage);
         }
@@ -2594,8 +2623,29 @@ class DocumentController extends Controller
             ->with(['user', 'unit', 'approvals.approver'])
             ->get();
 
-        // 3. Combine and filter
-        $documents = $docsAtLevel2->concat($docsApprovedAndMoved)->unique('id')->sortByDesc('created_at');
+        // 3. UPDATED: Fetch documents where MY track has ANY active status (not null, not revision)
+        // This ensures SHE documents remain visible when Security is in revision, and vice versa
+        // Covers all statuses: pending_head, assigned_review, assigned_approval, staff_verified, returned_to_head, approved, published
+        $docsMyTrackActive = Document::where(function ($q) use ($stField) {
+                $q->whereNotNull($stField)
+                  ->where($stField, '!=', 'revision')
+                  ->where($stField, '!=', '');
+            })
+            ->where(function ($q) use ($allowedCategories) {
+                $q->whereIn('kategori', $allowedCategories)
+                    ->orWhereHas('details', function ($d) use ($allowedCategories) {
+                        $d->whereIn('kategori', $allowedCategories);
+                    });
+            })
+            ->with(['user', 'unit', 'approvals.approver'])
+            ->get();
+
+        // 4. Combine all three queries and remove duplicates
+        $documents = $docsAtLevel2
+            ->concat($docsApprovedAndMoved)
+            ->concat($docsMyTrackActive)
+            ->unique('id')
+            ->sortByDesc('created_at');
 
         // 4. Categorize consistently for the cards
         $pendingDocuments = $documents->filter(function ($d) use ($stField) {
@@ -3022,6 +3072,10 @@ class DocumentController extends Controller
                     \App\Models\User::where('id_unit', $currentUser->id_unit)
                         ->where('id_user', '!=', $targetUser->id_user)
                         ->update(['is_reviewer' => 0]);
+                    
+                    // MUTUAL EXCLUSION: Unset other roles for this user
+                    $targetUser->is_verifier = 0;
+                    $targetUser->can_create_documents = 0;
                 }
                 $targetUser->is_reviewer = $request->is_reviewer;
             }
@@ -3032,6 +3086,10 @@ class DocumentController extends Controller
                     \App\Models\User::where('id_unit', $currentUser->id_unit)
                         ->where('id_user', '!=', $targetUser->id_user)
                         ->update(['is_verifier' => 0]);
+                    
+                    // MUTUAL EXCLUSION: Unset other roles for this user
+                    $targetUser->is_reviewer = 0;
+                    $targetUser->can_create_documents = 0;
                 }
                 $targetUser->is_verifier = $request->is_verifier;
             }
@@ -3042,6 +3100,10 @@ class DocumentController extends Controller
                     \App\Models\User::where('id_unit', $currentUser->id_unit)
                         ->where('id_user', '!=', $targetUser->id_user)
                         ->update(['can_create_documents' => 0]);
+                    
+                    // MUTUAL EXCLUSION: Unset other roles for this user
+                    $targetUser->is_reviewer = 0;
+                    $targetUser->is_verifier = 0;
                 }
                 $targetUser->can_create_documents = $request->can_create_documents;
             }

@@ -602,10 +602,11 @@
                     $allDocs = $documents;
                     $userUnit = Auth::user()->id_unit;
 
-                    // Filtering Logic (retained)
+                    // Filtering Logic (UPDATED - Track-specific)
                     $disposisiDocs = $documents->filter(function ($d) use ($userUnit) {
                         $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
-                        return $d->current_level == 2 && ($st == 'pending_head' || empty($st));
+                        // UPDATED: Remove current_level check to allow Security disposition during SHE revision
+                        return ($st == 'pending_head' || empty($st));
                     });
 
                     $dalamReviewDocs = $documents->filter(function ($d) use ($userUnit) {
@@ -727,7 +728,7 @@
                 <div class="doc-list">
                     @forelse($documents as $doc)
                         @php
-                            // Status Logic (Same as before)
+                            // Status Logic - Track-specific (UPDATED)
                             $currentStatus = $doc->level2_status;
                             if ($userUnit == 55)
                                 $currentStatus = $doc->status_security;
@@ -738,7 +739,9 @@
                             $statusText = 'Unknown';
                             $statusColor = '#94a3b8'; // gray default
 
-                            if ($doc->current_level == 2 && ($currentStatus == 'pending_head' || empty($currentStatus))) {
+                            // UPDATED: Check track status only, not current_level
+                            // This allows Security to disposition even when SHE is in revision
+                            if ($currentStatus == 'pending_head' || empty($currentStatus)) {
                                 $cat = 'disposisi';
                                 $statusText = 'Menunggu Disposisi';
                                 $statusColor = '#ef4444'; // red
@@ -754,6 +757,11 @@
                                 $cat = 'approved';
                                 $statusText = 'Disetujui';
                                 $statusColor = '#10b981'; // green
+                            } elseif ($currentStatus == 'revision') {
+                                // Track is in revision - should not appear in this dashboard
+                                $cat = 'revision';
+                                $statusText = 'Revisi';
+                                $statusColor = '#f59e0b'; // orange
                             }
                         @endphp
 

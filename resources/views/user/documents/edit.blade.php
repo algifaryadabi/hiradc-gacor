@@ -284,55 +284,249 @@
             flex: 1;
             margin-left: 280px;
         }
-        .header { background:white; padding:20px 40px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:40; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02); }
-        .header h1 { font-size:22px; font-weight:800; color:#111827; letter-spacing:-0.5px; }
-        .btn-back { display:inline-flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:#6b7280; text-decoration:none; transition:0.2s; }
-        .btn-back:hover { color:#111827; }
-        
-        .content-area { padding:40px; max-width:1100px; margin:0 auto; }
-        
-        /* Card Styles */
-        .doc-card { background:white; border-radius:var(--border-radius); box-shadow:var(--card-shadow); margin-bottom:30px; overflow:hidden; border:1px solid #f3f4f6; }
-        .card-header { padding:20px 30px; background:#fff; border-bottom:1px solid #f3f4f6; display:flex; align-items:center; gap:15px; }
-        .header-icon { width:40px; height:40px; background:#fef2f2; color:var(--primary-color); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; }
-        .header-title h2 { font-size:16px; font-weight:700; color:#1f2937; }
-        .header-title p { font-size:13px; color:#6b7280; margin-top:2px; }
-        .card-body { padding:30px; }
-        
-        /* Forms */
-        .form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
-        .form-group { margin-bottom:20px; }
-        .form-label { display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:8px; }
-        .required { color:var(--primary-color); margin-left:2px; }
-        .form-control { width:100%; padding:12px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; font-family:'Inter',sans-serif; transition:all 0.2s; background:#f9fafb; }
-        .form-control:focus { outline:none; border-color:var(--primary-color); background:white; box-shadow:0 0 0 3px rgba(196,30,58,0.1); }
-        textarea.form-control { min-height:100px; resize:vertical; line-height:1.5; }
-        select.form-control { appearance:none; cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; background-size:16px; }
+
+        .header {
+            background: linear-gradient(135deg, #ffffff 0%, #fef2f3 100%);
+            padding: 32px 40px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, var(--primary-color) 50%, transparent 100%);
+            opacity: 0.3;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            text-decoration: none;
+            transition: all 0.2s;
+            padding: 8px 16px;
+            border-radius: 10px;
+        }
+
+        .btn-back:hover {
+            color: var(--primary-color);
+            background: rgba(196, 30, 58, 0.05);
+        }
+
+        .content-area {
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Document Form Cards */
+        .doc-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fef2f3 100%);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .doc-card:hover {
+            box-shadow: var(--shadow-colored);
+        }
+
+        .card-header {
+            padding: 24px 30px;
+            background: linear-gradient(to right, #fff1f2, #fff);
+            border-bottom: 1px solid #fce7f3;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+        }
+
+        .header-title h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.01em;
+        }
+
+        .header-title p {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .card-body {
+            padding: 32px;
+        }
+
+        /* Grid Layouts */
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .form-grid-1 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        /* Form Controls - Modern Design */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 10px;
+            letter-spacing: -0.01em;
+        }
+
+        .required {
+            color: var(--primary-color);
+            margin-left: 3px;
+            font-weight: 700;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            color: #0f172a;
+            font-weight: 500;
+        }
+
+        .form-control:hover {
+            border-color: #cbd5e1;
+        }
+
+        .form-control:disabled,
+        .form-control:read-only {
+            background: #f8fafc;
+            color: #64748b;
+            cursor: not-allowed;
+            border-color: #e2e8f0;
+        }
+
+        /* Select elements should have pointer cursor when enabled */
+        select.form-control:not(:disabled) {
+            cursor: pointer;
+            background: white;
+            color: #0f172a;
+        }
+
+        select.form-control:disabled {
+            cursor: not-allowed;
+            background: #f8fafc;
+            color: #64748b;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        select.form-control {
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 18px;
+            padding-right: 44px;
+        }
+
+        small {
+            display: block;
+            margin-top: 8px;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 500;
+        }
 
         /* Toggles & Checkboxes */
         .toggle-group { display:flex; gap:10px; padding:5px; background:#f3f4f6; border-radius:10px; width:fit-content; }
         .toggle-btn { padding:10px 20px; border:none; border-radius:8px; background:transparent; color:#6b7280; font-weight:600; font-size:13px; cursor:pointer; transition:0.2s; }
         .toggle-btn.active { background:white; color:var(--primary-color); box-shadow:0 2px 4px rgba(0,0,0,0.05); }
         
-        .checkbox-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:15px; }
-        .checkbox-card { border:1px solid #e5e7eb; border-radius:8px; padding:15px; transition:0.2s; cursor:pointer; display:flex; align-items:start; gap:12px; }
-        .checkbox-card:hover { border-color:var(--primary-color); background:#fef2f2; }
-        .checkbox-card input[type="checkbox"] { margin-top:3px; accent-color:var(--primary-color); width:16px; height:16px; flex-shrink:0; }
-        .checkbox-card label { cursor:pointer; font-size:14px; font-weight:500; color:#4b5563; line-height:1.4; }
+        .checkbox-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
+        .checkbox-card { border:1px solid #e2e8f0; border-radius:12px; padding:16px; transition:all 0.2s; cursor:pointer; display:flex; align-items:start; gap:12px; background:white; }
+        .checkbox-card:hover { border-color:var(--primary-color); background:#fef2f3; box-shadow:0 2px 8px rgba(196,30,58,0.1); }
+        .checkbox-card input[type="checkbox"] { margin-top:2px; accent-color:var(--primary-color); width:18px; height:18px; flex-shrink:0; cursor:pointer; }
+        .checkbox-card label { cursor:pointer; font-size:14px; font-weight:500; color:#0f172a; line-height:1.5; }
 
         /* Risk Matrix */
-        .risk-result-box { background:#1f2937; color:white; padding:20px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
-        .risk-score { font-size:36px; font-weight:800; line-height:1; margin-bottom:5px; }
-        .risk-level { display:inline-block; padding:6px 16px; border-radius:20px; background:rgba(255,255,255,0.2); font-size:12px; font-weight:700; text-transform:uppercase; }
+        .risk-result-box { background:linear-gradient(135deg, #1e293b 0%, #334155 100%); color:white; padding:28px; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; box-shadow:0 10px 25px -5px rgba(0,0,0,0.2); }
+        .risk-score { font-size:48px; font-weight:800; line-height:1; margin-bottom:12px; letter-spacing:-0.02em; }
+        .risk-level { display:inline-block; padding:8px 20px; border-radius:24px; background:rgba(255,255,255,0.2); font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; backdrop-filter:blur(10px); }
 
         /* Action Bar */
-        .action-bar { position:sticky; bottom:20px; background:white; padding:20px 30px; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,0.1); margin-top:40px; display:flex; justify-content:space-between; align-items:center; border:1px solid #f3f4f6; z-index:30; }
-        .action-buttons { display:flex; gap:15px; }
-        .btn { padding:12px 24px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; transition:0.2s; border:none; display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
-        .btn-secondary { background:#f3f4f6; color:#4b5563; }
-        .btn-secondary:hover { background:#e5e7eb; color:#111827; }
-        .btn-primary { background:var(--primary-color); color:white; box-shadow:0 4px 12px rgba(196,30,58,0.3); }
-        .btn-primary:hover { background:var(--primary-hover); transform:translateY(-1px); }
+        .action-bar { position:sticky; bottom:24px; background:white; padding:24px 32px; border-radius:20px; box-shadow:0 20px 40px rgba(0,0,0,0.15); margin-top:48px; display:flex; justify-content:space-between; align-items:center; border:1px solid #e2e8f0; z-index:30; }
+        .action-buttons { display:flex; gap:12px; }
+        .btn { padding:14px 28px; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s cubic-bezier(0.4,0,0.2,1); border:none; display:inline-flex; align-items:center; gap:10px; text-decoration:none; letter-spacing:-0.01em; }
+        .btn-secondary { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+        .btn-secondary:hover { background:#e2e8f0; color:#0f172a; border-color:#cbd5e1; }
+        .btn-primary { background:linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); color:white; box-shadow:0 4px 12px rgba(196,30,58,0.3); }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(196,30,58,0.4); }
         
         .hidden { display:none; }
         .mt-4 { margin-top:1rem; }
@@ -479,7 +673,10 @@
                                         <div class="card-body collapsible-content">
                                             <!-- 1. Info -->
                                             <div style="margin-bottom:25px;">
-                                                <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">1. Informasi Dasar</h3>
+                                                <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                                                    <i class="fas fa-info-circle" style="color: var(--primary-color); margin-right: 8px;"></i>
+                                                    BAGIAN 1: Informasi Dasar
+                                                </h3>
                                                 <div class="form-grid-2">
                                                     <div class="form-group"><label class="form-label">Proses Bisnis</label><input type="text" class="form-control" name="items[{{$index}}][kolom2_proses]" value="{{ $item->kolom2_proses }}" readonly style="background:#f8fafc; cursor:not-allowed;"></div>
                                                     <div class="form-group"><label class="form-label">Kegiatan</label><input type="text" class="form-control item-kegiatan-input" name="items[{{$index}}][kolom2_kegiatan]" value="{{ $item->kolom2_kegiatan }}" required oninput="updateSummary(this)"></div>
@@ -514,11 +711,17 @@
 
                                             <!-- 2. Identifikasi -->
                                             <div style="margin-bottom:25px;">
-                                                <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">2. Identifikasi</h3>
+                                                <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                                                    <i class="fas fa-exclamation-triangle" style="color: #f59e0b; margin-right: 8px;"></i>
+                                                    BAGIAN 2: Identifikasi
+                                                </h3>
 
                                                 <!-- K3/KO: Bahaya -->
                                                 <div class="hazard-section k3-ko-field" data-category="K3,KO" style="{{ in_array($item->kategori, ['K3', 'KO']) ? '' : 'display:none;' }} background: #fffbeb; padding: 20px; border-radius: 8px; border: 1px solid #fcd34d; margin-bottom: 15px;">
-                                                    <label class="form-label">Kolom 6: POTENSI BAHAYA (K3/KO)</label>
+                                                    <label class="form-label" style="font-weight: 600;">
+                                                        <i class="fas fa-hard-hat" style="color: #f59e0b;"></i>
+                                                        Kolom 6: POTENSI BAHAYA (K3/KO)
+                                                    </label>
                                                     <div class="checkbox-grid">
                                                         @php $bahayaDetails = $item->kolom6_bahaya['details'] ?? []; @endphp
                                                         @foreach(['Bahaya Fisika', 'Bahaya Kimia', 'Bahaya Biologi', 'Bahaya Fisiologis/Ergonomi', 'Bahaya Psikologis', 'Bahaya dari Prilaku'] as $opt)
@@ -533,7 +736,10 @@
 
                                                 <!-- Lingkungan: Aspek -->
                                                 <div class="lingkungan-field" data-category="Lingkungan" style="{{ $item->kategori == 'Lingkungan' ? '' : 'display:none;' }} background: #ecfdf5; padding: 20px; border-radius: 8px; border: 1px solid #10b981; margin-bottom: 15px;">
-                                                    <label class="form-label">Kolom 7: ASPEK LINGKUNGAN</label>
+                                                    <label class="form-label" style="font-weight: 600;">
+                                                        <i class="fas fa-leaf" style="color: #10b981;"></i>
+                                                        Kolom 7: ASPEK LINGKUNGAN
+                                                    </label>
                                                     <div class="checkbox-grid">
                                                         @php $aspekDetails = $item->kolom7_aspek_lingkungan['details'] ?? []; @endphp
                                                         @foreach(['Emisi ke udara', 'Pembuangan ke air', 'Pembuangan ke tanah', 'Penggunaan Bahan Baku dan SDA', 'Penggunaan energi', 'Paparan energi', 'Limbah'] as $opt)
@@ -548,7 +754,10 @@
 
                                                 <!-- Keamanan: Ancaman -->
                                                 <div class="keamanan-field" data-category="Keamanan" style="{{ $item->kategori == 'Keamanan' ? '' : 'display:none;' }} background: #fef2f2; padding: 20px; border-radius: 8px; border: 1px solid #ef4444; margin-bottom: 15px;">
-                                                    <label class="form-label">Kolom 8: ANCAMAN KEAMANAN</label>
+                                                    <label class="form-label" style="font-weight: 600;">
+                                                        <i class="fas fa-shield-alt" style="color: #ef4444;"></i>
+                                                        Kolom 8: ANCAMAN KEAMANAN
+                                                    </label>
                                                     <div class="checkbox-grid">
                                                         @php $ancamanDetails = $item->kolom8_ancaman['details'] ?? []; @endphp
                                                         @foreach(['Terorisme', 'Sabotase', 'Intimidasi', 'Pencurian', 'Perusakan aset'] as $opt)
@@ -560,11 +769,6 @@
                                                         <input type="text" class="form-control" name="items[{{$index}}][ancaman_manual]" value="{{ $item->kolom8_ancaman['manual'] ?? '' }}">
                                                     </div>
                                                 </div>
-                                            </div>
-
-                                            <!-- 3. Risk / Impact -->
-                                            <div style="margin-bottom:25px;">
-                                                <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">3. Analisis Risiko</h3>
 
                                                 <!-- Kolom 9 Variants -->
                                                 <div class="form-group kolom9-k3ko-field" style="{{ in_array($item->kategori, ['K3', 'KO']) ? '' : 'display:none;' }}">
@@ -583,8 +787,13 @@
                                                 </div>
                                             </div>
 
-                                            <!-- 4. Penilaian Risiko Awal -->
-                                            <div style="margin-bottom: 25px;">
+
+                                            <!-- BAGIAN 3: Pengendalian & Penilaian -->
+                                            <div style="margin-bottom:25px;">
+                                                <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                                                    <i class="fas fa-shield-alt" style="color: #10b981; margin-right: 8px;"></i>
+                                                    BAGIAN 3: Pengendalian & Penilaian Risiko Saat Ini
+                                                </h3>
                                                 <div style="background:#f8fafc; padding:20px; border-radius:12px;">
                                                     <h4 style="font-size:13px; font-weight:700; margin-bottom:15px;">Penilaian Risiko Awal</h4>
                                                     <div style="display: flex; gap: 20px;">
@@ -615,8 +824,13 @@
                                                 </div>
                                             </div>
 
-                                            <!-- 4b. Legalitas & Signifikansi -->
+
+                                            <!-- BAGIAN 4: Legalitas & Signifikansi -->
                                             <div style="margin-bottom: 25px;">
+                                                <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                                                    <i class="fas fa-gavel" style="color: #3b82f6; margin-right: 8px;"></i>
+                                                    BAGIAN 4: Legalitas & Signifikansi
+                                                </h3>
                                                 <div class="form-group">
                                                     <label class="form-label">Kolom 15: Peraturan/Regulasi</label>
                                                     <textarea class="form-control" name="items[{{$index}}][kolom15_regulasi]" rows="2">{{ $item->kolom15_regulasi }}</textarea>
@@ -657,7 +871,10 @@
 
                                             <!-- 6. Residual -->
                                              <div class="bagian-5-section" style="{{ ($item->kolom14_score ?? 0) >= 8 ? 'display:block;' : 'display:none;' }}">
-                                                  <h3 style="font-size:14px; text-transform:uppercase; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">Bagian 5: Residual & Lanjut</h3>
+                                                  <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                                                      <i class="fas fa-tasks" style="color: #8b5cf6; margin-right: 8px;"></i>
+                                                      BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa
+                                                  </h3>
                                                   <div class="form-group"><label class="form-label">Tindak Lanjut</label><textarea class="form-control" name="items[{{$index}}][kolom18_tindak_lanjut]">{{ $item->kolom18_tindak_lanjut }}</textarea></div>
 
                                                   <div style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
@@ -691,11 +908,7 @@
                         @endforeach
                     </div>
 
-                    <div style="text-align: center; margin-bottom: 40px;">
-                        <button type="button" class="btn btn-secondary" onclick="addItem()" style="border: 2px dashed #cbd5e1; background: white; width: 100%; justify-content: center; padding: 20px;">
-                            <i class="fas fa-plus-circle" style="font-size: 18px; color: var(--primary-color);"></i> Tambah Kegiatan Lain
-                        </button>
-                    </div>
+
 
                     <div class="action-bar" style="display:flex; justify-content:space-between; align-items:center; gap:20px;">
                         <div class="action-buttons">
@@ -769,7 +982,10 @@
                 <div class="card-body collapsible-content" style="padding: 25px;">
                      <!-- 1. Basic -->
                      <div style="margin-bottom: 25px;">
-                        <h3 style="font-size:14px; text-transform:uppercase; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">1. Informasi Dasar</h3>
+                        <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                            <i class="fas fa-info-circle" style="color: var(--primary-color); margin-right: 8px;"></i>
+                            BAGIAN 1: Informasi Dasar
+                        </h3>
                         <div class="form-grid-2">
                              <div class="form-group"><label class="form-label">Proses Bisnis</label><input type="text" class="form-control probis-input" name="items[{index}][kolom2_proses]" readonly style="background-color:#f8fafc; cursor:not-allowed;"></div>
                              <div class="form-group"><label class="form-label">Kegiatan</label><input type="text" class="form-control item-kegiatan-input" name="items[{index}][kolom2_kegiatan]" required oninput="updateSummary(this)"></div>
@@ -792,11 +1008,17 @@
                      
                      <!-- 2. Hazard -->
                      <div style="margin-bottom: 25px;">
-                        <h3 style="font-size:14px; text-transform:uppercase; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">2. Identifikasi</h3>
+                        <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                            <i class="fas fa-exclamation-triangle" style="color: #f59e0b; margin-right: 8px;"></i>
+                            BAGIAN 2: Identifikasi
+                        </h3>
                         
                         <!-- K3/KO -->
                         <div class="hazard-section k3-ko-field" data-category="K3,KO" style="background:#fffbeb; padding:20px; border-radius:8px; border:1px solid #fcd34d; margin-bottom:15px;">
-                             <label class="form-label">Kolom 6: POTENSI BAHAYA (K3/KO)</label>
+                             <label class="form-label" style="font-weight: 600;">
+                                 <i class="fas fa-hard-hat" style="color: #f59e0b;"></i>
+                                 Kolom 6: POTENSI BAHAYA (K3/KO)
+                             </label>
                              <div class="checkbox-grid">
                                   @foreach(['Bahaya Fisika', 'Bahaya Kimia', 'Bahaya Biologi', 'Bahaya Fisiologis/Ergonomi', 'Bahaya Psikologis', 'Bahaya dari Prilaku'] as $opt)
                                     <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom6_bahaya][]" value="{{$opt}}"> {{$opt}}</label>
@@ -807,7 +1029,10 @@
 
                         <!-- Lingkungan -->
                         <div class="lingkungan-field" data-category="Lingkungan" style="background:#ecfdf5; padding:20px; border-radius:8px; border:1px solid #10b981; margin-bottom:15px; display:none;">
-                             <label class="form-label">Kolom 7: ASPEK LINGKUNGAN</label>
+                             <label class="form-label" style="font-weight: 600;">
+                                 <i class="fas fa-leaf" style="color: #10b981;"></i>
+                                 Kolom 7: ASPEK LINGKUNGAN
+                             </label>
                              <div class="checkbox-grid">
                                   @foreach(['Emisi ke udara', 'Pembuangan ke air', 'Pembuangan ke tanah', 'Penggunaan Bahan Baku dan SDA', 'Penggunaan energi', 'Paparan energi', 'Limbah'] as $opt)
                                     <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom7_aspek_lingkungan][]" value="{{$opt}}"> {{$opt}}</label>
@@ -818,7 +1043,10 @@
 
                         <!-- Keamanan -->
                         <div class="keamanan-field" data-category="Keamanan" style="background:#fef2f2; padding:20px; border-radius:8px; border:1px solid #ef4444; margin-bottom:15px; display:none;">
-                             <label class="form-label">Kolom 8: ANCAMAN KEAMANAN</label>
+                             <label class="form-label" style="font-weight: 600;">
+                                 <i class="fas fa-shield-alt" style="color: #ef4444;"></i>
+                                 Kolom 8: ANCAMAN KEAMANAN
+                             </label>
                              <div class="checkbox-grid">
                                   @foreach(['Terorisme', 'Sabotase', 'Intimidasi', 'Pencurian', 'Perusakan aset'] as $opt)
                                     <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom8_ancaman][]" value="{{$opt}}"> {{$opt}}</label>
@@ -826,27 +1054,29 @@
                              </div>
                              <div class="form-group mt-4"><label class="form-label">Ancaman Manual</label><input type="text" class="form-control" name="items[{index}][ancaman_manual]"></div>
                         </div>
+
+                        <!-- Kolom 9 Variants -->
+                        <div class="form-group kolom9-k3ko-field">
+                            <label class="form-label">Kolom 9: RISIKO <span class="required">*</span></label>
+                            <textarea class="form-control" name="items[{index}][kolom9_risiko_k3ko]" rows="3"></textarea>
+                        </div>
+                        <div class="form-group kolom9-lingkungan-field" style="display:none;">
+                            <label class="form-label">Kolom 9: DAMPAK LINGKUNGAN <span class="required">*</span></label>
+                            <textarea class="form-control" name="items[{index}][kolom9_dampak_lingkungan]" rows="3"></textarea>
+                        </div>
+                        <div class="form-group kolom9-keamanan-field" style="display:none;">
+                            <label class="form-label">Kolom 9: CELAH TIDAK AMAN <span class="required">*</span></label>
+                            <textarea class="form-control" name="items[{index}][kolom9_celah_keamanan]" rows="3"></textarea>
+                        </div>
                      </div>
+
                      
-                     <!-- 3. Risk -->
+                     <!-- BAGIAN 3: Pengendalian & Penilaian -->
                      <div style="margin-bottom: 25px;">
-                         <h3 style="font-size:14px; text-transform:uppercase; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">3. Analisis Risiko</h3>
-                         <div class="form-group kolom9-k3ko-field">
-                             <label class="form-label">Kolom 9: RISIKO <span class="required">*</span></label>
-                             <textarea class="form-control" name="items[{index}][kolom9_risiko_k3ko]" rows="3"></textarea>
-                         </div>
-                         <div class="form-group kolom9-lingkungan-field" style="display:none;">
-                             <label class="form-label">Kolom 9: DAMPAK LINGKUNGAN <span class="required">*</span></label>
-                             <textarea class="form-control" name="items[{index}][kolom9_dampak_lingkungan]" rows="3"></textarea>
-                         </div>
-                         <div class="form-group kolom9-keamanan-field" style="display:none;">
-                             <label class="form-label">Kolom 9: CELAH TIDAK AMAN <span class="required">*</span></label>
-                             <textarea class="form-control" name="items[{index}][kolom9_celah_keamanan]" rows="3"></textarea>
-                         </div>
-                     </div>
-                     
-                     <!-- 4. Assessment -->
-                     <div style="margin-bottom: 25px;">
+                        <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                            <i class="fas fa-shield-alt" style="color: #10b981; margin-right: 8px;"></i>
+                            BAGIAN 3: Pengendalian & Penilaian Risiko Saat Ini
+                        </h3>
                         <div style="background:#f8fafc; padding:20px; border-radius:12px;">
                             <h4 style="font-size:13px; font-weight:700; margin-bottom:15px;">Penilaian Risiko Awal</h4>
                             <div style="display:flex; gap:20px;">
@@ -864,8 +1094,14 @@
                         </div>
                      </div>
                      
-                     <!-- 4b. Legalitas -->
+                     </div>
+
+                     <!-- BAGIAN 4: Legalitas & Signifikansi -->
                      <div style="margin-bottom: 25px;">
+                        <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                            <i class="fas fa-gavel" style="color: #3b82f6; margin-right: 8px;"></i>
+                            BAGIAN 4: Legalitas & Signifikansi
+                        </h3>
                         <div class="form-group"><label class="form-label">Kolom 15: Peraturan/Regulasi</label><textarea class="form-control" name="items[{index}][kolom15_regulasi]" rows="2"></textarea></div>
                         
                         <div class="form-group lingkungan-only-field" style="display:none;">
@@ -897,7 +1133,10 @@
                      
                      <!-- 6. Residual -->
                      <div class="bagian-5-section" style="display:none;">
-                          <h3 style="font-size:14px; text-transform:uppercase; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">Bagian 5: Residual & Lanjut</h3>
+                          <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                              <i class="fas fa-tasks" style="color: #8b5cf6; margin-right: 8px;"></i>
+                              BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa
+                          </h3>
                           <div class="form-group"><label class="form-label">Tindak Lanjut</label><textarea class="form-control" name="items[{index}][kolom18_tindak_lanjut]"></textarea></div>
                           
                           <div style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
@@ -1253,6 +1492,12 @@
                  addItem();
              } else {
                  loadedItems.forEach(item => {
+                     // Initialize category-specific fields FIRST
+                     const categorySelect = item.querySelector('.category-select');
+                     if(categorySelect && categorySelect.value) {
+                         updateConditions(categorySelect);
+                     }
+                     
                      // Init calculations
                      const lSelect = item.querySelector('.likelihood-select');
                      if(lSelect) calculateItemRisk(lSelect);

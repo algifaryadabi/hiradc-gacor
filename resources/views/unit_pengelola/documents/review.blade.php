@@ -1144,8 +1144,23 @@
         $isApprover = ($currentApproverId == $user->id_user) || 
                       ($isStaffApprover && $status == 'assigned_approval');
 
-        // Edit Logic:
-        // - Kepala Unit Pengelola can edit EXCEPT when:
+        // Determine if this Unit Pengelola's track is active
+        $isSheUnit = ($user->id_unit == 56);
+        $isSecurityUnit = ($user->id_unit == 55);
+
+        // Check if MY track is in a state that allows editing
+        $myTrackIsActive = false;
+
+        if ($isSheUnit) {
+            // SHE track is active if status_she is NOT revision/approved/published
+            $myTrackIsActive = !in_array($document->status_she, ['revision', 'approved', 'published', 'level3_approved', 'none']);
+        } elseif ($isSecurityUnit) {
+            // Security track is active if status_security is NOT revision/approved/published
+            $myTrackIsActive = !in_array($document->status_security, ['revision', 'approved', 'published', 'level3_approved', 'none']);
+        }
+
+        // Edit Logic (UPDATED):
+        // - Kepala Unit Pengelola can edit if MY track is active EXCEPT when:
         //   1. status is 'pending_head' (menunggu disposisi)
         //   2. status is 'staff_verified' or 'returned_to_head' (siap keputusan akhir)
         //   3. status is 'approved', 'published' (Final) -> READ ONLY
@@ -1154,7 +1169,7 @@
         $isFinalDecision = ($isHead && in_array($status, ['staff_verified', 'returned_to_head']));
         $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
         
-        $canEdit = ($isHead && $document->current_level == 2 && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished) ||
+        $canEdit = ($isHead && $myTrackIsActive && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished) ||
             ($isReviewer && $status == 'assigned_review') ||
             ($isApprover && $status == 'assigned_approval');
     @endphp
@@ -1513,7 +1528,7 @@
                                             $isFinalDecision = ($isHead && in_array($status, ['staff_verified', 'returned_to_head']));
                                             $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
                                             
-                                            $headCanEdit = ($isHead && $document->current_level == 2 && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished);
+                                            $headCanEdit = ($isHead && $myTrackIsActive && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished);
                                             $staffCanEdit = ($isApprover && $status == 'assigned_approval') || ($isReviewer && $status == 'assigned_review');
 
                                             if ($headCanEdit || $staffCanEdit) {
@@ -2074,7 +2089,7 @@
             $isFinalDecision = ($isHead && in_array($status, ['staff_verified', 'returned_to_head']));
             $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
             
-            $headCanEditCompliance = ($isHead && $document->current_level == 2 && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished);
+            $headCanEditCompliance = ($isHead && $myTrackIsActive && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished);
             $staffCanEditCompliance = ($isApprover && $status == 'assigned_approval') || ($isReviewer && $status == 'assigned_review');
             
             $globalComplianceEdit = ($headCanEditCompliance || $staffCanEditCompliance);

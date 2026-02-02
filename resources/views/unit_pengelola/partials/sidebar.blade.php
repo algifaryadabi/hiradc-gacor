@@ -13,11 +13,29 @@
             <i class="fas fa-th-large"></i>
             <span>Dashboard</span>
         </a>
-        <a href="{{ route('unit_pengelola.documents.index') }}"
-            class="nav-item {{ request()->routeIs('unit_pengelola.documents.*') ? 'active' : '' }}">
-            <i class="fas fa-file-alt"></i>
-            <span>Review Dokumen</span>
-        </a>
+        
+        {{-- Show Form Saya & Buat Form Baru for staff with create access --}}
+        @if(Auth::user()->can_create_documents == 1)
+            <a href="{{ route('documents.index') }}"
+                class="nav-item {{ request()->routeIs('documents.index') || request()->routeIs('documents.show') ? 'active' : '' }}">
+                <i class="fas fa-folder-open"></i>
+                <span>Form Saya</span>
+            </a>
+            <a href="{{ route('documents.create') }}"
+                class="nav-item {{ request()->routeIs('documents.create') ? 'active' : '' }}">
+                <i class="fas fa-plus-circle"></i>
+                <span>Buat Form Baru</span>
+            </a>
+        @endif
+        
+        {{-- Review Dokumen: Only for Reviewer/Verifikator --}}
+        @if(Auth::user()->is_reviewer || Auth::user()->is_verifier)
+            <a href="{{ route('unit_pengelola.documents.index') }}"
+                class="nav-item {{ request()->routeIs('unit_pengelola.documents.*') ? 'active' : '' }}">
+                <i class="fas fa-file-alt"></i>
+                <span>Review Dokumen</span>
+            </a>
+        @endif
     </nav>
 
     <div class="user-info">

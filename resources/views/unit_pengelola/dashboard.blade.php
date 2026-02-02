@@ -291,13 +291,19 @@
                     <span>Dashboard</span>
                 </a>
 
+                {{-- Show Form Saya & Buat Form Baru for staff with create access --}}
                 @if(Auth::user()->can_create_documents)
+                    <a href="{{ route('documents.index') }}" class="nav-item">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Form Saya</span>
+                    </a>
                     <a href="{{ route('documents.create') }}" class="nav-item">
                         <i class="fas fa-plus-circle"></i>
-                        <span>Buat Dokumen</span>
+                        <span>Buat Form Baru</span>
                     </a>
                 @endif
 
+                {{-- Review Dokumen: Only for Kepala Unit or Reviewer/Verifikator --}}
                 @if(Auth::user()->role_jabatan == 3 || Auth::user()->is_reviewer || Auth::user()->is_verifier)
                     <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item">
                         <i class="fas fa-file-contract"></i>
@@ -389,7 +395,7 @@
                             </thead>
                             <tbody>
                                 @forelse($unitUsers as $staff)
-                                    <tr>
+                                    <tr data-user-id="{{ $staff->id_user }}">
                                         <td>
                                             <div style="display: flex; align-items: center; gap: 12px;">
                                                 <div
@@ -540,6 +546,20 @@
         // Init
         document.addEventListener('DOMContentLoaded', () => {
             renderDepartments();
+            
+            // Display success message if exists
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: '{{ session('success') }}',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    toast: true,
+                    position: 'top-end'
+                });
+            @endif
         });
 
         // Tab Switching Logic
@@ -794,16 +814,92 @@
              }
         }
 
-        // Permission Update Logic
+        // Permission Update Logic with Mutual Exclusion
         function updatePermission(userId, field, value) {
-             // ... Existing logic ...
-             if (value === true && (field === 'is_reviewer' || field === 'is_verifier' || field === 'can_create_documents')) {
-                let className = '';
-                if (field === 'is_reviewer') className = 'role-reviewer';
-                else if (field === 'is_verifier') className = 'role-verifier';
-                else if (field === 'can_create_documents') className = 'role-create';
-                document.querySelectorAll('.' + className).forEach(input => { if (input.dataset.user != userId) input.checked = false; });
+            const checkbox = event.target;
+            
+            // If enabling a role, check for mutual exclusion (same user can't have multiple roles)
+            if (value === true && (field === 'is_reviewer' || field === 'is_verifier' || field === 'can_create_documents')) {
+                const userRow = document.querySelector(`tr[data-user-id="${userId}"]`);
+                if (!userRow) {
+                    console.error('User row not found for userId:', userId);
+                    return;
+                }
+                
+                // Define mutually exclusive roles for the same user
+                const roleMap = {
+                    'can_create_documents': { class: 'role-create', name: 'Creator' },
+                    'is_reviewer': { class: 'role-reviewer', name: 'Reviewer' },
+                    'is_verifier': { class: 'role-verifier', name: 'Verifikator' }
+                };
+                
+                const currentRole = roleMap[field];
+                const otherRoles = Object.keys(roleMap).filter(r => r !== field);
+                
+                // Check if user already has another role
+                let hasOtherRole = false;
+                let otherRoleName = '';
+                
+                otherRoles.forEach(role => {
+                    const otherCheckbox = userRow.querySelector(`.${roleMap[role].class}`);
+                    if (otherCheckbox && otherCheckbox.checked) {
+                        hasOtherRole = true;
+                        otherRoleName = roleMap[role].name;
+                    }
+                });
+                
+                // If user has another role, ask for confirmation
+                if (hasOtherRole) {
+                    Swal.fire({
+                        title: 'Konfirmasi Perubahan Role',
+                        html: `User ini sudah memiliki role <b>${otherRoleName}</b>.<br><br>Apakah Anda ingin mengubahnya menjadi <b>${currentRole.name}</b>?<br><br><small style="color:#666;">Satu user hanya boleh memiliki satu role.</small>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#c41e3a',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Ya, Ubah Role',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Uncheck other roles for this user
+                            otherRoles.forEach(role => {
+                                const otherCheckbox = userRow.querySelector(`.${roleMap[role].class}`);
+                                if (otherCheckbox && otherCheckbox.checked) {
+                                    otherCheckbox.checked = false;
+                                    // Send update to backend to disable other role
+                                    sendPermissionUpdate(userId, role, false);
+                                }
+                            });
+                            
+                            // Proceed with enabling the new role
+                            sendPermissionUpdate(userId, field, value);
+                            updateRoleAvailability(userId);
+                        } else {
+                            // User cancelled, revert the checkbox
+                            checkbox.checked = false;
+                        }
+                    });
+                    return; // Stop here, wait for confirmation
+                }
+                
+                // Ensure only one person can have this role (existing logic)
+                let className = currentRole.class;
+                document.querySelectorAll('.' + className).forEach(input => { 
+                    if (input.dataset.user != userId) input.checked = false; 
+                });
             }
+            
+            // Send update to backend
+            sendPermissionUpdate(userId, field, value);
+            
+            // Update visual state
+            if (field === 'is_reviewer' || field === 'is_verifier' || field === 'can_create_documents') {
+                updateRoleAvailability(userId);
+            }
+        }
+        
+        // Helper function to send permission update to backend
+        function sendPermissionUpdate(userId, field, value) {
             fetch("{{ route('unit_pengelola.update_permissions') }}", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
@@ -815,11 +911,69 @@
             })
             .then(data => {
                 if(data.success) {
-                      Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }).fire({ icon: 'success', title: 'Akses diperbarui' });
-                } else { Swal.fire("Gagal", data.message, "error"); }
+                    Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }).fire({ icon: 'success', title: 'Akses diperbarui' });
+                } else { 
+                    Swal.fire("Gagal", data.message, "error"); 
+                }
             })
             .catch(err => Swal.fire("Error", "Gagal: " + err.message, "error"));
         }
+        
+        // Helper function to update role availability (disable/enable checkboxes)
+        function updateRoleAvailability(userId) {
+            const userRow = document.querySelector(`tr[data-user-id="${userId}"]`);
+            if (!userRow) return;
+            
+            const checkboxes = {
+                create: userRow.querySelector('.role-create'),
+                reviewer: userRow.querySelector('.role-reviewer'),
+                verifier: userRow.querySelector('.role-verifier')
+            };
+            
+            // Find which role is active
+            let activeRole = null;
+            Object.entries(checkboxes).forEach(([role, checkbox]) => {
+                if (checkbox && checkbox.checked) {
+                    activeRole = role;
+                }
+            });
+            
+            // If a role is active, disable other checkboxes
+            if (activeRole) {
+                Object.entries(checkboxes).forEach(([role, checkbox]) => {
+                    if (checkbox && role !== activeRole) {
+                        const label = checkbox.closest('label');
+                        if (label) {
+                            label.style.opacity = '0.4';
+                            label.style.cursor = 'not-allowed';
+                            label.title = 'User sudah memiliki role lain';
+                        }
+                        checkbox.disabled = true;
+                    }
+                });
+            } else {
+                // No role active, enable all checkboxes
+                Object.entries(checkboxes).forEach(([role, checkbox]) => {
+                    if (checkbox) {
+                        const label = checkbox.closest('label');
+                        if (label) {
+                            label.style.opacity = '1';
+                            label.style.cursor = 'pointer';
+                            label.title = '';
+                        }
+                        checkbox.disabled = false;
+                    }
+                });
+            }
+        }
+        
+        // Initialize role availability on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('tr[data-user-id]').forEach(row => {
+                const userId = row.getAttribute('data-user-id');
+                updateRoleAvailability(userId);
+            });
+        });
     </script>
 </body>
 
