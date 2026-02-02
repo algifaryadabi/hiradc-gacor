@@ -410,6 +410,7 @@ Route::middleware('auth')->group(function () {
                 'date' => $doc->published_at ? $doc->published_at->format('d M Y') : $doc->created_at->format('d M Y'),
                 'author' => $doc->user->nama_user ?? 'Unknown',
                 'unit' => $doc->unit ? $doc->unit->nama_unit : '-',
+                'unit_id' => $doc->id_unit, // Required for filtering on dashboard
                 'status' => 'DISETUJUI', // Admin view of published
                 'status_label' => 'Terpublikasi',
                 'risk_level' => $doc->risk_level ?? 'High'

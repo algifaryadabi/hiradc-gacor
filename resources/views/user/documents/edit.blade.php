@@ -858,15 +858,27 @@
                                             <!-- 5. Controls -->
                                             <div style="margin-bottom: 25px;">
                                                 <div class="form-group">
-                                                    <label class="form-label">Kolom 10: Hirarki Pengendalian</label>
-                                                    <div class="checkbox-grid">
+                                                    <label class="form-label">Kolom 10: Hirarki Pengendalian Risiko</label>
+                                                    <div class="checkbox-grid hierarchy-checkboxes" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
                                                         @php $h = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
                                                         @foreach(['Eliminasi', 'Substitusi', 'Rekayasa Teknik', 'Pengendalian Administratif', 'APD'] as $opt)
-                                                               <label class="checkbox-card"><input type="checkbox" name="items[{{$index}}][kolom10_pengendalian][]" value="{{$opt}}" {{ in_array($opt, (array) $h) ? 'checked' : '' }}> {{ $opt }}</label>
+                                                               <label class="checkbox-card"><input type="checkbox" name="items[{{$index}}][kolom10_pengendalian][]" value="{{$opt}}" onchange="updateKolom11(this)" {{ in_array($opt, (array) $h) ? 'checked' : '' }}> {{ $opt }}</label>
                                                         @endforeach
                                                     </div>
                                                 </div>
-                                                <div class="form-group"><label class="form-label">Kolom 11: Pengendalian Existing</label><textarea class="form-control" name="items[{{$index}}][kolom11_existing]" rows="3">{{ $item->kolom11_existing }}</textarea></div>
+                                                <div class="form-group">
+                                                    <label class="form-label">Kolom 11: Pengendalian yang Dilakukan <span class="required">*</span></label>
+                                                    <small style="display: block; margin-bottom: 12px; color: #64748b;">
+                                                        <i class="fas fa-info-circle"></i> Tambahkan penjelasan detail untuk setiap hierarki yang dipilih di atas.
+                                                    </small>
+                                                    <div class="kolom11-dynamic-container" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 16px; min-height: 200px;">
+                                                        <div class="empty-state" style="padding: 40px; text-align: center; color: #94a3b8;">
+                                                            <i class="fas fa-hand-pointer" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                                                            <p style="margin: 0;">Pilih hierarki pengendalian di atas untuk mulai mengisi</p>
+                                                        </div>
+                                                    </div>
+                                                    <input type="hidden" name="items[{{$index}}][kolom11_existing]" class="kolom11-hidden-input" value="{{ $item->kolom11_existing }}">
+                                                </div>
                                             </div>
 
                                             <!-- 6. Residual -->
@@ -1121,14 +1133,26 @@
                      <!-- 5. Controls -->
                      <div style="margin-bottom: 25px;">
                          <div class="form-group">
-                             <label class="form-label">Kolom 10: Hirarki Pengendalian</label>
-                             <div class="checkbox-grid">
+                             <label class="form-label">Kolom 10: Hirarki Pengendalian Risiko</label>
+                             <div class="checkbox-grid hierarchy-checkboxes" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
                                  @foreach(['Eliminasi', 'Substitusi', 'Rekayasa Teknik', 'Pengendalian Administratif', 'APD'] as $opt)
-                                    <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom10_pengendalian][]" value="{{$opt}}"> {{$opt}}</label>
+                                    <label class="checkbox-card"><input type="checkbox" name="items[{index}][kolom10_pengendalian][]" value="{{$opt}}" onchange="updateKolom11(this)"> {{$opt}}</label>
                                  @endforeach
                              </div>
                          </div>
-                         <div class="form-group"><label class="form-label">Kolom 11: Pengendalian Existing</label><textarea class="form-control" name="items[{index}][kolom11_existing]" rows="3"></textarea></div>
+                         <div class="form-group">
+                             <label class="form-label">Kolom 11: Pengendalian yang Dilakukan <span class="required">*</span></label>
+                             <small style="display: block; margin-bottom: 12px; color: #64748b;">
+                                 <i class="fas fa-info-circle"></i> Tambahkan penjelasan detail untuk setiap hierarki yang dipilih di atas.
+                             </small>
+                             <div class="kolom11-dynamic-container" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 16px; min-height: 200px;">
+                                 <div class="empty-state" style="padding: 40px; text-align: center; color: #94a3b8;">
+                                     <i class="fas fa-hand-pointer" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                                     <p style="margin: 0;">Pilih hierarki pengendalian di atas untuk mulai mengisi</p>
+                                 </div>
+                             </div>
+                             <input type="hidden" name="items[{index}][kolom11_existing]" class="kolom11-hidden-input">
+                         </div>
                      </div>
                      
                      <!-- 6. Residual -->
@@ -1309,6 +1333,9 @@
             const kolom9Lingkungan = item.querySelector('.kolom9-lingkungan-field');
             const kolom9Keamanan = item.querySelector('.kolom9-keamanan-field');
 
+            // PRESERVE existing selected value before clearing
+            const currentValue = condSelect.value;
+
             condSelect.innerHTML = '<option value="">-- Pilih --</option>';
 
             // 1. Reset/Hide All
@@ -1336,6 +1363,10 @@
                     const opt = document.createElement('option');
                     opt.value = c;
                     opt.textContent = c;
+                    // RESTORE selected state if this was the previous value
+                    if (c === currentValue) {
+                        opt.selected = true;
+                    }
                     condSelect.appendChild(opt);
                 });
 
@@ -1494,7 +1525,11 @@
                  loadedItems.forEach(item => {
                      // Initialize category-specific fields FIRST
                      const categorySelect = item.querySelector('.category-select');
-                     if(categorySelect && categorySelect.value) {
+                     const conditionSelect = item.querySelector('.condition-select');
+                     
+                     // Only call updateConditions if kondisi doesn't have a value yet
+                     // This prevents clearing Blade-rendered selected values
+                     if(categorySelect && categorySelect.value && (!conditionSelect || !conditionSelect.value)) {
                          updateConditions(categorySelect);
                      }
                      
@@ -1516,6 +1551,268 @@
                 event.preventDefault();
             }
         });
+
+        // ===== KOLOM 11 DYNAMIC HIERARCHY FUNCTIONS =====
+        
+        /**
+         * Update Kolom 11 with dynamic hierarchy sections
+         * Creates protected labels and editable textareas for each hierarchy
+         */
+        function updateKolom11(checkbox) {
+            const item = checkbox.closest('.doc-item');
+            const container = item.querySelector('.kolom11-dynamic-container');
+            const hiddenInput = item.querySelector('.kolom11-hidden-input');
+            const checkboxes = item.querySelectorAll('.hierarchy-checkboxes input[type="checkbox"]');
+
+            if (!container) return;
+
+            // Store existing content before clearing
+            const existingData = {};
+            container.querySelectorAll('.hierarchy-textarea').forEach(textarea => {
+                const hierarchy = textarea.dataset.hierarchy;
+                if (hierarchy && textarea.value.trim()) {
+                    existingData[hierarchy] = textarea.value.trim();
+                }
+            });
+
+            // Get currently checked values in order
+            const checkedValues = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            // Clear container
+            container.innerHTML = '';
+
+            // If no checkboxes checked, show empty state
+            if (checkedValues.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="padding: 40px; text-align: center; color: #94a3b8;">
+                        <i class="fas fa-hand-pointer" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                        <p style="margin: 0;">Pilih hierarki pengendalian di atas untuk mulai mengisi</p>
+                    </div>
+                `;
+                hiddenInput.value = '';
+                return;
+            }
+
+            // Create section for each checked hierarchy
+            checkedValues.forEach((value, index) => {
+                const section = document.createElement('div');
+                section.className = 'hierarchy-section';
+                section.style.marginBottom = index < checkedValues.length - 1 ? '20px' : '0';
+
+                // Protected header (cannot be edited)
+                const header = document.createElement('div');
+                header.className = 'hierarchy-header';
+                header.style.cssText = `
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #1e293b;
+                    margin-bottom: 8px;
+                    padding: 10px 14px;
+                    background: white;
+                    border-left: 4px solid #3b82f6;
+                    border-radius: 6px;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                `;
+                header.innerHTML = `<i class="fas fa-shield-alt" style="color: #3b82f6; margin-right: 8px;"></i>${index + 1}. ${value}:`;
+
+                // Editable textarea
+                const textarea = document.createElement('textarea');
+                textarea.className = 'form-control hierarchy-textarea';
+                textarea.dataset.hierarchy = value;
+                textarea.rows = 3;
+                textarea.placeholder = `Tambahkan penjelasan detail untuk ${value}...`;
+                textarea.style.cssText = `
+                    border: 1px solid #e2e8f0;
+                    border-radius: 6px;
+                    padding: 12px;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    resize: vertical;
+                    transition: all 0.2s ease;
+                `;
+
+                // Restore existing content if available
+                if (existingData[value]) {
+                    textarea.value = existingData[value];
+                }
+
+                // Focus/blur effects
+                textarea.addEventListener('focus', function() {
+                    this.style.borderColor = '#3b82f6';
+                    this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                });
+                textarea.addEventListener('blur', function() {
+                    this.style.borderColor = '#e2e8f0';
+                    this.style.boxShadow = 'none';
+                });
+
+                // Update hidden input on change
+                textarea.addEventListener('input', function() {
+                    updateHiddenInput(item);
+                });
+
+                section.appendChild(header);
+                section.appendChild(textarea);
+                container.appendChild(section);
+            });
+
+            // Initial update of hidden input
+            updateHiddenInput(item);
+        }
+
+        /**
+         * Update hidden input with combined data from all hierarchy textareas
+         */
+        function updateHiddenInput(item) {
+            const textareas = item.querySelectorAll('.hierarchy-textarea');
+            const hiddenInput = item.querySelector('.kolom11-hidden-input');
+
+            if (!hiddenInput) return;
+
+            let combinedText = '';
+            textareas.forEach((textarea, index) => {
+                const hierarchy = textarea.dataset.hierarchy;
+                const content = textarea.value.trim();
+
+                if (index > 0) combinedText += '\n\n';
+                combinedText += `${index + 1}. ${hierarchy}:`;
+
+                if (content) {
+                    combinedText += `\n   ${content}`;
+                }
+            });
+
+            hiddenInput.value = combinedText;
+        }
+
+
+        /**
+         * Parse text content into hierarchy sections
+         * Returns object with hierarchy as key and content as value
+         */
+        function parseKolom11Text(text) {
+            const sections = {};
+            const hierarchies = ['Eliminasi', 'Substitusi', 'Rekayasa Teknik', 'Pengendalian Administratif', 'APD'];
+            
+            if (!text || text.trim() === '') return sections;
+            
+            hierarchies.forEach(hierarchy => {
+                // Find pattern: "N. Hierarchy:" followed by content until next numbered item or end
+                const escapedHierarchy = hierarchy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`\\d+\\.\\s*${escapedHierarchy}:\\s*\\n([\\s\\S]*?)(?=\\n\\d+\\.|$)`, 'i');
+                const match = text.match(regex);
+                
+                if (match) {
+                    sections[hierarchy] = match[1].trim();
+                }
+            });
+            
+            return sections;
+        }
+
+        /**
+         * Initialize Kolom 11 for existing items on page load
+         */
+        function initializeKolom11ForExistingItems() {
+            document.querySelectorAll('.doc-item').forEach(item => {
+                const container = item.querySelector('.kolom11-dynamic-container');
+                const hiddenInput = item.querySelector('.kolom11-hidden-input');
+                const checkboxes = item.querySelectorAll('.hierarchy-checkboxes input[type="checkbox"]');
+                
+                if (!container || !hiddenInput || checkboxes.length === 0) return;
+
+                // Parse existing data from hidden input
+                const existingText = hiddenInput.value || '';
+                const parsedSections = parseKolom11Text(existingText);
+
+                // Get checked hierarchies
+                const checkedValues = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+
+                // Clear container
+                container.innerHTML = '';
+
+                // If no checkboxes checked, show empty state
+                if (checkedValues.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="padding: 40px; text-align: center; color: #94a3b8;">
+                            <i class="fas fa-hand-pointer" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                            <p style="margin: 0;">Pilih hierarki pengendalian di atas untuk mulai mengisi</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Create section for each checked hierarchy
+                checkedValues.forEach((value, index) => {
+                    const section = document.createElement('div');
+                    section.className = 'hierarchy-section';
+                    section.style.marginBottom = index < checkedValues.length - 1 ? '20px' : '0';
+
+                    // Protected header
+                    const header = document.createElement('div');
+                    header.className = 'hierarchy-header';
+                    header.style.cssText = `
+                        font-size: 14px;
+                        font-weight: 600;
+                        color: #1e293b;
+                        margin-bottom: 8px;
+                        padding: 10px 14px;
+                        background: white;
+                        border-left: 4px solid #3b82f6;
+                        border-radius: 6px;
+                        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                    `;
+                    header.innerHTML = `<i class="fas fa-shield-alt" style="color: #3b82f6; margin-right: 8px;"></i>${index + 1}. ${value}:`;
+
+                    // Editable textarea with existing content
+                    const textarea = document.createElement('textarea');
+                    textarea.className = 'form-control hierarchy-textarea';
+                    textarea.dataset.hierarchy = value;
+                    textarea.rows = 3;
+                    textarea.placeholder = `Tambahkan penjelasan detail untuk ${value}...`;
+                    textarea.style.cssText = `
+                        border: 1px solid #e2e8f0;
+                        border-radius: 6px;
+                        padding: 12px;
+                        font-size: 14px;
+                        line-height: 1.6;
+                        resize: vertical;
+                        transition: all 0.2s ease;
+                    `;
+
+                    // Set existing content if available
+                    if (parsedSections[value]) {
+                        textarea.value = parsedSections[value];
+                    }
+
+                    // Focus/blur effects
+                    textarea.addEventListener('focus', function() {
+                        this.style.borderColor = '#3b82f6';
+                        this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    });
+                    textarea.addEventListener('blur', function() {
+                        this.style.borderColor = '#e2e8f0';
+                        this.style.boxShadow = 'none';
+                    });
+
+                    // Update hidden input on change
+                    textarea.addEventListener('input', function() {
+                        updateHiddenInput(item);
+                    });
+
+                    section.appendChild(header);
+                    section.appendChild(textarea);
+                    container.appendChild(section);
+                });
+            });
+        }
+
+        // Initialize on page load
+        initializeKolom11ForExistingItems();
     </script>
 </body>
 </html>
