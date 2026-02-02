@@ -375,36 +375,84 @@
 
                     <!-- Alert for Partial Revision -->
                     @php
+                        // Check which categories are locked (approved/published)
                         $isSheLocked = ($document->status_she == 'approved' || $document->status_she == 'published');
                         $isSecLocked = ($document->status_security == 'approved' || $document->status_security == 'published');
+                        
+                        // Check which categories are in revision
+                        $isSheRevision = ($document->status_she == 'revision');
+                        $isSecRevision = ($document->status_security == 'revision');
+                        
                         $hiddenCount = 0;
                     @endphp
 
-                    @if($isSheLocked || $isSecLocked)
+                    @if($isSheLocked || $isSecLocked || $isSheRevision || $isSecRevision)
                         <div style="background:#e0f2fe; border:1px solid #bae6fd; padding:15px; border-radius:8px; margin-bottom:24px; color:#0369a1; display:flex; gap:10px; align-items:center;">
                             <i class="fas fa-info-circle" style="font-size:20px;"></i>
                             <div>
-                                <strong>Mode Revisi Parsial:</strong> Beberapa item disembunyikan karena kategori form tersebut sudah disetujui (Final).<br>
+                                <strong>Mode Revisi Parsial:</strong> Hanya item yang perlu direvisi yang ditampilkan.<br>
+                                @if($isSheRevision) <span style="font-size:12px; background:#fef2f2; padding:2px 6px; border-radius:4px; margin-right:5px; border:1px solid #fecaca; color:#991b1b;">SHE Perlu Revisi</span> @endif
+                                @if($isSecRevision) <span style="font-size:12px; background:#fef2f2; padding:2px 6px; border-radius:4px; margin-right:5px; border:1px solid #fecaca; color:#991b1b;">Security Perlu Revisi</span> @endif
                                 @if($isSheLocked) <span style="font-size:12px; background:white; padding:2px 6px; border-radius:4px; margin-right:5px; border:1px solid #bae6fd;">SHE Terkunci</span> @endif
                                 @if($isSecLocked) <span style="font-size:12px; background:white; padding:2px 6px; border-radius:4px; margin-right:5px; border:1px solid #bae6fd;">Security Terkunci</span> @endif
                             </div>
                         </div>
                     @endif
 
+                    <!-- DEBUG: Show current status (remove after testing) -->
+                    <div style="background:#fef3c7; border:1px solid #fbbf24; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px;">
+                        <strong>🔍 DEBUG INFO ({{ now()->format('H:i:s') }}):</strong><br>
+                        status_she: <code>{{ $document->status_she }}</code><br>
+                        status_security: <code>{{ $document->status_security }}</code><br>
+                        isSheRevision: <code>{{ $isSheRevision ? 'TRUE' : 'FALSE' }}</code><br>
+                        isSecRevision: <code>{{ $isSecRevision ? 'TRUE' : 'FALSE' }}</code><br>
+                        <strong>Expected behavior:</strong> 
+                        @if($isSecRevision && !$isSheRevision)
+                            <span style="color:#dc2626;">Only show Keamanan items</span>
+                        @elseif($isSheRevision && !$isSecRevision)
+                            <span style="color:#dc2626;">Only show K3/KO/Lingkungan items</span>
+                        @elseif($isSheRevision && $isSecRevision)
+                            <span style="color:#dc2626;">Show all items</span>
+                        @else
+                            <span style="color:#16a34a;">Normal mode - check locked status</span>
+                        @endif
+                    </div>
+
                     <div id="items-container">
                         @foreach($document->details as $index => $item)
                             @php
-                                // Filter Logic
+                                // Filter Logic: Show only items that need revision
                                 $cat = $item->kategori;
                                 $skip = false;
 
-                                if ($cat == 'Keamanan' && $isSecLocked) {
-                                    $skip = true;
-                                    $hiddenCount++;
-                                }
-                                if (in_array($cat, ['K3', 'KO', 'Lingkungan']) && $isSheLocked) {
-                                    $skip = true;
-                                    $hiddenCount++;
+                                // Priority 1: If a specific track is in revision, ONLY show that track
+                                if ($isSheRevision && !$isSecRevision) {
+                                    // SHE is revising, Security is NOT revising
+                                    // Show ONLY SHE categories (K3, KO, Lingkungan)
+                                    if (!in_array($cat, ['K3', 'KO', 'Lingkungan'])) {
+                                        $skip = true;
+                                        $hiddenCount++;
+                                    }
+                                } elseif ($isSecRevision && !$isSheRevision) {
+                                    // Security is revising, SHE is NOT revising
+                                    // Show ONLY Security category (Keamanan)
+                                    if ($cat != 'Keamanan') {
+                                        $skip = true;
+                                        $hiddenCount++;
+                                    }
+                                } elseif ($isSheRevision && $isSecRevision) {
+                                    // Both are revising - show all items
+                                    // No filtering needed
+                                } else {
+                                    // Neither is revising - check for locked status
+                                    if ($cat == 'Keamanan' && $isSecLocked) {
+                                        $skip = true;
+                                        $hiddenCount++;
+                                    }
+                                    if (in_array($cat, ['K3', 'KO', 'Lingkungan']) && $isSheLocked) {
+                                        $skip = true;
+                                        $hiddenCount++;
+                                    }
                                 }
                             @endphp
 

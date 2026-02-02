@@ -134,28 +134,31 @@ class User extends Authenticatable
 
     /**
      * Get role name based on hierarchy
+     * Priority: Admin > Unit Pengelola > Kepala Departemen > Approver > User
      */
     public function getRoleName(): string
     {
-        // 1. Check for Admin FIRST (highest priority)
+        // 1. Check for Admin FIRST (highest priority - ALWAYS takes precedence)
+        // Admin role overrides ALL other roles, including unit assignments
         if (($this->role_user ?? $this->id_role_user) == 1) {
             return 'admin';
         }
 
         // 2. Check for Unit Pengelola (Head & Staff)
         // Includes Kepala Unit (Role 3) AND Staff (Role 4,5,6) from SHE/Security
+        // Only applies if NOT admin
         if (in_array($this->id_unit, [55, 56])) {
             return 'unit_pengelola';
         }
 
-        // 3. Kepala Unit (Approver)
-        if ($this->isKepalaUnit()) {
-            return 'approver'; // Other Kepala Unit
-        }
-
-        // 4. Kepala Departemen
+        // 3. Kepala Departemen (before regular Kepala Unit)
         if ($this->isKepalaDepartemen()) {
             return 'kepala_departemen';
+        }
+
+        // 4. Kepala Unit (Approver)
+        if ($this->isKepalaUnit()) {
+            return 'approver'; // Other Kepala Unit
         }
 
         // 5. User (Role 4, 5, 6)

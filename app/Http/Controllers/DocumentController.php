@@ -1395,18 +1395,33 @@ class DocumentController extends Controller
                     // Normal Flow -> Move to Level 2
                     $document->refresh();
                     
-                    // SMART STATUS UPDATE: Only reset status if not already approved/published
+                    // SMART STATUS UPDATE with Partial Revision Support
+                    $wasRevision = ($document->status == 'revision');
+                    $isSheRevision = ($document->status_she == 'revision');
+                    $isSecRevision = ($document->status_security == 'revision');
+                    
                     $currentShe = $document->status_she;
+                    $currentSec = $document->status_security;
+                    
+                    // Determine SHE status
                     if (in_array($currentShe, ['approved', 'published'])) {
                         $sheStatus = $currentShe; // Keep as is
+                    } elseif ($wasRevision && $isSecRevision && !$isSheRevision) {
+                        // Security was revised, SHE was NOT -> Keep SHE status unchanged
+                        $sheStatus = $currentShe;
                     } else {
+                        // Normal flow or SHE was revised -> Set to pending_head
                         $sheStatus = $document->hasSheContent() ? 'pending_head' : 'none';
                     }
 
-                    $currentSec = $document->status_security;
+                    // Determine Security status
                     if (in_array($currentSec, ['approved', 'published'])) {
                         $secStatus = $currentSec; // Keep as is
+                    } elseif ($wasRevision && $isSheRevision && !$isSecRevision) {
+                        // SHE was revised, Security was NOT -> Keep Security status unchanged
+                        $secStatus = $currentSec;
                     } else {
+                        // Normal flow or Security was revised -> Set to pending_head
                         $secStatus = $document->hasSecurityContent() ? 'pending_head' : 'none';
                     }
 
@@ -1703,9 +1718,22 @@ class DocumentController extends Controller
             $isShe = ($user->id_unit == 56); // SHE Unit
             $isSecurity = ($user->id_unit == 55); // Security Unit
 
+            // Check if the OTHER track can still continue their work
+            $otherTrackCanContinue = false;
+            
+            if ($isShe) {
+                // SHE is revising - check if Security can still continue
+                // Security can continue if they haven't finished yet (not approved/published/revision)
+                $otherTrackCanContinue = !in_array($document->status_security, ['approved', 'published', 'revision']);
+            } elseif ($isSecurity) {
+                // Security is revising - check if SHE can still continue
+                $otherTrackCanContinue = !in_array($document->status_she, ['approved', 'published', 'revision']);
+            }
+
             $updateData = [
                 'status' => 'revision',
-                'current_level' => 1 // Back to Submitter
+                // If other track can continue, stay at level 2. Otherwise, back to submitter (level 1)
+                'current_level' => $otherTrackCanContinue ? 2 : 1
             ];
 
             // Partial Revision Logic
@@ -1930,6 +1958,26 @@ class DocumentController extends Controller
             }
         }
 
+        // VALIDATION: Ensure both Reviewer and Verifikator are assigned
+        if (!$reviewerId || !$approverId) {
+            $missing = [];
+            if (!$reviewerId) $missing[] = 'Staff Reviewer';
+            if (!$approverId) $missing[] = 'Staff Verifikator';
+            
+            $errorMessage = implode(' dan ', $missing) . ' wajib ditunjuk terlebih dahulu.';
+            
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 422);
+            }
+            
+            return back()->withErrors([
+                'disposition' => $errorMessage
+            ]);
+        }
+
         // Parallel Workflow: Update Specific Columns based on Unit
         if ($user->id_unit == 55) { // Security
             \Illuminate\Support\Facades\Log::info("Disposition Logic: SECURITY Block");
@@ -2007,12 +2055,16 @@ class DocumentController extends Controller
         $isAssigned = false;
 
         if ($user->id_unit == 55) { // Security
-            $isAssigned = ($user->id_user == $document->security_reviewer_id);
+            // Allow if explicitly assigned OR has reviewer permission and doc is in review status
+            $isAssigned = ($user->id_user == $document->security_reviewer_id) || 
+                          ($user->is_reviewer && $document->status_security == 'assigned_review');
         } elseif ($user->id_unit == 56) { // SHE
-            $isAssigned = ($user->id_user == $document->she_reviewer_id);
+            $isAssigned = ($user->id_user == $document->she_reviewer_id) || 
+                          ($user->is_reviewer && $document->status_she == 'assigned_review');
         } else {
             // Fallback
-            $isAssigned = ($user->id_user == $document->level2_reviewer_id);
+            $isAssigned = ($user->id_user == $document->level2_reviewer_id) || 
+                          ($user->is_reviewer && $document->level2_status == 'assigned_review');
         }
 
         if (!$isAssigned) {
@@ -2066,11 +2118,15 @@ class DocumentController extends Controller
         $isAssigned = false;
 
         if ($user->id_unit == 55) { // Security
-            $isAssigned = ($user->id_user == $document->security_verificator_id);
+            // Allow if explicitly assigned OR has verifier permission and doc is in approval status
+            $isAssigned = ($user->id_user == $document->security_verificator_id) || 
+                          ($user->is_verifier && $document->status_security == 'assigned_approval');
         } elseif ($user->id_unit == 56) { // SHE
-            $isAssigned = ($user->id_user == $document->she_verificator_id);
+            $isAssigned = ($user->id_user == $document->she_verificator_id) || 
+                          ($user->is_verifier && $document->status_she == 'assigned_approval');
         } else {
-            $isAssigned = ($user->id_user == $document->level2_approver_id);
+            $isAssigned = ($user->id_user == $document->level2_approver_id) || 
+                          ($user->is_verifier && $document->level2_status == 'assigned_approval');
         }
 
         if (!$isAssigned) {
@@ -2611,59 +2667,47 @@ class DocumentController extends Controller
         $query = Document::where('current_level', 2);
 
         if ($user->id_unit == 55) { // Security
-            $query->where(function ($q) use ($user, $allowedCategories) {
-                // Assigned to ME as Reviewer or Verificator
-                $q->where('security_reviewer_id', $user->id_user)
-                    ->orWhere('security_verificator_id', $user->id_user)
-                    // OR Unassigned (Pool)
-                    ->orWhere(function ($sub) use ($allowedCategories) {
-                        $sub->whereNull('security_reviewer_id')
-                            // Ensure status is appropriate for pool (e.g. pending_head or just assigned_review?)
-                            // If Head hasn't assigned yet, it might not be visible to staff? 
-                            // Logic: Head assigns. So usually not null? 
-                            // If Unassigned Pool is allowed:
-                            ->whereIn('status_security', ['pending_head', 'pending_level2', 'assigned_review']) // Adjust based on flow
-                            ->where(function ($c) use ($allowedCategories) {
-                                $c->whereIn('kategori', $allowedCategories)
-                                    ->orWhereHas('details', function ($d) use ($allowedCategories) {
-                                        $d->whereIn('kategori', $allowedCategories);
-                                    });
-                            });
-                    });
-            });
-            // Filter by role status
+            // Simplified permission-based filtering
             if ($user->role_jabatan == 4) { // Verifikator
-                $query->where('status_security', 'assigned_approval'); // or similar status
-            } else { // Reviewer
-                $query->where(function ($q) {
-                    $q->where('status_security', 'assigned_review');
-                    // REMOVED: ->orWhere('status_security', 'pending_head'); // Staff should NOT see pending_head
-                });
+                if ($user->is_verifier) {
+                    // Show all documents in approval status if user has verifier permission
+                    $query->where('status_security', 'assigned_approval');
+                } else {
+                    // Only show explicitly assigned documents
+                    $query->where('status_security', 'assigned_approval')
+                          ->where('security_verificator_id', $user->id_user);
+                }
+            } else { // Reviewer (role_jabatan 5 or 6)
+                if ($user->is_reviewer) {
+                    // Show all documents in review status if user has reviewer permission
+                    $query->where('status_security', 'assigned_review');
+                } else {
+                    // Only show explicitly assigned documents
+                    $query->where('status_security', 'assigned_review')
+                          ->where('security_reviewer_id', $user->id_user);
+                }
             }
 
         } elseif ($user->id_unit == 56) { // SHE
-            $query->where(function ($q) use ($user, $allowedCategories) {
-                $q->where('she_reviewer_id', $user->id_user)
-                    ->orWhere('she_verificator_id', $user->id_user)
-                    ->orWhere(function ($sub) use ($allowedCategories) {
-                        $sub->whereNull('she_reviewer_id')
-                            ->whereIn('status_she', ['pending_head', 'pending_level2', 'assigned_review'])
-                            ->where(function ($c) use ($allowedCategories) {
-                                $c->whereIn('kategori', $allowedCategories)
-                                    ->orWhereHas('details', function ($d) use ($allowedCategories) {
-                                        $d->whereIn('kategori', $allowedCategories);
-                                    });
-                            });
-                    });
-            });
-            // Status Filter
-            if ($user->role_jabatan == 4) {
-                $query->where('status_she', 'assigned_approval');
-            } else {
-                $query->where(function ($q) {
-                    $q->where('status_she', 'assigned_review');
-                    // REMOVED: ->orWhere('status_she', 'pending_head');
-                });
+            // Simplified permission-based filtering
+            if ($user->role_jabatan == 4) { // Verifikator
+                if ($user->is_verifier) {
+                    // Show all documents in approval status if user has verifier permission
+                    $query->where('status_she', 'assigned_approval');
+                } else {
+                    // Only show explicitly assigned documents
+                    $query->where('status_she', 'assigned_approval')
+                          ->where('she_verificator_id', $user->id_user);
+                }
+            } else { // Reviewer (role_jabatan 5 or 6)
+                if ($user->is_reviewer) {
+                    // Show all documents in review status if user has reviewer permission
+                    $query->where('status_she', 'assigned_review');
+                } else {
+                    // Only show explicitly assigned documents
+                    $query->where('status_she', 'assigned_review')
+                          ->where('she_reviewer_id', $user->id_user);
+                }
             }
 
         } else {

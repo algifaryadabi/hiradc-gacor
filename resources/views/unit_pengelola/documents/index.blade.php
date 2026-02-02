@@ -851,10 +851,39 @@
                             approver_id: null
                         })
                     })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success || data.message) { // Handle potential success redirect data
-                                Swal.fire('Berhasil', 'Dokumen berhasil didisposisikan ke staff.', 'success')
+                        .then(res => {
+                            // Check if response is JSON
+                            const contentType = res.headers.get("content-type");
+                            if (contentType && contentType.includes("application/json")) {
+                                return res.json().then(data => ({
+                                    status: res.status,
+                                    data: data
+                                }));
+                            }
+                            // If not JSON, might be a redirect (success case)
+                            return {
+                                status: res.status,
+                                data: { success: true, message: 'Dokumen berhasil didisposisikan.' }
+                            };
+                        })
+                        .then(response => {
+                            const { status, data } = response;
+                            
+                            // Handle validation error (422)
+                            if (status === 422) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Staff Belum Ditunjuk',
+                                    html: `<b>${data.message}</b><br><br>Silakan tunjuk staff reviewer dan verifikator terlebih dahulu melalui Dashboard Unit Pengelola.`,
+                                    confirmButtonText: 'Mengerti',
+                                    confirmButtonColor: '#f59e0b'
+                                });
+                                return;
+                            }
+                            
+                            // Handle success
+                            if (data.success || status === 200) {
+                                Swal.fire('Berhasil', data.message || 'Dokumen berhasil didisposisikan ke staff.', 'success')
                                     .then(() => location.reload());
                             } else {
                                 Swal.fire('Gagal', data.message || 'Terjadi kesalahan.', 'error');
@@ -862,17 +891,7 @@
                         })
                         .catch(err => {
                             console.error(err);
-                            // If controller redirects back with success flash, fetch might treat as opaque or error if not JSON
-                            // But we return JSON usually or back(). Wait, controller returns back()->with().
-                            // Fetching a back() redirect usually follows it to the HTML page.
-                            // We should ideally change controller to return JSON if AJAX, but for now let's handle the redirect.
-                            // If we land here, check if it's actually a success via page reload?
-                            // Actually, let's assume if no error thrown, it worked.
-                            // But fetch follows redirects by default. The response will be the HTML of the page.
-                            // This JSON.parse will fail.
-                            // FIX: Check content type.
-                            Swal.fire('Info', 'Permintaan diproses. Halaman akan dimuat ulang.', 'info')
-                                .then(() => location.reload());
+                            Swal.fire('Error', 'Terjadi kesalahan saat memproses permintaan.', 'error');
                         });
                 }
             });

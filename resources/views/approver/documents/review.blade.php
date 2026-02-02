@@ -1242,6 +1242,48 @@
                         </thead>
                         <tbody>
                             @forelse($document->details as $index => $item)
+                                @php
+                                    // Logic Partial Revision View - Same as show.blade.php
+                                    $isRev = $document->status == 'revision';
+                                    
+                                    // Check which categories are locked (approved/published)
+                                    $isSheLocked = ($document->status_she == 'approved' || $document->status_she == 'published');
+                                    $isSecLocked = ($document->status_security == 'approved' || $document->status_security == 'published');
+                                    
+                                    // Check which categories are in revision
+                                    $isSheRevision = ($document->status_she == 'revision');
+                                    $isSecRevision = ($document->status_security == 'revision');
+
+                                    $skip = false;
+                                    
+                                    // Priority 1: If a specific track is in revision, ONLY show that track
+                                    if ($isSheRevision && !$isSecRevision) {
+                                        // SHE is revising, Security is NOT revising
+                                        // Show ONLY SHE categories (K3, KO, Lingkungan)
+                                        if (!in_array($item->kategori, ['K3', 'KO', 'Lingkungan'])) {
+                                            $skip = true;
+                                        }
+                                    } elseif ($isSecRevision && !$isSheRevision) {
+                                        // Security is revising, SHE is NOT revising
+                                        // Show ONLY Security category (Keamanan)
+                                        if ($item->kategori != 'Keamanan') {
+                                            $skip = true;
+                                        }
+                                    } elseif ($isSheRevision && $isSecRevision) {
+                                        // Both are revising - show all items
+                                        // No filtering needed
+                                    } else {
+                                        // Neither is revising - check for locked status
+                                        if ($item->kategori == 'Keamanan' && $isSecLocked) {
+                                            $skip = true;
+                                        }
+                                        if (in_array($item->kategori, ['K3', 'KO', 'Lingkungan']) && $isSheLocked) {
+                                            $skip = true;
+                                        }
+                                    }
+                                @endphp
+                                @if($skip) @continue @endif
+                                
                                 <tr>
                                     <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
                                         {{ $index + 1 }}
