@@ -85,10 +85,10 @@ Route::middleware('auth')->group(function () {
         // Load published documents (General View)
         // Load published documents (General View) - Inclusive of partial tracks
         $rawDocuments = \App\Models\Document::where(function ($q) {
-                $q->where('status', 'published')
-                  ->orWhere('status_she', 'published')
-                  ->orWhere('status_security', 'published');
-            })
+            $q->where('status', 'published')
+                ->orWhere('status_she', 'published')
+                ->orWhere('status_security', 'published');
+        })
             ->with(['user', 'unit', 'approvals.approver', 'details'])
             ->orderBy('updated_at', 'desc')
             ->get();
@@ -195,6 +195,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/approver/documents/get-item-html/{id}', [DocumentController::class, 'getEditItemHtml'])->name('approver.get_edit_item');
     Route::get('/approver/documents/{id}/status', [DocumentController::class, 'getStatus'])->name('approver.get_status');
 
+    // ==================== NEW APPROVAL WORKFLOW ROUTES ====================
+    Route::post('/approval/hiradc/{id}', [\App\Http\Controllers\ApprovalController::class, 'approveHiradc'])->name('approval.hiradc');
+    Route::post('/approval/puk/{id}', [\App\Http\Controllers\ApprovalController::class, 'approvePuk'])->name('approval.puk');
+    Route::post('/approval/pmk/{id}', [\App\Http\Controllers\ApprovalController::class, 'approvePmk'])->name('approval.pmk');
 
     // ==================== UNIT PENGELOLA (SHE/KEAMANAN) ROUTES ====================
     // Kepala Unit Pengelola - Document Management
@@ -238,8 +242,8 @@ Route::middleware('auth')->group(function () {
                         // - Resubmitted (Pending Level 1)
                         // - Processing (Pending Level 2)
                         $sub->where(function ($p) {
-                             $p->whereIn('status_she', ['approved', 'published'])
-                               ->orWhereIn('status_security', ['approved', 'published']);
+                            $p->whereIn('status_she', ['approved', 'published'])
+                                ->orWhereIn('status_security', ['approved', 'published']);
                         });
                     })
                     ->orWhere('status', 'approved') // Published Global
@@ -253,19 +257,19 @@ Route::middleware('auth')->group(function () {
 
         $publishedDocuments = \App\Models\Document::where('id_dept', $user->id_dept)
             ->where(function ($q) {
-                 $q->where('status', 'published')
-                   ->orWhere('status_she', 'published')
-                   ->orWhere('status_security', 'published');
+                $q->where('status', 'published')
+                    ->orWhere('status_she', 'published')
+                    ->orWhere('status_security', 'published');
             })
             ->with(['user', 'unit', 'details'])
             ->orderBy('updated_at', 'desc') // Use updated_at since published_at might differ per track
             ->limit(10)
             ->get();
-            
+
         // Transform for View (JSON) - Support Split Cards
         $pendingData = $pendingDocuments->flatMap(function ($doc) {
             $items = [];
-            
+
             // Helper
             $buildItem = function ($filter, $label, $isPublished = false) use ($doc) {
                 return [
@@ -276,24 +280,24 @@ Route::middleware('auth')->group(function () {
                     'risk_level' => $doc->risk_level ?? 'High',
                     'status' => $label,
                     'filter' => $filter, // Passed to specific review link
-                    'is_published' => $isPublished 
+                    'is_published' => $isPublished
                 ];
             };
 
             // Check SHE
             if ($doc->hasSheContent()) {
                 if ($doc->status_she == 'approved') {
-                    $items[] = $buildItem('SHE', 'Menunggu Approval (SHE)');
+                    $items[] = $buildItem('SHE', 'Menunggu Approval (SHE)', false);
                 } elseif ($doc->status_she == 'published') {
-                     $items[] = $buildItem('SHE', 'Terpublikasi (SHE)', true);
+                    $items[] = $buildItem('SHE', 'Terpublikasi (SHE)', true);
                 }
             }
             // Check Security
             if ($doc->hasSecurityContent()) {
                 if ($doc->status_security == 'approved') {
-                    $items[] = $buildItem('Security', 'Menunggu Approval (Security)');
+                    $items[] = $buildItem('Security', 'Menunggu Approval (Security)', false);
                 } elseif ($doc->status_security == 'published') {
-                     $items[] = $buildItem('Security', 'Terpublikasi (Security)', true);
+                    $items[] = $buildItem('Security', 'Terpublikasi (Security)', true);
                 }
             }
 
@@ -302,7 +306,7 @@ Route::middleware('auth')->group(function () {
                 // If it was fetched but matches neither specific approved condition
                 // e.g. strictly pending_level3 with no sub-status used yet
                 if ($doc->current_level == 3) {
-                     $items[] = $buildItem('ALL', 'Menunggu Approval');
+                    $items[] = $buildItem('ALL', 'Menunggu Approval', false);
                 }
                 // Also show if global revision but visible? No, logic above handles status check from query.
             }
@@ -365,10 +369,10 @@ Route::middleware('auth')->group(function () {
         // Published Documents
         // Published Documents - Inclusive
         $publishedDocuments = \App\Models\Document::where(function ($q) {
-                $q->where('status', 'published')
-                  ->orWhere('status_she', 'published')
-                  ->orWhere('status_security', 'published');
-            })
+            $q->where('status', 'published')
+                ->orWhere('status_she', 'published')
+                ->orWhere('status_security', 'published');
+        })
             ->count();
 
         // Pending Approval (all levels)
@@ -384,10 +388,10 @@ Route::middleware('auth')->group(function () {
         // Get published documents for table
         // Get published documents for table - Inclusive
         $rawDocuments = \App\Models\Document::where(function ($q) {
-                $q->where('status', 'published')
-                  ->orWhere('status_she', 'published')
-                  ->orWhere('status_security', 'published');
-            })
+            $q->where('status', 'published')
+                ->orWhere('status_she', 'published')
+                ->orWhere('status_security', 'published');
+        })
             ->with(['user', 'unit', 'details'])
             ->orderBy('updated_at', 'desc')
             ->limit(20)

@@ -409,6 +409,49 @@
             gap: 24px;
         }
 
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        /* Hide Number Input Spinners */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* Custom Scrollbar for Program Kerja Table */
+        .program-kerja-scroll::-webkit-scrollbar {
+            height: 10px;
+        }
+
+        .program-kerja-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .program-kerja-scroll::-webkit-scrollbar-thumb {
+            background: #5c7cfa;
+            border-radius: 10px;
+        }
+
+        .program-kerja-scroll::-webkit-scrollbar-thumb:hover {
+            background: #4c6ef5;
+        }
+
         /* Form Controls - Modern Design */
         .form-group {
             margin-bottom: 24px;
@@ -733,6 +776,90 @@
 </head>
 
 <body>
+    <!-- Form Type Selection Modal -->
+    <div id="formTypeModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div
+            style="background: white; border-radius: 24px; padding: 48px; max-width: 700px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); position: relative; animation: modalSlideIn 0.3s ease-out;">
+
+            <div style="text-align: center; margin-bottom: 32px;">
+                <div
+                    style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(196, 30, 58, 0.3);">
+                    <i class="fas fa-clipboard-list" style="font-size: 36px; color: white;"></i>
+                </div>
+                <h2 style="font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Pilih Tipe Form</h2>
+                <p style="color: #64748b; font-size: 14px;">Pilih kategori form HIRADC yang ingin Anda buat</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- SHE Option -->
+                <div onclick="selectFormType('SHE')" class="form-type-card"
+                    style="border: 2px solid #e2e8f0; border-radius: 16px; padding: 32px 24px; cursor: pointer; transition: all 0.3s; text-align: center; background: white;">
+                    <div
+                        style="width: 64px; height: 64px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                        <i class="fas fa-hard-hat" style="font-size: 28px; color: white;"></i>
+                    </div>
+                    <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">SHE</h3>
+                    <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 16px;">
+                        Safety, Health & Environment<br>
+                        <span style="color: #10b981; font-weight: 600; font-size: 12px;">K3, KO, Lingkungan</span>
+                    </p>
+                    <div
+                        style="display: inline-flex; align-items: center; gap: 6px; color: #059669; font-size: 13px; font-weight: 600;">
+                        Pilih <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- Security Option -->
+                <div onclick="selectFormType('Security')" class="form-type-card"
+                    style="border: 2px solid #e2e8f0; border-radius: 16px; padding: 32px 24px; cursor: pointer; transition: all 0.3s; text-align: center; background: white;">
+                    <div
+                        style="width: 64px; height: 64px; background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 12px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
+                        <i class="fas fa-shield-alt" style="font-size: 28px; color: white;"></i>
+                    </div>
+                    <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">Security</h3>
+                    <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 16px;">
+                        Pengamanan<br>
+                        <span style="color: #ef4444; font-weight: 600; font-size: 12px;">Keamanan</span>
+                    </p>
+                    <div
+                        style="display: inline-flex; align-items: center; gap: 6px; color: #dc2626; font-size: 13px; font-weight: 600;">
+                        Pilih <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .form-type-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-type-card:hover:first-of-type {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .form-type-card:hover:last-of-type {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+    </style>
+
     <div class="container">
         <!-- Sidebar -->
         <!-- Sidebar -->
@@ -745,7 +872,7 @@
                     <a href="{{ route('documents.index') }}" class="btn-back"><i class="fas fa-arrow-left"></i>
                         Kembali</a>
                     <div style="height: 24px; width: 1px; background: #e5e7eb;"></div>
-                    <h1>Buat Form Baru</h1>
+                    <h1 id="formTitle">Buat Form Baru</h1>
                 </div>
             </div>
 
@@ -755,22 +882,7 @@
                     <!-- Hidden Metadata -->
                     <input type="hidden" id="auto_probis_value"
                         value="{{ isset($user->seksi->probis) ? $user->seksi->probis->nama_probis : (isset($user->unit->probis) ? $user->unit->probis->nama_probis : '') }}">
-
-                    <!-- Document Title Section -->
-                    <div
-                        style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #1e293b;">
-                                Judul Form <span style="color: #ef4444;">*</span>
-                            </label>
-                            <input type="text" name="judul_dokumen" class="form-control" required
-                                placeholder="Contoh: Identifikasi Bahaya Area Produksi Line 1"
-                                style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
-                            <small style="display: block; margin-top: 6px; color: #64748b;">
-                                Berikan judul yang jelas untuk form HIRADC ini.
-                            </small>
-                        </div>
-                    </div>
+                    <input type="hidden" id="form_type" name="form_type" value="">
 
                     <!-- Messages -->
                     @if(session('success'))
@@ -872,10 +984,14 @@
                         </h3>
                         <div class="form-grid-2">
                             <div class="form-group">
-                                <label class="form-label">Proses Bisnis</label>
-                                <input type="text" class="form-control probis-input"
-                                    name="items[{index}][kolom2_proses]" readonly
-                                    style="background-color: #f8fafc; color: #64748b; cursor: not-allowed; border-color: #e2e8f0;">
+                                <label class="form-label">Proses Bisnis <span class="required">*</span></label>
+                                <select class="form-control probis-select" name="items[{index}][kolom2_proses]"
+                                    required>
+                                    <option value="">-- Pilih Proses Bisnis --</option>
+                                    @foreach($probis as $p)
+                                        <option value="{{ $p->nama_probis }}">{{ $p->nama_probis }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Kegiatan <span class="required">*</span></label>
@@ -928,7 +1044,7 @@
                     </div>
 
                     <!-- 2. Identifikasi (Bahaya/Aspek/Ancaman) -->
-                    <div style="margin-bottom: 25px;">
+                    <div class="bagian-2-container" style="margin-bottom: 25px; display: none;">
                         <h3
                             style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
                             <i class="fas fa-exclamation-triangle" style="color: #f59e0b; margin-right: 8px;"></i>
@@ -940,7 +1056,7 @@
                             style="background: #fffbeb; padding: 20px; border-radius: 8px; border: 1px solid #fcd34d; margin-bottom: 15px;">
                             <label class="form-label" style="font-weight: 600;">
                                 <i class="fas fa-hard-hat" style="color: #f59e0b;"></i>
-                                Kolom 6: POTENSI BAHAYA (K3/KO)
+                                Kolom 6: POTENSI BAHAYA (K3)
                             </label>
                             <div class="hazard-options checkbox-grid"
                                 style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
@@ -1108,25 +1224,28 @@
                                 <label class="form-label">Kolom 11: Pengendalian yang Dilakukan <span
                                         class="required">*</span></label>
                                 <small style="display: block; margin-bottom: 12px; color: #64748b;">
-                                    <i class="fas fa-info-circle"></i> Tambahkan penjelasan detail untuk setiap hierarki yang dipilih di atas.
+                                    <i class="fas fa-info-circle"></i> Tambahkan penjelasan detail untuk setiap hierarki
+                                    yang dipilih di atas.
                                 </small>
-                                
+
                                 <!-- Dynamic container for hierarchy sections -->
-                                <div class="kolom11-dynamic-container" 
-                                     style="background: #f8fafc; 
+                                <div class="kolom11-dynamic-container" style="background: #f8fafc; 
                                             border: 2px solid #e2e8f0; 
                                             border-radius: 8px; 
                                             padding: 16px; 
                                             min-height: 200px;">
                                     <!-- Empty state -->
                                     <div class="empty-state" style="padding: 40px; text-align: center; color: #94a3b8;">
-                                        <i class="fas fa-hand-pointer" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
-                                        <p style="margin: 0;">Pilih hierarki pengendalian di atas untuk mulai mengisi</p>
+                                        <i class="fas fa-hand-pointer"
+                                            style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                                        <p style="margin: 0;">Pilih hierarki pengendalian di atas untuk mulai mengisi
+                                        </p>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Hidden input to store combined data for submission -->
-                                <input type="hidden" name="items[{index}][kolom11_existing]" class="kolom11-hidden-input">
+                                <input type="hidden" name="items[{index}][kolom11_existing]"
+                                    class="kolom11-hidden-input">
                             </div>
 
                             <!-- Columns 12-14: Penilaian Risiko Awal (was section 4) -->
@@ -1230,161 +1349,231 @@
                             </div>
                         </div>
 
-                        <!-- 5. Mitigasi Lanjutan & Risiko Sisa -->
+                        <!-- 5. PUK/PMK Program Management -->
                         <div class="bagian-5-section">
                             <h3
                                 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
                                 <i class="fas fa-check-double" style="color: #15803d; margin-right: 8px;"></i>
-                                BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa
+                                BAGIAN 5: Evaluasi & Program Pengendalian
                             </h3>
                             <div
                                 style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
 
-                                <!-- Column 18: Toleransi -->
+                                <!-- Column 18: Auto-Tolerance -->
                                 <div class="form-group">
-                                    <label class="form-label">Kolom 18: Risiko Dapat Ditoleransi? <span
-                                            class="required">*</span></label>
-                                    <select class="form-control tolerance-select"
-                                        name="items[{index}][kolom18_toleransi]" required
-                                        onchange="toggleFollowUpFields(this)">
-                                        <option value="Ya" selected>Ya - Dapat Ditoleransi</option>
-                                        <option value="Tidak">Tidak - Perlu Tindak Lanjut</option>
-                                    </select>
-                                    <small style="display: block; margin-top: 6px; color: #64748b;">
-                                        Jika "Tidak", kolom 19-22 (Pengendalian Tindak Lanjut) akan muncul.
-                                    </small>
+                                    <label class="form-label">Kolom 18: Risiko Dapat Ditoleransi?</label>
+                                    <div class="tolerance-display"
+                                        style="background: white; padding: 16px; border-radius: 8px; border: 2px solid #cbd5e1;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div class="tolerance-icon"
+                                                style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                                <i class="fas fa-spinner"></i>
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <div class="tolerance-value"
+                                                    style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">
+                                                    Menunggu Penilaian Risiko
+                                                </div>
+                                                <div class="tolerance-reason" style="font-size: 12px; color: #64748b;">
+                                                    Hitung risiko di Kolom 12-14 untuk menentukan toleransi
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="items[{index}][kolom18_toleransi]"
+                                        class="tolerance-input">
+                                    <input type="hidden" name="items[{index}][kolom18_auto]" class="tolerance-auto"
+                                        value="1">
                                 </div>
 
-                                <!-- Columns 19-22: Follow-up Controls (only if tolerance = Tidak) -->
-                                <div class="follow-up-section" style="display: none; margin-top: 20px;">
-                                    <h4
-                                        style="font-size:13px; font-weight:700; margin-bottom:15px; text-transform:uppercase; color:#15803d; border-top: 2px dashed #bbf7d0; padding-top: 15px;">
-                                        <i class="fas fa-exclamation-circle" style="margin-right:8px;"></i>
-                                        Pengendalian Tindak Lanjut (Kolom 19-22)
-                                    </h4>
-
-                                    <!-- Column 19: Pengendalian Lanjut -->
+                                <!-- Column 19: Program Title (conditional) -->
+                                <div class="kolom19-section" style="display:none; margin-top: 20px;">
                                     <div class="form-group">
-                                        <label class="form-label">Kolom 19: Rencana Pengendalian Tindak Lanjut <span
-                                                class="required">*</span></label>
-                                        <textarea class="form-control follow-up-field"
-                                            name="items[{index}][kolom19_pengendalian_lanjut]" rows="3"
-                                            placeholder="Jelaskan tindakan pengendalian tambahan yang akan dilakukan..."></textarea>
+                                        <label class="form-label">
+                                            Kolom 19: Rencana Pengendalian Tindak Lanjut <span class="required">*</span>
+                                        </label>
+                                        <textarea class="form-control kolom19-input"
+                                            name="items[{index}][kolom19_rencana]" rows="3"
+                                            placeholder="Masukkan rencana pengendalian yang akan menjadi judul program PUK/PMK..."></textarea>
+                                        <small style="display: block; margin-top: 6px; color: #64748b;">
+                                            <i class="fas fa-info-circle"></i> Ini akan menjadi judul Program PUK/PMK
+                                        </small>
                                     </div>
+                                </div>
 
-                                    <!-- Columns 20-22: Penilaian Risiko Setelah Tindak Lanjut -->
+                                <!-- Hidden Metadata -->
+                                <input type="hidden" id="user_unit_name" value="{{ $user->unit->nama_unit ?? '' }}">
+
+                                <!-- PUK/PMK Program Section (conditional) -->
+                                <div class="program-section" style="display:none; margin-top: 25px;">
                                     <div
-                                        style="background: #dcfce7; padding: 15px; border-radius: 8px; border: 1px solid #86efac;">
-                                        <h5 style="font-size:12px; font-weight:700; margin-bottom:12px; color:#166534;">
-                                            Penilaian Risiko Setelah Pengendalian Tindak Lanjut
-                                        </h5>
-                                        <div style="display: flex; gap: 20px; align-items: flex-start;">
-                                            <div
-                                                style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                                <div class="form-group">
-                                                    <label class="form-label">Kolom 20: Kemungkinan (Lanjut)</label>
-                                                    <select class="form-control follow-up-field"
-                                                        name="items[{index}][kolom20_kemungkinan_lanjut]"
-                                                        onchange="calculateFollowUpRisk(this)">
-                                                        <option value="">-- Pilih --</option>
-                                                        <option value="1">1 - Sangat Jarang</option>
-                                                        <option value="2">2 - Jarang</option>
-                                                        <option value="3">3 - Kadang-kadang</option>
-                                                        <option value="4">4 - Sering</option>
-                                                        <option value="5">5 - Sangat Sering</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label class="form-label">Kolom 21: Konsekuensi (Lanjut)</label>
-                                                    <select class="form-control follow-up-field"
-                                                        name="items[{index}][kolom21_konsekuensi_lanjut]"
-                                                        onchange="calculateFollowUpRisk(this)">
-                                                        <option value="">-- Pilih --</option>
-                                                        <option value="1">1 - Tidak Signifikan</option>
-                                                        <option value="2">2 - Minor</option>
-                                                        <option value="3">3 - Moderate</option>
-                                                        <option value="4">4 - Major</option>
-                                                        <option value="5">5 - Catastrophic</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div style="flex: 0 0 160px; text-align:center;">
-                                                <label class="form-label">Kolom 22: Tingkat Risiko</label>
-                                                <div class="risk-result-box followup-box"
-                                                    style="padding:15px; border-radius:8px; background:#166534; color:white;">
-                                                    <div class="risk-score followup-score" style="font-size:24px;">-
-                                                    </div>
-                                                    <span class="risk-level followup-level"
-                                                        style="font-size:11px; opacity:0.9;">PENDING</span>
-                                                </div>
-                                                <input type="hidden"
-                                                    name="items[{index}][kolom22_tingkat_risiko_lanjut]"
-                                                    class="input-followup-score">
-                                                <input type="hidden" name="items[{index}][kolom22_level_lanjut]"
-                                                    class="input-followup-level">
-                                            </div>
+                                        style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 12px; border: 2px solid #fbbf24; margin-bottom: 20px;">
+                                        <h4
+                                            style="color: #92400e; margin-bottom: 15px; font-size: 15px; font-weight: 700;">
+                                            <i class="fas fa-clipboard-list"></i> Program Pengendalian Lanjutan
+                                            Diperlukan
+                                        </h4>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Pilih Jenis Program <span
+                                                    class="required">*</span></label>
+                                            <select class="form-control program-type-select"
+                                                name="items[{index}][kolom19_program_type]">
+                                                <option value="">-- Pilih Program --</option>
+                                                <option value="PUK" class="option-puk">PUK - Program Unit Kerja</option>
+                                                <option value="PMK" class="option-pmk">PMK - Program Manajemen Korporat
+                                                </option>
+                                            </select>
+                                            <small style="display: block; margin-top: 8px; color: #78350f;">
+                                                <strong>PUK:</strong> Risiko dapat ditangani di level unit<br>
+                                                <strong>PMK:</strong> Memerlukan keputusan/budget dari Direksi
+                                            </small>
                                         </div>
                                     </div>
+
+                                    <!-- PUK/PMK Form Container (shown when type selected) -->
+                                    <div class="program-form-container" style="display:none;"></div>
                                 </div>
 
-                                <hr style="border:0; border-top:1px dashed #bbf7d0; margin:20px 0;">
-
-                                <!-- Residual Risk (Always shown - this is the final risk after controls) -->
-                                <h4
-                                    style="font-size:13px; font-weight:700; margin-bottom:15px; text-transform:uppercase; color:#15803d;">
-                                    <i class="fas fa-chart-line" style="margin-right:8px;"></i>
-                                    Risiko Residual (Risiko Akhir)
-                                </h4>
-                                <div style="display: flex; gap: 20px; align-items:flex-start;">
-                                    <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                        <div class="form-group">
-                                            <label class="form-label">Kemungkinan (Residual) <span
-                                                    class="required">*</span></label>
-                                            <select class="form-control res-val"
-                                                name="items[{index}][residual_kemungkinan]" required
-                                                onchange="calculateItemResidual(this)">
-                                                <option value="">-- Pilih --</option>
-                                                <option value="1">1</option>
-                                                <option value="2">2</option>
-                                                <option value="3">3</option>
-                                                <option value="4">4</option>
-                                                <option value="5">5</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Konsekuensi (Residual) <span
-                                                    class="required">*</span></label>
-                                            <select class="form-control res-val"
-                                                name="items[{index}][residual_konsekuensi]" required
-                                                onchange="calculateItemResidual(this)">
-                                                <option value="">-- Pilih --</option>
-                                                <option value="1">1</option>
-                                                <option value="2">2</option>
-                                                <option value="3">3</option>
-                                                <option value="4">4</option>
-                                                <option value="5">5</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div style="flex: 0 0 160px; text-align:center;">
-                                        <label class="form-label">Risiko Residual</label>
-                                        <div class="risk-result-box res-box"
-                                            style="padding:15px; border-radius:8px; background:#15803d; color:white;">
-                                            <div class="risk-score res-score" style="font-size:24px;">-</div>
-                                            <span class="risk-level res-level"
-                                                style="font-size:11px; opacity:0.9;">PENDING</span>
-                                        </div>
-                                        <input type="hidden" name="items[{index}][residual_score]"
-                                            class="input-res-score">
-                                        <input type="hidden" name="items[{index}][residual_level]"
-                                            class="input-res-level">
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+    </template>
+
+    <!-- PUK/PMK Form Template -->
+    <template id="program-form-template">
+        <div class="program-form"
+            style="background: white; padding: 25px; border-radius: 12px; border: 2px solid #e5e7eb; margin-top: 20px;">
+            <h5 class="program-form-title"
+                style="color: #1e40af; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #dbeafe; font-size: 14px; font-weight: 700;">
+            </h5>
+
+            <!-- 1. Judul (Auto-filled from Kolom 19) -->
+            <div class="form-group">
+                <label class="form-label">1. Judul Program <span class="required">*</span></label>
+                <input type="text" class="form-control program-judul" readonly
+                    style="background: #f3f4f6; font-weight: 600;">
+                <small class="text-muted">
+                    <i class="fas fa-link"></i> Diisi otomatis dari Kolom 19
+                </small>
+            </div>
+
+            <!-- 2. Tujuan -->
+            <div class="form-group">
+                <label class="form-label">2. Tujuan <span class="required">*</span></label>
+                <textarea class="form-control program-field" name="items[{index}][program_tujuan]" rows="3" required
+                    placeholder="Menjelaskan tujuan Program dan target pengurangan dampak..."></textarea>
+                <small class="text-muted">Detail tentang tujuan program dan target yang ingin dicapai</small>
+            </div>
+
+            <!-- 3. Sasaran -->
+            <div class="form-group">
+                <label class="form-label">3. Sasaran <span class="required">*</span></label>
+                <textarea class="form-control program-field" name="items[{index}][program_sasaran]" rows="3" required
+                    placeholder="Menjelaskan sasaran, tahapan pelaksanaan, dan target program..."></textarea>
+                <small class="text-muted">Sasaran konkret, tahapan (tahun), dan target terukur</small>
+            </div>
+
+            <!-- 4. Penanggung Jawab -->
+            <div class="form-group">
+                <label class="form-label">4. Penanggung Jawab <span class="required">*</span></label>
+                <input type="text" class="form-control program-field program-pj"
+                    name="items[{index}][program_penanggung_jawab]" required readonly
+                    style="background-color: #f8fafc; color: #64748b; cursor: not-allowed;">
+                <small class="text-muted">Unit kerja yang bertanggung jawab atas program ini (Auto-filled)</small>
+            </div>
+
+            <!-- 5. Uraian Revisi -->
+            <div class="form-group">
+                <label class="form-label">5. Uraian Revisi <span class="program-type-label"></span></label>
+                <textarea class="form-control program-field" name="items[{index}][program_uraian_revisi]" rows="3"
+                    placeholder="Revisi program, kendala, kajian (opsional jika program lanjutan)"></textarea>
+                <small class="text-muted">Jika program lanjutan, jelaskan revisi, kendala, dan kajiannya</small>
+            </div>
+
+            <!-- 6. Program Kerja Table -->
+            <div class="form-group">
+                <label class="form-label" style="display: block; margin-bottom: 10px;">6. Program Kerja <span
+                        class="required">*</span></label>
+                <div class="program-kerja-scroll"
+                    style="overflow-x: auto; overflow-y: visible; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                    <table class="table program-kerja-table table-bordered"
+                        style="margin-bottom: 0; min-width: 1400px; width: max-content;">
+                        <thead>
+                            <tr style="background: #5c7cfa; color: white; font-size: 12px; font-weight: 600;">
+                                <th rowspan="2"
+                                    style="width: 40px; text-align: center; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
+                                    No</th>
+                                <th rowspan="2"
+                                    style="min-width: 150px; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
+                                    Uraian Kegiatan</th>
+                                <th rowspan="2" class="col-koordinator"
+                                    style="min-width: 140px; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
+                                    Koordinator</th>
+                                <th rowspan="2" class="col-pelaksana"
+                                    style="min-width: 140px; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
+                                    Pelaksana</th>
+                                <th colspan="12" style="text-align: center; padding: 6px; border-color: #4c6ef5;">Target
+                                    (%)</th>
+                                <th rowspan="2" class="col-anggaran"
+                                    style="min-width: 120px; vertical-align: middle; display: none; padding: 6px; border-color: #4c6ef5;">
+                                    Anggaran (Rp)</th>
+                                <th rowspan="2"
+                                    style="width: 40px; text-align: center; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
+                                    Aksi</th>
+                            </tr>
+                            <tr style="background: #748ffc; color: white; font-size: 11px;">
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    1</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    2</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    3</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    4</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    5</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    6</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    7</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    8</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    9</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    10</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    11</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    12</th>
+                            </tr>
+                        </thead>
+                        <tbody class="program-kerja-tbody">
+                            <!-- Rows will be added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addProgramKerjaRow(this)"
+                    style="background: #6366f1; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px;">
+                    <i class="fas fa-plus"></i> Tambah Baris Program Kerja
+                </button>
+            </div>
+        </div>
     </template>
 
     <script>
@@ -1443,6 +1632,12 @@
             if (probisInput) probisInput.value = autoProbis;
 
             container.appendChild(itemNode);
+
+            // Filter categories in the newly added item
+            const categorySelect = itemNode.querySelector('select[onchange*="updateConditions"]');
+            if (categorySelect && selectedFormType) {
+                filterCategorySelect(categorySelect);
+            }
 
             // Scroll to new item top
             itemNode.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1543,6 +1738,16 @@
             const cat = select.value;
             const hazardSection = item.querySelector('.hazard-section');
             const hazardOptions = item.querySelector('.hazard-options');
+
+            // Toggle BAGIAN 2 Visibility
+            const bagian2Container = item.querySelector('.bagian-2-container');
+            if (bagian2Container) {
+                if (cat) {
+                    bagian2Container.style.display = 'block';
+                } else {
+                    bagian2Container.style.display = 'none';
+                }
+            }
 
             // Get all conditional field sections using CORRECT classes
             const k3KoField = item.querySelector('.k3-ko-field'); // Column 6
@@ -1665,9 +1870,22 @@
 
             if (score > 0) {
                 textColor = '#fff';
-                if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
-                else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; }
-                else { level = 'Rendah'; bg = '#10b981'; }
+                if (score >= 20) {
+                    level = 'Sangat Tinggi';
+                    bg = '#7f1d1d'; // Dark red for very high
+                }
+                else if (score >= 10) {
+                    level = 'Tinggi';
+                    bg = '#dc2626'; // Red
+                }
+                else if (score >= 5) {
+                    level = 'Sedang';
+                    bg = '#f59e0b'; // Orange
+                }
+                else {
+                    level = 'Rendah';
+                    bg = '#10b981'; // Green
+                }
             }
 
             levelEl.textContent = (score > 0) ? level : 'PENDING';
@@ -1678,20 +1896,17 @@
             // Show/Hide BAGIAN 5 based on risk level
             const bagian5 = item.querySelector('.bagian-5-section');
             if (bagian5) {
-                if (score < 8) {
+                if (score < 5) {
                     // Risk is LOW - hide BAGIAN 5 (no further mitigation needed)
                     bagian5.style.display = 'none';
-                    // Remove required from residual fields
-                    const resFields = bagian5.querySelectorAll('.res-val');
-                    resFields.forEach(field => field.removeAttribute('required'));
                 } else {
-                    // Risk is MEDIUM or HIGH - show BAGIAN 5
+                    // Risk is MEDIUM or higher - show BAGIAN 5
                     bagian5.style.display = 'block';
-                    // Add required back to residual fields
-                    const resFields = bagian5.querySelectorAll('.res-val');
-                    resFields.forEach(field => field.setAttribute('required', 'required'));
                 }
             }
+
+            // Trigger auto-tolerance calculation
+            calculateAutoTolerance(item, score, level);
         }
 
         function calculateItemResidual(el) {
@@ -1763,9 +1978,483 @@
             return true;
         }
 
+        // ==================== PUK/PMK Functions ====================
+
+        function calculateAutoTolerance(item, riskScore, riskLevel) {
+            const toleranceDisplay = item.querySelector('.tolerance-display');
+            const toleranceIcon = item.querySelector('.tolerance-icon');
+            const toleranceValue = item.querySelector('.tolerance-value');
+            const toleranceReason = item.querySelector('.tolerance-reason');
+            const toleranceInput = item.querySelector('.tolerance-input');
+            const kolom19Section = item.querySelector('.kolom19-section');
+            const programSection = item.querySelector('.program-section');
+
+            if (!toleranceDisplay) return;
+
+            let tolerance = 'Ya';
+            let icon = 'fa-check-circle';
+            let iconColor = '#10b981';
+            let bgcolor = '#ecfdf5';
+            let borderColor = '#6ee7b7';
+            let valueText = 'Ya - Dapat Ditoleransi';
+            let reasonText = '';
+
+            // Check if there are existing controls (Kolom 11)
+            const existingControls = item.querySelector('.kolom11-hidden-input')?.value;
+            const hasControls = existingControls && existingControls.trim() !== '';
+
+            // PMK Logic: Allowed for Tinggi (Score >= 10) and Sangat Tinggi
+            const pmkOption = item.querySelector('.option-pmk');
+            const pukOption = item.querySelector('option[value="PUK"]');
+
+            if (pmkOption && pukOption) {
+                if (riskScore >= 10) {
+                    // Risk >= 10: Must use PMK (PUK disabled/hidden)
+                    pmkOption.disabled = false;
+                    pmkOption.selected = true; // Auto-select PMK
+                    pmkOption.textContent = 'PMK - Program Manajemen Korporat (Wajib untuk Risiko Tinggi/Sangat Tinggi)';
+
+                    pukOption.disabled = true;
+                    pukOption.style.display = 'none'; // Hide PUK
+
+                    // Trigger change event to show PMK form (must bubble!)
+                    item.querySelector('.program-type-select').dispatchEvent(new Event('change', { bubbles: true }));
+                } else {
+                    // Risk < 10: Standard logic
+                    pmkOption.disabled = true;
+                    pmkOption.selected = false;
+                    pmkOption.textContent = 'PMK - Program Manajemen Korporat (Hanya untuk Risiko Tinggi/Sangat Tinggi)';
+
+                    pukOption.disabled = false;
+                    pukOption.style.display = 'block';
+                    pukOption.selected = true; // Default to PUK
+
+                    // Trigger change event to show PUK default form (must bubble!)
+                    item.querySelector('.program-type-select').dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+
+            // Auto-tolerance logic (Updated for new scale)
+            if (riskScore >= 10) {
+                // Tinggi & Sangat Tinggi (10+): Auto "Tidak" - always need program - MANDATORY PMK
+                tolerance = 'Tidak';
+                icon = 'fa-exclamation-triangle';
+                iconColor = '#dc2626';
+                bgcolor = '#fef2f2';
+                borderColor = '#fca5a5';
+                valueText = 'Tidak - Perlu Program Pengendalian (Wajib PMK)';
+                reasonText = 'Risiko Tinggi/Sangat Tinggi: Wajib membuat Program PMK';
+            } else if (riskScore >= 5) {
+                // Sedang (5-9): Depends on existing controls
+                if (!hasControls) {
+                    // No controls? Need PUK
+                    tolerance = 'Tidak';
+                    icon = 'fa-exclamation-circle';
+                    iconColor = '#f59e0b';
+                    bgcolor = '#fffbeb';
+                    borderColor = '#fcd34d';
+                    valueText = 'Tidak - Perlu Program Pengendalian';
+                    reasonText = 'Risiko Sedang tanpa pengendalian: Program PUK diperlukan';
+                } else {
+                    // Has controls? No PUK needed
+                    tolerance = 'Ya';
+                    icon = 'fa-check-circle';
+                    iconColor = '#10b981';
+                    bgcolor = '#ecfdf5';
+                    borderColor = '#6ee7b7';
+                    valueText = 'Ya - Dapat Ditoleransi (Cukup Pengendalian Kolom 10)';
+                    reasonText = 'Risiko Sedang dengan pengendalian (Kolom 10) sudah cukup. Tidak perlu PUK.';
+                }
+            } else if (riskScore > 0) {
+                // Rendah (1-4): Auto "Ya"
+                valueText = 'Ya - Dapat Ditoleransi';
+                reasonText = 'Risiko Rendah: Tidak perlu pengendalian tambahan';
+            } else {
+                // No risk calculated yet
+                icon = 'fa-spinner';
+                valueText = 'Menunggu Penilaian Risiko';
+                reasonText = 'Hitung risiko di Kolom 12-14 untuk menentukan toleransi';
+                bgcolor = 'white';
+                borderColor = '#cbd5e1';
+                iconColor = '#94a3b8';
+            }
+
+            // Update display
+            toleranceIcon.innerHTML = `<i class="fas ${icon}" style="color: ${iconColor};"></i>`;
+            toleranceValue.textContent = valueText;
+            toleranceReason.textContent = reasonText;
+            toleranceDisplay.style.background = bgcolor;
+            toleranceDisplay.style.borderColor = borderColor;
+            toleranceInput.value = tolerance;
+
+            // Show/hide Kolom 19 and Program section
+            // Logic: Show ONLY if Tolerance is "Tidak" (High Risk OR Medium Risk without Controls)
+            if (tolerance === 'Tidak') {
+                kolom19Section.style.display = 'block';
+                programSection.style.display = 'block';
+            } else {
+                kolom19Section.style.display = 'none';
+                programSection.style.display = 'none';
+
+                // Clear inputs if hiding to prevent submitting hidden data
+                const programTypeSelect = item.querySelector('.program-type-select');
+                if (programTypeSelect) programTypeSelect.value = '';
+
+                const programContainer = item.querySelector('.program-form-container');
+                if (programContainer) {
+                    programContainer.style.display = 'none';
+                    programContainer.innerHTML = '';
+                }
+            }
+        }
+
+        // Handle Kolom 19 input changes - auto-fill program title
+        document.addEventListener('input', function (e) {
+            if (e.target.classList.contains('kolom19-input')) {
+                const item = e.target.closest('.doc-item');
+                const programJudul = item.querySelector('.program-judul');
+                if (programJudul) {
+                    programJudul.value = e.target.value;
+                }
+            }
+        });
+
+        // Toggle Headers based on Program Type
+        function toggleProgramHeaders(item) {
+            const isPMK = item.querySelector('.program-type-select')?.value === 'PMK';
+            const table = item.querySelector('.program-kerja-table');
+            if (!table) return;
+
+            const colKoordinator = table.querySelector('.col-koordinator');
+            const colPelaksana = table.querySelector('.col-pelaksana');
+            const colAnggaran = table.querySelector('.col-anggaran');
+
+            if (isPMK) {
+                // PMK: Rename Koord -> PIC, Hide Pelaksana, Show Anggaran
+                if (colKoordinator) {
+                    colKoordinator.textContent = 'PIC'; // Rename header
+                    colKoordinator.style.minWidth = '180px';
+                }
+                if (colPelaksana) colPelaksana.style.display = 'none';
+
+                if (colAnggaran) colAnggaran.style.display = 'table-cell';
+            } else {
+                // PUK: Name Koord -> Koordinator, Show Pelaksana, Hide Anggaran
+                if (colKoordinator) {
+                    colKoordinator.textContent = 'Koordinator'; // Reset header
+                    colKoordinator.style.minWidth = '140px';
+                }
+                if (colPelaksana) colPelaksana.style.display = 'table-cell';
+
+                if (colAnggaran) colAnggaran.style.display = 'none';
+            }
+        }
+
+        // Logic check: Is PMK selected?
+        function isPmkSelected(btn) {
+            // Check if btn itself is the Select (when triggered by change event) or a child
+            let item;
+            if (btn.classList.contains('doc-item')) {
+                item = btn;
+            } else {
+                item = btn.closest('.doc-item');
+            }
+            const type = item.querySelector('.program-type-select');
+            return type && type.value === 'PMK';
+        }
+
+        // Handle Program Type Selection
+        document.addEventListener('change', function (e) {
+            if (e.target.classList.contains('program-type-select')) {
+                const item = e.target.closest('.doc-item');
+                const programType = e.target.value;
+                const container = item.querySelector('.program-form-container');
+                const kolom19Value = item.querySelector('.kolom19-input').value;
+
+                // Get item index from data-index attribute
+                const itemIndex = item.getAttribute('data-index');
+
+                if (!programType) {
+                    container.style.display = 'none';
+                    container.innerHTML = '';
+                    return;
+                }
+
+                // Clone template
+                const template = document.getElementById('program-form-template').innerHTML;
+                const processedHtml = template.replace(/{index}/g, itemIndex);
+
+                container.innerHTML = processedHtml;
+                container.style.display = 'block';
+
+                // Update headers immediately AFTER injecting HTML
+                toggleProgramHeaders(item);
+
+                // Set title
+                const title = container.querySelector('.program-form-title');
+                title.textContent = `Form ${programType} - ${programType === 'PUK' ? 'Program Unit Kerja' : 'Program Manajemen Korporat'}`;
+
+                // Set judul from Kolom 19
+                const judulInput = container.querySelector('.program-judul');
+                judulInput.value = kolom19Value;
+
+                // Auto-fill Penanggung Jawab
+                const pjInput = container.querySelector('.program-pj');
+                const userUnitName = document.getElementById('user_unit_name').value;
+                if (pjInput) pjInput.value = userUnitName;
+
+                // Set type label in uraian revisi
+                const typeLabel = container.querySelector('.program-type-label');
+                typeLabel.textContent = programType === 'PMK' ? '(Harus diisi untuk PMK)' : '(Opsional)';
+
+                // Add first row to program kerja
+                setTimeout(() => {
+                    const addBtn = container.querySelector('button[onclick*="addProgramKerjaRow"]');
+                    if (addBtn) addProgramKerjaRow(addBtn);
+                }, 100);
+            }
+        });
+
+        // Add Program Kerja Row
+        function addProgramKerjaRow(btn) {
+            const table = btn.previousElementSibling.querySelector('.program-kerja-tbody');
+            const rowCount = table.querySelectorAll('tr').length + 1;
+
+            const item = btn.closest('.doc-item');
+            const itemIndex = item.getAttribute('data-index');
+            const isPMK = isPmkSelected(btn);
+
+            // Ensure headers are correct state before adding row
+            toggleProgramHeaders(item);
+
+            // Get Users passed from controller
+            const band3Users = @json($band3Users ?? []); // Roles 4-5 for Koordinator
+            const band4Users = @json($band4Users ?? []); // Role 6 for Pelaksana
+            const pmkPicUsers = @json($pmkPicUsers ?? []); // Managers (Role 3)
+
+            // Generate Options for Band 3 (Koordinator)
+            let band3Options = '<option value="" disabled selected>-- Pilih Koordinator --</option>';
+            band3Users.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+            band3Users.forEach(u => {
+                band3Options += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+            });
+
+            // Generate Options for Band 4 (Pelaksana)
+            let band4Options = '<option value="" disabled selected>-- Pilih Pelaksana --</option>';
+            band4Users.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+            band4Users.forEach(u => {
+                band4Options += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+            });
+
+            // Generate Options for PMK PIC (Manager)
+            let pmkPicOptions = '<option value="" disabled selected>-- Pilih PIC (Manager) --</option>';
+            pmkPicUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+            pmkPicUsers.forEach(u => {
+                pmkPicOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+            });
+
+            const row = document.createElement('tr');
+
+            if (isPMK) {
+                // PMK Table: No | Uraian | PIC (Manager) | Target (12) | Anggaran
+                // Note: Only generate ONE user column
+                row.innerHTML = `
+                    <td style="text-align: center; border: 1px solid #d1d5db; vertical-align: middle;">${rowCount}</td>
+                    
+                    <td style="border: 1px solid #d1d5db; padding: 0;">
+                        <textarea class="form-control" name="items[${itemIndex}][program_kerja][${rowCount - 1}][uraian]" 
+                               placeholder="Uraian kegiatan..." required 
+                               style="border: none; width: 100%; min-width: 150px; resize: vertical; padding: 6px;" rows="3"></textarea>
+                    </td>
+                    
+                    <!-- Reuse the Koordinator column for PIC -->
+                    <td style="border: 1px solid #d1d5db; padding: 4px; min-width: 160px; vertical-align: middle;">
+                        <!-- Hidden values for compatibility -->
+                        <input type="hidden" name="items[${itemIndex}][program_kerja][${rowCount - 1}][pelaksana]" value="-">
+                        
+                        <!-- Map PIC dropdown to 'koordinator' field to reuse logic, or keep consistent keys -->
+                        <select class="form-select" name="items[${itemIndex}][program_kerja][${rowCount - 1}][koordinator]" required 
+                                style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                            ${pmkPicOptions}
+                        </select>
+                    </td>
+
+                    <!-- Pelaksana Column is HIDDEN via header logic, so strictly we should not render the TD or render a hidden one? 
+                         If html structure, we usually omit TD if header is hidden via separate mechanism? 
+                         Actually, standard table behavior: if header is hidden (display:none), the cells in body should also be hidden or omitted?
+                         Wait, if I just omit the TD, but the header is hidden, columns shift.
+                         If I use Display: None on the Header, I must use Display: None on the TD as well, or omit it if colspan structure matches?
+                         Let's assume simply omitting TD works if header is toggle via display:none. 
+                         Wait, a Missing TD will cause Target columns to shift left under the hidden header?
+                         No, display:none removes it from flow. So 2nd header is gone.
+                         So 3rd header becomes 2nd.
+                         So Body must have matching number of TDs.
+                         
+                         Headers Visible: [No] [Uraian] [PIC] [Target...] [Anggaran]
+                         Headers Hidden:  [Pelaksana]
+                         Body must contain TDs aligning to [No] [Uraian] [PIC] [Target...] [Anggaran].
+                         So I should NOT render the Pelaksana TD at all.
+                    -->
+
+                    ${Array.from({ length: 12 }, (_, i) => `
+                        <td style="border: 1px solid #d1d5db; padding: 2px; width: 40px; min-width: 40px;">
+                            <input type="number" class="form-control" name="items[${itemIndex}][program_kerja][${rowCount - 1}][target][${i}]" 
+                                   min="0" max="100" placeholder="-" 
+                                   style="border: none; width: 100%; height: 100%; text-align: center; padding: 0; font-size: 11px;">
+                        </td>
+                    `).join('')}
+                    
+                    <td style="border: 1px solid #d1d5db; padding: 0;">
+                        <input type="number" class="form-control" name="items[${itemIndex}][program_kerja][${rowCount - 1}][anggaran]" 
+                               placeholder="Rp 0" min="0"
+                               style="border: none; width: 100%; min-width: 120px; padding: 6px; font-size: 12px;">
+                    </td>
+                    
+                    <td style="text-align: center; border: 1px solid #d1d5db; vertical-align: middle; padding: 4px;">
+                        <button type="button" onclick="this.closest('tr').remove(); renumberProgramKerja(this)" 
+                                style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+            } else {
+                // PUK Table: No | Uraian | Koordinator | Pelaksana | Target | (No Anggaran)
+                row.innerHTML = `
+                    <td style="text-align: center; border: 1px solid #d1d5db; vertical-align: middle;">${rowCount}</td>
+                    
+                    <td style="border: 1px solid #d1d5db; padding: 0;">
+                        <textarea class="form-control" name="items[${itemIndex}][program_kerja][${rowCount - 1}][uraian]" 
+                               placeholder="Uraian kegiatan..." required 
+                               style="border: none; width: 100%; min-width: 150px; resize: vertical; padding: 6px;" rows="3"></textarea>
+                    </td>
+                    
+                    <td style="border: 1px solid #d1d5db; padding: 0;">
+                        <select class="form-select" name="items[${itemIndex}][program_kerja][${rowCount - 1}][koordinator]" required 
+                                style="border: none; width: 100%; min-width: 140px; padding: 6px; cursor: pointer; font-size: 12px;">
+                            ${band3Options}
+                        </select>
+                    </td>
+                    
+                    <td style="border: 1px solid #d1d5db; padding: 0;">
+                        <select class="form-select" name="items[${itemIndex}][program_kerja][${rowCount - 1}][pelaksana]" required 
+                                style="border: none; width: 100%; min-width: 140px; padding: 6px; cursor: pointer; font-size: 12px;">
+                            ${band4Options}
+                        </select>
+                    </td>
+
+                    ${Array.from({ length: 12 }, (_, i) => `
+                        <td style="border: 1px solid #d1d5db; padding: 2px; width: 40px; min-width: 40px;">
+                            <input type="number" class="form-control" name="items[${itemIndex}][program_kerja][${rowCount - 1}][target][${i}]" 
+                                   min="0" max="100" placeholder="-" 
+                                   style="border: none; width: 100%; height: 100%; text-align: center; padding: 0; font-size: 11px;">
+                        </td>
+                    `).join('')}
+                    
+                    <td style="text-align: center; border: 1px solid #d1d5db; vertical-align: middle; padding: 4px;">
+                        <button type="button" onclick="this.closest('tr').remove(); renumberProgramKerja(this)" 
+                                style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+            }
+
+            table.appendChild(row);
+        }
+
+        // Renumber program kerja rows
+        function renumberProgramKerja(btn) {
+            const table = btn.closest('table').querySelector('tbody');
+            const rows = table.querySelectorAll('tr');
+            rows.forEach((row, idx) => {
+                row.querySelector('td:first-child').textContent = idx + 1;
+            });
+        }
+
+        // ==================== Form Type Selection ====================
+
+        let selectedFormType = '';
+
+        // Show modal on page load
+        window.addEventListener('load', function () {
+            const modal = document.getElementById('formTypeModal');
+            modal.style.display = 'flex';
+        });
+
+        // Handle form type selection
+        function selectFormType(type) {
+            selectedFormType = type;
+
+            // Store in hidden input
+            document.getElementById('form_type').value = type;
+
+            // Update form title
+            const formTitle = document.getElementById('formTitle');
+            if (type === 'SHE') {
+                formTitle.textContent = 'Identifikasi dan Penetapan Mitigasi Risiko K3, KO, Aspek Lingkungan';
+            } else if (type === 'Security') {
+                formTitle.textContent = 'Identifikasi dan Penetapan Mitigasi Risiko Pengamanan';
+            }
+
+            // Hide modal with animation
+            const modal = document.getElementById('formTypeModal');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.style.opacity = '1';
+
+                // Add first item after modal is hidden
+                addItem();
+            }, 300);
+        }
+
+        // Filter categories based on form type
+        function filterAllCategories() {
+            // Filter in template
+            updateCategoryOptionsInTemplate();
+
+            // Filter in existing items
+            document.querySelectorAll('.doc-item').forEach(item => {
+                const categorySelect = item.querySelector('.category-select');
+                if (categorySelect) {
+                    filterCategorySelect(categorySelect);
+                }
+            });
+        }
+
+        function filterCategorySelect(select) {
+            if (!selectedFormType) return;
+
+            const allOptions = [
+                { value: 'K3', text: 'K3 (Keselamatan Kerja)', type: 'SHE' },
+                { value: 'KO', text: 'KO (Kesehatan Operasional)', type: 'SHE' },
+                { value: 'Lingkungan', text: 'Lingkungan', type: 'SHE' },
+                { value: 'Keamanan', text: 'Keamanan', type: 'Security' }
+            ];
+
+            // Clear current options except placeholder
+            select.innerHTML = '<option value="">-- Pilih Kategori --</option>';
+
+            // Add filtered options
+            allOptions.forEach(opt => {
+                if (opt.type === selectedFormType) {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.text;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        function updateCategoryOptionsInTemplate() {
+            // This will be applied when new items are added
+            // We'll intercept in addItem function
+        }
+
         // Init
         document.addEventListener('DOMContentLoaded', () => {
-            addItem(); // Add first item
+            // Don't add item yet - wait for form type selection
+            // addItem() will be called after form type is selected
         });
     </script>
 
@@ -1993,7 +2682,7 @@
 
 
 
-        // NEW: Update Kolom 11 when hierarchy checkboxes are changed
+        // NEW: Update Kolom 11 when hierarchy checkboxes are chang           ed
         /**
          * Parse textarea content into hierarchy sections
          * Returns array of {hierarchy: string, content: string}
@@ -2001,13 +2690,13 @@
         function parseHierarchySections(text) {
             const sections = [];
             const hierarchies = ['Eliminasi', 'Substitusi', 'Rekayasa Teknik', 'Pengendalian Administratif', 'APD'];
-            
+
             hierarchies.forEach(hierarchy => {
                 // Find pattern: "N. Hierarchy:" followed by content until next numbered item or end
                 const escapedHierarchy = hierarchy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                 const regex = new RegExp(`\\d+\\.\\s*${escapedHierarchy}:\\s*\\n([\\s\\S]*?)(?=\\n\\d+\\.|$)`, 'i');
                 const match = text.match(regex);
-                
+
                 if (match) {
                     sections.push({
                         hierarchy: hierarchy,
@@ -2015,7 +2704,7 @@
                     });
                 }
             });
-            
+
             return sections;
         }
 
@@ -2104,17 +2793,17 @@
                 }
 
                 // Focus/blur effects
-                textarea.addEventListener('focus', function() {
+                textarea.addEventListener('focus', function () {
                     this.style.borderColor = '#3b82f6';
                     this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
                 });
-                textarea.addEventListener('blur', function() {
+                textarea.addEventListener('blur', function () {
                     this.style.borderColor = '#e2e8f0';
                     this.style.boxShadow = 'none';
                 });
 
                 // Update hidden input on change
-                textarea.addEventListener('input', function() {
+                textarea.addEventListener('input', function () {
                     updateHiddenInput(item);
                 });
 
@@ -2150,6 +2839,142 @@
             });
 
             hiddenInput.value = combinedText;
+        }
+
+        // CORRECTION: Override addProgramKerjaRow to ensure unique input names
+        // (Deleted duplicate functions)
+
+        // UI REFINEMENT + PMK BUDGET COLUMN
+        function addProgramKerjaRow(btn) {
+            // Ensure headers are correct state before adding row
+            const item = btn.closest('.doc-item');
+            toggleProgramHeaders(item);
+
+            const table = btn.previousElementSibling.querySelector('.program-kerja-tbody');
+            const rowCount = table.querySelectorAll('tr').length + 1;
+            const itemIndex = item.getAttribute('data-index');
+            const isPMK = isPmkSelected(btn);
+
+            // Get Users passed from controller
+            const band3Users = @json($band3Users ?? []); // Roles 4-5 for Koordinator
+            const band4Users = @json($band4Users ?? []); // Role 6 for Pelaksana
+            const pmkPicUsers = @json($pmkPicUsers ?? []); // Managers (Role 3)
+
+            // Generate Options for Band 3 (Koordinator)
+            let band3Options = '<option value="" disabled selected>-- Pilih Koordinator --</option>';
+            band3Users.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+            band3Users.forEach(u => {
+                band3Options += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+            });
+
+            // Generate Options for Band 4 (Pelaksana)
+            let band4Options = '<option value="" disabled selected>-- Pilih Pelaksana --</option>';
+            band4Users.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+            band4Users.forEach(u => {
+                band4Options += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+            });
+
+            // Generate Options for PMK PIC (Manager)
+            let pmkPicOptions = '<option value="" disabled selected>-- Pilih PIC (Manager) --</option>';
+            pmkPicUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+            pmkPicUsers.forEach(u => {
+                pmkPicOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+            });
+
+            const row = document.createElement('tr');
+
+            if (isPMK) {
+                // PMK Table: No | Uraian | PIC | Target (12) | Anggaran
+                row.innerHTML = `
+                    <td style="text-align: center; border: 1px solid #e2e8f0; vertical-align: middle; background-color: #f8fafc; font-weight: 500; color: #64748b; padding: 4px;">${rowCount}</td>
+                    
+                    <td style="border: 1px solid #e2e8f0; padding: 0;">
+                        <textarea class="form-control" name="items[${itemIndex}][program_kerja][${rowCount - 1}][uraian]" 
+                               placeholder="Uraian kegiatan..." required 
+                               style="border: none; width: 100%; min-width: 150px; resize: vertical; padding: 6px; border-radius: 0; box-shadow: none; font-size: 12px;" rows="3"></textarea>
+                    </td>
+                    
+                    <td style="border: 1px solid #e2e8f0; padding: 4px; min-width: 160px; vertical-align: middle;">
+                        <input type="hidden" name="items[${itemIndex}][program_kerja][${rowCount - 1}][koordinator]" value="-">
+                        <select class="form-select" name="items[${itemIndex}][program_kerja][${rowCount - 1}][pelaksana]" required 
+                                style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                            ${pmkPicOptions}
+                        </select>
+                    </td>
+
+                    ${Array.from({ length: 12 }, (_, i) => `
+                        <td style="border: 1px solid #e2e8f0; padding: 0; width: 40px; min-width: 40px;">
+                            <input type="number" class="form-control target-input" name="items[${itemIndex}][program_kerja][${rowCount - 1}][target][${i}]" 
+                                   min="0" max="100" placeholder="-" 
+                                   style="border: none; width: 100%; height: 100%; text-align: center; padding: 0; font-size: 11px; font-weight: 600; color: #3b82f6; background: transparent; border-radius: 0; box-sizing: border-box;">
+                        </td>
+                    `).join('')}
+                    
+                    <td style="border: 1px solid #e2e8f0; padding: 0;">
+                        <input type="number" class="form-control" name="items[${itemIndex}][program_kerja][${rowCount - 1}][anggaran]" 
+                               placeholder="Rp 0" min="0"
+                               style="border: none; width: 100%; min-width: 120px; padding: 6px; border-radius: 0; font-size: 12px;">
+                    </td>
+                    
+                    <td style="text-align: center; border: 1px solid #e2e8f0; vertical-align: middle; background-color: #f8fafc; padding: 4px;">
+                        <button type="button" onclick="this.closest('tr').remove(); renumberProgramKerja(this)" 
+                                class="delete-btn-hover"
+                                title="Hapus Baris"
+                                style="background: transparent; color: #ef4444; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-trash-alt" style="font-size: 12px;"></i>
+                        </button>
+                    </td>
+                `;
+            } else {
+                // PUK Table: No | Uraian | Koordinator (Band 3) | Pelaksana (Band 4) | Target (12)
+                row.innerHTML = `
+                    <td style="text-align: center; border: 1px solid #e2e8f0; vertical-align: middle; background-color: #f8fafc; font-weight: 500; color: #64748b; padding: 4px;">${rowCount}</td>
+                    
+                    <td style="border: 1px solid #e2e8f0; padding: 0;">
+                        <textarea class="form-control" name="items[${itemIndex}][program_kerja][${rowCount - 1}][uraian]" 
+                               placeholder="Uraian kegiatan..." required 
+                               style="border: none; width: 100%; min-width: 150px; resize: vertical; padding: 6px; border-radius: 0; box-shadow: none; font-size: 12px;" rows="3"></textarea>
+                    </td>
+                    
+                    <td style="border: 1px solid #e2e8f0; padding: 0;">
+                        <select class="form-select" name="items[${itemIndex}][program_kerja][${rowCount - 1}][koordinator]" required 
+                                style="border: none; width: 100%; min-width: 140px; padding: 6px; border-radius: 0; box-shadow: none; cursor: pointer; font-size: 12px;">
+                            ${band3Options}
+                        </select>
+                    </td>
+                    
+                    <td style="border: 1px solid #e2e8f0; padding: 0;">
+                        <select class="form-select" name="items[${itemIndex}][program_kerja][${rowCount - 1}][pelaksana]" required 
+                                style="border: none; width: 100%; min-width: 140px; padding: 6px; border-radius: 0; box-shadow: none; cursor: pointer; font-size: 12px;">
+                            ${band4Options}
+                        </select>
+                    </td>
+
+                    ${Array.from({ length: 12 }, (_, i) => `
+                        <td style="border: 1px solid #e2e8f0; padding: 0; width: 40px; min-width: 40px;">
+                            <input type="number" class="form-control target-input" name="items[${itemIndex}][program_kerja][${rowCount - 1}][target][${i}]" 
+                                   min="0" max="100" placeholder="-" 
+                                   style="border: none; width: 100%; height: 100%; text-align: center; padding: 0; font-size: 11px; font-weight: 600; color: #3b82f6; background: transparent; border-radius: 0; box-sizing: border-box;">
+                        </td>
+                    `).join('')}
+                    
+                    <td style="text-align: center; border: 1px solid #e2e8f0; vertical-align: middle; background-color: #f8fafc; padding: 4px;">
+                        <button type="button" onclick="this.closest('tr').remove(); renumberProgramKerja(this)" 
+                                class="delete-btn-hover"
+                                title="Hapus Baris"
+                                style="background: transparent; color: #ef4444; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-trash-alt" style="font-size: 12px;"></i>
+                        </button>
+                    </td>
+                `;
+            }
+
+            // Add hover effect via JS
+            const delBtn = row.querySelector('button');
+            delBtn.addEventListener('mouseenter', () => { delBtn.style.background = '#fee2e2'; delBtn.style.borderColor = '#ef4444'; });
+            delBtn.addEventListener('mouseleave', () => { delBtn.style.background = 'transparent'; delBtn.style.borderColor = '#e2e8f0'; });
+
+            table.appendChild(row);
         }
     </script>
 

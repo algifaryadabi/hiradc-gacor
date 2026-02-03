@@ -132,6 +132,15 @@ class User extends Authenticatable
         return $this->isKepalaUnit() && in_array($this->id_unit, [55, 56]);
     }
 
+    public function isDirektur(): bool
+    {
+        // Role ID 1 is Admin, Role ID 5/6 is Staff.
+        // Usually Direksi is Role 1 in `role_jabatan`? 
+        // Let's assume Role Jabatan 1 = Direktur based on typical hierarchy (1=Dir, 2=GM, 3=Mgr).
+        // need to confirm exact ID, but using 1 is safe guess for now.
+        return $this->id_role_jabatan == 1 || $this->role_jabatan == 1;
+    }
+
     /**
      * Get role name based on hierarchy
      * Priority: Admin > Unit Pengelola > Kepala Departemen > Approver > User

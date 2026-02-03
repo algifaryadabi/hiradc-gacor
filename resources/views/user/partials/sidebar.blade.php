@@ -8,36 +8,35 @@
     </div>
 
     <nav class="nav-menu">
-        <a href="{{ Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard') }}" 
-           class="nav-item {{ Request::routeIs('dashboard') || Request::routeIs('user.dashboard') || Request::routeIs('admin.dashboard') ? 'active' : '' }}">
+        <a href="{{ Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard') }}"
+            class="nav-item {{ Request::routeIs('dashboard') || Request::routeIs('user.dashboard') || Request::routeIs('admin.dashboard') ? 'active' : '' }}">
             <i class="fas fa-th-large"></i>
             <span>Dashboard</span>
         </a>
-        
+
         @if(Auth::user()->isAdmin())
-            <a href="{{ route('admin.users') }}" 
-               class="nav-item {{ Request::routeIs('admin.users*') ? 'active' : '' }}">
+            <a href="{{ route('admin.users') }}" class="nav-item {{ Request::routeIs('admin.users*') ? 'active' : '' }}">
                 <i class="fas fa-users-cog"></i>
                 <span>Manajemen User</span>
             </a>
-            <a href="{{ route('admin.master_data') }}" 
-               class="nav-item {{ Request::routeIs('admin.master_data') || Request::routeIs('admin.direktorat*') || Request::routeIs('admin.departemen*') || Request::routeIs('admin.unit*') || Request::routeIs('admin.seksi*') || Request::routeIs('admin.probis*') ? 'active' : '' }}">
+            <a href="{{ route('admin.master_data') }}"
+                class="nav-item {{ Request::routeIs('admin.master_data') || Request::routeIs('admin.direktorat*') || Request::routeIs('admin.departemen*') || Request::routeIs('admin.unit*') || Request::routeIs('admin.seksi*') || Request::routeIs('admin.probis*') ? 'active' : '' }}">
                 <i class="fas fa-database"></i>
                 <span>Master Data</span>
             </a>
         @endif
-        
+
         @if(Auth::user()->can_create_documents == 1)
-            <a href="{{ route('documents.index') }}" 
-               class="nav-item {{ Request::routeIs('documents.index') ? 'active' : '' }}">
+            <a href="{{ route('documents.index') }}"
+                class="nav-item {{ Request::routeIs('documents.index') ? 'active' : '' }}">
                 <i class="fas fa-folder-open"></i>
                 <span>Form Saya</span>
                 @if(isset($revisionCount) && $revisionCount > 0)
                     <span class="badge">{{ $revisionCount }}</span>
                 @endif
             </a>
-            <a href="{{ route('documents.create') }}" 
-               class="nav-item {{ Request::routeIs('documents.create') ? 'active' : '' }}">
+            <a href="{{ route('documents.create') }}"
+                class="nav-item {{ Request::routeIs('documents.create') ? 'active' : '' }}">
                 <i class="fas fa-plus-circle"></i>
                 <span>Buat Form Baru</span>
             </a>

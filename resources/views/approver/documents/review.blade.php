@@ -54,7 +54,7 @@
             --radius-full: 9999px;
 
             --sidebar-bg: #5b6fd8;
-            
+
             /* Legacy Variables Support */
             --header-bg: #1e293b;
             --header-text: #ffffff;
@@ -129,7 +129,7 @@
             justify-content: center;
             transition: all 0.2s;
         }
-        
+
         .logo-circle img {
             max-width: 100%;
             max-height: 100%;
@@ -185,9 +185,10 @@
             color: white;
             font-weight: 600;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            border-left: none; /* Override existing */
+            border-left: none;
+            /* Override existing */
         }
-        
+
         .nav-item.active::before {
             content: '';
             position: absolute;
@@ -208,8 +209,10 @@
             border-radius: 99px;
             font-weight: 700;
             margin-left: auto;
-            right: auto; /* Reset */
-            position: relative; /* Reset */
+            right: auto;
+            /* Reset */
+            position: relative;
+            /* Reset */
         }
 
         .user-info-bottom {
@@ -281,49 +284,111 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
-        
+
         .main-content {
             flex: 1;
             margin-left: 280px;
             padding: 32px 48px;
             max-width: 1400px;
         }
-        
+
         /* Laptop Optimization (max-width: 1440px) */
         @media (max-width: 1440px) {
             .sidebar {
                 width: 220px;
             }
+
             .main-content {
                 margin-left: 220px;
                 padding: 24px 32px;
             }
-            
+
             /* Compact Sidebar Elements */
-            .logo-section { padding: 20px 15px; }
-            .logo-circle { width: 55px; height: 55px; margin-bottom: 10px; }
-            .logo-text { font-size: 16px; margin-bottom: 2px; }
-            .logo-subtext { font-size: 11px; }
-            .nav-item { padding: 10px 18px; font-size: 13px; gap: 10px; }
-            .user-info-bottom { padding: 15px; }
-            
+            .logo-section {
+                padding: 20px 15px;
+            }
+
+            .logo-circle {
+                width: 55px;
+                height: 55px;
+                margin-bottom: 10px;
+            }
+
+            .logo-text {
+                font-size: 16px;
+                margin-bottom: 2px;
+            }
+
+            .logo-subtext {
+                font-size: 11px;
+            }
+
+            .nav-item {
+                padding: 10px 18px;
+                font-size: 13px;
+                gap: 10px;
+            }
+
+            .user-info-bottom {
+                padding: 15px;
+            }
+
             /* Compact Content Elements */
-            .page-header { margin-bottom: 20px; }
-            .header-title h1 { font-size: 20px; }
-            .doc-card { margin-bottom: 20px; }
-            .doc-header { padding: 15px 24px; }
-            .doc-title-value { font-size: 16px; }
-            
+            .page-header {
+                margin-bottom: 20px;
+            }
+
+            .header-title h1 {
+                font-size: 20px;
+            }
+
+            .doc-card {
+                margin-bottom: 20px;
+            }
+
+            .doc-header {
+                padding: 15px 24px;
+            }
+
+            .doc-title-value {
+                font-size: 16px;
+            }
+
             /* Compact Table */
-            .excel-table th, .excel-table td { padding: 6px 8px; }
-            .excel-table { font-size: 12px; }
-            .cell-textarea, .cell-input { padding: 6px 8px; min-height: 70px; font-size: 12px; }
-            
+            .excel-table th,
+            .excel-table td {
+                padding: 6px 8px;
+            }
+
+            .excel-table {
+                font-size: 12px;
+            }
+
+            .cell-textarea,
+            .cell-input {
+                padding: 6px 8px;
+                min-height: 70px;
+                font-size: 12px;
+            }
+
             /* Compact Footer */
-            .review-footer { left: 240px; padding: 10px 20px; bottom: 15px; }
-            .notes-input { padding: 8px 12px; font-size: 13px; }
-            .action-btns .btn { padding: 8px 16px; font-size: 13px; }
+            .review-footer {
+                left: 240px;
+                padding: 10px 20px;
+                bottom: 15px;
+            }
+
+            .notes-input {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+
+            .action-btns .btn {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
         }
+
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -1125,11 +1190,15 @@
 
                     <div style="margin-left: auto; display: flex; gap: 10px;">
                         <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank"
-                            style="padding: 8px 16px; background: #c41e3a; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(196, 30, 58, 0.2); transition: all 0.2s;" onmouseover="this.style.background='#9a1829'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#c41e3a'; this.style.transform='none'">
+                            style="padding: 8px 16px; background: #c41e3a; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(196, 30, 58, 0.2); transition: all 0.2s;"
+                            onmouseover="this.style.background='#9a1829'; this.style.transform='translateY(-1px)'"
+                            onmouseout="this.style.background='#c41e3a'; this.style.transform='none'">
                             <i class="fas fa-file-pdf" style="margin-right: 6px;"></i> PDF
                         </a>
                         <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank"
-                            style="padding: 8px 16px; background: #10b981; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); transition: all 0.2s;" onmouseover="this.style.background='#059669'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#10b981'; this.style.transform='none'">
+                            style="padding: 8px 16px; background: #10b981; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); transition: all 0.2s;"
+                            onmouseover="this.style.background='#059669'; this.style.transform='translateY(-1px)'"
+                            onmouseout="this.style.background='#10b981'; this.style.transform='none'">
                             <i class="fas fa-file-excel" style="margin-right: 6px;"></i> Excel
                         </a>
                     </div>
@@ -1245,17 +1314,17 @@
                                 @php
                                     // Logic Partial Revision View - Same as show.blade.php
                                     $isRev = $document->status == 'revision';
-                                    
+
                                     // Check which categories are locked (approved/published)
                                     $isSheLocked = ($document->status_she == 'approved' || $document->status_she == 'published');
                                     $isSecLocked = ($document->status_security == 'approved' || $document->status_security == 'published');
-                                    
+
                                     // Check which categories are in revision
                                     $isSheRevision = ($document->status_she == 'revision');
                                     $isSecRevision = ($document->status_security == 'revision');
 
                                     $skip = false;
-                                    
+
                                     // Priority 1: If a specific track is in revision, ONLY show that track
                                     if ($isSheRevision && !$isSecRevision) {
                                         // SHE is revising, Security is NOT revising
@@ -1283,7 +1352,7 @@
                                     }
                                 @endphp
                                 @if($skip) @continue @endif
-                                
+
                                 <tr>
                                     <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
                                         {{ $index + 1 }}
@@ -1333,9 +1402,12 @@
                                             <div class="cell-checkbox-group">
                                                 @php
                                                     $bahaya = $item->kolom6_bahaya;
-                                                    if (is_string($bahaya)) $bahayaDetails = [$bahaya]; // Fallback for bad data
-                                                    else $bahayaDetails = $bahaya['details'] ?? [];
-                                                    if (!is_array($bahayaDetails)) $bahayaDetails = [$bahayaDetails]; // Ensure array
+                                                    if (is_string($bahaya))
+                                                        $bahayaDetails = [$bahaya]; // Fallback for bad data
+                                                    else
+                                                        $bahayaDetails = $bahaya['details'] ?? [];
+                                                    if (!is_array($bahayaDetails))
+                                                        $bahayaDetails = [$bahayaDetails]; // Ensure array
                                                 @endphp
                                                 @foreach($bahayaDetails as $detail)
                                                     <div class="cell-checkbox-item">
@@ -1363,9 +1435,12 @@
                                                 @php
                                                     $col7 = $item->kolom7_aspek_lingkungan ?? [];
                                                     // Handle if entire column is string (unlikely for col7 but safe)
-                                                    if (is_string($col7)) $details7 = [$col7];
-                                                    else $details7 = $col7['details'] ?? ((is_array($col7) && !array_key_exists('details', $col7)) ? $col7 : []);
-                                                    if (!is_array($details7)) $details7 = [$details7]; // Ensure array
+                                                    if (is_string($col7))
+                                                        $details7 = [$col7];
+                                                    else
+                                                        $details7 = $col7['details'] ?? ((is_array($col7) && !array_key_exists('details', $col7)) ? $col7 : []);
+                                                    if (!is_array($details7))
+                                                        $details7 = [$details7]; // Ensure array
                                                     $manual7 = $col7['manual'] ?? '';
                                                 @endphp
                                                 @foreach($details7 as $aspek)
@@ -1393,9 +1468,12 @@
                                             <div class="cell-checkbox-group">
                                                 @php
                                                     $col8 = $item->kolom8_ancaman ?? [];
-                                                    if (is_string($col8)) $details8 = [$col8];
-                                                    else $details8 = $col8['details'] ?? ((is_array($col8) && !array_key_exists('details', $col8)) ? $col8 : []);
-                                                    if (!is_array($details8)) $details8 = [$details8]; // Ensure array
+                                                    if (is_string($col8))
+                                                        $details8 = [$col8];
+                                                    else
+                                                        $details8 = $col8['details'] ?? ((is_array($col8) && !array_key_exists('details', $col8)) ? $col8 : []);
+                                                    if (!is_array($details8))
+                                                        $details8 = [$details8]; // Ensure array
                                                     $manual8 = $col8['manual'] ?? '';
                                                 @endphp
                                                 @foreach($details8 as $threat)
@@ -1596,6 +1674,129 @@
 
             </form>
 
+            @php
+                $puk = $document->details->map->pukProgram->filter()->first();
+                $pmk = $document->details->map->pmkProgram->filter()->first();
+                $user = auth()->user();
+            @endphp
+
+            @if($puk)
+                <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #3b82f6;">
+                    <div class="card-header-slim">
+                        <i class="fas fa-tasks"></i>
+                        <h2>Review Program Unit Kerja (PUK)</h2>
+                        <div class="ms-auto">
+                            <span class="badge"
+                                style="background: {{ $puk->status == 'approved' ? '#16a34a' : '#ca8a04' }}">
+                                {{ $puk->status == 'approved' ? 'DISETUJUI' : 'MENUNGGU APPROVAL' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div style="padding: 24px;">
+                        <table class="table table-bordered mb-4" style="width:100%; font-size:14px;">
+                            <tr>
+                                <th style="width:200px; background:#f8fafc;">Judul Program</th>
+                                <td>{{ $puk->judul }}</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Tujuan</th>
+                                <td>{{ $puk->tujuan }}</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Sasaran</th>
+                                <td>{{ $puk->sasaran }}</td>
+                            </tr>
+                        </table>
+
+                        @if($puk->status != 'approved' && $user->isKepalaUnit() && $user->id_unit == $document->id_unit)
+                            <form action="{{ route('approval.puk', $puk->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-approve" style="width:100%">
+                                    <i class="fas fa-check-circle me-2"></i> Setujui Program PUK
+                                </button>
+                            </form>
+                        @endif
+                        @if($puk->status == 'approved')
+                            <div class="alert alert-success"
+                                style="background:#f0fdf4; color:#15803d; padding:10px; border-radius:6px;">
+                                <i class="fas fa-check-circle me-1"></i> Disetujui oleh Kepala Unit pada
+                                {{ $puk->approved_at ? $puk->approved_at->format('d M Y H:i') : '' }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+            @if($pmk)
+                <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #c026d3;">
+                    <div class="card-header-slim">
+                        <i class="fas fa-project-diagram"></i>
+                        <h2>Review Program Manajemen Korporat (PMK)</h2>
+                        <div class="ms-auto">
+                            <span class="badge"
+                                style="background: {{ $pmk->status == 'approved' ? '#16a34a' : '#ca8a04' }}">
+                                {{ strtoupper(str_replace('_', ' ', $pmk->status)) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div style="padding: 24px;">
+                        <table class="table table-bordered mb-4" style="width:100%; font-size:14px;">
+                            <tr>
+                                <th style="width:200px; background:#f8fafc;">Judul Program</th>
+                                <td>{{ $pmk->judul }}</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Tujuan</th>
+                                <td>{{ $pmk->tujuan }}</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Sasaran</th>
+                                <td>{{ $pmk->sasaran }}</td>
+                            </tr>
+                        </table>
+
+                        <!-- Logic Approval PMK -->
+                        @php
+                            $canApprovePmk = false;
+                            $pmkStatus = $pmk->status;
+                            if ($pmkStatus == 'pending_unit' && $user->isKepalaUnit() && $user->id_unit == $document->id_unit) {
+                                $canApprovePmk = true;
+                            } elseif ($pmkStatus == 'pending_dept' && $user->isKepalaDepartemen() && $user->id_dept == $document->id_dept) {
+                                $canApprovePmk = true;
+                            } elseif ($pmkStatus == 'pending_direksi' && $user->isDirektur() && $user->id_direktorat == $document->id_direktorat) {
+                                $canApprovePmk = true;
+                            }
+                        @endphp
+
+                        @if($canApprovePmk)
+                            <form action="{{ route('approval.pmk', $pmk->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-approve" style="width:100%; background:#c026d3;">
+                                    <i class="fas fa-signature me-2"></i>
+                                    @if($pmkStatus == 'pending_unit') Setujui (Kepala Unit)
+                                    @elseif($pmkStatus == 'pending_dept') Setujui (Kepala Departemen)
+                                    @else Setujui (Direksi)
+                                    @endif
+                                </button>
+                            </form>
+                        @endif
+
+                        <!-- History Section -->
+                        <div style="margin-top:15px; font-size:12px; color:#64748b;">
+                            Progress:
+                            <span style="color:{{ $pmk->unit_approval_at ? '#16a34a' : '#cbd5e1' }}"><i
+                                    class="fas fa-check-circle"></i> Unit</span>
+                            <i class="fas fa-arrow-right mx-1"></i>
+                            <span style="color:{{ $pmk->dept_approval_at ? '#16a34a' : '#cbd5e1' }}"><i
+                                    class="fas fa-check-circle"></i> Dept</span>
+                            <i class="fas fa-arrow-right mx-1"></i>
+                            <span style="color:{{ $pmk->direksi_approval_at ? '#16a34a' : '#cbd5e1' }}"><i
+                                    class="fas fa-check-circle"></i> Direksi</span>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Riwayat Approval & Status Form -->
             <div class="timeline-card">
                 <div class="timeline-header">
@@ -1634,7 +1835,7 @@
                             'resubmitted' => "Sudah Direvisi (Perbaikan Selesai)",
                             default => $approval->action
                         };
-                        
+
                         $type = match ($approval->action) {
                             'approved' => 'approved',
                             'revised' => 'revised',
@@ -1833,7 +2034,7 @@
                 // We just want to capture the fieldName inside the second bracket pair.
                 // Regex: /\[\d+\]\[([^\]]+)\]/ matches [123][fieldName]
                 const match = key.match(/\[\d+\]\[([^\]]+)\]/);
-                
+
                 if (match && match[1]) {
                     const fieldName = match[1];
                     const isArray = key.endsWith('[]');

@@ -74,6 +74,16 @@ class DocumentDetail extends Model
         return $this->belongsTo(Document::class, 'document_id');
     }
 
+    public function pukProgram()
+    {
+        return $this->hasOne(PukProgram::class, 'document_detail_id');
+    }
+
+    public function pmkProgram()
+    {
+        return $this->hasOne(PmkProgram::class, 'document_detail_id');
+    }
+
     // ==================== HELPERS ====================
 
     public function getRiskLevelAttribute(): string
