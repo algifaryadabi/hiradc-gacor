@@ -111,6 +111,16 @@ class Document extends Model
         return $this->hasMany(DocumentDetail::class, 'document_id');
     }
 
+    public function pukProgram()
+    {
+        return $this->hasOneThrough(PukProgram::class, DocumentDetail::class, 'document_id', 'document_detail_id');
+    }
+
+    public function pmkProgram()
+    {
+        return $this->hasOneThrough(PmkProgram::class, DocumentDetail::class, 'document_id', 'document_detail_id');
+    }
+
     public function level2Reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'level2_reviewer_id', 'id_user');

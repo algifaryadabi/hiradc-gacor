@@ -927,20 +927,20 @@
                         
                         <div class="action-buttons">
                             <!-- Draft Button -->
-                            <button type="button" class="btn btn-secondary" onclick="validateAndSubmit('draft')" 
-                                    style="border: 2px solid #cbd5e1; background: #f8fafc; color: #475569;">
+                            <button type="button" class="btn" onclick="validateAndSubmit('draft')" 
+                                    style="border: 2px solid #7c3aed; background: white; color: #7c3aed; font-weight: 700;">
                                 <i class="fas fa-save"></i> Simpan Draft
                             </button>
                         </div>
                         
                         <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 15px;">
                             <div style="flex: 1; max-width: 500px; position: relative;">
-                                <textarea name="revision_comment" class="form-control" rows="1" placeholder="Tulis catatan perbaikan disini..." style="resize: none; border-radius: 20px; padding: 10px 20px; border: 1px solid #cbd5e1; padding-right: 40px; min-height: 45px;"></textarea>
+                                <textarea name="revision_comment" class="form-control" rows="1" placeholder="Tulis catatan (opsional)..." style="resize: none; border-radius: 20px; padding: 10px 20px; border: 1px solid #cbd5e1; padding-right: 40px; min-height: 45px;"></textarea>
                                 <i class="fas fa-comment-dots" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
                             </div>
 
-                            <button type="button" class="btn btn-primary" onclick="validateAndSubmit('submit')">
-                                <i class="fas fa-paper-plane"></i> {{ $document->status == 'draft' ? 'Kirim ke Atasan' : 'Submit Revisi' }}
+                            <button type="button" class="btn btn-primary" id="btnSubmit" onclick="validateAndSubmit('submit')">
+                                <i class="fas fa-paper-plane"></i> {{ ($document->status == 'draft' || $document->status == 'pending_level1') ? 'Kirim ke Atasan' : 'Submit Revisi' }}
                             </button>
                         </div>
                     </div>
@@ -1038,25 +1038,8 @@
                                 }
                             }
 
-                            // Validate Residual Risk - ONLY if BAGIAN 5 is visible
-                            const bagian5 = item.querySelector('.bagian-5-section');
-                            const isBagian5Visible = bagian5 && bagian5.style.display !== 'none';
-
-                            if (isValid && isBagian5Visible && (!residualS || residualS == 0)) {
-                                isValid = false;
-                                errorMsg = `Penilaian risiko residual belum lengkap untuk: ${kegiatan}`;
-                                const content = item.querySelector('.collapsible-content');
-                                if (content && content.style.display === 'none') {
-                                    toggleCollapse(item.querySelector('.card-header'));
-                                }
-
-                                const resBox = item.querySelector('.risk-result-box.res-box');
-                                if (resBox) {
-                                    resBox.style.border = '2px solid #ef4444';
-                                    setTimeout(() => resBox.style.border = '1px solid #15803d', 3000);
-                                }
-                                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
+                            // Validate Residual Risk - REMOVED per user request
+                            // Logic removed
                         }
                     });
                 }
@@ -1301,23 +1284,12 @@
                           </h3>
                           <div class="form-group"><label class="form-label">Tindak Lanjut</label><textarea class="form-control" name="items[{index}][kolom18_tindak_lanjut]"></textarea></div>
                           
-                          <div style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
-                              <div style="display:flex; gap:20px;">
-                                  <div class="form-group" style="flex:1"><label class="form-label">Res. Kemungkinan</label><select class="form-control res-val" name="items[{index}][residual_kemungkinan]" onchange="calculateItemResidual(this)"><option value="">--</option>@foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}">{{$v}}</option> @endforeach</select></div>
-                                  <div class="form-group" style="flex:1"><label class="form-label">Res. Konsekuensi</label><select class="form-control res-val" name="items[{index}][residual_konsekuensi]" onchange="calculateItemResidual(this)"><option value="">--</option>@foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}">{{$v}}</option> @endforeach</select></div>
-                              </div>
-                              <div style="text-align:center;">
-                                  <div class="risk-result-box res-box" style="background:#15803d; color:white; padding:10px;"><div class="risk-score res-score" style="font-size:24px;">-</div><span class="risk-level res-level">PENDING</span></div>
-                                  <input type="hidden" name="items[{index}][residual_score]" class="input-res-score">
-                                  <input type="hidden" name="items[{index}][residual_level]" class="input-res-level">
-                              </div>
-                              <div class="form-group mt-4">
-                                  <label class="form-label">Dapat Ditoleransi?</label>
-                                  <select class="form-control" name="items[{index}][kolom18_toleransi]">
-                                      <option value="Ya">Ya</option>
-                                      <option value="Tidak">Tidak</option>
-                                  </select>
-                              </div>
+                          <div class="form-group mb-3">
+                              <label class="form-label">Dapat Ditoleransi?</label>
+                              <select class="form-control" name="items[{index}][kolom18_toleransi]">
+                                  <option value="Ya">Ya</option>
+                                  <option value="Tidak">Tidak</option>
+                              </select>
                           </div>
                      </div>
                 </div>
@@ -1599,37 +1571,8 @@
             }
         }
 
-        function calculateItemResidual(el) {
-            const item = el.closest('.doc-item');
-            const likelihood = parseInt(item.querySelector('[name*="residual_kemungkinan"]').value) || 0;
-            const severity = parseInt(item.querySelector('[name*="residual_konsekuensi"]').value) || 0;
+        // calculateItemResidual Removed
 
-            const score = likelihood * severity;
-            const scoreEl = item.querySelector('.res-score');
-            const levelEl = item.querySelector('.res-level');
-            const resBox = item.querySelector('.res-box');
-
-            scoreEl.textContent = score || '-';
-            item.querySelector('.input-res-score').value = score;
-
-            let level = '-';
-            let bg = '#e2e8f0';
-            let textColor = '#64748b';
-
-            if (score > 0) {
-                textColor = '#fff';
-                if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
-                else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; }
-                else { level = 'Rendah'; bg = '#15803d'; }
-            }
-
-            levelEl.textContent = (score > 0) ? level : 'PENDING';
-            item.querySelector('.input-res-level').value = level;
-            if(resBox) {
-                resBox.style.background = bg;
-                resBox.style.color = textColor;
-            }
-        }
 
         // validateForm Removed - Logic moved to validateAndSubmit
 
@@ -1653,8 +1596,8 @@
                      const lSelect = item.querySelector('.likelihood-select');
                      if(lSelect) calculateItemRisk(lSelect);
                      
-                     const resSelect = item.querySelector('[name*="residual_kemungkinan"]');
-                     if(resSelect) calculateItemResidual(resSelect);
+                     // calculateItemResidual call removed
+
                      
                      if(item.dataset.index > 0) collapseItem(item);
                  });

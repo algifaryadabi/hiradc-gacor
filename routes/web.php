@@ -194,6 +194,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/approver/documents/update-detail/{id}', [DocumentController::class, 'updateDetail'])->name('approver.update_detail');
     Route::get('/approver/documents/get-item-html/{id}', [DocumentController::class, 'getEditItemHtml'])->name('approver.get_edit_item');
     Route::get('/approver/documents/{id}/status', [DocumentController::class, 'getStatus'])->name('approver.get_status');
+    // Update Program Kerja PUK/PMK (Approver)
+    Route::put('/approver/puk/{id}/update-program-kerja', [DocumentController::class, 'updatePukProgramKerja'])->name('approver.puk.update_program');
+    Route::put('/approver/pmk/{id}/update-program-kerja', [DocumentController::class, 'updatePmkProgramKerja'])->name('approver.pmk.update_program');
 
     // ==================== NEW APPROVAL WORKFLOW ROUTES ====================
     Route::post('/approval/hiradc/{id}', [\App\Http\Controllers\ApprovalController::class, 'approveHiradc'])->name('approval.hiradc');
@@ -226,6 +229,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/unit-pengelola/documents/update-detail/{id}', [DocumentController::class, 'updateDetail'])->name('unit_pengelola.update_detail');
     Route::post('/unit-pengelola/update-permissions', [DocumentController::class, 'updateUnitPermissions'])->name('unit_pengelola.update_permissions');
     Route::get('/unit-pengelola/documents/get-item-html/{id}', [DocumentController::class, 'getEditItemHtml'])->name('unit_pengelola.get_edit_item');
+    // Update Program Kerja PUK/PMK (Unit Pengelola)
+    Route::put('/unit-pengelola/puk/{id}/update-program-kerja', [DocumentController::class, 'updatePukProgramKerja'])->name('unit_pengelola.puk.update_program');
+    Route::put('/unit-pengelola/pmk/{id}/update-program-kerja', [DocumentController::class, 'updatePmkProgramKerja'])->name('unit_pengelola.pmk.update_program');
 
     // ==================== KEPALA DEPARTEMEN ROUTES ====================
     Route::get('/kepala-departemen/dashboard', function () {

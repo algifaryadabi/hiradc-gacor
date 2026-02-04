@@ -536,10 +536,12 @@ class DocumentController extends Controller
                     'kolom21_konsekuensi_lanjut' => $item['kolom21_konsekuensi_lanjut'] ?? null,
                     'kolom22_tingkat_risiko_lanjut' => $item['kolom22_tingkat_risiko_lanjut'] ?? null,
                     'kolom22_level_lanjut' => $item['kolom22_level_lanjut'] ?? null,
-                    'residual_kemungkinan' => $item['residual_kemungkinan'] ?? 1,
-                    'residual_konsekuensi' => $item['residual_konsekuensi'] ?? 1,
-                    'residual_score' => $item['residual_score'] ?? (($item['residual_kemungkinan'] ?? 1) * ($item['residual_konsekuensi'] ?? 1)),
-                    'residual_level' => $item['residual_level'] ?? 'Rendah',
+                    // Residual Risk Assessment (Required fields in DB)
+                    'residual_kemungkinan' => isset($item['residual_kemungkinan']) && $item['residual_kemungkinan'] !== '' ? $item['residual_kemungkinan'] : 1,
+                    'residual_konsekuensi' => isset($item['residual_konsekuensi']) && $item['residual_konsekuensi'] !== '' ? $item['residual_konsekuensi'] : 1,
+                    'residual_score' => isset($item['residual_score']) && $item['residual_score'] !== '' ? $item['residual_score'] : 1,
+                    'residual_level' => isset($item['residual_level']) && $item['residual_level'] !== '' ? $item['residual_level'] : 'Rendah',
+
                 ]);
 
                 // --- PUK/PMK PROCESSING ---
@@ -559,12 +561,13 @@ class DocumentController extends Controller
                     }
 
                     $programData = [
-                        'id_detail' => $detail->id,
-                        'judul_program' => $rencanaPengendalian, // The title comes from Kolom 19
-                        'tujuan_program' => $item['program_tujuan'] ?? '',
-                        'sasaran_program' => $item['program_sasaran'] ?? '',
+                        'document_detail_id' => $detail->id,
+                        'judul' => $rencanaPengendalian, // The title comes from Kolom 19
+                        'tujuan' => $item['program_tujuan'] ?? '',
+                        'sasaran' => $item['program_sasaran'] ?? '',
                         'penanggung_jawab' => $item['program_penanggung_jawab'] ?? '', // Should be Unit Name
                         'program_kerja' => $item['program_kerja'] ?? [], // JSON array
+                        'created_by' => Auth::id(),
                     ];
 
                     if ($programType === 'PUK') {
@@ -582,6 +585,12 @@ class DocumentController extends Controller
                 $document->submitForApproval();
             }
         });
+
+        // Different redirects for draft vs submit
+        if ($request->action === 'draft') {
+            return redirect()->route('documents.index')
+                ->with('success', 'Draft tersimpan.');
+        }
 
         return redirect()->route('documents.index')
             ->with('success', 'Dokumen berhasil disimpan dan dikirim untuk approval.')
@@ -810,14 +819,22 @@ class DocumentController extends Controller
                 $query->delete();
             }
 
-            // 4. LOG REVISION HISTORY
-            // Log that the unit has submitted the revision
-            $document->approvals()->create([
-                'level' => 1, // Reset to level 1 flow
-                'approver_id' => $user->id_user,
-                'action' => 'resubmitted',
-                'catatan' => $request->revision_comment, // Use user comment
-            ]);
+            // 4. LOG HISTORY
+            // Determine action name based on previous status
+            $logAction = 'resubmitted';
+            if ($document->getOriginal('status') == 'draft') {
+                $logAction = 'submitted';
+            }
+
+            // Only log if submitting (not saving draft)
+            if ($request->input('action') === 'submit') { 
+                $document->approvals()->create([
+                    'level' => 1, 
+                    'approver_id' => $user->id_user,
+                    'action' => $logAction,
+                    'catatan' => $request->revision_comment,
+                ]);
+            }
         });
 
 
@@ -826,6 +843,12 @@ class DocumentController extends Controller
         if ($isApprover) {
             return redirect()->route('approver.check_documents')
                 ->with('success', 'Dokumen berhasil diperbarui.');
+        }
+
+        // Redirect for draft
+        if ($request->input('action') === 'draft') {
+            return redirect()->route('documents.index')
+                ->with('success', 'Draft berhasil diperbarui.');
         }
 
         return redirect()->route('documents.index')
@@ -1321,7 +1344,10 @@ class DocumentController extends Controller
             'staffReviewers',
             'staffApprovers',
             'historyReviews',
-            'historyVerifications'
+            'historyVerifications',
+            'band3Users',
+            'band4Users',
+            'pmkPicUsers'
         ));
     }
 
@@ -1371,11 +1397,32 @@ class DocumentController extends Controller
             }
         }
 
-        return view(match (auth()->user()->getRoleName()) {
+        $view = match (auth()->user()->getRoleName()) {
             'unit_pengelola' => 'unit_pengelola.documents.review',
             'kepala_departemen' => 'kepala_departemen.documents.review',
             default => 'approver.documents.review',
-        }, compact('document', 'staffReviewers', 'staffApprovers', 'filter', 'verifyingUnit'));
+        };
+
+        // Fetch Users for PUK/PMK Edit Dropdown (Based on Document Unit)
+        // Band 3 = role_jabatan 4, 5 (Koordinator PUK)
+        $band3Users = \App\Models\User::where('id_unit', $document->id_unit)
+            ->whereIn('role_jabatan', [4, 5])
+            ->orderBy('nama_user')
+            ->get();
+
+        // Band 4 = role_jabatan 6 (Pelaksana PUK)
+        $band4Users = \App\Models\User::where('id_unit', $document->id_unit)
+            ->where('role_jabatan', 6)
+            ->orderBy('nama_user')
+            ->get();
+
+        // PMK PIC = Manager (Role 3)
+        $pmkPicUsers = \App\Models\User::where('id_unit', $document->id_unit)
+            ->where('role_jabatan', 3)
+            ->orderBy('nama_user')
+            ->get();
+
+        return view($view, compact('document', 'staffReviewers', 'staffApprovers', 'filter', 'verifyingUnit', 'band3Users', 'band4Users', 'pmkPicUsers'));
     }
 
     /**
@@ -2603,6 +2650,136 @@ class DocumentController extends Controller
         }
     }
 
+    /**
+     * Update Program Kerja PUK
+     */
+    public function updatePukProgramKerja(Request $request, $id)
+    {
+        try {
+            $puk = \App\Models\PukProgram::findOrFail($id);
+            $document = $puk->documentDetail->document;
+            $user = Auth::user();
+            
+            // Check Permissions
+            $canEdit = false;
+            
+            // 1. Kepala Unit Kerja (Before Approval)
+            if ($user->isKepalaUnit() && $user->id_unit == $document->id_unit) {
+                // Check if already approved by this user
+                $hasApproved = $document->approvals()
+                    ->where('approver_id', $user->id)
+                    ->where('level', 1)
+                    ->where('action', 'approved')
+                    ->exists();
+                if (!$hasApproved) $canEdit = true;
+            }
+            
+            // 2. Unit Pengelola (Reviewer/Verifikator) - Before Their Approval
+            if (in_array($user->id_unit, [55, 56])) {
+                // Check if already approved/verified by this user at level 2
+                // Logic: check approvals table for level 2 actions by this user
+                $hasApproved = $document->approvals()
+                    ->where('approver_id', $user->id)
+                    ->where('level', 2)
+                    ->whereIn('action', ['approved', 'verified', 'reviewed'])
+                    ->exists();
+                
+                // Allow edit if they are staff (4,5,6) and haven't approved yet, AND current level is 2
+                if (in_array($user->role_jabatan, [4, 5, 6]) && !$hasApproved && $document->current_level == 2) {
+                   $canEdit = true;
+                }
+            }
+
+            if (!$canEdit) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized or already approved.'], 403);
+            }
+
+            $validated = $request->validate([
+                'program_kerja' => 'required|array',
+            ]);
+
+            // Log Changes
+            \App\Models\PukProgramEditLog::create([
+                'puk_program_id' => $puk->id,
+                'edited_by' => $user->id,
+                'old_data' => $puk->program_kerja,
+                'new_data' => $validated['program_kerja'],
+                'edit_type' => 'update'
+            ]);
+
+            $puk->program_kerja = $validated['program_kerja'];
+            $puk->save();
+
+            return response()->json(['success' => true, 'message' => 'Program kerja PUK berhasil diperbarui.']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update Program Kerja PMK
+     */
+    public function updatePmkProgramKerja(Request $request, $id)
+    {
+        try {
+            $pmk = \App\Models\PmkProgram::findOrFail($id);
+            $document = $pmk->documentDetail->document;
+            $user = Auth::user();
+            
+            // Check Permissions (Same logic as PUK)
+            $canEdit = false;
+            
+            // 1. Kepala Unit Kerja
+            if ($user->isKepalaUnit() && $user->id_unit == $document->id_unit) {
+                $hasApproved = $document->approvals()
+                    ->where('approver_id', $user->id)
+                    ->where('level', 1)
+                    ->where('action', 'approved')
+                    ->exists();
+                if (!$hasApproved) $canEdit = true;
+            }
+            
+            // 2. Unit Pengelola
+            if (in_array($user->id_unit, [55, 56])) {
+                $hasApproved = $document->approvals()
+                    ->where('approver_id', $user->id)
+                    ->where('level', 2)
+                    ->whereIn('action', ['approved', 'verified', 'reviewed'])
+                    ->exists();
+                
+                if (in_array($user->role_jabatan, [4, 5, 6]) && !$hasApproved && $document->current_level == 2) {
+                   $canEdit = true;
+                }
+            }
+
+            if (!$canEdit) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized or already approved.'], 403);
+            }
+
+            $validated = $request->validate([
+                'program_kerja' => 'required|array',
+            ]);
+
+            // Log Changes
+            \App\Models\PmkProgramEditLog::create([
+                'pmk_program_id' => $pmk->id,
+                'edited_by' => $user->id,
+                'old_data' => $pmk->program_kerja,
+                'new_data' => $validated['program_kerja'],
+                'edit_type' => 'update'
+            ]);
+
+            $pmk->program_kerja = $validated['program_kerja'];
+            $pmk->save();
+
+            return response()->json(['success' => true, 'message' => 'Program kerja PMK berhasil diperbarui.']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
 
 
     /**
@@ -2660,7 +2837,23 @@ class DocumentController extends Controller
             ->where('role_jabatan', 4) // Band III
             ->get();
 
-        return view('unit_pengelola.documents.review', compact('document', 'filteredDetails', 'staffReviewers', 'staffApprovers'));
+        // Fetch Users for PUK/PMK Edit Dropdown (Based on Document Unit)
+        $band3Users = \App\Models\User::where('id_unit', $document->id_unit)
+            ->whereIn('role_jabatan', [4, 5])
+            ->orderBy('nama_user')
+            ->get();
+
+        $band4Users = \App\Models\User::where('id_unit', $document->id_unit)
+            ->where('role_jabatan', 6)
+            ->orderBy('nama_user')
+            ->get();
+
+        $pmkPicUsers = \App\Models\User::where('id_unit', $document->id_unit)
+            ->where('role_jabatan', 3)
+            ->orderBy('nama_user')
+            ->get();
+
+        return view('unit_pengelola.documents.review', compact('document', 'filteredDetails', 'staffReviewers', 'staffApprovers', 'band3Users', 'band4Users', 'pmkPicUsers'));
     }
 
     /**

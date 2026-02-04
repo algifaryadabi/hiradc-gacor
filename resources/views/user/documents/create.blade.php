@@ -1904,89 +1904,17 @@
             riskBox.style.color = textColor;
 
             // Show/Hide BAGIAN 5 based on risk level
-            const bagian5 = item.querySelector('.bagian-5-section');
-            if (bagian5) {
-                if (score < 5) {
-                    // Risk is LOW - hide BAGIAN 5 (no further mitigation needed)
-                    bagian5.style.display = 'none';
-                } else {
-                    // Risk is MEDIUM or higher - show BAGIAN 5
-                    bagian5.style.display = 'block';
-                }
-            }
+
 
             // Trigger auto-tolerance calculation
             calculateAutoTolerance(item, score, level);
         }
 
-        function calculateItemResidual(el) {
-            const item = el.closest('.doc-item');
-            const likelihood = parseInt(item.querySelector('[name*="residual_kemungkinan"]').value) || 0;
-            const severity = parseInt(item.querySelector('[name*="residual_konsekuensi"]').value) || 0;
+        // calculateItemResidual Removed
 
-            const score = likelihood * severity;
-            const scoreEl = item.querySelector('.res-score');
-            const levelEl = item.querySelector('.res-level');
-            const resBox = item.querySelector('.res-box');
 
-            scoreEl.textContent = score || '-';
-            item.querySelector('.input-res-score').value = score;
+        // validateForm Removed
 
-            let level = '-';
-            let bg = '#e2e8f0';
-            let textColor = '#64748b';
-
-            if (score > 0) {
-                textColor = '#fff';
-                if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
-                else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; }
-                else { level = 'Rendah'; bg = '#15803d'; }
-            }
-
-            levelEl.textContent = (score > 0) ? level : 'PENDING';
-            item.querySelector('.input-res-level').value = level;
-            if (resBox) {
-                resBox.style.background = bg;
-                resBox.style.color = textColor;
-            }
-        }
-
-        function validateForm() {
-            let valid = true;
-            let missingItems = [];
-
-            document.querySelectorAll('.doc-item').forEach(item => {
-                const itemName = item.querySelector('[name*="kolom2_kegiatan"]')?.value || 'Item';
-                const initialScore = item.querySelector('.input-score').value;
-
-                // Check initial risk assessment
-                if (!initialScore || initialScore == 0) {
-                    valid = false;
-                    missingItems.push(itemName);
-                    return;
-                }
-
-                // Only check residual risk if BAGIAN 5 is visible (risk >= 8)
-                const bagian5 = item.querySelector('.bagian-5-section');
-                if (bagian5 && bagian5.style.display !== 'none') {
-                    const residualScore = item.querySelector('.input-res-score').value;
-                    if (!residualScore || residualScore == 0) {
-                        valid = false;
-                        missingItems.push(itemName + ' (Residual)');
-                    }
-                }
-            });
-
-            if (!valid) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Data Belum Lengkap',
-                    text: 'Mohon lengkapi penilaian risiko untuk: ' + missingItems.join(', '),
-                });
-                return false;
-            }
-            return true;
-        }
 
         // ==================== PUK/PMK Functions ====================
 
@@ -2592,24 +2520,8 @@
                                 }
                             }
 
-                            // Validate Residual Risk - ONLY if BAGIAN 5 is visible (risk >= 8)
-                            const bagian5 = item.querySelector('.bagian-5-section');
-                            const isBagian5Visible = bagian5 && bagian5.style.display !== 'none';
+                            // Validate Residual Risk - REMOVED
 
-                            if (isValid && isBagian5Visible && (!residualS || residualS == 0)) {
-                                isValid = false;
-                                errorMsg = `Penilaian risiko residual belum lengkap untuk: ${kegiatan}`;
-                                const content = item.querySelector('.collapsible-content');
-                                if (content && content.style.display === 'none') {
-                                    toggleCollapse(item.querySelector('.card-header'));
-                                }
-                                const resBox = item.querySelector('.risk-result-box.res-box');
-                                if (resBox) {
-                                    resBox.style.border = '2px solid #ef4444';
-                                    setTimeout(() => resBox.style.border = '1px solid #15803d', 3000);
-                                }
-                                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
                         }
                     });
                 }

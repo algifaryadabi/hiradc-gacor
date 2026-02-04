@@ -925,11 +925,16 @@
             <div class="content-area">
 
                 <!-- Stats Summary -->
-                <div class="stats-grid">
+                <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr);">
                     <div class="stat-card active" onclick="filterByStatus('all', this)">
                         <div class="stat-icon icon-blue"><i class="fas fa-file-alt"></i></div>
                         <div class="stat-info"><span class="stat-label">Total Form</span><span
                                 class="stat-value">{{ $documents->count() }}</span></div>
+                    </div>
+                    <div class="stat-card" onclick="filterByStatus('draft', this)">
+                        <div class="stat-icon" style="background: #f3e8ff; color: #7c3aed;"><i class="fas fa-file-pen"></i></div>
+                        <div class="stat-info"><span class="stat-label">Draft</span><span
+                                class="stat-value">{{ $myDraft->count() }}</span></div>
                     </div>
                     <div class="stat-card" onclick="filterByStatus('pending', this)">
                         <div class="stat-icon icon-orange"><i class="fas fa-clock"></i></div>
