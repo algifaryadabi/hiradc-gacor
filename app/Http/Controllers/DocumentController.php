@@ -236,7 +236,8 @@ class DocumentController extends Controller
             return redirect()->route('dashboard')->with('error', 'Akses Ditolak: Anda bukan PIC dokumen.');
         }
 
-        $query = Document::where('id_user', $user->id_user)
+        // SCOPE: Unit-based (Shared Drafts/Docs)
+        $query = Document::where('id_unit', $user->id_unit)
             ->with(['unit', 'approvals.approver']);
 
         // Filter: Month
@@ -257,22 +258,14 @@ class DocumentController extends Controller
         $documents = $query->orderBy('created_at', 'desc')->get();
 
         // Get Available Years for Filter
-        $years = Document::where('id_user', $user->id_user)
+        $years = Document::where('id_unit', $user->id_unit)
             ->selectRaw('YEAR(created_at) as year')
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year');
 
-        // Load counts for Status Tracker (Calculate from ALL user docs, not just filtered ones, usually better UX, 
-        // BUT filtering typically implies narrowing down list.
-        // However, the "Stats Cards" usually show global stats. 
-        // Let's keep them global or filtered? 
-        // User request is just "filter existing list".
-        // Let's recalculate counts based on Filtered result OR keep global.
-        // Let's keep global for the top cards so they know their total stats always.
-        // Making a separate query for global stats.
-
-        $allDocs = Document::where('id_user', $user->id_user)->get();
+        // Load counts (Unit-wide)
+        $allDocs = Document::where('id_unit', $user->id_unit)->get();
         $myPending = $allDocs->whereIn('status', ['pending_level1', 'pending_level2', 'pending_level3']);
         $myRevision = $allDocs->where('status', 'revision');
         $myDraft = $allDocs->where('status', 'draft');
@@ -359,12 +352,21 @@ class DocumentController extends Controller
             ->where('role_jabatan', 6)
             ->get();
 
+        // PUK Specific Roles (Requested: Koord=Role3, Pelaksana=Role4)
+        $pukKoordinatorUsers = \App\Models\User::where('id_unit', $user->id_unit)
+            ->where('role_jabatan', 3)
+            ->get();
+
+        $pukPelaksanaUsers = \App\Models\User::where('id_unit', $user->id_unit)
+            ->where('role_jabatan', 4)
+            ->get();
+
         // New Requirement: PIC for PMK is Manager (Role 3)
         $pmkPicUsers = \App\Models\User::where('id_unit', $user->id_unit)
             ->where('role_jabatan', 3)
             ->get();
 
-        return view('user.documents.create', compact('user', 'direktorats', 'departemens', 'units', 'seksis', 'probis', 'band3Users', 'band4Users', 'pmkPicUsers'));
+        return view('user.documents.create', compact('user', 'direktorats', 'departemens', 'units', 'seksis', 'probis', 'band3Users', 'band4Users', 'pmkPicUsers', 'pukKoordinatorUsers', 'pukPelaksanaUsers'));
     }
 
     /**
@@ -384,17 +386,26 @@ class DocumentController extends Controller
             }
         }
 
-        $request->validate([
+        // Validation Logic
+        $rules = [
             'judul_dokumen' => 'required|string|max:255',
             'items' => 'required|array|min:1',
-            'items.*.kategori' => 'required|in:K3,KO,Lingkungan,Keamanan',
-            'items.*.kolom2_proses' => 'required|string',
-            'items.*.kolom2_kegiatan' => 'required|string',
-            'items.*.kolom3_lokasi' => 'required|string',
-            'items.*.kolom5_kondisi' => 'required|string',
-            'items.*.residual_score' => 'nullable|numeric|min:0',
-            'items.*.residual_level' => 'nullable|string',
-        ]);
+            'items.*.kolom2_kegiatan' => 'required|string', // Activity is always required
+        ];
+
+        // Strict rules for Submit action
+        if ($request->action !== 'draft') {
+            $rules = array_merge($rules, [
+                'items.*.kategori' => 'required|in:K3,KO,Lingkungan,Keamanan',
+                'items.*.kolom2_proses' => 'required|string',
+                'items.*.kolom3_lokasi' => 'required|string',
+                'items.*.kolom5_kondisi' => 'required|string',
+                'items.*.residual_score' => 'nullable|numeric|min:0',
+                'items.*.residual_level' => 'nullable|string',
+            ]);
+        }
+
+        $request->validate($rules);
 
         $user = Auth::user();
 
@@ -439,32 +450,32 @@ class DocumentController extends Controller
                 'id_dept' => $user->id_dept,
                 'id_unit' => $user->id_unit,
                 'id_seksi' => $user->id_seksi,
-                'kategori' => $firstItem['kategori'], // Main Header Category = First Item Category
+                'kategori' => $firstItem['kategori'] ?? 'K3',
                 'judul_dokumen' => $request->judul_dokumen,
-                'status' => 'draft',
-                'current_level' => 0,
+                'status' => $request->action === 'submit' ? 'pending_level1' : 'draft',
+                'current_level' => $request->action === 'submit' ? 1 : 0,
 
-                // Legacy Columns (Populated from Item #1)
-                'kolom2_proses' => $firstItem['kolom2_proses'],
+                // Legacy Columns (Populated from Item #1) with Defaults for Draft
+                'kolom2_proses' => $firstItem['kolom2_proses'] ?? '-',
                 'kolom2_kegiatan' => $firstItem['kolom2_kegiatan'],
-                'kolom3_lokasi' => $firstItem['kolom3_lokasi'],
-                'kolom5_kondisi' => $firstItem['kolom5_kondisi'],
+                'kolom3_lokasi' => $firstItem['kolom3_lokasi'] ?? '-',
+                'kolom5_kondisi' => $firstItem['kolom5_kondisi'] ?? 'Rutin',
                 'kolom6_bahaya' => $headerBahaya,
-                // kolom7_dampak removed - no longer used in new structure
-                'kolom9_risiko' => $firstItem['kolom9_risiko'] ?? $firstItem['kolom9_risiko_k3ko'] ?? $firstItem['kolom9_dampak_lingkungan'] ?? $firstItem['kolom9_celah_keamanan'] ?? null,
+                // kolom7_dampak removed
+                'kolom9_risiko' => $firstItem['kolom9_risiko'] ?? $firstItem['kolom9_risiko_k3ko'] ?? $firstItem['kolom9_dampak_lingkungan'] ?? $firstItem['kolom9_celah_keamanan'] ?? '-',
                 'kolom10_pengendalian' => $headerControls,
-                'kolom11_existing' => $firstItem['kolom11_existing'],
-                'kolom12_kemungkinan' => $firstItem['kolom12_kemungkinan'],
-                'kolom13_konsekuensi' => $firstItem['kolom13_konsekuensi'],
-                'kolom14_score' => $firstItem['kolom14_score'] ?? ($firstItem['kolom12_kemungkinan'] * $firstItem['kolom13_konsekuensi']),
+                'kolom11_existing' => $firstItem['kolom11_existing'] ?? '-',
+                'kolom12_kemungkinan' => $firstItem['kolom12_kemungkinan'] ?? 1,
+                'kolom13_konsekuensi' => $firstItem['kolom13_konsekuensi'] ?? 1,
+                'kolom14_score' => $firstItem['kolom14_score'] ?? (($firstItem['kolom12_kemungkinan'] ?? 0) * ($firstItem['kolom13_konsekuensi'] ?? 0)),
                 'kolom15_regulasi' => $firstItem['kolom15_regulasi'] ?? null,
                 'kolom16_aspek' => $firstItem['kolom16_aspek'] ?? null,
                 'kolom17_risiko' => $firstItem['kolom17_risiko'] ?? null,
                 'kolom17_peluang' => $firstItem['kolom17_peluang'] ?? null,
-                // kolom18_tindak_lanjut removed - replaced by kolom18_toleransi + kolom19-22
-                'residual_kemungkinan' => $firstItem['residual_kemungkinan'],
-                'residual_konsekuensi' => $firstItem['residual_konsekuensi'],
-                'residual_score' => $firstItem['residual_score'] ?? ($firstItem['residual_kemungkinan'] * $firstItem['residual_konsekuensi']),
+                // kolom18_tindak_lanjut removed
+                'residual_kemungkinan' => $firstItem['residual_kemungkinan'] ?? 1,
+                'residual_konsekuensi' => $firstItem['residual_konsekuensi'] ?? 1,
+                'residual_score' => $firstItem['residual_score'] ?? (($firstItem['residual_kemungkinan'] ?? 0) * ($firstItem['residual_konsekuensi'] ?? 0)),
             ]);
 
             // 2. Create Details
@@ -486,11 +497,11 @@ class DocumentController extends Controller
                 $riskScore = $item['kolom14_score'] ?? (($item['kolom12_kemungkinan'] ?? 0) * ($item['kolom13_konsekuensi'] ?? 0));
 
                 $detail = $document->details()->create([
-                    'kategori' => $item['kategori'],
-                    'kolom2_proses' => $item['kolom2_proses'],
+                    'kategori' => $item['kategori'] ?? 'K3', // Default to K3 if missing in draft
+                    'kolom2_proses' => $item['kolom2_proses'] ?? '-',
                     'kolom2_kegiatan' => $item['kolom2_kegiatan'],
-                    'kolom3_lokasi' => $item['kolom3_lokasi'],
-                    'kolom5_kondisi' => $item['kolom5_kondisi'],
+                    'kolom3_lokasi' => $item['kolom3_lokasi'] ?? '-',
+                    'kolom5_kondisi' => $item['kolom5_kondisi'] ?? 'Rutin',
                     'kolom6_bahaya' => $bahayaData,
                     // Conditional: Aspek Lingkungan (Lingkungan category only)
                     'kolom7_aspek_lingkungan' => [
@@ -509,11 +520,11 @@ class DocumentController extends Controller
                     // Keep old kolom9_risiko for backward compatibility (default to '-' if all new fields are empty)
                     'kolom9_risiko' => $item['kolom9_risiko_k3ko'] ?? $item['kolom9_dampak_lingkungan'] ?? $item['kolom9_celah_keamanan'] ?? '-',
                     'kolom10_pengendalian' => $controlsData,
-                    'kolom11_existing' => $item['kolom11_existing'],
-                    'kolom12_kemungkinan' => $item['kolom12_kemungkinan'],
-                    'kolom13_konsekuensi' => $item['kolom13_konsekuensi'],
+                    'kolom11_existing' => $item['kolom11_existing'] ?? '-',
+                    'kolom12_kemungkinan' => $item['kolom12_kemungkinan'] ?? 1,
+                    'kolom13_konsekuensi' => $item['kolom13_konsekuensi'] ?? 1,
                     'kolom14_score' => $riskScore,
-                    'kolom14_level' => $item['kolom14_level'] ?? null,
+                    'kolom14_level' => $item['kolom14_level'] ?? 'Rendah',
                     'kolom15_regulasi' => $item['kolom15_regulasi'] ?? null,
                     'kolom16_aspek' => $item['kolom16_aspek'] ?? null,
                     'kolom17_risiko' => $item['kolom17_risiko'] ?? null,
@@ -525,10 +536,10 @@ class DocumentController extends Controller
                     'kolom21_konsekuensi_lanjut' => $item['kolom21_konsekuensi_lanjut'] ?? null,
                     'kolom22_tingkat_risiko_lanjut' => $item['kolom22_tingkat_risiko_lanjut'] ?? null,
                     'kolom22_level_lanjut' => $item['kolom22_level_lanjut'] ?? null,
-                    'residual_kemungkinan' => $item['residual_kemungkinan'] ?? 0,
-                    'residual_konsekuensi' => $item['residual_konsekuensi'] ?? 0,
-                    'residual_score' => $item['residual_score'] ?? (isset($item['residual_kemungkinan']) && isset($item['residual_konsekuensi']) ? ($item['residual_kemungkinan'] * $item['residual_konsekuensi']) : 0),
-                    'residual_level' => $item['residual_level'] ?? '-',
+                    'residual_kemungkinan' => $item['residual_kemungkinan'] ?? 1,
+                    'residual_konsekuensi' => $item['residual_konsekuensi'] ?? 1,
+                    'residual_score' => $item['residual_score'] ?? (($item['residual_kemungkinan'] ?? 1) * ($item['residual_konsekuensi'] ?? 1)),
+                    'residual_level' => $item['residual_level'] ?? 'Rendah',
                 ]);
 
                 // --- PUK/PMK PROCESSING ---
@@ -627,13 +638,23 @@ class DocumentController extends Controller
             abort(403);
         }
 
-        $request->validate([
+        // Validation Logic
+        $rules = [
             'items' => 'required|array|min:1',
-            'items.*.kategori' => 'required|in:K3,KO,Lingkungan,Keamanan',
             'items.*.kolom2_kegiatan' => 'required|string',
-            'revision_comment' => 'required|string|min:5', // Added validation
-            // Add other validations as needed
-        ]);
+        ];
+
+        // Strict rules for Submit action
+        if ($request->input('action') !== 'draft') {
+            $rules = array_merge($rules, [
+                'revision_comment' => 'required|string|min:5',
+                'items.*.kategori' => 'required|in:K3,KO,Lingkungan,Keamanan',
+                'items.*.kolom2_proses' => 'required|string',
+                // Add other strict validations if needed
+            ]);
+        }
+
+        $request->validate($rules);
 
         \DB::transaction(function () use ($request, $document, $user) {
             // 1. UPDATE HEADER (Legacy compatibility with Item #1)
@@ -657,15 +678,15 @@ class DocumentController extends Controller
 
             $document->update([
                 'kategori' => $firstItem['kategori'] ?? 'K3',
-                'kolom2_proses' => $firstItem['kolom2_proses'] ?? '',
+                'kolom2_proses' => $firstItem['kolom2_proses'] ?? '-',
                 'kolom2_kegiatan' => $firstItem['kolom2_kegiatan'] ?? '',
-                'kolom3_lokasi' => $firstItem['kolom3_lokasi'] ?? '',
-                'kolom5_kondisi' => $firstItem['kolom5_kondisi'] ?? '',
+                'kolom3_lokasi' => $firstItem['kolom3_lokasi'] ?? '-',
+                'kolom5_kondisi' => $firstItem['kolom5_kondisi'] ?? 'Rutin',
                 'kolom6_bahaya' => $headerBahaya,
                 // Robust Fallback Chain for Kolom 9
                 'kolom9_risiko' => $firstItem['kolom9_risiko'] ?? $firstItem['kolom9_risiko_k3ko'] ?? $firstItem['kolom9_dampak_lingkungan'] ?? $firstItem['kolom9_celah_keamanan'] ?? '-',
                 'kolom10_pengendalian' => $headerControls,
-                'kolom11_existing' => $firstItem['kolom11_existing'] ?? '',
+                'kolom11_existing' => $firstItem['kolom11_existing'] ?? '-',
                 'kolom12_kemungkinan' => $firstItem['kolom12_kemungkinan'] ?? 1,
                 'kolom13_konsekuensi' => $firstItem['kolom13_konsekuensi'] ?? 1,
                 'kolom14_score' => $firstItem['kolom14_score'] ?? (($firstItem['kolom12_kemungkinan'] ?? 1) * ($firstItem['kolom13_konsekuensi'] ?? 1)),
@@ -675,13 +696,13 @@ class DocumentController extends Controller
                 'kolom17_peluang' => $firstItem['kolom17_peluang'] ?? null,
                 // 'kolom18_tindak_lanjut' => $firstItem['kolom18_tindak_lanjut'] ?? null, // REMOVED: Column does not exist in DB
 
-                'residual_kemungkinan' => $firstItem['residual_kemungkinan'] ?? 0,
-                'residual_konsekuensi' => $firstItem['residual_konsekuensi'] ?? 0,
-                'residual_score' => $firstItem['residual_score'] ?? (($firstItem['residual_kemungkinan'] ?? 0) * ($firstItem['residual_konsekuensi'] ?? 0)),
+                'residual_kemungkinan' => $firstItem['residual_kemungkinan'] ?? 1,
+                'residual_konsekuensi' => $firstItem['residual_konsekuensi'] ?? 1,
+                'residual_score' => $firstItem['residual_score'] ?? (($firstItem['residual_kemungkinan'] ?? 1) * ($firstItem['residual_konsekuensi'] ?? 1)),
 
-                // Reset Status
-                'status' => 'pending_level1',
-                'current_level' => 1
+                // Determine Status based on Action
+                'status' => $request->input('action') === 'draft' ? 'draft' : 'pending_level1',
+                'current_level' => $request->input('action') === 'draft' ? 0 : 1
             ]);
 
             // 2. SYNC DETAILS
@@ -698,15 +719,18 @@ class DocumentController extends Controller
 
                 $controlsData = [
                     'hierarchy' => $item['kolom10_pengendalian'] ?? [],
-                    'existing' => $item['kolom11_existing'],
+                    'existing' => $item['kolom11_existing'] ?? '-',
                 ];
 
+                // Calculate Risk Score
+                $riskScore = $item['kolom14_score'] ?? (($item['kolom12_kemungkinan'] ?? 1) * ($item['kolom13_konsekuensi'] ?? 1));
+
                 $detailData = [
-                    'kategori' => $item['kategori'],
-                    'kolom2_proses' => $item['kolom2_proses'],
+                    'kategori' => $item['kategori'] ?? 'K3',
+                    'kolom2_proses' => $item['kolom2_proses'] ?? '-',
                     'kolom2_kegiatan' => $item['kolom2_kegiatan'],
-                    'kolom3_lokasi' => $item['kolom3_lokasi'],
-                    'kolom5_kondisi' => $item['kolom5_kondisi'],
+                    'kolom3_lokasi' => $item['kolom3_lokasi'] ?? '-',
+                    'kolom5_kondisi' => $item['kolom5_kondisi'] ?? 'Rutin',
                     'kolom6_bahaya' => $bahayaData,
                     // Conditional: Aspek Lingkungan (Lingkungan category only)
                     'kolom7_aspek_lingkungan' => [
@@ -725,11 +749,11 @@ class DocumentController extends Controller
                     // Keep old kolom9_risiko for backward compatibility (default to '-' if all new fields are empty)
                     'kolom9_risiko' => $item['kolom9_risiko_k3ko'] ?? $item['kolom9_dampak_lingkungan'] ?? $item['kolom9_celah_keamanan'] ?? '-',
                     'kolom10_pengendalian' => $controlsData,
-                    'kolom11_existing' => $item['kolom11_existing'],
-                    'kolom12_kemungkinan' => $item['kolom12_kemungkinan'],
-                    'kolom13_konsekuensi' => $item['kolom13_konsekuensi'],
-                    'kolom14_score' => $item['kolom14_score'] ?? ($item['kolom12_kemungkinan'] * $item['kolom13_konsekuensi']),
-                    'kolom14_level' => $item['kolom14_level'] ?? null,
+                    'kolom11_existing' => $item['kolom11_existing'] ?? '-',
+                    'kolom12_kemungkinan' => $item['kolom12_kemungkinan'] ?? 1,
+                    'kolom13_konsekuensi' => $item['kolom13_konsekuensi'] ?? 1,
+                    'kolom14_score' => $riskScore, // Calculated earlier (ensure it has defaults)
+                    'kolom14_level' => $item['kolom14_level'] ?? 'Rendah',
                     'kolom15_regulasi' => $item['kolom15_regulasi'] ?? null,
                     'kolom16_aspek' => $item['kolom16_aspek'] ?? null,
                     'kolom17_risiko' => $item['kolom17_risiko'] ?? null,
@@ -741,10 +765,10 @@ class DocumentController extends Controller
                     'kolom21_konsekuensi_lanjut' => $item['kolom21_konsekuensi_lanjut'] ?? null,
                     'kolom22_tingkat_risiko_lanjut' => $item['kolom22_tingkat_risiko_lanjut'] ?? null,
                     'kolom22_level_lanjut' => $item['kolom22_level_lanjut'] ?? null,
-                    'residual_kemungkinan' => $item['residual_kemungkinan'] ?? 0,
-                    'residual_konsekuensi' => $item['residual_konsekuensi'] ?? 0,
-                    'residual_score' => $item['residual_score'] ?? (isset($item['residual_kemungkinan']) && isset($item['residual_konsekuensi']) ? ($item['residual_kemungkinan'] * $item['residual_konsekuensi']) : 0),
-                    'residual_level' => $item['residual_level'] ?? '-',
+                    'residual_kemungkinan' => $item['residual_kemungkinan'] ?? 1,
+                    'residual_konsekuensi' => $item['residual_konsekuensi'] ?? 1,
+                    'residual_score' => $item['residual_score'] ?? (($item['residual_kemungkinan'] ?? 1) * ($item['residual_konsekuensi'] ?? 1)),
+                    'residual_level' => $item['residual_level'] ?? 'Rendah',
                 ];
 
                 if (isset($item['id']) && in_array($item['id'], $existingIds)) {

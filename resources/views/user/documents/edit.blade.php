@@ -923,49 +923,187 @@
 
 
                     <div class="action-bar" style="display:flex; justify-content:space-between; align-items:center; gap:20px;">
+                        <input type="hidden" name="action" id="action_input" value="submit">
+                        
                         <div class="action-buttons">
-                            <!-- Draft save logic if needed -->
+                            <!-- Draft Button -->
+                            <button type="button" class="btn btn-secondary" onclick="validateAndSubmit('draft')" 
+                                    style="border: 2px solid #cbd5e1; background: #f8fafc; color: #475569;">
+                                <i class="fas fa-save"></i> Simpan Draft
+                            </button>
                         </div>
                         
                         <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 15px;">
                             <div style="flex: 1; max-width: 500px; position: relative;">
-                                <textarea name="revision_comment" class="form-control" rows="1" placeholder="Tulis catatan perbaikan disini (Wajib)..." required style="resize: none; border-radius: 20px; padding: 10px 20px; border: 1px solid #cbd5e1; padding-right: 40px; min-height: 45px;"></textarea>
+                                <textarea name="revision_comment" class="form-control" rows="1" placeholder="Tulis catatan perbaikan disini..." style="resize: none; border-radius: 20px; padding: 10px 20px; border: 1px solid #cbd5e1; padding-right: 40px; min-height: 45px;"></textarea>
                                 <i class="fas fa-comment-dots" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
                             </div>
 
-                            <button type="submit" class="btn btn-primary" onclick="return validateRevisionComment()">
-                                <i class="fas fa-paper-plane"></i> Submit Revisi
+                            <button type="button" class="btn btn-primary" onclick="validateAndSubmit('submit')">
+                                <i class="fas fa-paper-plane"></i> {{ $document->status == 'draft' ? 'Kirim ke Atasan' : 'Submit Revisi' }}
                             </button>
                         </div>
                     </div>
                 </form>
 
     <script>
-        function validateRevisionComment() {
-            const comment = document.querySelector('textarea[name="revision_comment"]').value;
-            if (!comment.trim()) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Catatan Wajib Diisi',
-                    text: 'Mohon isi catatan perbaikan pada kolom di samping tombol submit.',
-                    confirmButtonColor: '#c41e3a'
-                });
-                // Highlight the textarea
-                const textarea = document.querySelector('textarea[name="revision_comment"]');
-                textarea.style.borderColor = '#c41e3a';
-                textarea.style.boxShadow = '0 0 0 3px rgba(196,30,58,0.1)';
-                textarea.focus();
-                
-                setTimeout(() => {
-                    textarea.style.borderColor = '#cbd5e1';
-                    textarea.style.boxShadow = 'none';
-                }, 3000);
-                
-                return false;
+        function validateAndSubmit(actionType) {
+            // Set Action Input
+            const actionInput = document.getElementById('action_input');
+            if (actionInput) actionInput.value = actionType;
+            const isDraft = actionType === 'draft';
+
+            // Revision Comment Logic (Specific to Edit)
+            // Use logical OR for revision status check
+            const isRevision = @json(($document->status_she == 'revision' || $document->status_security == 'revision'));
+            
+            // If submitting a Revision, allow strict comment check OR rely on backend?
+            // User requested: "Adding Revision History". 
+            // Usually comment is specific to the *Change*.
+            // If I am just editing a draft, maybe no comment needed?
+            // But if I am Submitting, and it WAS a revision, I should probably explain what I fixed.
+            
+            const commentField = document.querySelector('textarea[name="revision_comment"]');
+            if (!isDraft && actionType === 'submit' && isRevision) {
+                 if (commentField && !commentField.value.trim()) {
+                     Swal.fire({
+                        icon: 'warning',
+                        title: 'Catatan Wajib Diisi',
+                        text: 'Mohon isi catatan perbaikan pada kolom di samping tombol submit.',
+                        confirmButtonColor: '#c41e3a'
+                     });
+                     commentField.focus();
+                     commentField.style.borderColor = '#c41e3a';
+                     return false;
+                 }
             }
-            return validateForm();
+
+            try {
+                let isValid = true;
+                let errorMsg = '';
+
+                // Note: Title is not editable in Edit Form usually, so valid by default.
+
+                // 1. Check if at least one item exists
+                const items = document.querySelectorAll('.doc-item');
+                if (isValid && items.length === 0) {
+                    isValid = false;
+                    errorMsg = 'Minimal harus ada 1 kegiatan.';
+                }
+
+                // 2. Item Validation
+                if (isValid) {
+                    items.forEach((item, idx) => {
+                        const kegiatanInput = item.querySelector('.item-kegiatan-input');
+                        const kegiatan = kegiatanInput?.value || 'Item #' + (idx + 1);
+
+                        // Rule: Draft ONLY requires "Kegiatan". Submit requires "Kegiatan" too.
+                        if (isValid && (!kegiatanInput || !kegiatanInput.value.trim())) {
+                            isValid = false;
+                            errorMsg = `Kegiatan belum diisi pada Item #${idx + 1}`;
+                            const content = item.querySelector('.collapsible-content');
+                            if (content && content.style.display === 'none') {
+                                toggleCollapse(item.querySelector('.card-header'));
+                            }
+                            item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+
+                        // STRICT Checks (Only if NOT Draft)
+                        if (isValid && !isDraft) {
+                            const scoreInput = item.querySelector('.input-score');
+                            const resScoreInput = item.querySelector('.input-res-score');
+                            const s = scoreInput ? scoreInput.value : 0;
+                            const residualS = resScoreInput ? resScoreInput.value : 0;
+                            const kondisi = item.querySelector('.condition-select')?.value;
+
+                            // Validate Conditions
+                            if (!kondisi) {
+                                isValid = false;
+                                errorMsg = `Kondisi (Rutin/Non-Rutin/dll) belum dipilih untuk: ${kegiatan}`;
+                                const content = item.querySelector('.collapsible-content');
+                                if (content && content.style.display === 'none') {
+                                    toggleCollapse(item.querySelector('.card-header'));
+                                }
+                                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+
+                            // Validate Initial Risk
+                            if (isValid && (!s || s == 0)) {
+                                isValid = false;
+                                errorMsg = `Penilaian risiko awal belum lengkap untuk: ${kegiatan}`;
+                                const box = item.querySelector('.risk-result-box');
+                                if (box) {
+                                    box.style.border = '2px solid #ef4444';
+                                    setTimeout(() => box.style.border = '', 3000);
+                                }
+                            }
+
+                            // Validate Residual Risk - ONLY if BAGIAN 5 is visible
+                            const bagian5 = item.querySelector('.bagian-5-section');
+                            const isBagian5Visible = bagian5 && bagian5.style.display !== 'none';
+
+                            if (isValid && isBagian5Visible && (!residualS || residualS == 0)) {
+                                isValid = false;
+                                errorMsg = `Penilaian risiko residual belum lengkap untuk: ${kegiatan}`;
+                                const content = item.querySelector('.collapsible-content');
+                                if (content && content.style.display === 'none') {
+                                    toggleCollapse(item.querySelector('.card-header'));
+                                }
+
+                                const resBox = item.querySelector('.risk-result-box.res-box');
+                                if (resBox) {
+                                    resBox.style.border = '2px solid #ef4444';
+                                    setTimeout(() => resBox.style.border = '1px solid #15803d', 3000);
+                                }
+                                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }
+                    });
+                }
+
+                if (!isValid) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Validasi Gagal',
+                        text: errorMsg,
+                        confirmButtonColor: '#c41e3a'
+                    });
+                    return false;
+                }
+
+                // Show Loading
+                const btn = document.getElementById('btnSubmit');
+                const originalText = btn ? btn.innerHTML : 'Submit';
+                if(btn) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+                    btn.disabled = true;
+                }
+
+                // Submit
+                const form = document.getElementById('hiradcForm');
+                if (isDraft) {
+                    // Bypass HTML5 validation for draft
+                    form.noValidate = true;
+                    form.submit();
+                } else {
+                    form.noValidate = false;
+                    if (form.reportValidity()) {
+                        form.submit();
+                    } else {
+                        if(btn) {
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        }
+                    }
+                }
+
+            } catch (e) {
+                console.error(e);
+                Swal.fire('System Error', e.message, 'error');
+                const btn = document.getElementById('btnSubmit');
+                if (btn) btn.disabled = false;
+            }
         }
-    </script>
             </div>
         </main>
     </div>
@@ -1493,29 +1631,7 @@
             }
         }
 
-        function validateForm() {
-            let valid = true;
-            let missingItems = [];
-
-            // Simple validation
-            document.querySelectorAll('.doc-item').forEach(item => {
-                const initialScore = item.querySelector('.input-score').value;
-                if (!initialScore || initialScore == 0) {
-                    valid = false;
-                    missingItems.push("Item #" + item.querySelector('.item-number').innerText);
-                }
-            });
-
-            if (!valid) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Data Belum Lengkap',
-                    text: 'Mohon lengkapi penilaian risiko.',
-                });
-                return false;
-            }
-            return true;
-        }
+        // validateForm Removed - Logic moved to validateAndSubmit
 
         document.addEventListener('DOMContentLoaded', () => {
              const loadedItems = document.querySelectorAll('.item-loaded');

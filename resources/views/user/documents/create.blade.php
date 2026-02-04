@@ -883,6 +883,7 @@
                     <input type="hidden" id="auto_probis_value"
                         value="{{ isset($user->seksi->probis) ? $user->seksi->probis->nama_probis : (isset($user->unit->probis) ? $user->unit->probis->nama_probis : '') }}">
                     <input type="hidden" id="form_type" name="form_type" value="">
+                    <input type="hidden" id="judul_dokumen" name="judul_dokumen" value="">
 
                     <!-- Messages -->
                     @if(session('success'))
@@ -921,9 +922,18 @@
                             <a href="{{ route('documents.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> Batal
                             </a>
-                            <input type="hidden" name="submit_for_approval" value="1">
-                            <button type="button" id="btnSubmit" class="btn btn-primary" onclick="validateForm()">
-                                <i class="fas fa-paper-plane"></i> Kirim Form
+                            <input type="hidden" name="action" id="action_input" value="draft">
+
+                            <!-- Save Draft Button -->
+                            <button type="button" class="btn btn-secondary" onclick="validateAndSubmit('draft')"
+                                style="border: 2px solid #cbd5e1; background: #f8fafc; color: #475569;">
+                                <i class="fas fa-save"></i> Simpan Draft
+                            </button>
+
+                            <!-- Submit Button -->
+                            <button type="button" id="btnSubmit" class="btn btn-primary"
+                                onclick="validateAndSubmit('submit')">
+                                <i class="fas fa-paper-plane"></i> Kirim ke Atasan
                             </button>
                         </div>
                     </div>
@@ -2388,12 +2398,18 @@
             // Store in hidden input
             document.getElementById('form_type').value = type;
 
-            // Update form title
+            // Update form title & hidden input
             const formTitle = document.getElementById('formTitle');
+            const judulInput = document.getElementById('judul_dokumen');
+
             if (type === 'SHE') {
-                formTitle.textContent = 'Identifikasi dan Penetapan Mitigasi Risiko K3, KO, Aspek Lingkungan';
+                const title = 'Identifikasi dan Penetapan Mitigasi Risiko K3, KO, Aspek Lingkungan';
+                formTitle.textContent = title;
+                if (judulInput) judulInput.value = title;
             } else if (type === 'Security') {
-                formTitle.textContent = 'Identifikasi dan Penetapan Mitigasi Risiko Pengamanan';
+                const title = 'Identifikasi dan Penetapan Mitigasi Risiko Pengamanan';
+                formTitle.textContent = title;
+                if (judulInput) judulInput.value = title;
             }
 
             // Hide modal with animation
@@ -2504,9 +2520,12 @@
     <script>
         // ... (Existing functions: addItem, removeItem, etc - keeping logic) ...
 
-        function validateForm(event) {
-            // Only prevent default if event is passed (when called from submit listener)
-            if (event && event.type === 'submit') event.preventDefault();
+        // Form Validation and Submission
+        function validateAndSubmit(actionType) {
+            // Set Action Input
+            const actionInput = document.getElementById('action_input');
+            if (actionInput) actionInput.value = actionType;
+            const isDraft = actionType === 'draft';
 
             try {
                 let isValid = true;
@@ -2517,7 +2536,6 @@
                 if (!titleInput || !titleInput.value.trim()) {
                     isValid = false;
                     errorMsg = 'Judul Form wajib diisi.';
-                    if (titleInput) titleInput.focus();
                 }
 
                 // 1. Check if at least one item exists
@@ -2527,61 +2545,74 @@
                     errorMsg = 'Minimal harus ada 1 kegiatan.';
                 }
 
-                // 2. Check each item for Risk Score
+                // 2. Item Validation
                 if (isValid) {
                     items.forEach((item, idx) => {
-                        const s = item.querySelector('.input-score').value;
-                        const residualS = item.querySelector('.input-res-score').value;
+                        const kegiatanInput = item.querySelector('.item-kegiatan-input');
+                        const kegiatan = kegiatanInput?.value || 'Item #' + (idx + 1);
 
-                        const kegiatan = item.querySelector('.item-kegiatan-input')?.value || 'Item #' + (idx + 1);
-                        const kondisi = item.querySelector('.condition-select')?.value;
-
-                        // Validate Conditions
-                        if (!kondisi) {
+                        // Rule: Draft ONLY requires "Kegiatan". Submit requires "Kegiatan" too.
+                        if (isValid && (!kegiatanInput || !kegiatanInput.value.trim())) {
                             isValid = false;
-                            errorMsg = `Kondisi (Rutin/Non-Rutin/dll) belum dipilih untuk: ${kegiatan}`;
+                            errorMsg = `Kegiatan belum diisi pada Item #${idx + 1}`;
                             const content = item.querySelector('.collapsible-content');
-                            if (content.style.display === 'none') {
+                            if (content && content.style.display === 'none') {
                                 toggleCollapse(item.querySelector('.card-header'));
                             }
                             item.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
 
-                        // Validate Initial Risk
-                        if (isValid && (!s || s == 0)) {
-                            isValid = false;
-                            errorMsg = `Penilaian risiko awal belum lengkap untuk: ${kegiatan}`;
-                            const box = item.querySelector('.risk-result-box');
-                            if (box) {
-                                box.style.border = '2px solid #ef4444';
-                                setTimeout(() => box.style.border = '', 3000);
-                            }
-                        }
+                        // STRICT Checks (Only if NOT Draft)
+                        if (isValid && !isDraft) {
+                            const scoreInput = item.querySelector('.input-score');
+                            const resScoreInput = item.querySelector('.input-res-score');
+                            const s = scoreInput ? scoreInput.value : 0;
+                            const residualS = resScoreInput ? resScoreInput.value : 0;
+                            const kondisi = item.querySelector('.condition-select')?.value;
 
-                        // Validate Residual Risk - ONLY if BAGIAN 5 is visible (risk >= 8)
-                        const bagian5 = item.querySelector('.bagian-5-section');
-                        const isBagian5Visible = bagian5 && bagian5.style.display !== 'none';
-
-                        if (isValid && isBagian5Visible && (!residualS || residualS == 0)) {
-                            isValid = false;
-                            errorMsg = `Penilaian risiko residual belum lengkap untuk: ${kegiatan}`;
-                            const content = item.querySelector('.collapsible-content');
-                            if (content.style.display === 'none') {
-                                toggleCollapse(item.querySelector('.card-header'));
+                            // Validate Conditions
+                            if (!kondisi) {
+                                isValid = false;
+                                errorMsg = `Kondisi (Rutin/Non-Rutin/dll) belum dipilih untuk: ${kegiatan}`;
+                                const content = item.querySelector('.collapsible-content');
+                                if (content && content.style.display === 'none') {
+                                    toggleCollapse(item.querySelector('.card-header'));
+                                }
+                                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }
 
-                            const resBox = item.querySelector('.risk-result-box.res-box');
-                            if (resBox) {
-                                resBox.style.border = '2px solid #ef4444';
-                                setTimeout(() => resBox.style.border = '1px solid #15803d', 3000);
+                            // Validate Initial Risk
+                            if (isValid && (!s || s == 0)) {
+                                isValid = false;
+                                errorMsg = `Penilaian risiko awal belum lengkap untuk: ${kegiatan}`;
+                                const box = item.querySelector('.risk-result-box');
+                                if (box) {
+                                    box.style.border = '2px solid #ef4444';
+                                    setTimeout(() => box.style.border = '', 3000);
+                                }
                             }
-                            item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                            // Validate Residual Risk - ONLY if BAGIAN 5 is visible (risk >= 8)
+                            const bagian5 = item.querySelector('.bagian-5-section');
+                            const isBagian5Visible = bagian5 && bagian5.style.display !== 'none';
+
+                            if (isValid && isBagian5Visible && (!residualS || residualS == 0)) {
+                                isValid = false;
+                                errorMsg = `Penilaian risiko residual belum lengkap untuk: ${kegiatan}`;
+                                const content = item.querySelector('.collapsible-content');
+                                if (content && content.style.display === 'none') {
+                                    toggleCollapse(item.querySelector('.card-header'));
+                                }
+                                const resBox = item.querySelector('.risk-result-box.res-box');
+                                if (resBox) {
+                                    resBox.style.border = '2px solid #ef4444';
+                                    setTimeout(() => resBox.style.border = '1px solid #15803d', 3000);
+                                }
+                                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
                         }
                     });
                 }
-
-                // 3. Check Required Fields (Native HTML required might miss hidden tabs)
-                // Adding specific checks if needed, but 'required' attribute handles most.
 
                 if (!isValid) {
                     Swal.fire({
@@ -2595,19 +2626,28 @@
 
                 // Show Loading
                 const btn = document.getElementById('btnSubmit');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
-                btn.disabled = true;
+                const originalText = btn ? btn.innerHTML : 'Submit';
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+                    btn.disabled = true;
+                }
 
-                // Submit manually 
+                // Submit
                 const form = document.getElementById('hiradcForm');
-                if (form.reportValidity()) {
+                if (isDraft) {
+                    // Bypass HTML5 validation for draft
+                    form.noValidate = true;
                     form.submit();
                 } else {
-                    // Even if custom validation passes, standard HTML validation might fail (e.g. required texts)
-                    // This catches that silently.
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
+                    form.noValidate = false;
+                    if (form.reportValidity()) {
+                        form.submit();
+                    } else {
+                        if (btn) {
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        }
+                    }
                 }
 
             } catch (e) {
@@ -2856,22 +2896,22 @@
             const isPMK = isPmkSelected(btn);
 
             // Get Users passed from controller
-            const band3Users = @json($band3Users ?? []); // Roles 4-5 for Koordinator
-            const band4Users = @json($band4Users ?? []); // Role 6 for Pelaksana
+            const pukKoordinatorUsers = @json($pukKoordinatorUsers ?? []); // Koordinator = Role 3
+            const pukPelaksanaUsers = @json($pukPelaksanaUsers ?? []); // Pelaksana = Role 4
             const pmkPicUsers = @json($pmkPicUsers ?? []); // Managers (Role 3)
 
-            // Generate Options for Band 3 (Koordinator)
-            let band3Options = '<option value="" disabled selected>-- Pilih Koordinator --</option>';
-            band3Users.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
-            band3Users.forEach(u => {
-                band3Options += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+            // Generate Options for PUK Koordinator (Role 4)
+            let pukKoordinatorOptions = '<option value="" disabled selected>-- Pilih Koordinator --</option>';
+            pukKoordinatorUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+            pukKoordinatorUsers.forEach(u => {
+                pukKoordinatorOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
             });
 
-            // Generate Options for Band 4 (Pelaksana)
-            let band4Options = '<option value="" disabled selected>-- Pilih Pelaksana --</option>';
-            band4Users.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
-            band4Users.forEach(u => {
-                band4Options += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+            // Generate Options for PUK Pelaksana (Role 3)
+            let pukPelaksanaOptions = '<option value="" disabled selected>-- Pilih Pelaksana --</option>';
+            pukPelaksanaUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+            pukPelaksanaUsers.forEach(u => {
+                pukPelaksanaOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
             });
 
             // Generate Options for PMK PIC (Manager)
@@ -2926,7 +2966,7 @@
                     </td>
                 `;
             } else {
-                // PUK Table: No | Uraian | Koordinator (Band 3) | Pelaksana (Band 4) | Target (12)
+                // PUK Table: No | Uraian | Koordinator (Role 4) | Pelaksana (Role 3) | Target (12)
                 row.innerHTML = `
                     <td style="text-align: center; border: 1px solid #e2e8f0; vertical-align: middle; background-color: #f8fafc; font-weight: 500; color: #64748b; padding: 4px;">${rowCount}</td>
                     
@@ -2939,14 +2979,14 @@
                     <td style="border: 1px solid #e2e8f0; padding: 0;">
                         <select class="form-select" name="items[${itemIndex}][program_kerja][${rowCount - 1}][koordinator]" required 
                                 style="border: none; width: 100%; min-width: 140px; padding: 6px; border-radius: 0; box-shadow: none; cursor: pointer; font-size: 12px;">
-                            ${band3Options}
+                            ${pukKoordinatorOptions}
                         </select>
                     </td>
                     
                     <td style="border: 1px solid #e2e8f0; padding: 0;">
                         <select class="form-select" name="items[${itemIndex}][program_kerja][${rowCount - 1}][pelaksana]" required 
                                 style="border: none; width: 100%; min-width: 140px; padding: 6px; border-radius: 0; box-shadow: none; cursor: pointer; font-size: 12px;">
-                            ${band4Options}
+                            ${pukPelaksanaOptions}
                         </select>
                     </td>
 
