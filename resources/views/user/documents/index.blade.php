@@ -410,7 +410,7 @@
         /* Stats Cards */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 24px;
             margin-bottom: 30px;
         }
@@ -437,7 +437,11 @@
             border-color: var(--primary);
             background: var(--primary-light);
             box-shadow: var(--shadow-md);
+            color: #fff;
         }
+        
+        .stat-card.active .stat-label { color: rgba(255,255,255,0.9); }
+        .stat-card.active .stat-value { color: #fff; }
 
         .stat-icon {
             width: 56px;
@@ -618,7 +622,8 @@
             background: #eff6ff;
             color: #1e40af;
         }
-
+        
+        /* Shared class for K3/KO/Lingkungan if needed, or reuse cat-k3 */
         .cat-lingkungan {
             background: #ecfdf5;
             color: #15803d;
@@ -869,7 +874,7 @@
                 </div>
             </div>
 
-            <!-- Filter Section -->
+            <!-- Filter Section (Restored) -->
             <div class="filter-section">
                 <form action="{{ route('documents.index') }}" method="GET"
                     style="display:flex; gap:20px; align-items:flex-end; flex-wrap:wrap;">
@@ -883,6 +888,16 @@
                                     {{ \Carbon\Carbon::create()->month($m)->locale('id')->isoFormat('MMMM') }}
                                 </option>
                             @endforeach
+                        </select>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <label
+                            style="font-size:11px; font-weight:700; color:#64748b; letter-spacing: 0.05em;">KATEGORI</label>
+                        <select name="category" class="filter-select" onchange="this.form.submit()">
+                            <option value="">Semua Kategori</option>
+                            <option value="SHE" {{ request('category') == 'SHE' ? 'selected' : '' }}>K3 / KO / Lingkungan</option>
+                            <option value="Security" {{ request('category') == 'Security' ? 'selected' : '' }}>Pengamanan</option>
                         </select>
                     </div>
 
@@ -954,18 +969,15 @@
                     </div>
                 </div>
 
-                <!-- Toolbar -->
-                <div class="toolbar">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="Cari judul form..." onkeyup="filterContent()">
-                    </div>
-                    <div class="view-toggles">
-                        <button class="view-btn active" id="btnGrid" onclick="switchView('grid')"><i
-                                class="fas fa-th-large"></i> Grid</button>
-                        <button class="view-btn" id="btnList" onclick="switchView('list')"><i class="fas fa-list"></i>
-                            List</button>
-                    </div>
+                <!-- Toolbar (Category Filter Only) -->
+                <div class="toolbar" style="justify-content: flex-start; gap: 16px;">
+                    <div style="font-size: 14px; font-weight: 600; color: var(--text-main);">Filter Kategori:</div>
+                    <select id="categoryFilter" onchange="filterContent()" 
+                        style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; min-width: 250px; cursor: pointer; background: white; color: var(--text-main); font-weight: 500;">
+                        <option value="all">Semua Kategori</option>
+                        <option value="SHE">K3 / KO / Lingkungan</option>
+                        <option value="Security">Keamanan</option>
+                    </select>
                 </div>
 
                 <!-- Grid View -->
@@ -995,195 +1007,179 @@
                                     $statusKey = 'approved';
                                 }
 
-                                // Override Labels based on Context
+                                // Context Labels
                                 $ctxLabel = '';
-                                $ctxClass = ''; // Use for styling overrides?
                                 if ($ctx == 'she_rev') {
                                     $ctxLabel = 'Revisi SHE';
                                 } elseif ($ctx == 'sec_rev') {
                                     $ctxLabel = 'Revisi Security';
                                 }
+
+                                // Category Display Logic & Grouping
+                                $catDisplay = $doc->kategori;
+                                $catClass = 'cat-keamanan'; // default
+                                $catGroup = 'Security'; // default group
+
+                                if (in_array($doc->kategori, ['K3', 'KO', 'Lingkungan'])) {
+                                    $catDisplay = 'K3 / KO / Lingkungan';
+                                    $catClass = 'cat-k3'; 
+                                    $catGroup = 'SHE';
+                                } elseif ($doc->kategori == 'Keamanan') {
+                                    $catDisplay = 'Pengamanan';
+                                    $catClass = 'cat-keamanan';
+                                    $catGroup = 'Security';
+                                }
+
+                                // Program Checks (Robust)
+                                $hasPuk = $doc->details->contains(function($d) {
+                                    return strtoupper(trim($d->kolom19_program_type ?? '')) === 'PUK';
+                                });
+                                $hasPmk = $doc->details->contains(function($d) {
+                                    return strtoupper(trim($d->kolom19_program_type ?? '')) === 'PMK';
+                                });
                             @endphp
 
                             <div class="doc-card animate-item searchable-item"
-                                data-title="{{ strtolower($doc->kolom2_kegiatan) }}" data-status="{{ $statusKey }}">
-
-                                <div class="card-top">
+                                data-title="{{ strtolower($doc->kolom2_kegiatan) }}" 
+                                data-status="{{ $statusKey }}"
+                                data-category-group="{{ $catGroup }}"
+                                style="border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.2s;">
+                                
+                                <!-- Card Header: Badges -->
+                                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:12px;">
                                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                                        <span
-                                            style="font-size:11px; padding:6px 10px; border-radius:8px; background:#f8fafc; color:#64748b; font-weight:600; display:flex; align-items:center; gap:4px; border:1px solid #e2e8f0;">
-                                            <i class="fas fa-building" style="font-size:10px;"></i>
-                                            {{ Str::limit($doc->unit->nama_unit ?? '-', 15) }}
+                                        <!-- Category Badge -->
+                                        <span class="cat-badge {{ $catClass }}" style="white-space:nowrap;">
+                                            {{ $catDisplay }}
                                         </span>
+                                        
+                                        <!-- Program Badge (Right Aligned) -->
+                                        <div style="display:flex; gap:4px;">
+                                            @if($hasPuk)
+                                                <span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700; background:#f0f9ff; color:#0369a1; border:1px solid #bae6fd;" title="Program Untuk Kesesuaian">
+                                                    PUK
+                                                </span>
+                                            @endif
+                                            @if($hasPmk)
+                                                <span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700; background:#fff1f2; color:#be123c; border:1px solid #fda4af;" title="Program Manajemen Risiko">
+                                                    PMK
+                                                </span>
+                                            @endif
+                                            @if(!$hasPuk && !$hasPmk)
+                                                <span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:600; color:#94a3b8; background:#f8fafc; border:1px solid #e2e8f0;">
+                                                    Non-Program
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="doc-title" title="{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}">
+                                <!-- Title -->
+                                <div class="doc-title" title="{{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}" style="min-height:44px; margin-bottom:16px;">
                                     {{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan ?? 'Tanpa Judul' }}
                                 </div>
 
-                                <div class="doc-meta">
-                                    <div style="display:flex; align-items:center; gap:8px;">
-                                        <i class="far fa-calendar-alt"></i> {{ $doc->created_at->format('d M Y') }}
-                                        <span style="color:#e2e8f0;">|</span>
-                                        <i class="far fa-clock"></i> {{ $doc->created_at->format('H:i') }}
+                                <!-- Info Grid -->
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; font-size:12px; color:#64748b; margin-bottom:16px; background:#f8fafc; padding:12px; border-radius:8px;">
+                                    <div>
+                                        <div style="font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase;">Unit</div>
+                                        <div style="font-weight:600; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                            {{ Str::limit($doc->unit->nama_unit ?? '-', 18) }}
+                                        </div>
                                     </div>
-                                    <div style="display:flex; align-items:center; gap:8px;">
-                                        <i class="far fa-user-circle"></i> {{ $doc->user->nama_user ?? 'Unknown' }}
+                                    <div>
+                                        <div style="font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase;">Tanggal</div>
+                                        <div style="font-weight:600; color:#334155;">{{ $doc->created_at->format('d M Y') }}</div>
                                     </div>
                                 </div>
 
-                                <div class="status-container">
+                                <div class="status-container" style="border-top:none; padding-top:0;">
                                     @php
                                         $step = 1;
                                         $waitingFor = 'Anda';
-                                        $position = 'Submitter';
-
+                                        $txtColor = '#64748b';
+                                        $bgColor = '#e2e8f0';
+                                        
                                         if ($statusKey == 'pending') {
+                                            $txtColor = '#d97706';
+                                            $bgColor = '#f59e0b';
                                             if ($doc->current_level == 1) {
-                                                $position = 'Kepala Unit';
-                                                $waitingFor = 'Ka. Unit ' . ($doc->unit->nama_unit ?? '');
                                                 $step = 2;
-                                            } elseif ($doc->current_level == 2) {
-                                                $position = 'Unit Pengelola';
+                                                $waitingFor = 'Kepala Unit';
+                                            }
+                                            elseif ($doc->current_level == 2) {
+                                                $step = 2; 
+                                                // Determine specific unit pengelola
                                                 $waitingFor = ($doc->kategori == 'Keamanan') ? 'Unit Keamanan' : 'Unit SHE';
-                                                $step = 2;
-                                            } elseif ($doc->current_level == 3) {
-                                                $position = 'Kepala Dept';
-                                                $waitingFor = 'Ka. Dept ' . ($doc->user->departemen->nama_dept ?? '');
+                                            }
+                                            elseif ($doc->current_level == 3) {
                                                 $step = 3;
+                                                $waitingFor = 'Kepala Departemen';
                                             }
                                         } elseif ($statusKey == 'revision') {
-                                            $position = 'Draft';
-                                            $waitingFor = 'Anda (Revisi)';
-                                            $step = 1;
+                                            $step = 1; 
+                                            $waitingFor = 'Submitter (Revisi)';
+                                            $txtColor = '#dc2626';
+                                            $bgColor = '#ef4444';
                                         } elseif ($statusKey == 'approved') {
-                                            $position = 'Final';
-                                            $waitingFor = '-';
                                             $step = 4;
+                                            $waitingFor = '-';
+                                            $txtColor = '#059669';
+                                            $bgColor = '#10b981';
                                         }
                                     @endphp
 
-                                    <!-- Stepper -->
-                                    <div
-                                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 0 10px;">
-                                        @foreach(['Draft', 'Unit', 'Dept', 'Final'] as $index => $label)
-                                            @php $i = $index + 1;
-                                                $isActive = ($i <= $step);
-                                            $isCurrent = ($i == $step); @endphp
-                                            <div
-                                                style="display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; width: 25%;">
-                                                @if($i > 1)
-                                                    <div
-                                                        style="position: absolute; left: -50%; top: 5px; width: 100%; height: 2px; background: {{ $isActive ? '#c41e3a' : '#eaeaea' }}; z-index: 0;">
-                                                    </div>
-                                                @endif
-                                                <div
-                                                    style="width:{{ $isCurrent ? '12px' : '10px' }}; height:{{ $isCurrent ? '12px' : '10px' }}; border-radius: 50%; background: {{ $isActive ? '#c41e3a' : '#e5e7eb' }}; z-index: 1; border: 2px solid white; box-shadow: 0 0 0 1px {{ $isActive ? '#c41e3a' : '#e5e7eb' }};">
-                                                </div>
-                                                <span
-                                                    style="font-size: 10px; font-weight: {{ $isCurrent ? '700' : '500' }}; color: {{ $isActive ? '#0f172a' : '#9ca3af' }};">{{ $label }}</span>
-                                            </div>
-                                        @endforeach
+                                    <!-- Simple Progress Bar -->
+                                    <div style="height:4px; background:#e2e8f0; border-radius:2px; margin-bottom:8px; overflow:hidden;">
+                                        <div style="height:100%; width:{{ $step * 25 }}%; background:{{ $bgColor }}; border-radius:2px;"></div>
+                                    </div>
+                                    
+                                    <!-- Detailed Status Info -->
+                                    <div style="margin-bottom:12px; font-size:11px; display:flex; justify-content:space-between;">
+                                        <span style="color:#64748b; font-weight:600;">Tahap:</span>
+                                        <span style="color:{{ $txtColor }}; font-weight:700;">
+                                            @if($statusKey == 'approved')
+                                                Published
+                                            @elseif($statusKey == 'revision')
+                                                Dikembalikan
+                                            @else
+                                                {{ $waitingFor }}
+                                            @endif
+                                        </span>
                                     </div>
 
-                                    <!-- Action -->
-                                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                                        <div style="font-size: 11px; line-height: 1.4;">
-                                            @if($statusKey == 'approved')
-                                                <div style="color:#059669; font-weight:700;"><i class="fas fa-check-circle"></i>
-                                                    Selesai</div>
+                                    <!-- Action Footer -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                                        <div style="font-size: 11px; font-weight:600;">
+                                            <!-- Status Label Main -->
+                                             @if($statusKey == 'approved')
+                                                <span style="color:#059669;"><i class="fas fa-check-circle"></i> Selesai</span>
                                             @elseif($statusKey == 'revision')
-                                                <div style="color:#dc2626; font-weight:700;">
-                                                    <i class="fas fa-exclamation-circle"></i> {{ $ctxLabel ?: 'Perlu Revisi' }}
-                                                </div>
+                                                <span style="color:#dc2626;"><i class="fas fa-exclamation-circle"></i> Perlu Revisi</span>
+                                            @elseif($statusKey == 'pending')
+                                                <span style="color:#d97706;"><i class="fas fa-spinner fa-spin"></i> Proses</span>
                                             @else
-                                                <div style="color:#d97706; font-weight:700;"><i class="fas fa-spinner fa-spin"></i>
-                                                    Proses</div>
+                                                <span style="color:#64748b;">Draft</span>
                                             @endif
                                         </div>
 
-                                    @php
-                                        // Determine Filter Param for URL
-                                        $filterParam = [];
-                                        if ($statusKey == 'revision') {
-                                            if ($ctx == 'she_rev') $filterParam['filter'] = 'she';
-                                            if ($ctx == 'sec_rev') $filterParam['filter'] = 'security';
-                                        }
-                                    @endphp
-                                    <a href="{{ route('documents.show', array_merge(['document' => $doc->id], $filterParam)) }}" class="view-link">
-                                        {{ $statusKey == 'revision' ? 'Perbaiki' : 'Detail' }} <i
-                                            class="fas fa-arrow-right"></i>
-                                    </a>
+                                        @php
+                                            $filterParam = [];
+                                            if ($statusKey == 'revision') {
+                                                if ($ctx == 'she_rev') $filterParam['filter'] = 'she';
+                                                if ($ctx == 'sec_rev') $filterParam['filter'] = 'security';
+                                            }
+                                        @endphp
+                                        <a href="{{ route('documents.show', array_merge(['document' => $doc->id], $filterParam)) }}" 
+                                           class="view-link"
+                                           style="border-radius:8px; padding:6px 14px; background:white; border:1px solid #e2e8f0; color:#0f172a; box-shadow:0 1px 2px rgba(0,0,0,0.05); text-decoration:none;">
+                                            {{ $statusKey == 'revision' ? 'Perbaiki' : 'Detail' }} <i class="fas fa-arrow-right" style="font-size:10px;"></i>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         @endforeach
                     @endforeach
-                </div>
-
-                <!-- List View (Table) -->
-                <div class="doc-table-container" id="listView">
-                    <table class="doc-table">
-                        <thead>
-                            <tr>
-                                <th>Kategori</th>
-                                <th>Judul Form</th>
-                                <th>Tanggal</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($documents as $doc)
-                                @php
-                                    $statusKey = 'draft';
-                                    if (in_array($doc->status, ['pending_level1', 'pending_level2', 'pending_level3'])) {
-                                        $statusKey = 'pending';
-                                    } elseif ($doc->status == 'revision') {
-                                        $statusKey = 'revision';
-                                    } elseif ($doc->status == 'approved') {
-                                        $statusKey = 'approved';
-                                    }
-                                @endphp
-                                <tr class="searchable-item" data-title="{{ strtolower($doc->kolom2_kegiatan) }}"
-                                    data-status="{{ $statusKey }}">
-                                    <td>
-                                        <span
-                                            class="cat-badge {{ $doc->kategori == 'K3' ? 'cat-k3' : ($doc->kategori == 'Lingkungan' ? 'cat-lingkungan' : 'cat-keamanan') }}">
-                                            {{ $doc->kategori }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: 600; color: #333;">
-                                            {{ Str::limit($doc->judul_dokumen ?? $doc->kolom2_kegiatan, 50) }}</div>
-                                    </td>
-                                    <td>{{ $doc->created_at->format('d M Y') }}</td>
-                                    <td>
-                                        @php
-                                            $stClass = 'st-draft';
-                                            $stText = 'Draft';
-                                            if ($statusKey == 'pending') {
-                                                $stClass = 'st-pending';
-                                                $stText = 'Menunggu';
-                                            } elseif ($statusKey == 'revision') {
-                                                $stClass = 'st-revision';
-                                                $stText = 'Revisi';
-                                            } elseif ($statusKey == 'approved') {
-                                                $stClass = 'st-approved';
-                                                $stText = 'Disetujui';
-                                            }
-                                        @endphp
-                                        <span class="status-pill {{ $stClass }}">{{ $stText }}</span>
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('documents.show', $doc->id) }}" class="view-link"
-                                            style="border:none; padding:4px 0; background:transparent;">Detail</a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
                 </div>
 
             </div>
@@ -1193,25 +1189,6 @@
     <script>
         let currentStatusFilter = 'all';
 
-        function switchView(view) {
-            const grid = document.getElementById('gridView');
-            const list = document.getElementById('listView');
-            const btnGrid = document.getElementById('btnGrid');
-            const btnList = document.getElementById('btnList');
-
-            if (view === 'grid') {
-                grid.style.display = 'grid';
-                list.style.display = 'none';
-                btnGrid.classList.add('active');
-                btnList.classList.remove('active');
-            } else {
-                grid.style.display = 'none';
-                list.style.display = 'block';
-                btnGrid.classList.remove('active');
-                btnList.classList.add('active');
-            }
-        }
-
         function filterByStatus(status, card) {
             currentStatusFilter = status;
             document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
@@ -1220,17 +1197,20 @@
         }
 
         function filterContent() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
+            // Get Category Value
+            const categoryFilter = document.getElementById('categoryFilter').value;
             const items = document.querySelectorAll('.searchable-item');
 
             items.forEach(item => {
-                const title = item.getAttribute('data-title');
-                const status = item.getAttribute('data-status');
-                const matchesSearch = title.includes(input);
-                const matchesStatus = (currentStatusFilter === 'all') || (status === currentStatusFilter);
+                const itemStatus = item.getAttribute('data-status');
+                const itemCategory = item.getAttribute('data-category-group');
+                
+                // Logic: Match Status AND Match Category
+                const matchesStatus = (currentStatusFilter === 'all') || (itemStatus === currentStatusFilter);
+                const matchesCategory = (categoryFilter === 'all') || (itemCategory === categoryFilter);
 
-                if (matchesSearch && matchesStatus) {
-                    item.style.display = item.classList.contains('doc-card') ? 'flex' : 'table-row';
+                if (matchesStatus && matchesCategory) {
+                    item.style.display = 'flex';
                 } else {
                     item.style.display = 'none';
                 }

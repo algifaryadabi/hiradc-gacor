@@ -121,6 +121,14 @@ class Document extends Model
         return $this->hasOneThrough(PmkProgram::class, DocumentDetail::class, 'document_id', 'document_detail_id');
     }
 
+    /**
+     * Check if document has PMK data
+     */
+    public function hasPmk(): bool
+    {
+        return $this->pmkProgram()->exists();
+    }
+
     public function level2Reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'level2_reviewer_id', 'id_user');

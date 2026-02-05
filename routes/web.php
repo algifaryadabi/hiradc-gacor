@@ -365,6 +365,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/kepala-departemen/documents/{document}/revise', [DocumentController::class, 'revise'])->name('kepala_departemen.revise');
     Route::post('/kepala-departemen/documents/{document}/publish', [DocumentController::class, 'publish'])->name('kepala_departemen.publish');
 
+
     // ==================== ADMIN ROUTES ====================
     Route::get('/admin/dashboard', function () {
         $user = Auth::user();

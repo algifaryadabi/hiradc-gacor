@@ -238,7 +238,16 @@ class DocumentController extends Controller
 
         // SCOPE: Unit-based (Shared Drafts/Docs)
         $query = Document::where('id_unit', $user->id_unit)
-            ->with(['unit', 'approvals.approver']);
+            ->with(['unit', 'approvals.approver', 'details']); // Eager load details for PUK/PMK check
+
+        // Filter: Category (SHE vs Security)
+        if ($request->filled('category')) {
+            if ($request->category === 'SHE') {
+                $query->whereIn('kategori', ['K3', 'KO', 'Lingkungan']);
+            } elseif ($request->category === 'Security') {
+                $query->where('kategori', 'Keamanan');
+            }
+        }
 
         // Filter: Month
         if ($request->filled('month')) {
@@ -530,6 +539,7 @@ class DocumentController extends Controller
                     'kolom17_risiko' => $item['kolom17_risiko'] ?? null,
                     'kolom17_peluang' => $item['kolom17_peluang'] ?? null,
                     'kolom18_toleransi' => $item['kolom18_toleransi'] ?? 'Ya',
+                    'kolom19_program_type' => $item['kolom19_program_type'] ?? null, // Added to ensure saving
                     // Columns 19-22: Follow-up risk assessment (only if tolerance = Tidak)
                     'kolom19_pengendalian_lanjut' => $item['kolom19_rencana'] ?? null, // Use rencana content
                     'kolom20_kemungkinan_lanjut' => $item['kolom20_kemungkinan_lanjut'] ?? null,
@@ -2667,7 +2677,7 @@ class DocumentController extends Controller
             if ($user->isKepalaUnit() && $user->id_unit == $document->id_unit) {
                 // Check if already approved by this user
                 $hasApproved = $document->approvals()
-                    ->where('approver_id', $user->id)
+                    ->where('approver_id', $user->id_user)
                     ->where('level', 1)
                     ->where('action', 'approved')
                     ->exists();
@@ -2679,7 +2689,7 @@ class DocumentController extends Controller
                 // Check if already approved/verified by this user at level 2
                 // Logic: check approvals table for level 2 actions by this user
                 $hasApproved = $document->approvals()
-                    ->where('approver_id', $user->id)
+                    ->where('approver_id', $user->id_user)
                     ->where('level', 2)
                     ->whereIn('action', ['approved', 'verified', 'reviewed'])
                     ->exists();
@@ -2701,7 +2711,7 @@ class DocumentController extends Controller
             // Log Changes
             \App\Models\PukProgramEditLog::create([
                 'puk_program_id' => $puk->id,
-                'edited_by' => $user->id,
+                'edited_by' => $user->id_user,
                 'old_data' => $puk->program_kerja,
                 'new_data' => $validated['program_kerja'],
                 'edit_type' => 'update'
@@ -2733,7 +2743,7 @@ class DocumentController extends Controller
             // 1. Kepala Unit Kerja
             if ($user->isKepalaUnit() && $user->id_unit == $document->id_unit) {
                 $hasApproved = $document->approvals()
-                    ->where('approver_id', $user->id)
+                    ->where('approver_id', $user->id_user)
                     ->where('level', 1)
                     ->where('action', 'approved')
                     ->exists();
@@ -2743,7 +2753,7 @@ class DocumentController extends Controller
             // 2. Unit Pengelola
             if (in_array($user->id_unit, [55, 56])) {
                 $hasApproved = $document->approvals()
-                    ->where('approver_id', $user->id)
+                    ->where('approver_id', $user->id_user)
                     ->where('level', 2)
                     ->whereIn('action', ['approved', 'verified', 'reviewed'])
                     ->exists();
@@ -2761,14 +2771,8 @@ class DocumentController extends Controller
                 'program_kerja' => 'required|array',
             ]);
 
-            // Log Changes
-            \App\Models\PmkProgramEditLog::create([
-                'pmk_program_id' => $pmk->id,
-                'edited_by' => $user->id,
-                'old_data' => $pmk->program_kerja,
-                'new_data' => $validated['program_kerja'],
-                'edit_type' => 'update'
-            ]);
+            // Log Changes REMOVED (Model Deleted)
+            // \App\Models\PmkProgramEditLog::create([...]); 
 
             $pmk->program_kerja = $validated['program_kerja'];
             $pmk->save();

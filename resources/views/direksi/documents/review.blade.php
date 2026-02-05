@@ -10,7 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review Dokumen - Kepala Departemen</title>
+    <title>Review Dokumen - Direksi</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
@@ -971,7 +971,7 @@
                                 <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal
                                 </th>
                                 <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
-                                <th colspan="5">BAGIAN 5: Mitigasi Lanjutan</th>
+                                <th colspan="8">BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa</th>
                             </tr>
                             <!-- Header Row 2: Column Details -->
                             <tr>
@@ -1012,6 +1012,9 @@
                                 <th style="width: 50px;">L<br><small>(Kol 20)</small></th>
                                 <th style="width: 50px;">S<br><small>(Kol 21)</small></th>
                                 <th style="width: 80px;">Level<br><small>(Kol 22)</small></th>
+                                <th style="width: 50px;">Residual L</th>
+                                <th style="width: 50px;">Residual S</th>
+                                <th style="width: 80px;">Residual Level</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1261,7 +1264,29 @@
                                         </td>
                                     @endif
 
-                                    <td colspan="24" style="text-align:center; padding:20px;">Tidak ada data detail.</td>
+                                    <td style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->residual_kemungkinan }}
+                                        </div>
+                                    </td>
+                                    <td style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->residual_konsekuensi }}
+                                        </div>
+                                    </td>
+                                    <td style="vertical-align:middle;">
+                                        <div class="risk-score-box">
+                                            <div class="risk-val">{{ $item->residual_score ?? '-' }}</div>
+                                            @if($item->residual_score)
+                                                <div
+                                                    class="risk-badge {{ $item->residual_score >= 15 ? 'bg-high' : ($item->residual_score >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                    {{ $item->residual_score >= 15 ? 'HIGH' : ($item->residual_score >= 8 ? 'MED' : 'LOW') }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="27" style="text-align:center; padding:20px;">Tidak ada data detail.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -1569,89 +1594,26 @@
                     </div>
                 </div>
 
-                <!-- Sticky Action Bar -->
-                @php
-                    // Show action buttons if:
-                    // 1. Filter=SHE and status_she='approved' (SHE track ready)
-                    // 2. Filter=Security and status_security='approved' (Security track ready)
-                    // 3. Filter=ALL and status='pending_level3' (legacy/general)
-                    $showActions = false;
-                    if (isset($filter) && $filter == 'SHE' && $document->status_she == 'approved') {
-                        $showActions = true;
-                    } elseif (isset($filter) && $filter == 'Security' && $document->status_security == 'approved') {
-                        $showActions = true;
-                    } elseif ($document->status === 'pending_level3') {
-                        $showActions = true;
-                    }
-                @endphp
-
-                @if($showActions)
-                    <div class="action-bar">
-                        <div class="note-input-wrapper">
-                            <label class="note-label" for="catatan_ui">
-                                <i class="fas fa-comment-dots"></i> Catatan Review
-                            </label>
-                            <textarea id="catatan_ui" class="note-input"
-                                placeholder="Tulis catatan (Opsional untuk Approve, Wajib untuk Revisi)..."
-                                rows="2"></textarea>
-                        </div>
-                        <div class="action-buttons" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
-                            @if(isset($filter) && ($filter == 'SHE' || $filter == 'Security'))
-                                {{-- SCOPED ACTIONS --}}
-                                <button type="button" class="btn-action btn-revise" onclick="submitAction('revise', '{{ $filter }}')">
-                                    <i class="fas fa-undo"></i> Minta Revisi ({{ $filter }})
-                                </button>
-                                <button type="button" class="btn-action btn-approve" onclick="submitAction('approve', '{{ $filter }}')">
-                                    <i class="fas fa-check-circle"></i> Publikasikan ({{ $filter }})
-                                </button>
-                            @else
-                                {{-- SPLIT ACTIONS (When Filter is ALL) --}}
-                                <div style="display:flex; gap:5px; border-right:1px solid #ccc; padding-right:10px;">
-                                    <span style="align-self:center; font-weight:bold; color:#666; font-size:0.8rem;">SHE:</span>
-                                    <button type="button" class="btn-action btn-revise" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('revise', 'SHE')">
-                                        <i class="fas fa-undo"></i> Revisi
-                                    </button>
-                                    <button type="button" class="btn-action btn-approve" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('approve', 'SHE')">
-                                        <i class="fas fa-check"></i> Publikasi
-                                    </button>
-                                </div>
-                                <div style="display:flex; gap:5px;">
-                                    <span style="align-self:center; font-weight:bold; color:#666; font-size:0.8rem;">Security:</span>
-                                    <button type="button" class="btn-action btn-revise" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('revise', 'Security')">
-                                        <i class="fas fa-undo"></i> Revisi
-                                    </button>
-                                    <button type="button" class="btn-action btn-approve" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('approve', 'Security')">
-                                        <i class="fas fa-check"></i> Publikasi
-                                    </button>
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Main Publish Form (Final Approval) -->
-                        <form action="{{ route('kepala_departemen.publish', $document->id) }}" method="POST" id="publishForm" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                            @csrf
-                            <input type="hidden" name="filter" value="{{ $filter ?? 'ALL' }}">
-                            <div class="mb-3">
-                                <label class="form-label" style="font-weight:600;">Catatan Approval (Opsional)</label>
-                                <textarea class="form-control" name="catatan" rows="3" placeholder="Tambahkan catatan untuk publikasi/revisi..."></textarea>
-                            </div>
-                            
-                            @if($document->hasPmk())
-                                <div class="alert alert-info" style="background:#e0f2fe; border:1px solid #bae6fd; color:#0369a1;">
-                                    <i class="fas fa-info-circle"></i> <b>Dokumen PMK:</b> Memerlukan persetujuan Direksi (Level 4).
-                                </div>
-                                <button type="submit" class="btn-action btn-approve" style="width:100%; justify-content:center; padding:12px; font-size:1rem;">
-                                    <i class="fas fa-check-double"></i> Approve & Teruskan ke Direksi
-                                </button>
-                            @else
-                                <button type="submit" class="btn-action btn-approve" style="width:100%; justify-content:center; padding:12px; font-size:1rem;">
-                                    <i class="fas fa-check-circle"></i> Publish Dokumen
-                                </button>
-                            @endif
-                        </form>
+                <!-- Final Action Card -->
+                <div class="doc-card" style="margin-top: 40px;">
+                    <div class="card-header-slim">
+                        <i class="fas fa-check-circle"></i>
+                        <h2>Persetujuan Akhir</h2>
                     </div>
-                @endif
-            </form>
+                    <div class="doc-body">
+                   <!-- Direksi Publish Form -->
+                <form action="{{ route('direksi.publish', $document->id) }}" method="POST" id="publishForm">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label">Catatan Approval (Opsional)</label>
+                        <textarea class="form-control" name="catatan" rows="3" placeholder="Tambahkan catatan jika perlu..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100 btn-lg">
+                        <i class="bx bx-check-circle font-size-16 align-middle me-2"></i> Publikasi Dokumen
+                    </button>
+                    </div>
+                </div>
 
             <!-- Approval History -->
             <!-- PUK SECTION (Injected) -->
@@ -1801,64 +1763,25 @@
         </main>
     </div>
 
+    @include('partials.alerts')
     <script>
-        function submitAction(type, forcedFilter = null) {
-            const noteUI = document.getElementById('catatan_ui');
-            // If the element doesn't exist (locked mode), fail gracefully or handle
-            if (!noteUI) {
-                console.error("Note input element not found. Form might be locked.");
-                return;
-            }
-
-            const noteCommon = noteUI.value.trim();
-            const form = document.getElementById('reviewForm');
-            const noteHidden = document.getElementById('catatan_hidden');
-
-            if (type === 'revise' && noteCommon.length < 5) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Catatan Diperlukan',
-                    text: 'Untuk meminta revisi, Anda wajib memberikan catatan minimal 5 karakter.',
-                    confirmButtonColor: '#c41e3a'
-                });
-                return;
-            }
-
-            // Determine effective filter
-            const filter = forcedFilter || "{{ $filter ?? 'ALL' }}";
-            
-            const actionText = type === 'approve' ? 'Publikasikan (' + filter + ')' : 'Kembalikan untuk Revisi (' + filter + ')';
-            const actionColor = type === 'approve' ? '#16a34a' : '#dc2626';
-
-            // Construct URLs
-            const baseApproveUrl = "{{ route('kepala_departemen.publish', $document->id) }}";
-            const baseReviseUrl = "{{ route('kepala_departemen.revise', $document->id) }}";
-
-            let actionUrl = type === 'approve' ? baseApproveUrl : baseReviseUrl;
-            
-            // Append Filter
-            if (filter !== 'ALL') {
-                actionUrl += '?filter=' + filter;
-            }
-
-            console.log('Action URL:', actionUrl);
-
+        // Optional: Client-side confirmation for Direksi Publish
+        document.getElementById('publishForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             Swal.fire({
-                title: 'Konfirmasi',
-                text: `Apakah Anda yakin ingin ${actionText} dokumen ini?`,
+                title: 'Konfirmasi Publikasi',
+                text: "Apakah Anda yakin ingin mempublikasikan dokumen ini sebagai Final?",
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: actionColor,
-                confirmButtonText: 'Ya, Lanjutkan',
+                confirmButtonColor: '#10b981',
+                confirmButtonText: 'Ya, Publikasikan',
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    noteHidden.value = noteCommon;
-                    form.action = actionUrl;
-                    form.submit();
+                    this.submit();
                 }
             });
-        }
+        });
     </script>
     @include('partials.alerts')
 </body>

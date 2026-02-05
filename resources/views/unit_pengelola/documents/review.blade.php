@@ -1796,11 +1796,11 @@
                                             <textarea class="edit-mode form-control" style="display:none; width:100%; min-height:60px; padding:8px;" name="program_kerja[{{ $index }}][uraian]">{{ $item['uraian'] ?? '' }}</textarea>
                                         </td>
                                         <td style="border: 1px solid #cbd5e1; padding: 10px;">
-                                            <span class="view-mode">{{ $item['koordinator'] ?? '-' }}</span>
+                                            <span class="view-mode">{{ (!empty($item['koordinator']) && $item['koordinator'] !== '-') ? $item['koordinator'] : ($item['pelaksana'] ?? $item['pic'] ?? '-') }}</span>
                                             <select class="edit-mode form-control" style="display:none; width:100%; padding:6px;" name="program_kerja[{{ $index }}][koordinator]">
                                                 <option value="">-- Pilih PIC --</option>
                                                 @foreach($pmkPicUsers as $u)
-                                                    <option value="{{ $u->nama_user }}" {{ ($item['koordinator'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{ $u->nama_user }}</option>
+                                                    <option value="{{ $u->nama_user }}" {{ ($item['koordinator'] ?? $item['pic'] ?? $item['pelaksana'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{ $u->nama_user }}</option>
                                                 @endforeach
                                             </select>
                                         </td>

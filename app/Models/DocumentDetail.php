@@ -49,6 +49,7 @@ class DocumentDetail extends Model
         'kolom17_peluang',
         'kolom18_tindak_lanjut',
         'kolom18_toleransi',
+        'kolom19_program_type', // Re-added via migration
         'kolom19_pengendalian_lanjut', // New cols from controller
         'kolom20_kemungkinan_lanjut',
         'kolom21_konsekuensi_lanjut',
