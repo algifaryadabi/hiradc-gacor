@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -836,6 +836,85 @@
                 margin: 1cm;
             }
         }
+
+        /* CUSTOM TABS styling */
+        .page-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 1px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 12px 24px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+            background: rgba(196, 30, 58, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-bottom-color: transparent;
+            margin-bottom: -3px; /* Cover the bottom border */
+            z-index: 2;
+            box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: white;
+        }
+        
+        .tab-btn .badge-counter {
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 99px;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active .badge-counter {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 
@@ -945,8 +1024,31 @@
                 @endif
             </div>
 
-            <!-- Full HIRADC Table View -->
-            <div class="hiradc-wrapper">
+            <!-- TABS LOGIC & NAVIGATION -->
+            @php
+                // Fetch ALL programs (hasManyThrough)
+                $pukPrograms = $document->pukPrograms;
+                $pmkPrograms = $document->pmkPrograms;
+                
+                // Determine if we should show the Program Tab
+                $hasPrograms = $pukPrograms->count() > 0 || $pmkPrograms->count() > 0;
+            @endphp
+
+            <div class="page-tabs">
+                <button type="button" class="tab-btn active" onclick="openTab(event, 'tab-hiradc')">
+                    <i class="fas fa-table"></i> HIRADC
+                </button>
+                @if($hasPrograms)
+                <button type="button" class="tab-btn" onclick="openTab(event, 'tab-programs')">
+                    <i class="fas fa-tasks"></i> Program Kerja
+                    <span class="badge-counter">{{ $pukPrograms->count() + $pmkPrograms->count() }}</span>
+                </button>
+                @endif
+            </div>
+
+            <!-- TAB 1: HIRADC CONTENT -->
+            <div id="tab-hiradc" class="tab-content active">
+                <div class="hiradc-wrapper">
                 <table class="excel-table">
                     <thead>
                         <!-- Header Row 1: Main Sections (BAGIAN 1-5) -->
@@ -1370,225 +1472,252 @@
                 </table>
             </div>
 
-                        <!-- PROGRESS PROGRAM TABLES (PUK & PMK) -->
-            @php
-                $puk = $document->pukProgram;
-                $pmk = $document->pmkProgram;
-            @endphp
+            </div> <!-- End of tab-hiradc -->
 
-            <!-- 1. CARD PUK -->
-            @if($puk)
-            <div class="content-card" style="margin-top: 30px; border-left: 4px solid #3b82f6; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                <div class="card-header" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <i class="fas fa-tasks" style="font-size: 24px;"></i>
-                        <div>
-                            <div style="font-size: 18px; font-weight: 700; letter-spacing: -0.02em;">
-                                PROGRAM UNIT KERJA (PUK)
-                            </div>
-                            <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">
-                                Program Mitigasi Risiko Unit Kerja
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- TAB 2: PROGRAM KERJA CONTENT -->
+            <div id="tab-programs" class="tab-content" style="padding-top: 10px;">
                 
-                <div style="padding: 24px; background: #ffffff;">
-                    <!-- Informasi Program -->
-                    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
-                        <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
-                            Informasi Program
-                        </h4>
-                        <table style="width: 100%; font-size: 14px;">
-                            <tr>
-                                <td style="padding: 10px 0; width: 200px; font-weight: 600; color: #475569;">Judul Program</td>
-                                <td style="padding: 10px 0; color: #0f172a;">: {{ $puk->judul }}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0; font-weight: 600; color: #475569; vertical-align: top;">Tujuan</td>
-                                <td style="padding: 10px 0; color: #0f172a;">: {{ $puk->tujuan }}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0; font-weight: 600; color: #475569; vertical-align: top;">Sasaran</td>
-                                <td style="padding: 10px 0; color: #0f172a;">: {{ $puk->sasaran }}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0; font-weight: 600; color: #475569;">Penanggung Jawab</td>
-                                <td style="padding: 10px 0; color: #0f172a;">: {{ $puk->penanggung_jawab }}</td>
-                            </tr>
-                            @if($puk->uraian_revisi)
-                            <tr>
-                                <td style="padding: 10px 0; font-weight: 600; color: #475569; vertical-align: top;">Uraian Revisi</td>
-                                <td style="padding: 10px 0; color: #0f172a;">: {{ $puk->uraian_revisi }}</td>
-                            </tr>
-                            @endif
-                        </table>
+                @if(!$hasPrograms)
+                    <div style="text-align: center; padding: 40px; background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0; color: #64748b;">
+                        <i class="fas fa-clipboard-list" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Tidak Ada Program Kerja</h3>
+                        <p>Dokumen ini tidak memiliki item dengan risiko yang memerlukan Program Unit Kerja (PUK) atau Program Manajemen Korporat (PMK).</p>
                     </div>
+                @endif
+                
+                @foreach($document->details as $detailIndex => $detail)
+                    @php
+                        $puk = $detail->pukProgram;
+                        $pmk = $detail->pmkProgram;
+                    @endphp
 
-                    <!-- Tabel Program Kerja -->
-                    @if($puk->program_kerja && is_array($puk->program_kerja) && count($puk->program_kerja) > 0)
-                    <div>
-                        <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-list-check" style="color: #3b82f6;"></i>
-                            Detail Program Kerja
-                        </h4>
-                        <div class="hiradc-wrapper" style="margin-bottom: 0;">
-                            <table class="excel-table" style="min-width: 1500px;">
-                                <thead>
-                                    <tr style="background: #1e293b; color: white;">
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center; width: 50px;">NO</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; min-width: 250px;">URAIAN KEGIATAN</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; width: 150px;">KOORDINATOR</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; width: 150px;">PELAKSANA</th>
-                                        <th colspan="12" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center;">TARGET (%)</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; width: 150px; border-right: 1px solid #cbd5e1;">ANGGARAN</th>
-                                    </tr>
-                                    <tr style="background: #334155; color: white;">
-                                        @for($m=1; $m<=12; $m++)
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 60px;">{{ $m }}</th>
-                                        @endfor
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($puk->program_kerja as $itemIndex => $item)
-                                    <tr style="background: {{ $itemIndex % 2 == 0 ? '#ffffff' : '#f9fafb' }};">
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-weight: 600;">{{ $itemIndex + 1 }}</td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px;">{{ $item['uraian'] ?? '-' }}</td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px;">{{ $item['koordinator'] ?? '-' }}</td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px;">{{ $item['pelaksana'] ?? '-' }}</td>
-                                        @php
-                                            $targets = $item['target'] ?? [];
-                                        @endphp
-                                        @for($m=0; $m<12; $m++)
-                                            <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 12px;">
-                                                {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}
-                                            </td>
-                                        @endfor
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px; border-right: 1px solid #cbd5e1;">
-                                            {{ isset($item['anggaran']) ? 'Rp ' . number_format($item['anggaran'], 0, ',', '.') : '-' }}
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                    @if($puk || $pmk)
+                    <div class="group-container" style="margin-bottom: 40px;">
+                        <!-- Activity Header (Matches HIRADC Row) -->
+                        <div style="background: #f1f5f9; padding: 12px 20px; border-radius: 8px; border-left: 4px solid #475569; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+                            <div style="background: #475569; color: white; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 700; font-size: 12px;">
+                                {{ $detailIndex + 1 }}
+                            </div>
+                            <div style="font-weight: 700; color: #334155; font-size: 15px;">
+                                Kegiatan: <span style="font-weight: 600; color: #475569;">{{ $detail->kolom2_kegiatan }}</span>
+                            </div>
                         </div>
-                    </div>
-                    @else
-                    <div style="text-align: center; padding: 30px; background: #f9fafb; border-radius: 8px; color: #64748b;">
-                        <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
-                        <p style="margin: 0;">Belum ada detail program kerja</p>
+
+                        <!-- PUK CARD -->
+                        @if($puk)
+                        <div class="content-card" style="margin-bottom: 30px; border-left: 4px solid #3b82f6; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-left: 20px;">
+                            <div class="card-header" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 15px 20px; border-radius: 12px 12px 0 0;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div>
+                                            <div style="font-size: 16px; font-weight: 700;">PROGRAM UNIT KERJA (PUK)</div>
+                                            <div style="font-size: 12px; opacity: 0.9;">{{ $puk->judul }}</div>
+                                        </div>
+                                    </div>
+                                    <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ $puk->status ?? 'Draft' }}</span>
+                                </div>
+                            </div>
+                            
+                            <div style="padding: 24px; background: #ffffff;">
+                                <!-- Informasi Program -->
+                                <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+                                    <table style="width: 100%; font-size: 14px;">
+                                        <tr>
+                                            <td style="padding: 8px 0; width: 180px; font-weight: 600; color: #475569;">Judul Program</td>
+                                            <td style="padding: 8px 0; color: #0f172a;">: <strong>{{ $puk->judul }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Tujuan</td>
+                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->tujuan }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Sasaran</td>
+                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->sasaran }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; font-weight: 600; color: #475569;">Penanggung Jawab</td>
+                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->penanggung_jawab }}</td>
+                                        </tr>
+                                        @if($puk->uraian_revisi)
+                                        <tr>
+                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Uraian Revisi</td>
+                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->uraian_revisi }}</td>
+                                        </tr>
+                                        @endif
+                                    </table>
+                                </div>
+
+                                <!-- Tabel Program Kerja -->
+                                @if($puk->program_kerja && is_array($puk->program_kerja) && count($puk->program_kerja) > 0)
+                                <div>
+                                    <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">
+                                        <i class="fas fa-list-check" style="color: #3b82f6; margin-right: 6px;"></i> Detail Kegiatan
+                                    </h4>
+                                    <div class="hiradc-wrapper" style="margin-bottom: 0;">
+                                        <table class="excel-table" style="min-width: 100%;">
+                                            <thead>
+                                                <tr style="background: #1e293b; color: white;">
+                                                    <th rowspan="2" style="width: 40px; text-align: center;">No</th>
+                                                    <th rowspan="2" style="text-align: left;">Uraian Kegiatan</th>
+                                                    <th rowspan="2" style="text-align: left; width: 120px;">Koordinator</th>
+                                                    <th rowspan="2" style="text-align: left; width: 120px;">Pelaksana</th>
+                                                    <th colspan="12" style="text-align: center;">Target (%)</th>
+                                                    <th rowspan="2" style="text-align: left; width: 120px;">Anggaran</th>
+                                                </tr>
+                                                <tr style="background: #334155; color: white;">
+                                                    @for($m=1; $m<=12; $m++) <th style="text-align: center; width: 30px; font-size: 10px;">{{ $m }}</th> @endfor
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($puk->program_kerja as $itemIndex => $item)
+                                                <tr>
+                                                    <td style="text-align: center;">{{ $itemIndex + 1 }}</td>
+                                                    <td>{{ $item['uraian'] ?? '-' }}</td>
+                                                    <td>{{ $item['koordinator'] ?? '-' }}</td>
+                                                    <td>{{ $item['pelaksana'] ?? '-' }}</td>
+                                                    @php $targets = $item['target'] ?? []; @endphp
+                                                    @for($m=0; $m<12; $m++)
+                                                        <td style="text-align: center; font-size: 11px; background: {{ (isset($targets[$m]) && $targets[$m] != '') ? '#eff6ff' : 'transparent' }};">
+                                                            {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '' }}
+                                                        </td>
+                                                    @endfor
+                                                    <td>{{ isset($item['anggaran']) ? 'Rp ' . number_format($item['anggaran'], 0, ',', '.') : '-' }}</td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- PMK PROGRAMS -->
+                        @if($pmk)
+                        <div class="content-card" style="margin-bottom: 30px; border-left: 4px solid #c026d3; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-left: 20px;">
+                            <div class="card-header" style="background: linear-gradient(135deg, #c026d3 0%, #a21caf 100%); color: white; padding: 15px 20px; border-radius: 12px 12px 0 0;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div>
+                                            <div style="font-size: 16px; font-weight: 700;">PROGRAM MANAJEMEN KORPORAT (PMK)</div>
+                                            <div style="font-size: 12px; opacity: 0.9;">{{ $pmk->judul }}</div>
+                                        </div>
+                                    </div>
+                                    <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ $pmk->status ?? 'Draft' }}</span>
+                                </div>
+                            </div>
+                            
+                            <div style="padding: 24px; background: #ffffff;">
+                                <!-- Informasi Program -->
+                                <div style="background: #faf5ff; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e9d5ff;">
+                                    <table style="width: 100%; font-size: 14px;">
+                                        <tr>
+                                            <td style="padding: 8px 0; width: 180px; font-weight: 600; color: #475569;">Judul Program</td>
+                                            <td style="padding: 8px 0; color: #0f172a;">: <strong>{{ $pmk->judul }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Tujuan</td>
+                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->tujuan }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Sasaran</td>
+                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->sasaran }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; font-weight: 600; color: #475569;">Penanggung Jawab</td>
+                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->penanggung_jawab }}</td>
+                                        </tr>
+                                        @if($pmk->uraian_revisi)
+                                        <tr>
+                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Uraian Revisi</td>
+                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->uraian_revisi }}</td>
+                                        </tr>
+                                        @endif
+                                    </table>
+                                </div>
+
+                                <!-- Tabel Program Kerja -->
+                                @if($pmk->program_kerja && is_array($pmk->program_kerja) && count($pmk->program_kerja) > 0)
+                                <div>
+                                    <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">
+                                        <i class="fas fa-list-check" style="color: #c026d3; margin-right: 6px;"></i> Detail Kegiatan
+                                    </h4>
+                                    <div class="hiradc-wrapper" style="margin-bottom: 0;">
+                                        <table class="excel-table" style="min-width: 100%;">
+                                            <thead>
+                                                <tr style="background: #1e293b; color: white;">
+                                                    <th rowspan="2" style="width: 40px; text-align: center;">No</th>
+                                                    <th rowspan="2" style="text-align: left;">Uraian Kegiatan</th>
+                                                    <th rowspan="2" style="text-align: left; width: 120px;">PIC</th>
+                                                    <th colspan="12" style="text-align: center;">Target (%)</th>
+                                                    <th rowspan="2" style="text-align: left; width: 120px;">Anggaran</th>
+                                                </tr>
+                                                <tr style="background: #334155; color: white;">
+                                                    @for($m=1; $m<=12; $m++) <th style="text-align: center; width: 30px; font-size: 10px;">{{ $m }}</th> @endfor
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($pmk->program_kerja as $itemIndex => $item)
+                                                <tr>
+                                                    <td style="text-align: center;">{{ $itemIndex + 1 }}</td>
+                                                    <td>{{ $item['uraian'] ?? '-' }}</td>
+                                                    <td>{{ (!empty($item['koordinator']) && $item['koordinator'] !== '-') ? $item['koordinator'] : ($item['pelaksana'] ?? $item['pic'] ?? '-') }}</td>
+                                                    @php $targets = $item['target'] ?? []; @endphp
+                                                    @for($m=0; $m<12; $m++)
+                                                        <td style="text-align: center; font-size: 11px; background: {{ (isset($targets[$m]) && $targets[$m] != '') ? '#eff6ff' : 'transparent' }};">
+                                                            {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '' }}
+                                                        </td>
+                                                    @endfor
+                                                    <td>{{ isset($item['anggaran']) ? 'Rp ' . number_format($item['anggaran'], 0, ',', '.') : '-' }}</td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                        @endif
+
                     </div>
                     @endif
-                </div>
+                @endforeach
             </div>
-            @endif
 
-            <!-- 2. CARD PMK -->
-            @if($pmk)
-            <div class="content-card" style="margin-top: 30px; border-left: 4px solid #c026d3; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                <div class="card-header" style="background: linear-gradient(135deg, #c026d3 0%, #a21caf 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <i class="fas fa-project-diagram" style="font-size: 24px;"></i>
-                        <div>
-                            <div style="font-size: 18px; font-weight: 700; letter-spacing: -0.02em;">
-                                PROGRAM MANAJEMEN KORPORAT (PMK)
-                            </div>
-                            <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">
-                                Program Mitigasi Risiko Tingkat Korporat
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="padding: 24px; background: #ffffff;">
-                    <!-- Informasi Program -->
-                    <div style="background: #faf5ff; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e9d5ff;">
-                        <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-info-circle" style="color: #c026d3;"></i>
-                            Informasi Program
-                        </h4>
-                        <table style="width: 100%; font-size: 14px;">
-                            <tr>
-                                <td style="padding: 10px 0; width: 200px; font-weight: 600; color: #475569;">Judul Program</td>
-                                <td style="padding: 10px 0; color: #0f172a;">: {{ $pmk->judul }}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0; font-weight: 600; color: #475569; vertical-align: top;">Tujuan</td>
-                                <td style="padding: 10px 0; color: #0f172a;">: {{ $pmk->tujuan }}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0; font-weight: 600; color: #475569; vertical-align: top;">Sasaran</td>
-                                <td style="padding: 10px 0; color: #0f172a;">: {{ $pmk->sasaran }}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0; font-weight: 600; color: #475569;">Penanggung Jawab</td>
-                                <td style="padding: 10px 0; color: #0f172a;">: {{ $pmk->penanggung_jawab }}</td>
-                            </tr>
-                            @if($pmk->uraian_revisi)
-                            <tr>
-                                <td style="padding: 10px 0; font-weight: 600; color: #475569; vertical-align: top;">Uraian Revisi</td>
-                                <td style="padding: 10px 0; color: #0f172a;">: {{ $pmk->uraian_revisi }}</td>
-                            </tr>
-                            @endif
-                        </table>
-                    </div>
+            <!-- Tab Switching Script -->
+            <script>
+                function openTab(evt, tabName) {
+                    var i, tabcontent, tablinks;
+                    
+                    // Hide all tab content
+                    tabcontent = document.getElementsByClassName("tab-content");
+                    for (i = 0; i < tabcontent.length; i++) {
+                        tabcontent[i].classList.remove("active");
+                        tabcontent[i].style.display = "none";
+                    }
+                    
+                    // Remove active class from buttons
+                    tablinks = document.getElementsByClassName("tab-btn");
+                    for (i = 0; i < tablinks.length; i++) {
+                        tablinks[i].classList.remove("active");
+                    }
+                    
+                    // Show current tab and activate button
+                    var currentTab = document.getElementById(tabName);
+                    if (currentTab) {
+                        currentTab.style.display = "block";
+                        // Small timeout to allow display block to apply before adding class for animation
+                        setTimeout(() => currentTab.classList.add("active"), 10);
+                    }
+                    
+                    if (evt && evt.currentTarget) {
+                        evt.currentTarget.classList.add("active");
+                    }
+                }
+            </script>
 
-                    <!-- Tabel Program Kerja -->
-                    @if($pmk->program_kerja && is_array($pmk->program_kerja) && count($pmk->program_kerja) > 0)
-                    <div>
-                        <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-list-check" style="color: #c026d3;"></i>
-                            Detail Program Kerja
-                        </h4>
-                        <div class="hiradc-wrapper" style="margin-bottom: 0;">
-                            <table class="excel-table" style="min-width: 1500px;">
-                                <thead>
-                                    <tr style="background: #1e293b; color: white;">
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center; width: 50px;">NO</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; min-width: 250px;">URAIAN KEGIATAN</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; width: 120px;">PIC</th>
-                                        <th colspan="12" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center;">TARGET (%)</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; width: 120px; border-right: 1px solid #cbd5e1;">ANGGARAN</th>
-                                    </tr>
-                                    <tr style="background: #334155; color: white;">
-                                        @for($m=1; $m<=12; $m++)
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 60px;">{{ $m }}</th>
-                                        @endfor
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($pmk->program_kerja as $itemIndex => $item)
-                                    <tr style="background: {{ $itemIndex % 2 == 0 ? '#ffffff' : '#faf9fb' }};">
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-weight: 600;">{{ $itemIndex + 1 }}</td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px;">{{ $item['uraian'] ?? '-' }}</td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px;">{{ (!empty($item['koordinator']) && $item['koordinator'] !== '-') ? $item['koordinator'] : ($item['pelaksana'] ?? $item['pic'] ?? '-') }}</td>
-                                        @php
-                                            $targets = $item['target'] ?? [];
-                                        @endphp
-                                        @for($m=0; $m<12; $m++)
-                                            <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 12px;">
-                                                {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}
-                                            </td>
-                                        @endfor
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px; border-right: 1px solid #cbd5e1;">
-                                            {{ isset($item['anggaran']) ? 'Rp ' . number_format($item['anggaran'], 0, ',', '.') : '-' }}
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    @else
-                    <div style="text-align: center; padding: 30px; background: #f9fafb; border-radius: 8px; color: #64748b;">
-                        <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
-                        <p style="margin: 0;">Belum ada detail program kerja</p>
-                    </div>
-                    @endif
-                </div>
-            </div>
-            @endif
 
 
 

@@ -366,6 +366,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/kepala-departemen/documents/{document}/publish', [DocumentController::class, 'publish'])->name('kepala_departemen.publish');
 
 
+    // ==================== DIREKSI (LEVEL 4) ROUTES ====================
+    Route::get('/direksi/dashboard', [DocumentController::class, 'direksiDashboard'])->name('direksi.dashboard');
+    Route::get('/direksi/dashboard/data', [DocumentController::class, 'getDireksiDashboardData'])->name('direksi.dashboard.data');
+    
+    Route::get('/direksi/documents/check', [DocumentController::class, 'direksiPending'])->name('direksi.check_documents');
+
+    Route::get('/direksi/documents/{document}/review', [DocumentController::class, 'review'])->name('direksi.review');
+    Route::post('/direksi/documents/{document}/approve', [DocumentController::class, 'approve'])->name('direksi.approve');
+    Route::post('/direksi/documents/{document}/revise', [DocumentController::class, 'revise'])->name('direksi.revise');
+
+
     // ==================== ADMIN ROUTES ====================
     Route::get('/admin/dashboard', function () {
         $user = Auth::user();

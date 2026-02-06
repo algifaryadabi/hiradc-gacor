@@ -2712,6 +2712,28 @@
 
                         }
                     });
+
+                    // 3. Program Kerja Target Validation
+                    if (isValid) {
+                        const targetRows = document.querySelectorAll('.program-kerja-tbody tr');
+                        targetRows.forEach(row => {
+                            if (!isValid) return; // Stop if already found error
+                            
+                            const inputs = row.querySelectorAll('.target-input');
+                            if (inputs.length > 0) {
+                                let total = 0;
+                                inputs.forEach(el => total += parseInt(el.value) || 0);
+                                
+                                if (total > 100) {
+                                    isValid = false;
+                                    errorMsg = 'Total target (%) pada Program Kerja tidak boleh melebihi 100%. Silakan periksa kembali.';
+                                    row.classList.add('target-invalid');
+                                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                            }
+                        });
+                    }
+
                 }
 
                 if (!isValid) {
@@ -2991,6 +3013,56 @@
         // CORRECTION: Override addProgramKerjaRow to ensure unique input names
         // (Deleted duplicate functions)
 
+        // NEW: Validate Target Percentages
+        function validateTargetPercentages(input) {
+            const row = input.closest('tr');
+            const inputs = row.querySelectorAll('.target-input');
+            let total = 0;
+
+            inputs.forEach(el => {
+                total += parseInt(el.value) || 0;
+            });
+
+            if (total > 100) {
+                // Show Alert ONLY if it wasn't already invalid (prevents spamming on every keystroke)
+                if (!row.classList.contains('target-invalid')) {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer)
+                            toast.addEventListener('mouseleave', Swal.resumeTimer)
+                        }
+                    });
+
+                    Toast.fire({
+                        icon: 'warning',
+                        title: 'Melebihi 100%',
+                        text: 'Total target persentase tidak boleh lebih dari 100%.'
+                    });
+                }
+
+                // Visual Error
+                inputs.forEach(el => {
+                    el.style.color = '#ef4444'; // Red text
+                    el.style.backgroundColor = '#fee2e2'; // Light red background
+                });
+
+                // Add invalid marker class
+                row.classList.add('target-invalid');
+            } else {
+                // Reset Visual
+                inputs.forEach(el => {
+                    el.style.color = '#3b82f6'; // Original Blue
+                    el.style.backgroundColor = 'transparent'; 
+                });
+                row.classList.remove('target-invalid');
+            }
+        }
+
         // UI REFINEMENT + PMK BUDGET COLUMN
         function addProgramKerjaRow(btn) {
             // Ensure headers are correct state before adding row
@@ -3052,7 +3124,7 @@
                     ${Array.from({ length: 12 }, (_, i) => `
                         <td style="border: 1px solid #e2e8f0; padding: 0; width: 40px; min-width: 40px;">
                             <input type="number" class="form-control target-input" name="items[${itemIndex}][program_kerja][${rowCount - 1}][target][${i}]" 
-                                   min="0" max="100" placeholder="-" 
+                                   min="0" max="100" placeholder="-" oninput="validateTargetPercentages(this)"
                                    style="border: none; width: 100%; height: 100%; text-align: center; padding: 0; font-size: 11px; font-weight: 600; color: #3b82f6; background: transparent; border-radius: 0; box-sizing: border-box;">
                         </td>
                     `).join('')}
@@ -3100,7 +3172,7 @@
                     ${Array.from({ length: 12 }, (_, i) => `
                         <td style="border: 1px solid #e2e8f0; padding: 0; width: 40px; min-width: 40px;">
                             <input type="number" class="form-control target-input" name="items[${itemIndex}][program_kerja][${rowCount - 1}][target][${i}]" 
-                                   min="0" max="100" placeholder="-" 
+                                   min="0" max="100" placeholder="-" oninput="validateTargetPercentages(this)"
                                    style="border: none; width: 100%; height: 100%; text-align: center; padding: 0; font-size: 11px; font-weight: 600; color: #3b82f6; background: transparent; border-radius: 0; box-sizing: border-box;">
                         </td>
                     `).join('')}

@@ -680,7 +680,7 @@
                         <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
                         <div class="user-role">{{ Auth::user()->role_jabatan_name ?? 'Direksi' }}</div>
                         <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                           Management
+                           {{ Auth::user()->unit_or_dept_name }}
                         </div>
                     </div>
                 </div>
@@ -764,13 +764,30 @@
             'id_dept' => is_array($u) ? $u['id_dept'] : $u->id_dept,
             'nama_unit' => is_array($u) ? $u['nama_unit'] : $u->nama_unit
         ]);
+        
+        $documentsList = $publishedData->map(fn($d) => [
+            'id' => $d->id,
+            'title' => $d->judul_dokumen ?? $d->kolom2_kegiatan,
+            'unit_id' => $d->id_unit,
+            'category' => $d->hasPmk() ? 'PMK' : 'HIRADC',
+            'author' => $d->user->nama_user ?? 'Unknown',
+            'date' => $d->published_at ? \Carbon\Carbon::parse($d->published_at)->format('d M Y') : '-',
+        ]);
+
+        $pendingList = $pendingData->map(fn($d) => [
+            'id' => $d->id,
+            'title' => $d->judul_dokumen ?? $d->kolom2_kegiatan,
+            'unit' => $d->unit->nama_unit ?? '-',
+            'date' => $d->updated_at->format('d M Y'),
+            'status' => 'Menunggu Review'
+        ]);
     @endphp
 
     <script>
         const departments = @json($departmentsData);
         const units = @json($unitsData);
-        const documents = @json($publishedData);
-        const pendingDocs = @json($pendingData ?? []);
+        const documents = @json($documentsList);
+        const pendingDocs = @json($pendingList);
 
         let currentLevel = 'dept';
         let selectedDept = null;

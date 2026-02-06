@@ -1261,7 +1261,10 @@
                                         </td>
                                     @endif
 
-                                    <td colspan="24" style="text-align:center; padding:20px;">Tidak ada data detail.</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="27" style="text-align:center; padding:20px;">Tidak ada data detail.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -1567,93 +1570,9 @@
                             </table>
                         </div>
                     </div>
-                </div>
 
-                <!-- Sticky Action Bar -->
-                @php
-                    // Show action buttons if:
-                    // 1. Filter=SHE and status_she='approved' (SHE track ready)
-                    // 2. Filter=Security and status_security='approved' (Security track ready)
-                    // 3. Filter=ALL and status='pending_level3' (legacy/general)
-                    $showActions = false;
-                    if (isset($filter) && $filter == 'SHE' && $document->status_she == 'approved') {
-                        $showActions = true;
-                    } elseif (isset($filter) && $filter == 'Security' && $document->status_security == 'approved') {
-                        $showActions = true;
-                    } elseif ($document->status === 'pending_level3') {
-                        $showActions = true;
-                    }
-                @endphp
-
-                @if($showActions)
-                    <div class="action-bar">
-                        <div class="note-input-wrapper">
-                            <label class="note-label" for="catatan_ui">
-                                <i class="fas fa-comment-dots"></i> Catatan Review
-                            </label>
-                            <textarea id="catatan_ui" class="note-input"
-                                placeholder="Tulis catatan (Opsional untuk Approve, Wajib untuk Revisi)..."
-                                rows="2"></textarea>
-                        </div>
-                        <div class="action-buttons" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
-                            @if(isset($filter) && ($filter == 'SHE' || $filter == 'Security'))
-                                {{-- SCOPED ACTIONS --}}
-                                <button type="button" class="btn-action btn-revise" onclick="submitAction('revise', '{{ $filter }}')">
-                                    <i class="fas fa-undo"></i> Minta Revisi ({{ $filter }})
-                                </button>
-                                <button type="button" class="btn-action btn-approve" onclick="submitAction('approve', '{{ $filter }}')">
-                                    <i class="fas fa-check-circle"></i> Publikasikan ({{ $filter }})
-                                </button>
-                            @else
-                                {{-- SPLIT ACTIONS (When Filter is ALL) --}}
-                                <div style="display:flex; gap:5px; border-right:1px solid #ccc; padding-right:10px;">
-                                    <span style="align-self:center; font-weight:bold; color:#666; font-size:0.8rem;">SHE:</span>
-                                    <button type="button" class="btn-action btn-revise" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('revise', 'SHE')">
-                                        <i class="fas fa-undo"></i> Revisi
-                                    </button>
-                                    <button type="button" class="btn-action btn-approve" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('approve', 'SHE')">
-                                        <i class="fas fa-check"></i> Publikasi
-                                    </button>
-                                </div>
-                                <div style="display:flex; gap:5px;">
-                                    <span style="align-self:center; font-weight:bold; color:#666; font-size:0.8rem;">Security:</span>
-                                    <button type="button" class="btn-action btn-revise" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('revise', 'Security')">
-                                        <i class="fas fa-undo"></i> Revisi
-                                    </button>
-                                    <button type="button" class="btn-action btn-approve" style="font-size:0.8rem; padding: 8px 12px;" onclick="submitAction('approve', 'Security')">
-                                        <i class="fas fa-check"></i> Publikasi
-                                    </button>
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Main Publish Form (Final Approval) -->
-                        <form action="{{ route('kepala_departemen.publish', $document->id) }}" method="POST" id="publishForm" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                            @csrf
-                            <input type="hidden" name="filter" value="{{ $filter ?? 'ALL' }}">
-                            <div class="mb-3">
-                                <label class="form-label" style="font-weight:600;">Catatan Approval (Opsional)</label>
-                                <textarea class="form-control" name="catatan" rows="3" placeholder="Tambahkan catatan untuk publikasi/revisi..."></textarea>
-                            </div>
-                            
-                            @if($document->hasPmk())
-                                <div class="alert alert-info" style="background:#e0f2fe; border:1px solid #bae6fd; color:#0369a1;">
-                                    <i class="fas fa-info-circle"></i> <b>Dokumen PMK:</b> Memerlukan persetujuan Direksi (Level 4).
-                                </div>
-                                <button type="submit" class="btn-action btn-approve" style="width:100%; justify-content:center; padding:12px; font-size:1rem;">
-                                    <i class="fas fa-check-double"></i> Approve & Teruskan ke Direksi
-                                </button>
-                            @else
-                                <button type="submit" class="btn-action btn-approve" style="width:100%; justify-content:center; padding:12px; font-size:1rem;">
-                                    <i class="fas fa-check-circle"></i> Publish Dokumen
-                                </button>
-                            @endif
-                        </form>
-                    </div>
-                @endif
             </form>
-
-            <!-- Approval History -->
+            
             <!-- PUK SECTION (Injected) -->
 
 
@@ -1796,6 +1715,69 @@
                         <div style="padding-left:20px; color:var(--text-sub);">Belum ada riwayat.</div>
                     @endforelse
                 </div>
+            <!-- End History Card -->
+            </div>
+
+            <!-- DECISION PANEL (Moved Below History) -->
+            <div id="decision-section" style="margin-top: 40px;">
+                @php
+                    // Show action buttons if logic
+                    $showActions = false;
+                    if (isset($filter) && $filter == 'SHE' && $document->status_she == 'approved') {
+                        $showActions = true;
+                    } elseif (isset($filter) && $filter == 'Security' && $document->status_security == 'approved') {
+                        $showActions = true;
+                    } elseif ($document->status === 'pending_level3') {
+                        $showActions = true;
+                    }
+                    
+                    // Determine labels
+                    $approveLabel = 'Approve';
+                    $reviseLabel = 'Revisi';
+                    
+                    if (isset($filter)) {
+                        if ($filter == 'SHE') {
+                            $approveLabel = 'Approve (HIRADC)';
+                            $reviseLabel = 'Revisi (K3/KO/Lingkungan)';
+                        } elseif ($filter == 'Security') {
+                            $approveLabel = 'Approve (Security)';
+                            $reviseLabel = 'Revisi (Keamanan)';
+                        }
+                    }
+                @endphp
+
+                @if($showActions)
+                <!-- Custom Sticky-like Action Bar (Now Static at Bottom) -->
+                <div class="action-bar-container" style="background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); display: flex; align-items: center; gap: 20px; color: white;">
+                    
+                    <!-- Input Section -->
+                    <div style="flex: 1;">
+                        <textarea id="catatan_ui" class="form-control" 
+                            placeholder="Catatan Review (Wajib jika Revisi)..." 
+                            rows="2" 
+                            style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; padding: 12px; font-size: 14px; resize: none;"></textarea>
+                        <div style="font-size: 12px; color: #94a3b8; margin-top: 6px;">
+                            <i class="fas fa-info-circle"></i> Catatan ini akan tersimpan permanen dalam riwayat.
+                        </div>
+                    </div>
+
+                    <!-- Buttons Section -->
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <!-- REVISE -->
+                        <button type="button" onclick="submitAction('revise', '{{ $filter ?? 'ALL' }}')"
+                            style="background: #ef4444; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
+                            <i class="fas fa-undo"></i> {{ $reviseLabel }}
+                        </button>
+                        
+                        <!-- APPROVE -->
+                        <button type="button" onclick="submitAction('approve', '{{ $filter ?? 'ALL' }}')"
+                            style="background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
+                            <i class="fas fa-check"></i> {{ $approveLabel }}
+                        </button>
+                    </div>
+
+                </div>
+                @endif
             </div>
 
         </main>

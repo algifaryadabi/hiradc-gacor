@@ -134,26 +134,26 @@ class User extends Authenticatable
 
     public function isDirektur(): bool
     {
-        // Role ID 1 is Admin, Role ID 5/6 is Staff.
-        // Usually Direksi is Role 1 in `role_jabatan`? 
-        // Let's assume Role Jabatan 1 = Direktur based on typical hierarchy (1=Dir, 2=GM, 3=Mgr).
-        // need to confirm exact ID, but using 1 is safe guess for now.
         return $this->id_role_jabatan == 1 || $this->role_jabatan == 1;
     }
 
     /**
      * Get role name based on hierarchy
-     * Priority: Admin > Unit Pengelola > Kepala Departemen > Approver > User
+     * Priority: Admin > Direksi > Unit Pengelola > Kepala Departemen > Approver > User
      */
     public function getRoleName(): string
     {
-        // 1. Check for Admin FIRST (highest priority - ALWAYS takes precedence)
-        // Admin role overrides ALL other roles, including unit assignments
+        // 1. Check for Admin FIRST (highest priority)
         if (($this->role_user ?? $this->id_role_user) == 1) {
             return 'admin';
         }
+        
+        // 2. Direksi (Level 4 Approver)
+        if ($this->isDirektur()) {
+            return 'direksi';
+        }
 
-        // 2. Check for Unit Pengelola (Head & Staff)
+        // 3. Check for Unit Pengelola (Head & Staff)
         // Includes Kepala Unit (Role 3) AND Staff (Role 4,5,6) from SHE/Security
         // Only applies if NOT admin
         if (in_array($this->id_unit, [55, 56])) {
@@ -185,6 +185,7 @@ class User extends Authenticatable
 
         return match ($role) {
             'admin' => 'admin.dashboard',
+            'direksi' => 'direksi.dashboard',
             'approver' => 'approver.dashboard',
             'unit_pengelola' => 'unit_pengelola.dashboard',
             'kepala_departemen' => 'kepala_departemen.dashboard',

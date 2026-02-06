@@ -122,6 +122,22 @@ class Document extends Model
     }
 
     /**
+     * Get ALL PUK Programs associated with this document's details
+     */
+    public function pukPrograms()
+    {
+        return $this->hasManyThrough(PukProgram::class, DocumentDetail::class, 'document_id', 'document_detail_id');
+    }
+
+    /**
+     * Get ALL PMK Programs associated with this document's details
+     */
+    public function pmkPrograms()
+    {
+        return $this->hasManyThrough(PmkProgram::class, DocumentDetail::class, 'document_id', 'document_detail_id');
+    }
+
+    /**
      * Check if document has PMK data
      */
     public function hasPmk(): bool
@@ -203,6 +219,19 @@ class Document extends Model
                 $this->status_security = 'approved';
 
         } elseif ($this->current_level == 3) {
+            // Level 3: Kepala Departemen
+            // Check if PMK exists -> Move to Level 4 (Direksi)
+            if ($this->hasPmk()) {
+                $this->current_level = 4;
+                $this->status = 'pending_direksi';
+            } else {
+                // No PMK -> Finish (Publish)
+                $this->status = 'published';
+                $this->published_at = now();
+            }
+
+        } elseif ($this->current_level == 4) {
+            // Level 4: Direksi (PMK Only)
             $this->status = 'published';
             $this->published_at = now();
         }
@@ -274,9 +303,15 @@ class Document extends Model
         // Allow access if document is at least Level 2.
         // We relax the strict status check here to avoid 403 errors during complex partial flows.
         // The Controller/Dashboard will filter what is actionable.
-        if ($this->current_level >= 2) {
+        if ($this->current_level == 3) {
             // Must be General Manager (Role 2) AND same Dept
             return $user->isKepalaDepartemen() && $user->id_dept == $this->id_dept;
+        }
+
+        // Level 4: Direksi (PMK Only)
+        if ($this->current_level == 4) {
+            // Must be Direktur (Role 1) AND same Direktorat
+            return $user->isDirektur() && $user->id_direktorat == $this->id_direktorat;
         }
 
         return false;
@@ -318,6 +353,7 @@ class Document extends Model
             'pending_level1' => 'Menunggu Approval Kepala Unit',
             'pending_level2' => 'Menunggu Approval Unit Pengelola',
             'pending_level3' => 'Menunggu Approval Kepala Departemen',
+            'pending_direksi' => 'Menunggu Approval Direksi',
             'approved' => 'Disetujui',
             'published' => 'Terpublikasi',
             'rejected' => 'Ditolak',

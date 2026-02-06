@@ -28,8 +28,8 @@
             </a>
         @endif
         
-        {{-- Review Dokumen: Only for Reviewer/Verifikator --}}
-        @if(Auth::user()->is_reviewer || Auth::user()->is_verifier)
+        {{-- Review Dokumen: Only for Reviewer/Verifikator/Head --}}
+        @if(Auth::user()->is_reviewer || Auth::user()->is_verifier || Auth::user()->isUnitPengelola())
             <a href="{{ route('unit_pengelola.documents.index') }}"
                 class="nav-item {{ request()->routeIs('unit_pengelola.documents.*') ? 'active' : '' }}">
                 <i class="fas fa-file-alt"></i>
