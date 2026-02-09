@@ -197,6 +197,168 @@ class DocumentController extends Controller
     }
 
     /**
+     * Export PUK Program to PDF
+     */
+    public function exportPukPdf(Document $document)
+    {
+        // Access Control: Submitter, Kepala Unit Kerja, Kepala Unit Pengelola, Reviewer, Verifikator, Kepala Departemen, Direktur, Admin
+        $user = Auth::user();
+        if (!$user) {
+            abort(403, 'Unauthorized');
+        }
+
+        $isAuthor = $user->id_user == $document->id_user;
+        $isKepalaUnit = $user->isKepalaUnit() && $document->id_unit == $user->id_unit;
+        $isUnitPengelola = $user->isUnitPengelola();
+        $isReviewer = $user->is_reviewer == 1;
+        $isVerifier = $user->is_verifier == 1;
+        $isKepalaDept = $user->isKepalaDepartemen() && $document->user && $document->user->id_dept == $user->id_dept;
+        $isDirektur = $user->isDirektur();
+        $isAdmin = $user->isAdmin();
+
+        if (!$isAuthor && !$isKepalaUnit && !$isUnitPengelola && !$isReviewer && !$isVerifier && !$isKepalaDept && !$isDirektur && !$isAdmin) {
+            abort(403, 'Unauthorized access to export PUK program.');
+        }
+
+        // Load necessary relations
+        $document->load(['pukProgram.createdBy', 'pukProgram.approvedBy', 'user.roleJabatan', 'user.seksi', 'unit', 'departemen', 'direktorat']);
+
+        // Check if PUK program exists
+        if (!$document->pukProgram) {
+            abort(404, 'PUK Program not found for this document.');
+        }
+
+        $pukProgram = $document->pukProgram;
+
+        $pdf = Pdf::loadView('documents.export_puk_pdf', compact('document', 'pukProgram'));
+        $pdf->setPaper('a4', 'portrait');
+
+        $unitName = $document->unit ? $this->sanitizeFilename($document->unit->nama_unit) : 'Unit';
+        $filename = "PUK_{$unitName}_" . date('Y-m-d') . ".pdf";
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Export PUK Program to Excel
+     */
+    public function exportPukExcel(Document $document)
+    {
+        // Access Control: Same as PDF
+        $user = Auth::user();
+        if (!$user) {
+            abort(403, 'Unauthorized');
+        }
+
+        $isAuthor = $user->id_user == $document->id_user;
+        $isKepalaUnit = $user->isKepalaUnit() && $document->id_unit == $user->id_unit;
+        $isUnitPengelola = $user->isUnitPengelola();
+        $isReviewer = $user->is_reviewer == 1;
+        $isVerifier = $user->is_verifier == 1;
+        $isKepalaDept = $user->isKepalaDepartemen() && $document->user && $document->user->id_dept == $user->id_dept;
+        $isDirektur = $user->isDirektur();
+        $isAdmin = $user->isAdmin();
+
+        if (!$isAuthor && !$isKepalaUnit && !$isUnitPengelola && !$isReviewer && !$isVerifier && !$isKepalaDept && !$isDirektur && !$isAdmin) {
+            abort(403, 'Unauthorized access to export PUK program.');
+        }
+
+        // Load necessary relations
+        $document->load(['pukProgram.createdBy', 'pukProgram.approvedBy', 'user.roleJabatan', 'user.seksi', 'unit', 'departemen', 'direktorat']);
+
+        // Check if PUK program exists
+        if (!$document->pukProgram) {
+            abort(404, 'PUK Program not found for this document.');
+        }
+
+        $unitName = $document->unit ? $this->sanitizeFilename($document->unit->nama_unit) : 'Unit';
+        $filename = "PUK_{$unitName}_" . date('Y-m-d') . ".xlsx";
+
+        return Excel::download(new \App\Exports\PukProgramExport($document), $filename);
+    }
+
+    /**
+     * Export PMK Program to PDF
+     */
+    public function exportPmkPdf(Document $document)
+    {
+        // Access Control: Same as PUK
+        $user = Auth::user();
+        if (!$user) {
+            abort(403, 'Unauthorized');
+        }
+
+        $isAuthor = $user->id_user == $document->id_user;
+        $isKepalaUnit = $user->isKepalaUnit() && $document->id_unit == $user->id_unit;
+        $isUnitPengelola = $user->isUnitPengelola();
+        $isReviewer = $user->is_reviewer == 1;
+        $isVerifier = $user->is_verifier == 1;
+        $isKepalaDept = $user->isKepalaDepartemen() && $document->user && $document->user->id_dept == $user->id_dept;
+        $isDirektur = $user->isDirektur();
+        $isAdmin = $user->isAdmin();
+
+        if (!$isAuthor && !$isKepalaUnit && !$isUnitPengelola && !$isReviewer && !$isVerifier && !$isKepalaDept && !$isDirektur && !$isAdmin) {
+            abort(403, 'Unauthorized access to export PMK program.');
+        }
+
+        // Load necessary relations
+        $document->load(['pmkProgram.createdBy', 'pmkProgram.approvedBy', 'user.roleJabatan', 'user.seksi', 'unit', 'departemen', 'direktorat']);
+
+        // Check if PMK program exists
+        if (!$document->pmkProgram) {
+            abort(404, 'PMK Program not found for this document.');
+        }
+
+        $pmkProgram = $document->pmkProgram;
+
+        $pdf = Pdf::loadView('documents.export_pmk_pdf', compact('document', 'pmkProgram'));
+        $pdf->setPaper('a4', 'portrait');
+
+        $unitName = $document->unit ? $this->sanitizeFilename($document->unit->nama_unit) : 'Unit';
+        $filename = "PMK_{$unitName}_" . date('Y-m-d') . ".pdf";
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Export PMK Program to Excel
+     */
+    public function exportPmkExcel(Document $document)
+    {
+        // Access Control: Same as PDF
+        $user = Auth::user();
+        if (!$user) {
+            abort(403, 'Unauthorized');
+        }
+
+        $isAuthor = $user->id_user == $document->id_user;
+        $isKepalaUnit = $user->isKepalaUnit() && $document->id_unit == $user->id_unit;
+        $isUnitPengelola = $user->isUnitPengelola();
+        $isReviewer = $user->is_reviewer == 1;
+        $isVerifier = $user->is_verifier == 1;
+        $isKepalaDept = $user->isKepalaDepartemen() && $document->user && $document->user->id_dept == $user->id_dept;
+        $isDirektur = $user->isDirektur();
+        $isAdmin = $user->isAdmin();
+
+        if (!$isAuthor && !$isKepalaUnit && !$isUnitPengelola && !$isReviewer && !$isVerifier && !$isKepalaDept && !$isDirektur && !$isAdmin) {
+            abort(403, 'Unauthorized access to export PMK program.');
+        }
+
+        // Load necessary relations
+        $document->load(['pmkProgram.createdBy', 'pmkProgram.approvedBy', 'user.roleJabatan', 'user.seksi', 'unit', 'departemen', 'direktorat']);
+
+        // Check if PMK program exists
+        if (!$document->pmkProgram) {
+            abort(404, 'PMK Program not found for this document.');
+        }
+
+        $unitName = $document->unit ? $this->sanitizeFilename($document->unit->nama_unit) : 'Unit';
+        $filename = "PMK_{$unitName}_" . date('Y-m-d') . ".xlsx";
+
+        return Excel::download(new \App\Exports\PmkProgramExport($document), $filename);
+    }
+
+    /**
      * Sanitize filename by removing special characters
      */
     private function sanitizeFilename($string)
@@ -641,7 +803,35 @@ class DocumentController extends Controller
             // Maybe allow restrictions? For now let's allow content correction.
         }
 
-        return view('user.documents.edit', compact('document'));
+        // Fetch Users for PUK/PMK Program Kerja (Same as Create)
+        // Use Document's Unit ID to ensure consistency
+        $unitId = $document->id_unit;
+
+        // Band 3 = role_jabatan 4, 5 (Koordinator for PUK)
+        $band3Users = \App\Models\User::where('id_unit', $unitId)
+            ->whereIn('role_jabatan', [4, 5])
+            ->get();
+
+        // Band 4 = role_jabatan 6 (Pelaksana for PUK)
+        $band4Users = \App\Models\User::where('id_unit', $unitId)
+            ->where('role_jabatan', 6)
+            ->get();
+
+        // PUK Specific Roles
+        $pukKoordinatorUsers = \App\Models\User::where('id_unit', $unitId)
+            ->where('role_jabatan', 3)
+            ->get();
+
+        $pukPelaksanaUsers = \App\Models\User::where('id_unit', $unitId)
+            ->where('role_jabatan', 4)
+            ->get();
+
+        // PMK PIC = Role 3 (Manager)
+        $pmkPicUsers = \App\Models\User::where('id_unit', $unitId)
+            ->where('role_jabatan', 3)
+            ->get();
+
+        return view('user.documents.edit', compact('document', 'band3Users', 'band4Users', 'pmkPicUsers', 'pukKoordinatorUsers', 'pukPelaksanaUsers'));
     }
 
     /**
@@ -779,7 +969,7 @@ class DocumentController extends Controller
                     'kolom17_peluang' => $item['kolom17_peluang'] ?? null,
                     'kolom18_toleransi' => $item['kolom18_toleransi'] ?? 'Ya',
                     // Columns 19-22: Follow-up risk assessment (only if tolerance = Tidak)
-                    'kolom19_pengendalian_lanjut' => $item['kolom19_pengendalian_lanjut'] ?? null,
+                    'kolom19_pengendalian_lanjut' => $item['kolom19_rencana'] ?? $item['kolom19_pengendalian_lanjut'] ?? null,
                     'kolom20_kemungkinan_lanjut' => $item['kolom20_kemungkinan_lanjut'] ?? null,
                     'kolom21_konsekuensi_lanjut' => $item['kolom21_konsekuensi_lanjut'] ?? null,
                     'kolom22_tingkat_risiko_lanjut' => $item['kolom22_tingkat_risiko_lanjut'] ?? null,
@@ -788,16 +978,64 @@ class DocumentController extends Controller
                     'residual_konsekuensi' => $item['residual_konsekuensi'] ?? 1,
                     'residual_score' => $item['residual_score'] ?? (($item['residual_kemungkinan'] ?? 1) * ($item['residual_konsekuensi'] ?? 1)),
                     'residual_level' => $item['residual_level'] ?? 'Rendah',
+                    'kolom19_program_type' => $item['kolom19_program_type'] ?? null,
                 ];
+
+                $currentDetail = null;
 
                 if (isset($item['id']) && in_array($item['id'], $existingIds)) {
                     // Update existing
-                    $document->details()->where('id', $item['id'])->update($detailData);
-                    $processedIds[] = $item['id'];
-                } else {
+                    $currentDetail = $document->details()->find($item['id']);
+                    if ($currentDetail) {
+                        $currentDetail->update($detailData);
+                        $processedIds[] = $item['id'];
+                    }
+                }
+                
+                if (!$currentDetail) {
                     // Create new
-                    $newDetail = $document->details()->create($detailData);
-                    $processedIds[] = $newDetail->id;
+                    $currentDetail = $document->details()->create($detailData);
+                    $processedIds[] = $currentDetail->id;
+                }
+
+                // --- PUK/PMK PROCESSING ---
+                if ($currentDetail) {
+                    $programType = $item['kolom19_program_type'] ?? null;
+                    $rencanaPengendalian = $item['kolom19_rencana'] ?? null;
+                    $tolerance = $item['kolom18_toleransi'] ?? 'Ya';
+
+                    // Only process if program type is selected AND tolerance is Tidak
+                    if ($programType && $tolerance === 'Tidak') {
+                         $programData = [
+                            'document_detail_id' => $currentDetail->id,
+                            'judul' => $rencanaPengendalian ?? 'Program Pengendalian',
+                            'tujuan' => $item['program_tujuan'] ?? '',
+                            'sasaran' => $item['program_sasaran'] ?? '',
+                            'penanggung_jawab' => $item['program_penanggung_jawab'] ?? '',
+                            // Start fix: Normalize array keys to sequential for JSON storage
+                            'program_kerja' => isset($item['program_kerja']) ? array_values($item['program_kerja']) : [],
+                            'created_by' => Auth::id(),
+                            'uraian_revisi' => $item['program_uraian_revisi'] ?? null,
+                        ];
+
+                        if ($programType === 'PUK') {
+                            $currentDetail->pmkProgram()->delete(); // Ensure only one exists
+                            $currentDetail->pukProgram()->updateOrCreate(
+                                ['document_detail_id' => $currentDetail->id],
+                                $programData
+                            );
+                        } elseif ($programType === 'PMK') {
+                            $currentDetail->pukProgram()->delete();
+                            $currentDetail->pmkProgram()->updateOrCreate(
+                                ['document_detail_id' => $currentDetail->id],
+                                $programData
+                            );
+                        }
+                    } elseif ($tolerance === 'Ya') {
+                         // Remove programs if tolerance is now acceptable
+                         $currentDetail->pukProgram()->delete();
+                         $currentDetail->pmkProgram()->delete();
+                    }
                 }
             }
 
@@ -1414,6 +1652,15 @@ class DocumentController extends Controller
         $role = auth()->user()->getRoleName();
         if (auth()->user()->isDirektur()) { // Helper I created
              $role = 'direksi';
+             
+             // FILTER: Direktur hanya melihat details yang memiliki PMK
+             // Ini penting untuk performa dengan data besar - filter di memory setelah eager load
+             $detailsWithPmk = $document->details->filter(function($detail) {
+                 return $detail->pmkProgram !== null;
+             });
+             
+             // Replace the details relation dengan yang sudah difilter
+             $document->setRelation('details', $detailsWithPmk);
         }
 
         $view = match ($role) {
@@ -1954,7 +2201,7 @@ class DocumentController extends Controller
                'time_submit' => $doc->created_at->format('H:i') . ' WIB',
                'status' => $status,
                'current_level' => 4,
-               'viewUrl' => route('direksi.documents.review', $doc->id), // Using the new dedicated view route
+               'viewUrl' => route('direksi.review', $doc->id), // Fixed: Changed from direksi.documents.review to direksi.review
                'has_pmk' => $doc->hasPmk()
            ];
         });
@@ -3042,7 +3289,7 @@ class DocumentController extends Controller
      */
     public function showPublished(Document $document)
     {
-        // Load details but filter out PMK items that are NOT approved by Direksi
+        // Eager load necessary relations including nested PMK programs for checking status
         $document->load([
             'user', 
             'approvals.approver', 
@@ -3050,21 +3297,24 @@ class DocumentController extends Controller
             'departemen', 
             'unit', 
             'seksi',
+            'details.pmkProgram', // Load nested to check status
             'pmkProgram' => function($q) {
-                // HIDE PMK Table if not approved
-                $q->where('status', 'approved');
+                 // Only load main PMK relation if approved (for the separate PMK table)
+                 $q->where('status', 'approved');
             }
         ]);
-        
-        $document->setRelation('details', $document->details->filter(function ($detail) {
-            $pmk = $detail->pmkProgram;
-            // If has PMK, only show if approved
-            if ($pmk) {
-               return $pmk->status === 'approved';
-            }
-            // If no PMK (ordinary HIRADC/PUK), show it
-            return true;
-        }));
+
+        // Identify Blocked Categories (Categories containing at least one unapproved PMK)
+        $blockedCategories = $document->details->filter(function ($detail) {
+            return $detail->pmkProgram && $detail->pmkProgram->status !== 'approved';
+        })->pluck('kategori')->unique()->toArray();
+
+        // Filter Details: Exclude ALL details belonging to blocked categories
+        $filteredDetails = $document->details->filter(function ($detail) use ($blockedCategories) {
+            return !in_array($detail->kategori, $blockedCategories);
+        });
+
+        $document->setRelation('details', $filteredDetails);
 
         return view('documents.published_detail', compact('document'));
     }

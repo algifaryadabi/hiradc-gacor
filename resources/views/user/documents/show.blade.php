@@ -1514,7 +1514,24 @@
                                             <div style="font-size: 12px; opacity: 0.9;">{{ $puk->judul }}</div>
                                         </div>
                                     </div>
-                                    <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ $puk->status ?? 'Draft' }}</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <!-- Download Buttons -->
+                                        <a href="{{ route('documents.export.puk.pdf', $document->id) }}" 
+                                           class="btn btn-sm" 
+                                           style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
+                                           onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
+                                           onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
+                                            <i class="fas fa-file-pdf"></i> PDF
+                                        </a>
+                                        <a href="{{ route('documents.export.puk.excel', $document->id) }}" 
+                                           class="btn btn-sm" 
+                                           style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
+                                           onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
+                                           onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
+                                            <i class="fas fa-file-excel"></i> Excel
+                                        </a>
+                                        <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ $puk->status ?? 'Draft' }}</span>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -1604,7 +1621,24 @@
                                             <div style="font-size: 12px; opacity: 0.9;">{{ $pmk->judul }}</div>
                                         </div>
                                     </div>
-                                    <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ $pmk->status ?? 'Draft' }}</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <!-- Download Buttons -->
+                                        <a href="{{ route('documents.export.pmk.pdf', $document->id) }}" 
+                                           class="btn btn-sm" 
+                                           style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
+                                           onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
+                                           onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
+                                            <i class="fas fa-file-pdf"></i> PDF
+                                        </a>
+                                        <a href="{{ route('documents.export.pmk.excel', $document->id) }}" 
+                                           class="btn btn-sm" 
+                                           style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
+                                           onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
+                                           onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
+                                            <i class="fas fa-file-excel"></i> Excel
+                                        </a>
+                                        <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ $pmk->status ?? 'Draft' }}</span>
+                                    </div>
                                 </div>
                             </div>
                             

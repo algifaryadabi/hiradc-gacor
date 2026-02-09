@@ -834,6 +834,66 @@
         .section-border-right {
             border-right: 3px solid #94a3b8 !important;
         }
+
+        /* Tabs Styling */
+        .page-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-sub);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+            background: var(--primary-light);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .badge-count {
+            background: var(--primary);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 100px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 
@@ -960,7 +1020,27 @@
                     </div>
                 </div>
 
-                <div class="table-wrapper">
+                @php
+                    $puk = $document->pukProgram;
+                    $pmk = $document->pmkProgram;
+                    // Count only the existence of the program document, not the items
+                    $programCount = ($puk ? 1 : 0) + ($pmk ? 1 : 0);
+                @endphp
+
+                <div class="page-tabs">
+                    <button type="button" class="tab-btn active" onclick="openTab(event, 'tab-hiradc')">
+                        <i class="fas fa-table"></i> HIRADC
+                    </button>
+                    <button type="button" class="tab-btn" onclick="openTab(event, 'tab-programs')">
+                        <i class="fas fa-tasks"></i> Program Kerja
+                        @if($programCount > 0)
+                            <span class="badge-count">{{ $programCount }}</span>
+                        @endif
+                    </button>
+                </div>
+
+                <div id="tab-hiradc" class="tab-content active">
+                    <div class="table-wrapper">
                     <table class="excel-table">
                         <thead>
                             <!-- Header Row 1: Main Sections (BAGIAN 1-5) -->
@@ -1271,225 +1351,8 @@
                     </table>
                 </div>
 
-            @php
-                // Logic Visibilitas Program Kerja (MOVED HERE)
-                // Tampilkan jika Unit Pengelola terkait sudah approve/publish
-                
-                $sheApproved = in_array($document->status_she, ['approved', 'published', 'level3_approved']);
-                $secApproved = in_array($document->status_security, ['approved', 'published', 'level3_approved']);
-                
-                $showPrograms = false;
-                if (isset($filter)) {
-                    if ($filter == 'SHE' && $sheApproved) $showPrograms = true;
-                    elseif ($filter == 'Security' && $secApproved) $showPrograms = true;
-                    elseif (($filter == 'ALL' || empty($filter)) && ($sheApproved || $secApproved)) $showPrograms = true;
-                } else {
-                    if ($sheApproved || $secApproved) $showPrograms = true;
-                }
-
-                $puk = $document->pukProgram;
-                $pmk = $document->pmkProgram;
-            @endphp
-
-            @if($showPrograms)
-                <style>
-                    /* Hide Number Input Spinners */
-                    input[type=number]::-webkit-inner-spin-button, 
-                    input[type=number]::-webkit-outer-spin-button { 
-                        -webkit-appearance: none; 
-                        margin: 0; 
-                    }
-                    input[type=number] {
-                        -moz-appearance: textfield;
-                    }
-                    
-                    /* Wrapper for scrolling */
-                    .hiradc-wrapper {
-                        overflow-x: auto;
-                        -webkit-overflow-scrolling: touch;
-                        width: 100%;
-                        border: 1px solid var(--border);
-                        border-radius: 8px;
-                        margin-bottom: 20px;
-                        background: white;
-                    }
-
-                    /* Info Table Styling */
-                    .info-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        font-size: 14px;
-                    }
-                    .info-table td {
-                        padding: 8px 12px;
-                        vertical-align: top;
-                        border-bottom: 1px solid #f1f5f9;
-                    }
-                    .info-table tr:last-child td {
-                        border-bottom: none;
-                    }
-                    .info-label {
-                        font-weight: 600;
-                        color: #475569;
-                        width: 180px;
-                    }
-                    .info-value {
-                        color: #0f172a;
-                    }
-                </style>
-
-                @if($puk)
-                <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #3b82f6;">
-                    <div class="doc-header" style="justify-content: flex-start; gap: 12px; margin-bottom: 20px; padding: 20px 24px; border-bottom: 1px solid #e2e8f0;">
-                        <i class="fas fa-tasks" style="color: #3b82f6; font-size: 20px;"></i>
-                        <h2 style="margin:0; font-size:18px; color:#1e293b;">Review Program Unit Kerja (PUK)</h2>
-                    </div>
-                    
-                    <div style="padding: 0 24px 24px 24px;">
-                        <!-- Informasi Program (Refactored to Table) -->
-                        <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
-                            <table class="info-table">
-                                <tr>
-                                    <td class="info-label">Judul Program</td>
-                                    <td class="info-value">: {{ $puk->judul }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="info-label">Tujuan</td>
-                                    <td class="info-value">: {{ $puk->tujuan }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="info-label">Sasaran</td>
-                                    <td class="info-value">: {{ $puk->sasaran }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="info-label">Penanggung Jawab</td>
-                                    <td class="info-value">: {{ $puk->penanggung_jawab }}</td>
-                                </tr>
-                            </table>
-                        </div>
-
-                        @if($puk->program_kerja && is_array($puk->program_kerja) && count($puk->program_kerja) > 0)
-                        <div style="margin-bottom: 12px;">
-                            <h4 style="font-size:15px; font-weight:700; color:#0f172a; margin: 0;">Detail Program Kerja:</h4>
-                        </div>
-
-                        <!-- Menggunakan hiradc-wrapper dan excel-table untuk style yang konsisten -->
-                        <div class="hiradc-wrapper">
-                            <table class="excel-table" style="min-width: 1500px;">
-                                <thead>
-                                    <tr>
-                                        <th rowspan="2" style="width: 50px;">NO</th>
-                                        <th rowspan="2" style="min-width: 250px;">URAIAN KEGIATAN</th>
-                                        <th rowspan="2" style="min-width: 150px;">KOORD.</th>
-                                        <th rowspan="2" style="min-width: 150px;">PELAKSANA</th>
-                                        <th colspan="12" class="text-center">TARGET (%)</th>
-                                    </tr>
-                                    <tr>
-                                        @for($m=1; $m<=12; $m++)
-                                            <th style="width: 50px; text-align: center;">{{ $m }}</th>
-                                        @endfor
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($puk->program_kerja as $index => $item)
-                                    <tr>
-                                        <td style="text-align: center; font-weight: 600;">{{ $index + 1 }}</td>
-                                        <td>{{ $item['uraian'] ?? '-' }}</td>
-                                        <td>{{ $item['koordinator'] ?? '-' }}</td>
-                                        <td>{{ $item['pelaksana'] ?? '-' }}</td>
-                                        @php $targets = $item['target'] ?? []; @endphp
-                                        @for($m=0; $m<12; $m++)
-                                            <td style="text-align: center;">
-                                                {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}
-                                            </td>
-                                        @endfor
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-                @endif
-
-                @if($pmk)
-                <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #c026d3;">
-                    <div class="doc-header" style="justify-content: flex-start; gap: 12px; margin-bottom: 20px; padding: 20px 24px; border-bottom: 1px solid #e2e8f0;">
-                        <i class="fas fa-project-diagram" style="color: #c026d3; font-size: 20px;"></i>
-                        <h2 style="margin:0; font-size:18px; color:#1e293b;">Review Program Manajemen Korporat (PMK)</h2>
-                    </div>
-                    
-                    <div style="padding: 0 24px 24px 24px;">
-                        <div style="background: #faf5ff; padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e9d5ff;">
-                            <table class="info-table">
-                                <tr>
-                                    <td class="info-label">Judul Program</td>
-                                    <td class="info-value">: {{ $pmk->judul }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="info-label">Tujuan</td>
-                                    <td class="info-value">: {{ $pmk->tujuan }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="info-label">Sasaran</td>
-                                    <td class="info-value">: {{ $pmk->sasaran }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="info-label">Penanggung Jawab</td>
-                                    <td class="info-value">: {{ $pmk->penanggung_jawab }}</td>
-                                </tr>
-                            </table>
-                        </div>
-
-                        @if($pmk->program_kerja && is_array($pmk->program_kerja) && count($pmk->program_kerja) > 0)
-                        <div style="margin-bottom: 12px;">
-                            <h4 style="font-size:15px; font-weight:700; color:#0f172a; margin: 0;">Detail Program Kerja:</h4>
-                        </div>
-
-                        <div class="hiradc-wrapper">
-                            <table class="excel-table" style="min-width: 1500px;">
-                                <thead>
-                                    <tr>
-                                        <th rowspan="2" style="width: 50px;">NO</th>
-                                        <th rowspan="2" style="min-width: 200px;">URAIAN KEGIATAN</th>
-                                        <th rowspan="2" style="width: 150px;">PIC</th>
-                                        <th colspan="12" class="text-center">TARGET (%)</th>
-                                        <th rowspan="2" style="min-width: 150px;">ANGGARAN</th>
-                                    </tr>
-                                    <tr>
-                                        @for($m=1; $m<=12; $m++)
-                                            <th style="width: 50px; text-align: center;">{{ $m }}</th>
-                                        @endfor
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($pmk->program_kerja as $index => $item)
-                                    <tr>
-                                        <td style="text-align: center; font-weight: 600;">{{ $index + 1 }}</td>
-                                        <td>{{ $item['uraian'] ?? '-' }}</td>
-                                        <td>{{ (!empty($item['koordinator']) && $item['koordinator'] !== '-') ? $item['koordinator'] : ($item['pelaksana'] ?? $item['pic'] ?? '-') }}</td>
-                                        @php $targets = $item['target'] ?? []; @endphp
-                                        @for($m=0; $m<12; $m++)
-                                            <td style="text-align: center;">
-                                                {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}
-                                            </td>
-                                        @endfor
-                                        <td>
-                                            {{ isset($item['anggaran']) ? 'Rp ' . number_format($item['anggaran'], 0, ',', '.') : '-' }}
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-                @endif
-            @endif
-
                 <!-- Compliance Checklist (Read Only) -->
+                <!-- HIRADC CHECKLIST UNIQUE MARKER -->
                 <div class="doc-card" style="margin-top: 40px;">
                     <div class="card-header-slim">
                         <i class="fas fa-clipboard-check"></i>
@@ -1570,17 +1433,241 @@
                             </table>
                         </div>
                     </div>
+                </div>
 
-            </form>
+            </div> <!-- End tab-hiradc -->
+
+            <div id="tab-programs" class="tab-content">
             
-            <!-- PUK SECTION (Injected) -->
+            @php
+                // Logic Visibilitas Program Kerja (MOVED HERE)
+                // Tampilkan jika Unit Pengelola terkait sudah approve/publish
+                
+                $sheApproved = in_array($document->status_she, ['approved', 'published', 'level3_approved']);
+                $secApproved = in_array($document->status_security, ['approved', 'published', 'level3_approved']);
+                
+                $showPrograms = false;
+                if (isset($filter)) {
+                    if ($filter == 'SHE' && $sheApproved) $showPrograms = true;
+                    elseif ($filter == 'Security' && $secApproved) $showPrograms = true;
+                    elseif (($filter == 'ALL' || empty($filter)) && ($sheApproved || $secApproved)) $showPrograms = true;
+                } else {
+                    if ($sheApproved || $secApproved) $showPrograms = true;
+                }
 
+                $puk = $document->pukProgram;
+                $pmk = $document->pmkProgram;
+            @endphp
 
+            @if($showPrograms)
+                <style>
+                    /* Hide Number Input Spinners */
+                    input[type=number]::-webkit-inner-spin-button, 
+                    input[type=number]::-webkit-outer-spin-button { 
+                        -webkit-appearance: none; 
+                        margin: 0; 
+                    }
+                    input[type=number] {
+                        -moz-appearance: textfield;
+                    }
+                    
+                    /* Wrapper for scrolling */
+                    .hiradc-wrapper {
+                        overflow-x: auto;
+                        -webkit-overflow-scrolling: touch;
+                        width: 100%;
+                        border: 1px solid var(--border);
+                        border-radius: 8px;
+                        margin-bottom: 20px;
+                        background: white;
+                    }
 
+                    /* Info Table Styling */
+                    .info-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 14px;
+                    }
+                    .info-table td {
+                        padding: 8px 12px;
+                        vertical-align: top;
+                        border-bottom: 1px solid #f1f5f9;
+                    }
+                    .info-table tr:last-child td {
+                        border-bottom: none;
+                    }
+                    .info-label {
+                        font-weight: 600;
+                        color: #475569;
+                        width: 180px;
+                    }
+                    .info-value {
+                        color: #0f172a;
+                    }
+                </style>
 
-            <!-- History Card (Separated) -->
-            <div class="history-card" style="margin-top: 32px;">
-                <div class="section-heading">
+                @if($puk)
+                <div class="doc-card" style="margin-top: 24px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div class="card-header-slim" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9;">
+                        <i class="fas fa-tasks" style="color: #3b82f6;"></i>
+                        <h2 style="font-size: 16px; margin: 0;">Review Program Unit Kerja (PUK)</h2>
+                    </div>
+                    <div style="padding: 20px;">
+                        <!-- Informasi Program (Compact) -->
+                        <div style="background: #f8fafc; padding: 16px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <tr>
+                                    <td style="width: 160px; font-weight: 600; color: #64748b; padding-bottom: 8px;">Judul Program</td>
+                                    <td style="color: #334155; padding-bottom: 8px;">: {{ $puk->judul }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600; color: #64748b; padding-bottom: 8px;">Tujuan</td>
+                                    <td style="color: #334155; padding-bottom: 8px;">: {{ $puk->tujuan }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600; color: #64748b; padding-bottom: 8px;">Sasaran</td>
+                                    <td style="color: #334155; padding-bottom: 8px;">: {{ $puk->sasaran }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600; color: #64748b;">Penanggung Jawab</td>
+                                    <td style="color: #334155;">: {{ $puk->penanggung_jawab }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        @if($puk->program_kerja && is_array($puk->program_kerja) && count($puk->program_kerja) > 0)
+                        <div style="margin-bottom: 10px;">
+                            <h4 style="font-size:14px; font-weight:700; color:#334155; margin: 0;">Detail Program Kerja:</h4>
+                        </div>
+
+                        <!-- Wrapper dengan scroll horizontal -->
+                        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                            <table class="table table-bordered " style="width:100%; min-width: 1000px; font-size:12px; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #1e293b; color: white;">
+                                        <th rowspan="2" style="border: 1px solid #334155; padding: 8px; text-align: center; width: 40px; vertical-align: middle;">NO</th>
+                                        <th rowspan="2" style="border: 1px solid #334155; padding: 8px; text-align: left; min-width: 200px; vertical-align: middle;">URAIAN KEGIATAN</th>
+                                        <th rowspan="2" style="border: 1px solid #334155; padding: 8px; text-align: left; min-width: 120px; vertical-align: middle;">KOORD.</th>
+                                        <th rowspan="2" style="border: 1px solid #334155; padding: 8px; text-align: left; min-width: 120px; vertical-align: middle;">PELAKSANA</th>
+                                        <th colspan="12" style="border: 1px solid #334155; padding: 8px; text-align: center;">TARGET (%)</th>
+                                    </tr>
+                                    <tr style="background: #334155; color: white;">
+                                        @for($m=1; $m<=12; $m++)
+                                            <th style="border: 1px solid #334155; padding: 6px; text-align: center; width: 40px; min-width: 40px;">{{ $m }}</th>
+                                        @endfor
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($puk->program_kerja as $index => $item)
+                                    <tr style="background: {{ $index % 2 == 0 ? '#ffffff' : '#f8fafc' }}; color: #334155;">
+                                        <td style="border: 1px solid #e2e8f0; padding: 8px; text-align: center; font-weight: 600;">{{ $index + 1 }}</td>
+                                        <td style="border: 1px solid #e2e8f0; padding: 8px;">
+                                            {{ $item['uraian'] ?? '-' }}
+                                        </td>
+                                        <td style="border: 1px solid #e2e8f0; padding: 8px;">
+                                            {{ $item['koordinator'] ?? '-' }}
+                                        </td>
+                                        <td style="border: 1px solid #e2e8f0; padding: 8px;">
+                                            {{ $item['pelaksana'] ?? '-' }}
+                                        </td>
+                                        @php $targets = $item['target'] ?? []; @endphp
+                                        @for($m=0; $m<12; $m++)
+                                            <td style="border: 1px solid #e2e8f0; padding: 4px; text-align: center; font-size: 11px;">
+                                                {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}
+                                            </td>
+                                        @endfor
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                @endif
+
+                @if($pmk)
+                <div class="doc-card" style="margin-top: 24px; border-left: 4px solid #c026d3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div class="card-header-slim" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9;">
+                        <i class="fas fa-project-diagram" style="color: #c026d3;"></i>
+                        <h2 style="font-size: 16px; margin: 0;">Review Program Manajemen Korporat (PMK)</h2>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="background: #faf5ff; padding: 16px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #e9d5ff;">
+                             <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <tr>
+                                    <td style="width: 160px; font-weight: 600; color: #64748b; padding-bottom: 8px;">Judul Program</td>
+                                    <td style="color: #334155; padding-bottom: 8px;">: {{ $pmk->judul }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600; color: #64748b; padding-bottom: 8px;">Tujuan</td>
+                                    <td style="color: #334155; padding-bottom: 8px;">: {{ $pmk->tujuan }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600; color: #64748b; padding-bottom: 8px;">Sasaran</td>
+                                    <td style="color: #334155; padding-bottom: 8px;">: {{ $pmk->sasaran }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600; color: #64748b;">Penanggung Jawab</td>
+                                    <td style="color: #334155;">: {{ $pmk->penanggung_jawab }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        @if($pmk->program_kerja && is_array($pmk->program_kerja) && count($pmk->program_kerja) > 0)
+                        <div style="margin-bottom: 10px;">
+                            <h4 style="font-size:14px; font-weight:700; color:#334155; margin: 0;">Detail Program Kerja:</h4>
+                        </div>
+
+                        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                            <table class="table table-bordered" style="width:100%; min-width: 1000px; font-size:12px; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #1e293b; color: white;">
+                                        <th rowspan="2" style="border: 1px solid #334155; padding: 8px; text-align: center; width: 40px; vertical-align: middle;">NO</th>
+                                        <th rowspan="2" style="border: 1px solid #334155; padding: 8px; text-align: left; min-width: 200px; vertical-align: middle;">URAIAN KEGIATAN</th>
+                                        <th rowspan="2" style="border: 1px solid #334155; padding: 8px; text-align: left; width: 120px; vertical-align: middle;">PIC</th>
+                                        <th colspan="12" style="border: 1px solid #334155; padding: 8px; text-align: center;">TARGET (%)</th>
+                                        <th rowspan="2" style="border: 1px solid #334155; padding: 8px; text-align: left; min-width: 120px; vertical-align: middle;">ANGGARAN</th>
+                                    </tr>
+                                    <tr style="background: #334155; color: white;">
+                                        @for($m=1; $m<=12; $m++)
+                                            <th style="border: 1px solid #334155; padding: 6px; text-align: center; width: 40px; min-width: 40px;">{{ $m }}</th>
+                                        @endfor
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($pmk->program_kerja as $index => $item)
+                                    <tr style="background: {{ $index % 2 == 0 ? '#ffffff' : '#f8fafc' }}; color: #334155;">
+                                        <td style="border: 1px solid #e2e8f0; padding: 8px; text-align: center; font-weight: 600;">{{ $index + 1 }}</td>
+                                        <td style="border: 1px solid #e2e8f0; padding: 8px;">
+                                            {{ $item['uraian'] ?? '-' }}
+                                        </td>
+                                        <td style="border: 1px solid #e2e8f0; padding: 8px;">
+                                            {{ (!empty($item['koordinator']) && $item['koordinator'] !== '-') ? $item['koordinator'] : ($item['pelaksana'] ?? $item['pic'] ?? '-') }}
+                                        </td>
+                                        @php $targets = $item['target'] ?? []; @endphp
+                                        @for($m=0; $m<12; $m++)
+                                            <td style="border: 1px solid #e2e8f0; padding: 4px; text-align: center; font-size: 11px;">
+                                                {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}
+                                            </td>
+                                        @endfor
+                                        <td style="border: 1px solid #e2e8f0; padding: 8px;">
+                                            {{ isset($item['anggaran']) ? 'Rp ' . number_format($item['anggaran'], 0, ',', '.') : '-' }}
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                @endif
+            @endif
+
+            </div>
+            <div class="history-card" style="margin-top: 32px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 24px;">
+                <div class="section-heading" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; color: #1e293b;">
                     <i class="fas fa-history" style="color:var(--primary);"></i>
                     Riwayat Persetujuan
                 </div>
@@ -1685,11 +1772,11 @@
 
                         <div class="timeline-item {{ $isFirst ? 'active' : '' }}">
                             <div class="timeline-dot" style="{{ $isFirst ? 'border-color:' . $actionColor : '' }}"></div>
-                            <div class="timeline-date">{{ $log->created_at->format('d M Y, H:i') }} WIB</div>
-                            <div class="timeline-content">
-                                <div class="timeline-user">
+                            <div class="timeline-date" style="font-size: 13px; color: #64748b;">{{ $log->created_at->format('d M Y, H:i') }} WIB</div>
+                            <div class="timeline-content" style="padding: 0 0 0 15px;">
+                                <div class="timeline-user" style="font-size: 14px; font-weight: 600; color: #334155;">
                                     {{ optional($log->approver)->nama_user ?? 'System' }}
-                                    <span style="font-weight:400; color:var(--text-sub);">
+                                    <span style="font-weight:400; color:var(--text-sub); font-size: 13px;">
                                         •
                                         {{ optional($log->approver)->role_jabatan_name ? $log->approver->role_jabatan_name : ($log->action == 'created' ? 'Submitter' : '-') }}
                                         @if(optional(optional($log->approver)->unit)->nama_unit)
@@ -1697,15 +1784,15 @@
                                         @endif
                                     </span>
                                 </div>
-                                <div class="timeline-action">
+                                <div class="timeline-action" style="margin-top: 6px;">
                                     <span
-                                        style="display:inline-flex; align-items:center; gap:8px; padding:6px 14px; background:{{ $actionColor }}15; color:{{ $actionColor }}; border-radius:100px; font-weight:700; font-size:12px; border:1px solid {{ $actionColor }}30;">
+                                        style="display:inline-flex; align-items:center; gap:8px; padding:4px 12px; background:{{ $actionColor }}15; color:{{ $actionColor }}; border-radius:100px; font-weight:600; font-size:11px; border:1px solid {{ $actionColor }}30;">
                                         <i class="fas {{ $icon }}"></i> {{ $actionLabel }}
                                     </span>
                                 </div>
                                 @if($log->catatan)
                                     <div class="timeline-note"
-                                        style="margin-top:12px; padding:12px; background:white; border-radius:8px; border:1px solid var(--border); color:var(--text-main); font-style:normal;">
+                                        style="margin-top:10px; padding:10px; background:#f8fafc; border-radius:6px; border:1px solid #e2e8f0; color:#475569; font-size: 13px; font-style:italic;">
                                         "{{ $log->catatan }}"
                                     </div>
                                 @endif
@@ -1718,8 +1805,13 @@
             <!-- End History Card -->
             </div>
 
-            <!-- DECISION PANEL (Moved Below History) -->
-            <div id="decision-section" style="margin-top: 40px;">
+            <!-- End tab-programs (Now closed before history card) -->
+
+
+
+
+            <!-- DECISION PANEL (Fixed Bottom) -->
+            <div id="decision-section">
                 @php
                     // Show action buttons if logic
                     $showActions = false;
@@ -1747,36 +1839,35 @@
                 @endphp
 
                 @if($showActions)
-                <!-- Custom Sticky-like Action Bar (Now Static at Bottom) -->
-                <div class="action-bar-container" style="background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); display: flex; align-items: center; gap: 20px; color: white;">
+                <!-- Custom Sticky Action Bar (Fixed at Bottom) -->
+                <div class="action-bar-container" style="position: fixed; bottom: 20px; left: 280px; right: 20px; z-index: 1000; background: #1e293b; padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); display: flex; align-items: center; gap: 20px; color: white;">
                     
                     <!-- Input Section -->
                     <div style="flex: 1;">
                         <textarea id="catatan_ui" class="form-control" 
                             placeholder="Catatan Review (Wajib jika Revisi)..." 
-                            rows="2" 
-                            style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; padding: 12px; font-size: 14px; resize: none;"></textarea>
-                        <div style="font-size: 12px; color: #94a3b8; margin-top: 6px;">
-                            <i class="fas fa-info-circle"></i> Catatan ini akan tersimpan permanen dalam riwayat.
-                        </div>
+                            rows="1" 
+                            style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; padding: 10px; font-size: 13px; resize: none;"></textarea>
                     </div>
 
                     <!-- Buttons Section -->
-                    <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="display: flex; gap: 10px; align-items: center;">
                         <!-- REVISE -->
                         <button type="button" onclick="submitAction('revise', '{{ $filter ?? 'ALL' }}')"
-                            style="background: #ef4444; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
+                            style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; font-size: 13px;">
                             <i class="fas fa-undo"></i> {{ $reviseLabel }}
                         </button>
                         
                         <!-- APPROVE -->
                         <button type="button" onclick="submitAction('approve', '{{ $filter ?? 'ALL' }}')"
-                            style="background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
+                            style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; font-size: 13px;">
                             <i class="fas fa-check"></i> {{ $approveLabel }}
                         </button>
                     </div>
 
                 </div>
+                <!-- Spacer to prevent content from being hidden behind sticky bar -->
+                <div style="height: 100px;"></div>
                 @endif
             </div>
 
@@ -1842,7 +1933,25 @@
             });
         }
     </script>
+    </form>
     @include('partials.alerts')
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove('active');
+            }
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.className += " active";
+        }
+    </script>
 </body>
 
 </html>

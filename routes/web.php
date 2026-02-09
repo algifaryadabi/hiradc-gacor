@@ -171,6 +171,13 @@ Route::middleware('auth')->group(function () {
     Route::get('documents/{document}/export-detail-pdf', [\App\Http\Controllers\DocumentController::class, 'exportDetailPdf'])
         ->name('documents.export.detail.pdf');
     Route::get('/documents/{document}/export/excel', [DocumentController::class, 'exportDetailExcel'])->name('documents.export.detail.excel');
+    
+    // PUK/PMK Export Routes
+    Route::get('/documents/{document}/export/puk/pdf', [DocumentController::class, 'exportPukPdf'])->name('documents.export.puk.pdf');
+    Route::get('/documents/{document}/export/puk/excel', [DocumentController::class, 'exportPukExcel'])->name('documents.export.puk.excel');
+    Route::get('/documents/{document}/export/pmk/pdf', [DocumentController::class, 'exportPmkPdf'])->name('documents.export.pmk.pdf');
+    Route::get('/documents/{document}/export/pmk/excel', [DocumentController::class, 'exportPmkExcel'])->name('documents.export.pmk.excel');
+
 
     Route::get('/my-documents/summary', function () {
         return redirect()->route('documents.index');

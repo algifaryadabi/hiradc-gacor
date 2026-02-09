@@ -1276,23 +1276,283 @@
                          </div>
                      </div>
                      
-                     <!-- 6. Residual -->
-                     <div class="bagian-5-section" style="display:none;">
-                          <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
-                              <i class="fas fa-tasks" style="color: #8b5cf6; margin-right: 8px;"></i>
-                              BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa
-                          </h3>
-                          <div class="form-group"><label class="form-label">Tindak Lanjut</label><textarea class="form-control" name="items[{index}][kolom18_tindak_lanjut]"></textarea></div>
-                          
-                          <div class="form-group mb-3">
-                              <label class="form-label">Dapat Ditoleransi?</label>
-                              <select class="form-control" name="items[{index}][kolom18_toleransi]">
-                                  <option value="Ya">Ya</option>
-                                  <option value="Tidak">Tidak</option>
-                              </select>
-                          </div>
-                     </div>
+                        <!-- 5. PUK/PMK Program Management -->
+                        <div class="bagian-5-section">
+                            <h3
+                                style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                                <i class="fas fa-check-double" style="color: #15803d; margin-right: 8px;"></i>
+                                BAGIAN 5: Evaluasi & Program Pengendalian
+                            </h3>
+                            <div
+                                style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
+
+                                <!-- Column 18: Auto-Tolerance -->
+                                <div class="form-group">
+                                    <label class="form-label">Kolom 18: Risiko Dapat Ditoleransi?</label>
+                                    <div class="tolerance-display"
+                                        style="background: white; padding: 16px; border-radius: 8px; border: 2px solid #cbd5e1;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div class="tolerance-icon"
+                                                style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                                <i class="fas fa-spinner"></i>
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <div class="tolerance-value"
+                                                    style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">
+                                                    Menunggu Penilaian Risiko
+                                                </div>
+                                                <div class="tolerance-reason" style="font-size: 12px; color: #64748b;">
+                                                    Hitung risiko di Kolom 12-14 untuk menentukan toleransi
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="items[{index}][kolom18_toleransi]"
+                                        class="tolerance-input">
+                                    <input type="hidden" name="items[{index}][kolom18_auto]" class="tolerance-auto"
+                                        value="1">
+                                </div>
+
+                                <!-- Column 19: Program Title (conditional) -->
+                                <div class="kolom19-section" style="display:none; margin-top: 20px;">
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            Kolom 19: Rencana Pengendalian Tindak Lanjut <span class="required">*</span>
+                                        </label>
+                                        <textarea class="form-control kolom19-input"
+                                            name="items[{index}][kolom19_rencana]" rows="3"
+                                            placeholder="Masukkan rencana pengendalian yang akan menjadi judul program PUK/PMK..."></textarea>
+                                        <small style="display: block; margin-top: 6px; color: #64748b;">
+                                            <i class="fas fa-info-circle"></i> Ini akan menjadi judul Program PUK/PMK
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Column 20-22: Risiko Setelah Pengendalian Tindak Lanjut (Moved Here) -->
+                                <div class="risk-after-control-section" style="display:none; margin-top: 25px;">
+                                    <div
+                                        style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 20px; border-radius: 12px; border: 2px solid #93c5fd; margin-bottom: 20px;">
+                                        <h4
+                                            style="color: #1e40af; margin-bottom: 15px; font-size: 15px; font-weight: 700;">
+                                            <i class="fas fa-chart-line"></i> Risiko Setelah Pengendalian Tindak Lanjut
+                                        </h4>
+
+                                        <div style="display: flex; gap: 20px; align-items: flex-start;">
+                                            <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                                <div class="form-group">
+                                                    <label class="form-label">Kolom 20: L (Likelihood)</label>
+                                                    <select class="form-control likelihood-select-after"
+                                                        name="items[{index}][kolom20_kemungkinan_lanjut]"
+                                                        onchange="calculateRiskAfterControl(this)">
+                                                        <option value="">-- Pilih --</option>
+                                                        <option value="1">1 - Sangat Jarang</option>
+                                                        <option value="2">2 - Jarang</option>
+                                                        <option value="3">3 - Kadang-kadang</option>
+                                                        <option value="4">4 - Sering</option>
+                                                        <option value="5">5 - Sangat Sering</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="form-label">Kolom 21: S (Severity)</label>
+                                                    <select class="form-control severity-select-after"
+                                                        name="items[{index}][kolom21_konsekuensi_lanjut]"
+                                                        onchange="calculateRiskAfterControl(this)">
+                                                        <option value="">-- Pilih --</option>
+                                                        <option value="1">1 - Tidak Signifikan</option>
+                                                        <option value="2">2 - Minor</option>
+                                                        <option value="3">3 - Moderate</option>
+                                                        <option value="4">4 - Major</option>
+                                                        <option value="5">5 - Catastrophic</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div style="flex: 0 0 160px; text-align:center;">
+                                                <label class="form-label">Kolom 22: Level</label>
+                                                <div class="risk-result-box-after"
+                                                    style="padding:15px; border-radius:8px; transition: background 0.3s; background: #e2e8f0; border: 1px solid #cbd5e1;">
+                                                    <div class="risk-score-after" style="font-size: 24px; font-weight: 800; color: #64748b;">-</div>
+                                                    <span class="risk-level-after"
+                                                        style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">PENDING</span>
+                                                </div>
+                                                <!-- Hidden inputs for columns 20, 21, 22 are already named correctly in selects/logic -->
+                                                <input type="hidden" name="items[{index}][kolom22_tingkat_risiko_lanjut]" class="input-score-after">
+                                                <input type="hidden" name="items[{index}][kolom22_level_lanjut]" class="input-level-after">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Hidden Metadata -->
+                                <input type="hidden" id="user_unit_name" value="{{ $user->unit->nama_unit ?? '' }}">
+
+                                <!-- PUK/PMK Program Section (conditional) -->
+                                <div class="program-section" style="display:none; margin-top: 25px;">
+                                    <div
+                                        style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 12px; border: 2px solid #fbbf24; margin-bottom: 20px;">
+                                        <h4
+                                            style="color: #92400e; margin-bottom: 15px; font-size: 15px; font-weight: 700;">
+                                            <i class="fas fa-clipboard-list"></i> Program Pengendalian Lanjutan
+                                            Diperlukan
+                                        </h4>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Pilih Jenis Program <span
+                                                    class="required">*</span></label>
+                                            <select class="form-control program-type-select"
+                                                name="items[{index}][kolom19_program_type]">
+                                                <option value="">-- Pilih Program --</option>
+                                                <option value="PUK" class="option-puk">PUK - Program Unit Kerja</option>
+                                                <option value="PMK" class="option-pmk">PMK - Program Manajemen Korporat
+                                                </option>
+                                            </select>
+                                            <small style="display: block; margin-top: 8px; color: #78350f;">
+                                                <strong>PUK:</strong> Risiko dapat ditangani di level unit<br>
+                                                <strong>PMK:</strong> Memerlukan keputusan/budget dari Direksi
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <!-- PUK/PMK Form Container (shown when type selected) -->
+                                    <div class="program-form-container" style="display:none;"></div>
+                                </div>
+
+                            </div>
+                        </div>
                 </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- PUK/PMK Form Template -->
+    <template id="program-form-template">
+        <div class="program-form"
+            style="background: white; padding: 25px; border-radius: 12px; border: 2px solid #e5e7eb; margin-top: 20px;">
+            <h5 class="program-form-title"
+                style="color: #1e40af; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #dbeafe; font-size: 14px; font-weight: 700;">
+            </h5>
+
+            <!-- 1. Judul (Auto-filled from Kolom 19) -->
+            <div class="form-group">
+                <label class="form-label">1. Judul Program <span class="required">*</span></label>
+                <input type="text" class="form-control program-judul" readonly
+                    style="background: #f3f4f6; font-weight: 600;">
+                <small class="text-muted">
+                    <i class="fas fa-link"></i> Diisi otomatis dari Kolom 19
+                </small>
+            </div>
+
+            <!-- 2. Tujuan -->
+            <div class="form-group">
+                <label class="form-label">2. Tujuan <span class="required">*</span></label>
+                <textarea class="form-control program-field" name="items[{index}][program_tujuan]" rows="3" required
+                    placeholder="Menjelaskan tujuan Program dan target pengurangan dampak..."></textarea>
+                <small class="text-muted">Detail tentang tujuan program dan target yang ingin dicapai</small>
+            </div>
+
+            <!-- 3. Sasaran -->
+            <div class="form-group">
+                <label class="form-label">3. Sasaran <span class="required">*</span></label>
+                <textarea class="form-control program-field" name="items[{index}][program_sasaran]" rows="3" required
+                    placeholder="Menjelaskan sasaran, tahapan pelaksanaan, dan target program..."></textarea>
+                <small class="text-muted">Sasaran konkret, tahapan (tahun), dan target terukur</small>
+            </div>
+
+            <!-- 4. Penanggung Jawab -->
+            <div class="form-group">
+                <label class="form-label">4. Penanggung Jawab <span class="required">*</span></label>
+                <input type="text" class="form-control program-field program-pj"
+                    name="items[{index}][program_penanggung_jawab]" required readonly
+                    style="background-color: #f8fafc; color: #64748b; cursor: not-allowed;">
+                <small class="text-muted">Unit kerja yang bertanggung jawab atas program ini (Auto-filled)</small>
+            </div>
+
+            <!-- 5. Uraian Revisi -->
+            <div class="form-group">
+                <label class="form-label">5. Uraian Revisi <span class="program-type-label"></span></label>
+                <textarea class="form-control program-field" name="items[{index}][program_uraian_revisi]" rows="3"
+                    placeholder="Revisi program, kendala, kajian (opsional jika program lanjutan)"></textarea>
+                <small class="text-muted">Jika program lanjutan, jelaskan revisi, kendala, dan kajiannya</small>
+            </div>
+
+            <!-- 6. Program Kerja Table -->
+            <div class="form-group">
+                <label class="form-label" style="display: block; margin-bottom: 10px;">6. Program Kerja <span
+                        class="required">*</span></label>
+                <div class="program-kerja-scroll"
+                    style="overflow-x: auto; overflow-y: visible; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                    <table class="table program-kerja-table table-bordered"
+                        style="margin-bottom: 0; min-width: 1400px; width: max-content;">
+                        <thead>
+                            <tr style="background: #5c7cfa; color: white; font-size: 12px; font-weight: 600;">
+                                <th rowspan="2"
+                                    style="width: 40px; text-align: center; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
+                                    No</th>
+                                <th rowspan="2"
+                                    style="min-width: 150px; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
+                                    Uraian Kegiatan</th>
+                                <th rowspan="2" class="col-koordinator"
+                                    style="min-width: 140px; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
+                                    Koordinator</th>
+                                <th rowspan="2" class="col-pelaksana"
+                                    style="min-width: 140px; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
+                                    Pelaksana</th>
+                                <th colspan="12" style="text-align: center; padding: 6px; border-color: #4c6ef5;">Target
+                                    (%)</th>
+                                <th rowspan="2" class="col-anggaran"
+                                    style="min-width: 120px; vertical-align: middle; display: none; padding: 6px; border-color: #4c6ef5;">
+                                    Anggaran (Rp)</th>
+                                <th rowspan="2"
+                                    style="width: 40px; text-align: center; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
+                                    Aksi</th>
+                            </tr>
+                            <tr style="background: #748ffc; color: white; font-size: 11px;">
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    1</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    2</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    3</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    4</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    5</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    6</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    7</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    8</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    9</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    10</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    11</th>
+                                <th
+                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
+                                    12</th>
+                            </tr>
+                        </thead>
+                        <tbody class="program-kerja-tbody">
+                            <!-- Rows will be added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addProgramKerjaRow(this)"
+                    style="background: #6366f1; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px;">
+                    <i class="fas fa-plus"></i> Tambah Baris Program Kerja
+                </button>
             </div>
         </div>
     </template>
@@ -1557,18 +1817,8 @@
             riskBox.style.background = bg;
             riskBox.style.color = textColor;
 
-            const bagian5 = item.querySelector('.bagian-5-section');
-            if (bagian5) {
-                if (score < 8) {
-                    bagian5.style.display = 'none';
-                    const resFields = bagian5.querySelectorAll('.res-val');
-                    resFields.forEach(field => field.removeAttribute('required'));
-                } else {
-                    bagian5.style.display = 'block';
-                    const resFields = bagian5.querySelectorAll('.res-val');
-                    resFields.forEach(field => field.setAttribute('required', 'required'));
-                }
-            }
+            // Trigger auto-tolerance calculation
+            calculateAutoTolerance(item, score, level);
         }
 
         // calculateItemResidual Removed
@@ -1872,6 +2122,315 @@
 
         // Initialize on page load
         initializeKolom11ForExistingItems();
+
+        // ==================== PUK/PMK LOGIC (APPENDED) ====================
+
+        function calculateAutoTolerance(item, riskScore, riskLevel) {
+            const toleranceInput = item.querySelector('.tolerance-input');
+            const toleranceAuto = item.querySelector('.tolerance-auto');
+            const toleranceDisplay = item.querySelector('.tolerance-display');
+            
+            // Sections to show/hide
+            const kolom19Section = item.querySelector('.kolom19-section');
+            const riskAfterSection = item.querySelector('.risk-after-control-section');
+            const programSection = item.querySelector('.program-section');
+            const programFormContainer = item.querySelector('.program-form-container');
+
+            let tolerance = 'Ya';
+            let reason = 'Risiko dapat ditoleransi';
+            let icon = '<i class="fas fa-check-circle" style="color: #10b981;"></i>';
+            let bg = '#ecfdf5';
+            let border = '#6ee7b7';
+
+            if (riskScore > 0) {
+                if (riskLevel === 'Sedang' || riskLevel === 'Tinggi' || riskLevel === 'Sangat Tinggi' || riskScore >= 8) {
+                    tolerance = 'Tidak';
+                    reason = 'Risiko TIDAK dapat ditoleransi (Wajib Ada Program)';
+                    icon = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>';
+                    bg = '#fef2f2';
+                    border = '#fca5a5';
+                }
+            } else {
+                reason = 'Menunggu Penilaian Risiko';
+                icon = '<i class="fas fa-spinner"></i>';
+                bg = 'white';
+                border = '#cbd5e1';
+                tolerance = ''; 
+            }
+
+            // Update DOM
+            if (toleranceInput) toleranceInput.value = tolerance;
+
+            if (toleranceDisplay) {
+                toleranceDisplay.style.background = bg;
+                toleranceDisplay.style.borderColor = border;
+                toleranceDisplay.querySelector('.tolerance-icon').innerHTML = icon;
+                toleranceDisplay.querySelector('.tolerance-value').textContent = tolerance === 'Tidak' ? 'TIDAK DITOLERANSI' : (tolerance === 'Ya' ? 'DAPAT DITOLERANSI' : 'PENDING');
+                toleranceDisplay.querySelector('.tolerance-reason').textContent = reason;
+            }
+
+            // Show/Hide Next Sections
+            if (tolerance === 'Tidak') {
+                if (kolom19Section) kolom19Section.style.display = 'block';
+                if (riskAfterSection) riskAfterSection.style.display = 'block';
+                if (programSection) programSection.style.display = 'block';
+                
+                // Add required attributes
+                const k19Input = item.querySelector('.kolom19-input');
+                if(k19Input) k19Input.setAttribute('required', 'required');
+                
+            } else {
+                if (kolom19Section) kolom19Section.style.display = 'none';
+                if (riskAfterSection) riskAfterSection.style.display = 'none';
+                if (programSection) programSection.style.display = 'none';
+                
+                // Remove required
+                const k19Input = item.querySelector('.kolom19-input');
+                if(k19Input) k19Input.removeAttribute('required');
+
+                // Clear program selection if hidden? No, sustain data for now or clear.
+                // Usually better to hide.
+            }
+
+            // Handle PUK/PMK Logic based on Risk Score
+            const programTypeSelect = item.querySelector('.program-type-select');
+            if (programTypeSelect && programSection) {
+                 const pukOption = programTypeSelect.querySelector('.option-puk');
+                 const pmkOption = programTypeSelect.querySelector('.option-pmk');
+                 
+                 // Logic:
+                 // Score >= 20 (Sangat Tinggi): FORCE PMK
+                 // Score 10-19 (Tinggi): Allow Both, Suggest PMK
+                 // Score < 10: Allow PUK, Disable PMK?
+                 
+                 if (riskScore >= 20) {
+                     // Force PMK
+                     if (pukOption) { pukOption.disabled = true; pukOption.style.display = 'none'; }
+                     if (pmkOption) { pmkOption.disabled = false; pmkOption.selected = true; }
+                     // Trigger change?
+                 } else if (riskScore >= 10) {
+                     // Allow Both
+                     if (pukOption) { pukOption.disabled = false; pukOption.style.display = 'block'; }
+                     if (pmkOption) { pmkOption.disabled = false; }
+                 } else {
+                     // Low Risk but Tolerance=Tidak? (e.g. Medium 8-9)
+                     // Allow PUK. PMK usually for High Risk.
+                     if (pmkOption) { pmkOption.disabled = true; } // Or allow?
+                     if (pukOption) { pukOption.disabled = false; pukOption.selected = true; }
+                 }
+            }
+        }
+
+        function calculateRiskAfterControl(el) {
+            const item = el.closest('.doc-item');
+            const likelihood = parseInt(item.querySelector('.likelihood-select-after').value) || 0;
+            const severity = parseInt(item.querySelector('.severity-select-after').value) || 0;
+
+            const score = likelihood * severity;
+            const scoreEl = item.querySelector('.risk-score-after');
+            const levelEl = item.querySelector('.risk-level-after');
+            const box = item.querySelector('.risk-result-box-after');
+            
+            const inputScore = item.querySelector('.input-score-after');
+            const inputLevel = item.querySelector('.input-level-after');
+
+            scoreEl.textContent = score || '-';
+            if (inputScore) inputScore.value = score;
+
+            let level = 'Rendah';
+            let bg = '#e2e8f0'; 
+            let textColor = '#64748b';
+
+            if (score > 0) {
+                textColor = '#fff';
+                if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
+                else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; }
+                else { level = 'Rendah'; bg = '#166534'; }
+            }
+
+            levelEl.textContent = (score > 0) ? level : 'PENDING';
+            if (inputLevel) inputLevel.value = level;
+            
+            if (box) {
+                box.style.background = bg;
+                box.querySelector('.risk-score-after').style.color = textColor;
+                box.querySelector('.risk-level-after').style.color = textColor;
+            }
+        }
+
+        // Program Type Selection Logic (For NEW/Changed Selection)
+        document.addEventListener('change', function (e) {
+            if (e.target.classList.contains('program-type-select')) {
+                const item = e.target.closest('.doc-item');
+                const programType = e.target.value;
+                const container = item.querySelector('.program-form-container');
+                const kolom19Value = item.querySelector('.kolom19-input')?.value || '';
+                const itemIndex = item.getAttribute('data-index');
+
+                if (!programType) {
+                    container.style.display = 'none';
+                    container.innerHTML = '';
+                    return;
+                }
+
+                // If content is already loaded (via PHP) and type matches, do nothing?
+                // But if user CHANGES type, we must reload template.
+                // We can check if existing form matches type?
+                // For now, simple logic: REPLACE content with Template.
+                // THIS WILL WIPE EXISTING DATA IF CHANGING TYPE!
+                // But that is expected behavior when switching forms.
+
+                const template = document.getElementById('program-form-template').innerHTML;
+                const processedHtml = template.replace(/{index}/g, itemIndex);
+
+                container.innerHTML = processedHtml;
+                container.style.display = 'block';
+
+                // Setup Form
+                toggleProgramHeaders(item);
+                const title = container.querySelector('.program-form-title');
+                if(title) title.textContent = `Form ${programType} - ${programType === 'PUK' ? 'Program Unit Kerja' : 'Program Manajemen Korporat'}`;
+
+                const judulInput = container.querySelector('.program-judul');
+                if(judulInput) judulInput.value = kolom19Value;
+
+                const pjInput = container.querySelector('.program-pj');
+                const userUnitName = document.getElementById('user_unit_name')?.value || '';
+                if (pjInput) pjInput.value = userUnitName;
+
+                const typeLabel = container.querySelector('.program-type-label');
+                if(typeLabel) typeLabel.textContent = programType === 'PMK' ? '(Harus diisi untuk PMK)' : '(Opsional)';
+
+                // Initialize one row
+                setTimeout(() => {
+                    const addBtn = container.querySelector('button'); // Assume button is for add row
+                    if (addBtn && addBtn.textContent.includes('Tambah')) addProgramKerjaRow(addBtn);
+                }, 50);
+            }
+        });
+
+        // Sync Judul Program with Kolom 19
+        document.addEventListener('input', function(e) {
+            if(e.target.classList.contains('kolom19-input')) {
+                const item = e.target.closest('.doc-item');
+                const judul = item.querySelector('.program-judul');
+                if(judul) judul.value = e.target.value;
+            }
+        });
+
+        function toggleProgramHeaders(item) {
+             const isPmk = isPmkSelected(item);
+             const colsKoordinator = item.querySelectorAll('.col-koordinator');
+             const colsPelaksana = item.querySelectorAll('.col-pelaksana');
+             const colsAnggaran = item.querySelectorAll('.col-anggaran');
+
+             colsKoordinator.forEach(el => el.textContent = isPmk ? 'PIC' : 'Koordinator');
+             colsPelaksana.forEach(el => el.style.display = isPmk ? 'none' : 'table-cell');
+             colsAnggaran.forEach(el => el.style.display = isPmk ? 'table-cell' : 'none');
+        }
+
+        function isPmkSelected(el) {
+             const item = el.closest('.doc-item');
+             if(!item) return false;
+             // Check select value
+             const sel = item.querySelector('.program-type-select');
+             return sel && sel.value === 'PMK';
+        }
+
+        function addProgramKerjaRow(btn) {
+            const table = btn.previousElementSibling.querySelector('.program-kerja-tbody');
+            // Use timestamp for unique index to avoid collision logic issues
+            const uniqueId = Date.now() + Math.floor(Math.random() * 1000); 
+            const rowCount = table.querySelectorAll('tr').length + 1; // Visual Index
+
+            const item = btn.closest('.doc-item');
+            const itemIndex = item.getAttribute('data-index');
+            const isPMK = isPmkSelected(btn);
+
+            // User Variables passed from Controller
+            const band3Users = @json($band3Users ?? []);
+            const band4Users = @json($band4Users ?? []);
+            const pmkPicUsers = @json($pmkPicUsers ?? []);
+
+            let band3Options = '<option value="">-- Pilih --</option>';
+            band3Users.forEach(u => band3Options += `<option value="${u.nama_user}">${u.nama_user}</option>`);
+
+            let band4Options = '<option value="">-- Pilih --</option>';
+            band4Users.forEach(u => band4Options += `<option value="${u.nama_user}">${u.nama_user}</option>`);
+
+            let pmkPicOptions = '<option value="">-- Pilih --</option>';
+            pmkPicUsers.forEach(u => pmkPicOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`);
+
+            const row = document.createElement('tr');
+            
+            // Build Row HTML
+            // Note: We use uniqueId for array key to prevent collision!
+            // name="items[${itemIndex}][program_kerja][${uniqueId}][uraian]"
+            
+            let koordinatorHtml = '';
+            if(isPMK) {
+                koordinatorHtml = `
+                    <select class="form-select" name="items[${itemIndex}][program_kerja][${uniqueId}][koordinator]" required style="border:none; width:100%; font-size:12px;">
+                        ${pmkPicOptions}
+                    </select>
+                `;
+            } else {
+                 koordinatorHtml = `
+                    <select class="form-select" name="items[${itemIndex}][program_kerja][${uniqueId}][koordinator]" required style="border:none; width:100%; font-size:12px;">
+                        ${band3Options}
+                    </select>
+                `;
+            }
+
+            let pelaksanaHtml = '';
+            if(!isPMK) {
+                 pelaksanaHtml = `
+                    <select class="form-select" name="items[${itemIndex}][program_kerja][${uniqueId}][pelaksana]" required style="border:none; width:100%; font-size:12px;">
+                        ${band4Options}
+                    </select>
+                `;
+            } else {
+                 pelaksanaHtml = `<input type="hidden" name="items[${itemIndex}][program_kerja][${uniqueId}][pelaksana]" value="-">`;
+            }
+
+            let targetHtml = '';
+            for(let i=0; i<12; i++) {
+                targetHtml += `
+                    <td style="border: 1px solid #d1d5db; padding: 2px; width: 40px;">
+                        <input type="number" class="form-control" name="items[${itemIndex}][program_kerja][${uniqueId}][target][${i}]" min="0" max="100" placeholder="-" style="border:none; width:100%; text-align:center; font-size:11px;">
+                    </td>
+                `;
+            }
+
+            row.innerHTML = `
+                <td style="text-align: center; border: 1px solid #d1d5db; vertical-align: middle;">${rowCount}</td>
+                <td style="border: 1px solid #d1d5db; padding: 0;">
+                    <textarea class="form-control" name="items[${itemIndex}][program_kerja][${uniqueId}][uraian]" required style="border:none; width:100%; min-width:150px; padding:6px; resize:vertical;" rows="3"></textarea>
+                </td>
+                <td style="border: 1px solid #d1d5db; padding: 0;">${koordinatorHtml}</td>
+                <td style="border: 1px solid #d1d5db; padding: 0; display:${isPMK ? 'none' : 'table-cell'};">${pelaksanaHtml}</td>
+                ${targetHtml}
+                <td style="border: 1px solid #d1d5db; padding: 0; display:${isPMK ? 'table-cell' : 'none'};">
+                    <input type="number" class="form-control" name="items[${itemIndex}][program_kerja][${uniqueId}][anggaran]" placeholder="Rp 0" style="border:none; width:100%; min-width:120px; padding:6px; font-size:12px;">
+                </td>
+                <td style="text-align: center; border: 1px solid #d1d5db; vertical-align: middle; padding: 4px;">
+                    <button type="button" onclick="this.closest('tr').remove(); renumberProgramKerja(this)" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            table.appendChild(row);
+        }
+
+        function renumberProgramKerja(btn) {
+            const table = btn.closest('table').querySelector('tbody');
+            if(!table) return;
+            table.querySelectorAll('tr').forEach((row, idx) => {
+                row.cells[0].textContent = idx + 1;
+            });
+        }
+
     </script>
 </body>
 </html>

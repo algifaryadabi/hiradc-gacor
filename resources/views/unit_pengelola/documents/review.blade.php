@@ -795,10 +795,93 @@
             animation: pulse 2s infinite;
         }
 
+
         @keyframes pulse {
             0%, 100% { box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
             50% { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5); }
         }
+
+        /* TABS STYLES */
+        .page-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 1px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 12px 24px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none; /* Reset anchor styles if button is a */
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+            background: rgba(196, 30, 58, 0.05);
+            transform: none; /* Reset generic btn hover */
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-bottom-color: transparent;
+            margin-bottom: -3px; /* Cover the bottom border */
+            z-index: 2;
+            box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: white;
+        }
+        
+        .tab-btn .badge-counter {
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 99px;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active .badge-counter {
+            background: #fff1f2;
+            color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
 
         .step-label {
             font-size: 13px;
@@ -1238,7 +1321,25 @@
             </div>
 
             <!-- TABLE (New Structure) -->
-            <div class="hiradc-wrapper">
+            @php
+                $puk = $document->pukProgram;
+                $pmk = $document->pmkProgram;
+                // Count only the existence of the program document, not the items
+                $programCount = ($puk ? 1 : 0) + ($pmk ? 1 : 0);
+            @endphp
+
+            <div class="page-tabs">
+                <button type="button" class="tab-btn active" onclick="openTab(event, 'tab-hiradc')">
+                    <i class="fas fa-table"></i> HIRADC
+                </button>
+                <button type="button" class="tab-btn" onclick="openTab(event, 'tab-programs')">
+                    <i class="fas fa-tasks"></i> Program Kerja
+                    <span class="badge-counter">{{ $programCount }}</span>
+                </button>
+            </div>
+
+            <div id="tab-hiradc" class="tab-content active">
+                <div class="hiradc-wrapper">
                 <table class="excel-table">
                     <thead>
                         <tr>
@@ -1568,11 +1669,10 @@
                 </div>
             @endif
 
-            <!-- PUK SECTION (Injected) -->
-            @php
-                $puk = $document->pukProgram;
-                $pmk = $document->pmkProgram;
-            @endphp
+            <!-- PUK SECTION (Injected in Tab 2) -->
+            </div> <!-- End Tab HIRADC -->
+
+            <div id="tab-programs" class="tab-content">
 
             @if($puk)
                 <style>
@@ -1587,9 +1687,24 @@
                     }
                 </style>
                 <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #3b82f6;">
-                    <div class="card-header-slim">
-                        <i class="fas fa-tasks"></i>
-                        <h2>Review Program Unit Kerja (PUK)</h2>
+                    <div class="card-header-slim" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-tasks"></i>
+                            <h2>Review Program Unit Kerja (PUK)</h2>
+                        </div>
+                        <!-- Download Buttons for PUK -->
+                        <div style="display: flex; gap: 8px;">
+                            <a href="{{ route('documents.export.puk.pdf', $document->id) }}" 
+                               class="btn btn-sm" 
+                               style="background-color: #dc2626; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-file-pdf"></i> Download PDF
+                            </a>
+                            <a href="{{ route('documents.export.puk.excel', $document->id) }}" 
+                               class="btn btn-sm" 
+                               style="background-color: #107c41; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-file-excel"></i> Download Excel
+                            </a>
+                        </div>
                     </div>
                     <div style="padding: 24px;">
                         <!-- Informasi Program -->
@@ -1866,6 +1981,8 @@
                 </div>
             @endif
 
+
+            </div> <!-- End Tab Programs -->
 
             <!-- TIMELINE -->
             <div class="timeline-card">
@@ -2677,6 +2794,23 @@
                 console.error('Error:', error);
                 Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
             });
+        }
+
+        // TAB FUNCTION
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.className += " active";
         }
     </script>
 </body>

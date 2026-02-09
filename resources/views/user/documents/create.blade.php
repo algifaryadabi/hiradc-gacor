@@ -2039,49 +2039,56 @@
             // PMK Logic: Allowed for Tinggi (Score >= 10) and Sangat Tinggi
             const pmkOption = item.querySelector('.option-pmk');
             const pukOption = item.querySelector('option[value="PUK"]');
+            const typeSelect = item.querySelector('.program-type-select');
 
             if (pmkOption && pukOption) {
-                if (riskScore >= 10) {
-                    // Risk >= 10: High/Very High
-                    // Allow BOTH PUK and PMK, but default/suggest PMK?
-                    // User Request: "user submitter bisa memilih mengisi program puk/pmk"
+                if (riskScore >= 20) {
+                    // Risk >= 20: SANGAT TINGGI -> FORCE PMK ONLY
+                    pukOption.disabled = true;
+                    pukOption.style.display = 'none'; // Sembunyikan opsi PUK
                     
                     pmkOption.disabled = false;
-                    // Dont force select if already has value? 
-                    // For now, let's just enable both.
+                    pmkOption.textContent = 'PMK - Program Manajemen Korporat (Wajib untuk Risiko Sangat Tinggi)';
                     
-                    pmkOption.textContent = 'PMK - Program Manajemen Korporat (Disarankan untuk Risiko Tinggi)';
-                    
+                    // Force select PMK if not selected
+                    if (typeSelect.value !== 'PMK') {
+                        pmkOption.selected = true;
+                        typeSelect.value = 'PMK'; // Ensure value is set
+                        typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+
+                } else if (riskScore >= 10) {
+                    // Risk 10-19: TINGGI -> ALLOW BOTH, SUGGEST PMK
                     pukOption.disabled = false;
                     pukOption.style.display = 'block';
                     
-                    // If no value, maybe default to PMK?
-                    const currentVal = item.querySelector('.program-type-select').value;
-                    if(!currentVal) {
-                        pmkOption.selected = true;
-                        // Trigger change
-                        item.querySelector('.program-type-select').dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-
-                } else {
-                    // Risk < 10: Standard logic (PMK disabled usually?)
-                    // Assuming PMK is only for High Risk?
-                    // Previous logic: "PMK - Program Manajemen Korporat (Hanya untuk Risiko Tinggi/Sangat Tinggi)"
-                    // So disable PMK if risk < 10.
+                    pmkOption.disabled = false;
+                    pmkOption.textContent = 'PMK - Program Manajemen Korporat (Disarankan untuk Risiko Tinggi)';
                     
+                    // Default behavior (optional): Don't force change if user already selected something valid
+                    // But if empty, maybe default to PMK? Keeping it neutral or strictly suggestive.
+                    
+                } else {
+                    // Risk < 10: STANDARD -> PMK DISABLED (Usually)
                     pmkOption.disabled = true;
-                    if(pmkOption.selected) pmkOption.selected = false;
+                    if(pmkOption.selected) {
+                        pmkOption.selected = false;
+                        typeSelect.value = ''; // Reset if it was PMK
+                    }
                     
                     pmkOption.textContent = 'PMK - Program Manajemen Korporat (Hanya untuk Risiko Tinggi/Sangat Tinggi)';
 
                     pukOption.disabled = false;
                     pukOption.style.display = 'block';
                     
-                    const currentVal = item.querySelector('.program-type-select').value;
-                    if(!currentVal) {
-                         pukOption.selected = true; 
-                         item.querySelector('.program-type-select').dispatchEvent(new Event('change', { bubbles: true }));
-                    }
+                    // If we forced reset above, or it's empty, default to PUK?
+                    // Let's leave it to user to pick PUK, but since PMK is disabled, they only have 1 choice.
+                    // Better UX: Auto-select PUK if PMK is disabled and nothing selected
+                     if (typeSelect.value !== 'PUK') {
+                        pukOption.selected = true;
+                        typeSelect.value = 'PUK';
+                        typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                     }
                 }
             }
 

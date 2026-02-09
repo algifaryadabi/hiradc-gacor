@@ -659,8 +659,8 @@
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('direksi.dashboard') }}" class="nav-item">
-                    <i class="fas fa-file-contract"></i>
+                <a href="{{ route('direksi.check_documents') }}" class="nav-item">
+                    <i class="fas fa-file-signature"></i>
                     <span>Review Dokumen</span>
                     @if(isset($pendingCount) && $pendingCount > 0)
                         <span
