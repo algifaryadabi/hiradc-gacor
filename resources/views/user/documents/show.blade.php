@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary: #c41e3a;
@@ -383,10 +386,10 @@
             gap: 10px;
         }
 
-        .btn-print {
-            background: white;
-            border: 1px solid #e2e8f0;
-            color: #0f172a;
+        .btn-edit-programs {
+            background: #ffffff;
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
             padding: 10px 16px;
             border-radius: 12px;
             font-weight: 700;
@@ -395,15 +398,14 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            letter-spacing: -0.01em;
+            text-decoration: none;
+            transition: all 0.2s;
         }
 
-        .btn-print:hover {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
+        .btn-edit-programs:hover {
+            background: #f0f9ff;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
         }
 
         /* Wizard - Compact */
@@ -942,38 +944,21 @@
                     </p>
                 </div>
                 <div class="action-buttons">
-                    @if($document->status == 'revision' || $document->status == 'draft')
-                        <a href="{{ route('documents.edit', $document->id) }}" class="btn-print"
-                            style="background:var(--primary); color:white; border-color:var(--primary);">
+                    <!-- Edit Form Button (Styled Better) -->
+                    @if(in_array($document->status, ['draft', 'pending_level1', 'revision']))
+                        <a href="{{ route('documents.edit', $document->id) }}" class="btn-edit-programs" 
+                           style="background: linear-gradient(135deg, #c41e3a 0%, #9f1239 100%); color: white; border: none; box-shadow: 0 4px 6px -1px rgba(196, 30, 58, 0.3);">
                             <i class="fas fa-edit"></i> Edit Form
                         </a>
                     @endif
 
-                    @php
-                        $user = Auth::user();
-                        // Export access: Originating Unit, SHE/Security Units (55,56), or Management (role 1,2)
-                        $canExport = ($user->id_unit == $document->id_unit)
-                            || in_array($user->id_unit, [55, 56])
-                            || in_array($user->role_jabatan, [1, 2]);
-                    @endphp
-
-                    @if($canExport)
-                        <a href="{{ route('documents.export.detail.pdf', $document->id) }}" class="btn-print"
-                            target="_blank"
-                            style="background:#ef4444; color:white; border-color:#ef4444; text-decoration:none;">
-                            <i class="fas fa-file-pdf"></i> Export PDF
-                        </a>
-                        <a href="{{ route('documents.export.detail.excel', $document->id) }}" class="btn-print"
-                            target="_blank"
-                            style="background:#22c55e; color:white; border-color:#22c55e; text-decoration:none;">
-                            <i class="fas fa-file-excel"></i> Export Excel
+                    <!-- Edit Program Kerja Button (Primary Action) -->
+                    @if(in_array($document->status, ['draft', 'pending_level1', 'revision']) || ($document->pukProgram && $document->pukProgram->status == 'revision') || ($document->pmkProgram && $document->pmkProgram->status == 'revision'))
+                        <a href="{{ route('documents.edit_programs', $document->id) }}" class="btn-edit-programs"
+                           style="background: linear-gradient(135deg, #c41e3a 0%, #9f1239 100%); color: white; border: none; box-shadow: 0 4px 6px -1px rgba(196, 30, 58, 0.3);">
+                            <i class="fas fa-tasks"></i> Edit Program Kerja
                         </a>
                     @endif
-
-                    <div style="width: 1px; height: 30px; background: #e2e8f0; margin: 0 5px;"></div>
-                    <button onclick="window.print()" class="btn-print">
-                        <i class="fas fa-print"></i> Print View
-                    </button>
                 </div>
             </div>
 
@@ -1048,6 +1033,27 @@
 
             <!-- TAB 1: HIRADC CONTENT -->
             <div id="tab-hiradc" class="tab-content active">
+                
+                <!-- Export Buttons (Moved from Header) -->
+                @php
+                    $user = Auth::user();
+                    $canExport = ($user->id_unit == $document->id_unit) || in_array($user->id_unit, [55, 56]) || in_array($user->role_jabatan, [1, 2]);
+                @endphp
+                @if($canExport)
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 12px;">
+                    <a href="{{ route('documents.export.detail.pdf', $document->id) }}" class="btn-print"
+                        target="_blank"
+                        style="background:#ef4444; color:white; border-color:#ef4444; text-decoration:none; font-size: 12px; padding: 6px 12px;">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </a>
+                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" class="btn-print"
+                        target="_blank"
+                        style="background:#22c55e; color:white; border-color:#22c55e; text-decoration:none; font-size: 12px; padding: 6px 12px;">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </a>
+                </div>
+                @endif
+
                 <div class="hiradc-wrapper">
                 <table class="excel-table">
                     <thead>
@@ -1103,44 +1109,46 @@
                     <tbody>
                         @forelse($document->details as $index => $item)
                             @php
-                                // Logic Partial Revision View
-                                $isRev = $document->status == 'revision';
-                                
-                                // Check which categories are locked (approved/published)
-                                $isSheLocked = ($document->status_she == 'approved' || $document->status_she == 'published');
-                                $isSecLocked = ($document->status_security == 'approved' || $document->status_security == 'published');
-                                
-                                // Check which categories are in revision
-                                $isSheRevision = ($document->status_she == 'revision');
-                                $isSecRevision = ($document->status_security == 'revision');
-
                                 $skip = false;
                                 
-                                // Priority 1: If a specific track is in revision, ONLY show that track
-                                if ($isSheRevision && !$isSecRevision) {
-                                    // SHE is revising, Security is NOT revising
-                                    // Show ONLY SHE categories (K3, KO, Lingkungan)
-                                    if (!in_array($item->kategori, ['K3', 'KO', 'Lingkungan'])) {
-                                        $skip = true;
-                                    }
-                                } elseif ($isSecRevision && !$isSheRevision) {
-                                    // Security is revising, SHE is NOT revising
-                                    // Show ONLY Security category (Keamanan)
-                                    if ($item->kategori != 'Keamanan') {
-                                        $skip = true;
-                                    }
-                                } elseif ($isSheRevision && $isSecRevision) {
-                                    // Both are revising - show all items
-                                    // No filtering needed
-                                } else {
-                                    // Neither is revising - check for locked status
-                                    if ($item->kategori == 'Keamanan' && $isSecLocked) {
-                                        $skip = true;
-                                    }
-                                    if (in_array($item->kategori, ['K3', 'KO', 'Lingkungan']) && $isSheLocked) {
-                                        $skip = true;
+                                // ONLY apply filtering logic if document is in revision mode
+                                // For normal viewing (draft, pending, approved, published), show ALL details
+                                if ($document->status == 'revision') {
+                                    // Check which categories are locked (approved/published)
+                                    $isSheLocked = ($document->status_she == 'approved' || $document->status_she == 'published');
+                                    $isSecLocked = ($document->status_security == 'approved' || $document->status_security == 'published');
+                                    
+                                    // Check which categories are in revision
+                                    $isSheRevision = ($document->status_she == 'revision');
+                                    $isSecRevision = ($document->status_security == 'revision');
+                                    
+                                    // Priority 1: If a specific track is in revision, ONLY show that track
+                                    if ($isSheRevision && !$isSecRevision) {
+                                        // SHE is revising, Security is NOT revising
+                                        // Show ONLY SHE categories (K3, KO, Lingkungan)
+                                        if (!in_array($item->kategori, ['K3', 'KO', 'Lingkungan'])) {
+                                            $skip = true;
+                                        }
+                                    } elseif ($isSecRevision && !$isSheRevision) {
+                                        // Security is revising, SHE is NOT revising
+                                        // Show ONLY Security category (Keamanan)
+                                        if ($item->kategori != 'Keamanan') {
+                                            $skip = true;
+                                        }
+                                    } elseif ($isSheRevision && $isSecRevision) {
+                                        // Both are revising - show all items
+                                        // No filtering needed
+                                    } else {
+                                        // Neither is revising - check for locked status
+                                        if ($item->kategori == 'Keamanan' && $isSecLocked) {
+                                            $skip = true;
+                                        }
+                                        if (in_array($item->kategori, ['K3', 'KO', 'Lingkungan']) && $isSheLocked) {
+                                            $skip = true;
+                                        }
                                     }
                                 }
+                                // If not in revision mode, show everything ($skip remains false)
                             @endphp
                             @if($skip) @continue @endif
 
@@ -1505,8 +1513,8 @@
 
                         <!-- PUK CARD -->
                         @if($puk)
-                        <div class="content-card" style="margin-bottom: 30px; border-left: 4px solid #3b82f6; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-left: 20px;">
-                            <div class="card-header" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 15px 20px; border-radius: 12px 12px 0 0;">
+                        <div class="content-card" style="margin-bottom: 30px; border-left: 4px solid #dc2626; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-left: 20px;">
+                            <div class="card-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 15px 20px; border-radius: 12px 12px 0 0;">
                                 <div style="display: flex; align-items: center; justify-content: space-between;">
                                     <div style="display: flex; align-items: center; gap: 12px;">
                                         <div>
@@ -1568,7 +1576,7 @@
                                 @if($puk->program_kerja && is_array($puk->program_kerja) && count($puk->program_kerja) > 0)
                                 <div>
                                     <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">
-                                        <i class="fas fa-list-check" style="color: #3b82f6; margin-right: 6px;"></i> Detail Kegiatan
+                                        <i class="fas fa-list-check" style="color: #dc2626; margin-right: 6px;"></i> Detail Kegiatan
                                     </h4>
                                     <div class="hiradc-wrapper" style="margin-bottom: 0;">
                                         <table class="excel-table" style="min-width: 100%;">
@@ -1579,7 +1587,7 @@
                                                     <th rowspan="2" style="text-align: left; width: 120px;">Koordinator</th>
                                                     <th rowspan="2" style="text-align: left; width: 120px;">Pelaksana</th>
                                                     <th colspan="12" style="text-align: center;">Target (%)</th>
-                                                    <th rowspan="2" style="text-align: left; width: 120px;">Anggaran</th>
+
                                                 </tr>
                                                 <tr style="background: #334155; color: white;">
                                                     @for($m=1; $m<=12; $m++) <th style="text-align: center; width: 30px; font-size: 10px;">{{ $m }}</th> @endfor
@@ -1598,7 +1606,7 @@
                                                             {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '' }}
                                                         </td>
                                                     @endfor
-                                                    <td>{{ isset($item['anggaran']) ? 'Rp ' . number_format($item['anggaran'], 0, ',', '.') : '-' }}</td>
+
                                                 </tr>
                                                 @endforeach
                                             </tbody>
@@ -1612,8 +1620,8 @@
 
                         <!-- PMK PROGRAMS -->
                         @if($pmk)
-                        <div class="content-card" style="margin-bottom: 30px; border-left: 4px solid #c026d3; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-left: 20px;">
-                            <div class="card-header" style="background: linear-gradient(135deg, #c026d3 0%, #a21caf 100%); color: white; padding: 15px 20px; border-radius: 12px 12px 0 0;">
+                        <div class="content-card" style="margin-bottom: 30px; border-left: 4px solid #dc2626; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-left: 20px;">
+                            <div class="card-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 15px 20px; border-radius: 12px 12px 0 0;">
                                 <div style="display: flex; align-items: center; justify-content: space-between;">
                                     <div style="display: flex; align-items: center; gap: 12px;">
                                         <div>
@@ -1675,7 +1683,7 @@
                                 @if($pmk->program_kerja && is_array($pmk->program_kerja) && count($pmk->program_kerja) > 0)
                                 <div>
                                     <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">
-                                        <i class="fas fa-list-check" style="color: #c026d3; margin-right: 6px;"></i> Detail Kegiatan
+                                        <i class="fas fa-list-check" style="color: #dc2626; margin-right: 6px;"></i> Detail Kegiatan
                                     </h4>
                                     <div class="hiradc-wrapper" style="margin-bottom: 0;">
                                         <table class="excel-table" style="min-width: 100%;">
@@ -1719,42 +1727,7 @@
                     @endif
                 @endforeach
             </div>
-
-            <!-- Tab Switching Script -->
-            <script>
-                function openTab(evt, tabName) {
-                    var i, tabcontent, tablinks;
-                    
-                    // Hide all tab content
-                    tabcontent = document.getElementsByClassName("tab-content");
-                    for (i = 0; i < tabcontent.length; i++) {
-                        tabcontent[i].classList.remove("active");
-                        tabcontent[i].style.display = "none";
-                    }
-                    
-                    // Remove active class from buttons
-                    tablinks = document.getElementsByClassName("tab-btn");
-                    for (i = 0; i < tablinks.length; i++) {
-                        tablinks[i].classList.remove("active");
-                    }
-                    
-                    // Show current tab and activate button
-                    var currentTab = document.getElementById(tabName);
-                    if (currentTab) {
-                        currentTab.style.display = "block";
-                        // Small timeout to allow display block to apply before adding class for animation
-                        setTimeout(() => currentTab.classList.add("active"), 10);
-                    }
-                    
-                    if (evt && evt.currentTarget) {
-                        evt.currentTarget.classList.add("active");
-                    }
-                }
-            </script>
-
-
-
-
+            
             <!-- Approval History -->
             <div class="timeline-card">
                 <div class="timeline-header">
@@ -1790,8 +1763,247 @@
                 </div>
             </div>
 
+            <!-- UNIFIED ACTION BUTTONS CARD (Draft & Revision) -->
+            @php
+                $isDraft = ($document->status == 'draft');
+                $isRevision = ($document->status == 'revision' || $document->status_she == 'revision' || $document->status_security == 'revision');
+                $canEdit = (Auth::id() == $document->created_by || Auth::id() == $document->id_user) && ($isDraft || $isRevision);
+            @endphp
+
+            @if($canEdit)
+            <div class="action-card" id="action-section" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px; margin-bottom: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-top: 32px;">
+                <div style="margin-bottom: 24px;">
+                    <h4 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-paper-plane" style="color: #c41e3a;"></i> Aksi Dokumen
+                    </h4>
+                    <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                        @if($isDraft)
+                            Anda dapat menyimpan dokumen sebagai draft atau mengirimkannya ke Kepala Unit Kerja untuk proses approval.
+                        @else
+                            Setelah selesai memperbaiki data, silakan tulis catatan perbaikan dan kirimkan kembali ke Kepala Unit Kerja.
+                        @endif
+                    </p>
+                </div>
+
+                <form id="actionForm" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
+                    @csrf
+                    <input type="hidden" name="action_type" id="action_type" value="">
+                    
+                    <!-- Notes Textarea -->
+                    <div>
+                        <label for="submission_notes" style="display: block; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 8px;">
+                            Catatan <span style="color: #ef4444;" id="required_indicator">(Wajib diisi untuk Submit/Revisi)</span>
+                        </label>
+                        {{-- Use different name for revision to match controller expectation --}}
+                        <textarea 
+                            name="{{ $isRevision ? 'revision_comment' : 'submission_notes' }}" 
+                            id="submission_notes" 
+                            rows="4"
+                            placeholder="{{ $isRevision ? 'Jelaskan bagian mana saja yang telah diperbaiki...' : 'Tuliskan catatan atau keterangan tambahan mengenai dokumen ini...' }}"
+                            oninput="validateNotes()"
+                            style="width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; resize: vertical; transition: all 0.2s; line-height: 1.6;"
+                            onfocus="this.style.borderColor='#c41e3a'; this.style.boxShadow='0 0 0 3px rgba(196, 30, 58, 0.1)'"
+                            onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'"
+                        ></textarea>
+                        <div id="notes_hint" style="font-size: 12px; color: #94a3b8; margin-top: 6px;">
+                            <i class="fas fa-info-circle"></i> Catatan wajib diisi
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+                        <!-- Save Draft Button (Only for Draft) -->
+                        @if($isDraft)
+                        <button 
+                            type="button" 
+                            onclick="submitAction('draft')"
+                            class="btn-draft"
+                            style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px -2px rgba(16, 185, 129, 0.4)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(16, 185, 129, 0.3)'"
+                        >
+                            <i class="fas fa-save"></i>
+                            <span>Simpan Draft</span>
+                        </button>
+                        @endif
+
+                        <!-- Submit Button -->
+                        <button 
+                            type="button" 
+                            id="btn_submit"
+                            onclick="submitAction('{{ $isRevision ? 'revision' : 'submit' }}')"
+                            disabled
+                            style="background: #94a3b8; color: white; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: not-allowed; transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(148, 163, 184, 0.3);"
+                        >
+                            <i class="fas fa-paper-plane"></i>
+                            <span>{{ $isRevision ? 'Kirim Revisi' : 'Submit ke Kepala Unit' }}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <script>
+                // Scroll to action section if needed
+                document.addEventListener('DOMContentLoaded', function() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has('action_needed')) {
+                        document.getElementById('action-section').scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+
+                function validateNotes() {
+                    const notes = document.getElementById('submission_notes').value.trim();
+                    const submitBtn = document.getElementById('btn_submit');
+                    const hint = document.getElementById('notes_hint');
+                    
+                    if (notes.length > 0) {
+                        // Enable submit button
+                        submitBtn.disabled = false;
+                        submitBtn.style.background = 'linear-gradient(135deg, #c41e3a 0%, #a01729 100%)';
+                        submitBtn.style.cursor = 'pointer';
+                        submitBtn.style.boxShadow = '0 4px 6px -1px rgba(196, 30, 58, 0.3)';
+                        submitBtn.onmouseover = function() {
+                            this.style.transform = 'translateY(-2px)';
+                            this.style.boxShadow = '0 6px 12px -2px rgba(196, 30, 58, 0.4)';
+                        };
+                        submitBtn.onmouseout = function() {
+                            this.style.transform = 'translateY(0)';
+                            this.style.boxShadow = '0 4px 6px -1px rgba(196, 30, 58, 0.3)';
+                        };
+                        hint.style.color = '#10b981';
+                        hint.innerHTML = '<i class="fas fa-check-circle"></i> Catatan sudah cukup untuk submit';
+                    } else {
+                        // Disable submit button
+                        submitBtn.disabled = true;
+                        submitBtn.style.background = '#94a3b8';
+                        submitBtn.style.cursor = 'not-allowed';
+                        submitBtn.style.boxShadow = '0 4px 6px -1px rgba(148, 163, 184, 0.3)';
+                        submitBtn.onmouseover = null;
+                        submitBtn.onmouseout = null;
+                        submitBtn.style.transform = 'translateY(0)';
+                        hint.style.color = '#94a3b8';
+                        hint.innerHTML = '<i class="fas fa-info-circle"></i> Catatan wajib diisi';
+                    }
+                }
+
+                function submitAction(actionType) {
+                    const notes = document.getElementById('submission_notes').value.trim();
+                    const form = document.getElementById('actionForm');
+                    
+                    // Validation for submit/revision action
+                    if ((actionType === 'submit' || actionType === 'revision') && notes.length === 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Catatan Diperlukan',
+                            text: 'Silakan isi catatan sebelum submit dokumen.',
+                            confirmButtonColor: '#c41e3a'
+                        });
+                        return;
+                    }
+                    
+                    // Set action type
+                    document.getElementById('action_type').value = actionType;
+                    
+                    // Confirmation dialog text
+                    let title, text, confirmText, icon;
+                    
+                    if (actionType === 'draft') {
+                        title = 'Simpan sebagai Draft?';
+                        text = 'Dokumen akan disimpan sebagai draft dan dapat diedit kembali.';
+                        confirmText = 'Ya, Simpan';
+                        icon = 'question';
+                    } else if (actionType === 'revision') {
+                        title = 'Kirim Revisi?';
+                        text = 'Dokumen yang telah diperbaiki akan dikirim kembali ke Kepala Unit Kerja untuk diperiksa.';
+                        confirmText = 'Ya, Kirim Revisi';
+                        icon = 'info';
+                    } else {
+                        title = 'Submit ke Kepala Unit?';
+                        text = 'Dokumen akan dikirim ke Kepala Unit Kerja untuk proses approval.';
+                        confirmText = 'Ya, Submit';
+                        icon = 'info';
+                    }
+                    
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: icon,
+                        showCancelButton: true,
+                        confirmButtonColor: actionType === 'draft' ? '#10b981' : '#c41e3a',
+                        cancelButtonColor: '#94a3b8',
+                        confirmButtonText: confirmText,
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Set form action based on type
+                            if (actionType === 'draft') {
+                                form.action = '{{ route("documents.update", $document->id) }}';
+                                form.method = 'POST';
+                                // Add method spoofing for PUT
+                                let methodInput = document.createElement('input');
+                                methodInput.type = 'hidden';
+                                methodInput.name = '_method';
+                                methodInput.value = 'PUT';
+                                form.appendChild(methodInput);
+                            } else if (actionType === 'revision') {
+                                form.action = '{{ route("documents.submit_revision", $document->id) }}';
+                                form.method = 'POST';
+                            } else {
+                                form.action = '{{ route("documents.submit", $document->id) }}';
+                                form.method = 'POST';
+                            }
+                            
+                            // Show loading
+                            Swal.fire({
+                                title: 'Memproses...',
+                                text: 'Mohon tunggu sebentar',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            
+                            // Submit form
+                            form.submit();
+                        }
+                    });
+                }
+            </script>
+            @endif
+
         </main>
     </div>
+    <!-- Tab Switching Script (Restored) -->
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            
+            // Hide all tab content
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+                tabcontent[i].style.display = "none";
+            }
+            
+            // Remove active class from buttons
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            
+            // Show current tab and activate button
+            var currentTab = document.getElementById(tabName);
+            if (currentTab) {
+                currentTab.style.display = "block";
+                // Small timeout to allow display block to apply before adding class for animation
+                setTimeout(() => currentTab.classList.add("active"), 10);
+            }
+            
+            if (evt && evt.currentTarget) {
+                evt.currentTarget.classList.add("active");
+            }
+        }
+    </script>
 </body>
 
 </html>

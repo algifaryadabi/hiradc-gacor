@@ -121,12 +121,38 @@
 </head>
 <body>
     @php
-        $kaSeksi = $document->user;
-        $kaUnit = $pukProgram->approvedBy;
+        use App\Models\User;
+        
+        // Get Kepala Seksi: User with role_jabatan = 4 (Kepala Seksi) from submitter's seksi
+        $kaSeksi = null;
+        $kaSeksiJabatan = 'Ka. Seksi';
+        if ($document->user && $document->user->id_seksi) {
+            $kaSeksi = User::where('id_seksi', $document->user->id_seksi)
+                           ->where('role_jabatan', 4)
+                           ->where('user_aktif', 1)
+                           ->with('roleJabatan')
+                           ->first();
+            if ($kaSeksi && $kaSeksi->roleJabatan) {
+                $kaSeksiJabatan = $kaSeksi->roleJabatan->nama_role_jabatan;
+            }
+        }
+        
+        // Get Kepala Unit: User with role_jabatan = 3 (Kepala Unit) from document's unit
+        $kaUnit = null;
+        $kaUnitJabatan = 'Ka. Unit';
+        if ($document->id_unit) {
+            $kaUnit = User::where('id_unit', $document->id_unit)
+                          ->where('role_jabatan', 3)
+                          ->where('user_aktif', 1)
+                          ->with('roleJabatan')
+                          ->first();
+            if ($kaUnit && $kaUnit->roleJabatan) {
+                $kaUnitJabatan = $kaUnit->roleJabatan->nama_role_jabatan;
+            }
+        }
+        
         $unitName = $document->unit ? $document->unit->nama_unit : '-';
         $tanggal = $pukProgram->approved_at ? $pukProgram->approved_at->locale('id')->isoFormat('D MMMM YYYY') : now()->locale('id')->isoFormat('D MMMM YYYY');
-        $kaSeksiJabatan = $kaSeksi && $kaSeksi->roleJabatan ? $kaSeksi->roleJabatan->nama_role_jabatan : 'Ka. Seksi';
-        $kaUnitJabatan = $kaUnit && $kaUnit->roleJabatan ? $kaUnit->roleJabatan->nama_role_jabatan : 'Ka. Unit';
     @endphp
 
     <!-- COVER -->
@@ -140,12 +166,12 @@
         <div class="signature-row">
             <div class="signature-cell">
                 <strong>Disiapkan oleh</strong><br><br><br>
-                <strong>{{ $kaSeksi ? $kaSeksi->nama_user : '-' }}</strong><br>
+                <strong>{{ $kaSeksi ? $kaSeksi->nama_user : '........................' }}</strong><br>
                 {{ $kaSeksiJabatan }}
             </div>
             <div class="signature-cell">
                 <strong>Disahkan oleh</strong><br><br><br>
-                <strong>{{ $kaUnit ? $kaUnit->nama_user : '-' }}</strong><br>
+                <strong>{{ $kaUnit ? $kaUnit->nama_user : '........................' }}</strong><br>
                 {{ $kaUnitJabatan }}
             </div>
         </div>
@@ -171,17 +197,15 @@
                 <td>Penanggung Jawab</td>
                 <td>: <strong>{{ $pukProgram->penanggung_jawab }}</strong></td>
             </tr>
-            @if($pukProgram->uraian_revisi)
             <tr>
                 <td>Uraian Revisi</td>
-                <td>: {{ $pukProgram->uraian_revisi }}</td>
+                <td>: {{ $pukProgram->uraian_revisi ?? '-' }}</td>
             </tr>
-            @endif
         </table>
     </div>
 
     <!-- TABLE -->
-    <div class="section-header">Detail Kegiatan</div>
+    <div class="section-header">PROGRAM KERJA</div>
 
     @if($pukProgram->program_kerja && is_array($pukProgram->program_kerja) && count($pukProgram->program_kerja) > 0)
     <table class="program-table">

@@ -999,10 +999,13 @@
                         @foreach($contexts as $ctx)
                             @php
                                 $statusKey = 'draft';
-                                if (in_array($doc->status, ['pending_level1', 'pending_level2', 'pending_level3'])) {
-                                    $statusKey = 'pending';
-                                } elseif ($doc->status == 'revision') {
+                                $isPukRevision = $doc->pukProgram && $doc->pukProgram->status === 'revision';
+                                $isPmkRevision = $doc->pmkProgram && $doc->pmkProgram->status === 'revision';
+
+                                if ($doc->status == 'revision' || $isPukRevision || $isPmkRevision) {
                                     $statusKey = 'revision';
+                                } elseif (in_array($doc->status, ['pending_level1', 'pending_level2', 'pending_level3'])) {
+                                    $statusKey = 'pending';
                                 } elseif ($doc->status == 'approved' || $doc->status == 'published') {
                                     $statusKey = 'approved';
                                 }
@@ -1155,7 +1158,13 @@
                                              @if($statusKey == 'approved')
                                                 <span style="color:#059669;"><i class="fas fa-check-circle"></i> Selesai</span>
                                             @elseif($statusKey == 'revision')
-                                                <span style="color:#dc2626;"><i class="fas fa-exclamation-circle"></i> Perlu Revisi</span>
+                                                @if(isset($isPukRevision) && $isPukRevision)
+                                                    <span style="color:#dc2626;"><i class="fas fa-exclamation-circle"></i> Revisi PUK</span>
+                                                @elseif(isset($isPmkRevision) && $isPmkRevision)
+                                                    <span style="color:#dc2626;"><i class="fas fa-exclamation-circle"></i> Revisi PMK</span>
+                                                @else
+                                                    <span style="color:#dc2626;"><i class="fas fa-exclamation-circle"></i> Perlu Revisi</span>
+                                                @endif
                                             @elseif($statusKey == 'pending')
                                                 <span style="color:#d97706;"><i class="fas fa-spinner fa-spin"></i> Proses</span>
                                             @else

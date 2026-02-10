@@ -101,11 +101,20 @@
         }
 
         .info-section {
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 15px;
+            border: 2px solid #1e293b;
+            padding: 0;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        
+        .info-header {
+            background: #1e293b;
+            color: white;
+            padding: 8px 15px;
+            font-size: 10pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .info-table {
@@ -114,47 +123,60 @@
         }
 
         .info-table td {
-            padding: 6px 0;
+            padding: 10px 15px;
             vertical-align: top;
-            border: none;
+            border-bottom: 1px solid #e2e8f0;
+            line-height: 1.6;
+        }
+        
+        .info-table tr:last-child td {
+            border-bottom: none;
         }
 
         .info-table td:first-child {
-            width: 150px;
-            font-weight: 600;
-            color: #475569;
+            width: 180px;
+            font-weight: 700;
+            color: #1e293b;
+            background: #f8fafc;
         }
 
         .info-table td:nth-child(2) {
-            width: 15px;
-            color: #64748b;
+            width: 20px;
+            color: #475569;
+            text-align: center;
+            background: #f8fafc;
         }
 
         .info-table td:last-child {
-            color: #0f172a;
+            color: #334155;
+            background: white;
         }
 
         .section-header {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            background: #1e293b;
             color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin: 15px 0 10px 0;
-            font-size: 11pt;
+            padding: 8px 15px;
+            margin: 20px 0 0 0;
+            font-size: 10pt;
             font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            page-break-after: avoid;
         }
 
         /* Table */
         .table-container {
             width: 100%;
             overflow: visible;
+            margin-top: 0;
         }
 
         table.program-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 7.5pt;
-            margin: 10px auto;
+            margin: 0;
         }
 
         table.program-table th {
@@ -278,6 +300,7 @@
     <div class="content-page">
         <!-- Program Information -->
         <div class="info-section">
+            <div class="info-header">INFORMASI PROGRAM UNIT KERJA</div>
             <table class="info-table">
                 <tr>
                     <td>Judul Program</td>
@@ -299,19 +322,17 @@
                     <td>:</td>
                     <td><strong>{{ $pukProgram->penanggung_jawab }}</strong></td>
                 </tr>
-                @if($pukProgram->uraian_revisi)
                 <tr>
                     <td>Uraian Revisi</td>
                     <td>:</td>
-                    <td>{{ $pukProgram->uraian_revisi }}</td>
+                    <td>{{ $pukProgram->uraian_revisi ?? '-' }}</td>
                 </tr>
-                @endif
             </table>
         </div>
 
         <!-- Program Kerja Table -->
         <div class="section-header">
-            Detail Kegiatan
+            PROGRAM KERJA
         </div>
 
         @if($pukProgram->program_kerja && is_array($pukProgram->program_kerja) && count($pukProgram->program_kerja) > 0)

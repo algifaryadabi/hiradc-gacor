@@ -25,6 +25,10 @@ class PmkProgram extends Model
         'dept_approval_at',
         'direksi_approval_at',
         'rejection_note',
+        'revision_note',
+        'revised_by',
+        'revised_at',
+        'resubmitted_at',
         'created_by',
     ];
 
@@ -33,6 +37,8 @@ class PmkProgram extends Model
         'unit_approval_at' => 'datetime',
         'dept_approval_at' => 'datetime',
         'direksi_approval_at' => 'datetime',
+        'revised_at' => 'datetime',
+        'resubmitted_at' => 'datetime',
     ];
 
     public function documentDetail()

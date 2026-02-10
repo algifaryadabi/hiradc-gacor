@@ -1718,6 +1718,11 @@
                                 <div style="color: #0f172a;">: {{ $puk->sasaran }}</div>
                                 <div style="font-weight: 600; color: #475569;">Penanggung Jawab</div>
                                 <div style="color: #0f172a;">: {{ $puk->penanggung_jawab }}</div>
+
+                                @if($puk->uraian_revisi)
+                                <div style="font-weight: 600; color: #475569;">Uraian Revisi</div>
+                                <div style="color: #0f172a;">: {{ $puk->uraian_revisi }}</div>
+                                @endif
                             </div>
                         </div>
 
@@ -1862,6 +1867,11 @@
                                 <div style="color: #0f172a;">: {{ $pmk->sasaran }}</div>
                                 <div style="font-weight: 600; color: #475569;">Penanggung Jawab</div>
                                 <div style="color: #0f172a;">: {{ $pmk->penanggung_jawab }}</div>
+
+                                @if($pmk->uraian_revisi)
+                                <div style="font-weight: 600; color: #475569;">Uraian Revisi</div>
+                                <div style="color: #0f172a;">: {{ $pmk->uraian_revisi }}</div>
+                                @endif
                             </div>
                         </div>
 

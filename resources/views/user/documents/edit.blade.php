@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* Modern Design System - Consistent with Dashboard */
         :root {
@@ -581,77 +584,15 @@
                     @endphp
 
                     @if($isSheLocked || $isSecLocked || $isSheRevision || $isSecRevision)
-                        <div style="background:#e0f2fe; border:1px solid #bae6fd; padding:15px; border-radius:8px; margin-bottom:24px; color:#0369a1; display:flex; gap:10px; align-items:center;">
-                            <i class="fas fa-info-circle" style="font-size:20px;"></i>
-                            <div>
-                                <strong>Mode Revisi Parsial:</strong> Hanya item yang perlu direvisi yang ditampilkan.<br>
-                                @if($isSheRevision) <span style="font-size:12px; background:#fef2f2; padding:2px 6px; border-radius:4px; margin-right:5px; border:1px solid #fecaca; color:#991b1b;">SHE Perlu Revisi</span> @endif
-                                @if($isSecRevision) <span style="font-size:12px; background:#fef2f2; padding:2px 6px; border-radius:4px; margin-right:5px; border:1px solid #fecaca; color:#991b1b;">Security Perlu Revisi</span> @endif
-                                @if($isSheLocked) <span style="font-size:12px; background:white; padding:2px 6px; border-radius:4px; margin-right:5px; border:1px solid #bae6fd;">SHE Terkunci</span> @endif
-                                @if($isSecLocked) <span style="font-size:12px; background:white; padding:2px 6px; border-radius:4px; margin-right:5px; border:1px solid #bae6fd;">Security Terkunci</span> @endif
-                            </div>
-                        </div>
-                    @endif
-
-                    <!-- DEBUG: Show current status (remove after testing) -->
-                    <div style="background:#fef3c7; border:1px solid #fbbf24; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px;">
-                        <strong>🔍 DEBUG INFO ({{ now()->format('H:i:s') }}):</strong><br>
-                        status_she: <code>{{ $document->status_she }}</code><br>
-                        status_security: <code>{{ $document->status_security }}</code><br>
-                        isSheRevision: <code>{{ $isSheRevision ? 'TRUE' : 'FALSE' }}</code><br>
-                        isSecRevision: <code>{{ $isSecRevision ? 'TRUE' : 'FALSE' }}</code><br>
-                        <strong>Expected behavior:</strong> 
-                        @if($isSecRevision && !$isSheRevision)
-                            <span style="color:#dc2626;">Only show Keamanan items</span>
-                        @elseif($isSheRevision && !$isSecRevision)
-                            <span style="color:#dc2626;">Only show K3/KO/Lingkungan items</span>
-                        @elseif($isSheRevision && $isSecRevision)
-                            <span style="color:#dc2626;">Show all items</span>
-                        @else
-                            <span style="color:#16a34a;">Normal mode - check locked status</span>
-                        @endif
+                        <div class="alert alert-info" role="alert" style="margin-bottom: 30px; border-left: 5px solid #0ea5e9; background-color: #e0f2fe; color: #0369a1;">
+                        <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                        <strong>Mode Revisi:</strong> Anda dapat mengubah data yang diperlukan. Pastikan semua perubahan disimpan sebelum mengirim ulang.
                     </div>
+                    @endif
 
                     <div id="items-container">
                         @foreach($document->details as $index => $item)
-                            @php
-                                // Filter Logic: Show only items that need revision
-                                $cat = $item->kategori;
-                                $skip = false;
-
-                                // Priority 1: If a specific track is in revision, ONLY show that track
-                                if ($isSheRevision && !$isSecRevision) {
-                                    // SHE is revising, Security is NOT revising
-                                    // Show ONLY SHE categories (K3, KO, Lingkungan)
-                                    if (!in_array($cat, ['K3', 'KO', 'Lingkungan'])) {
-                                        $skip = true;
-                                        $hiddenCount++;
-                                    }
-                                } elseif ($isSecRevision && !$isSheRevision) {
-                                    // Security is revising, SHE is NOT revising
-                                    // Show ONLY Security category (Keamanan)
-                                    if ($cat != 'Keamanan') {
-                                        $skip = true;
-                                        $hiddenCount++;
-                                    }
-                                } elseif ($isSheRevision && $isSecRevision) {
-                                    // Both are revising - show all items
-                                    // No filtering needed
-                                } else {
-                                    // Neither is revising - check for locked status
-                                    if ($cat == 'Keamanan' && $isSecLocked) {
-                                        $skip = true;
-                                        $hiddenCount++;
-                                    }
-                                    if (in_array($cat, ['K3', 'KO', 'Lingkungan']) && $isSheLocked) {
-                                        $skip = true;
-                                        $hiddenCount++;
-                                    }
-                                }
-                            @endphp
-
-                            @if(!$skip)
-                                <div class="doc-item item-loaded" data-index="{{ $index }}" style="margin-bottom: 30px;">
+                        <div class="doc-item item-loaded" data-index="{{ $index }}" style="margin-bottom: 30px;">
                                     <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
                                     <div class="doc-card" style="border-left: 5px solid var(--primary-color);">
                                         <div class="card-header" style="justify-content: space-between; cursor: pointer;" onclick="toggleCollapse(this)">
@@ -881,87 +822,256 @@
                                                 </div>
                                             </div>
 
-                                            <!-- 6. Residual -->
-                                             <div class="bagian-5-section" style="{{ ($item->kolom14_score ?? 0) >= 8 ? 'display:block;' : 'display:none;' }}">
-                                                  <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
-                                                      <i class="fas fa-tasks" style="color: #8b5cf6; margin-right: 8px;"></i>
-                                                      BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa
-                                                  </h3>
-                                                  <div class="form-group"><label class="form-label">Tindak Lanjut</label><textarea class="form-control" name="items[{{$index}}][kolom18_tindak_lanjut]">{{ $item->kolom18_tindak_lanjut }}</textarea></div>
+                                            <!-- 6. Residual & Program -->
+                                            @php
+                                                // Calculate initial display state for Tolerance
+                                                $score = $item->kolom14_score ?? 0;
+                                                $level = $item->kolom14_level ?? 'Rendah';
+                                                $hasControls = !empty($item->kolom11_existing);
+                                                $tolerance = $item->kolom18_toleransi ?? 'Ya'; // Default
+                                                
+                                                // Auto-calculate logic for display consistency (PHP side)
+                                                if ($score >= 10) {
+                                                    $tolerance = 'Tidak';
+                                                } elseif ($score >= 5 && !$hasControls) {
+                                                    $tolerance = 'Tidak';
+                                                }
+                                                // Or trust DB value:
+                                                $tolerance = $item->kolom18_toleransi ?? (($score >= 10 || ($score >= 5 && !$hasControls)) ? 'Tidak' : 'Ya');
 
-                                                  <div style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
-                                                      <div style="display:flex; gap:20px;">
-                                                          <div class="form-group" style="flex:1"><label class="form-label">Res. Kemungkinan</label><select class="form-control res-val" name="items[{{$index}}][residual_kemungkinan]" onchange="calculateItemResidual(this)">
-                                                              <option value="">--</option>@foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}" {{ $v == $item->residual_kemungkinan ? 'selected' : '' }}>{{$v}}</option> @endforeach
-                                                          </select></div>
-                                                          <div class="form-group" style="flex:1"><label class="form-label">Res. Konsekuensi</label><select class="form-control res-val" name="items[{{$index}}][residual_konsekuensi]" onchange="calculateItemResidual(this)">
-                                                              <option value="">--</option>@foreach([1, 2, 3, 4, 5] as $v) <option value="{{$v}}" {{ $v == $item->residual_konsekuensi ? 'selected' : '' }}>{{$v}}</option> @endforeach
-                                                          </select></div>
-                                                      </div>
-                                                      <div style="text-align:center;">
-                                                          <div class="risk-result-box res-box" style="background:#15803d; color:white; padding:10px;"><div class="risk-score res-score" style="font-size:24px;">{{$item->residual_score}}</div><span class="risk-level res-level">{{$item->residual_level}}</span></div>
-                                                          <input type="hidden" name="items[{{$index}}][residual_score]" class="input-res-score" value="{{$item->residual_score}}">
-                                                          <input type="hidden" name="items[{{$index}}][residual_level]" class="input-res-level" value="{{$item->residual_level}}">
-                                                      </div>
-                                                      <div class="form-group mt-4">
-                                                          <label class="form-label">Dapat Ditoleransi?</label>
-                                                          <select class="form-control" name="items[{{$index}}][kolom18_toleransi]">
-                                                              <option value="Ya" {{ ($item->kolom18_toleransi ?? 'Ya') == 'Ya' ? 'selected' : '' }}>Ya</option>
-                                                              <option value="Tidak" {{ ($item->kolom18_toleransi ?? '') == 'Tidak' ? 'selected' : '' }}>Tidak</option>
-                                                          </select>
-                                                      </div>
-                                                  </div>
-                                             </div>
+                                                // Styles
+                                                $tolBg = $tolerance == 'Tidak' ? '#fef2f2' : ($tolerance == 'Ya' ? '#ecfdf5' : 'white');
+                                                $tolBorder = $tolerance == 'Tidak' ? '#fca5a5' : ($tolerance == 'Ya' ? '#6ee7b7' : '#cbd5e1');
+                                                $tolIcon = $tolerance == 'Tidak' ? 'fa-exclamation-triangle' : ($tolerance == 'Ya' ? 'fa-check-circle' : 'fa-spinner');
+                                                $tolColor = $tolerance == 'Tidak' ? '#dc2626' : ($tolerance == 'Ya' ? '#10b981' : '#94a3b8');
+                                                $tolText = $tolerance == 'Tidak' ? 'Tidak - Perlu Program Pengendalian' : ($tolerance == 'Ya' ? 'Ya - Dapat Ditoleransi' : 'Menunggu Penilaian');
+                                            @endphp
+
+                                            <div class="bagian-5-section" style="{{ $score > 0 ? 'display:block;' : 'display:none;' }}">
+                                                <h3 style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
+                                                    <i class="fas fa-check-double" style="color: #15803d; margin-right: 8px;"></i>
+                                                    BAGIAN 5: Evaluasi & Program Pengendalian
+                                                </h3>
+                                                <div style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
+
+                                                    <!-- Column 18: Auto-Tolerance -->
+                                                    <div class="form-group">
+                                                        <label class="form-label">Kolom 18: Risiko Dapat Ditoleransi?</label>
+                                                        <div class="tolerance-display" style="background: {{ $tolBg }}; padding: 16px; border-radius: 8px; border: 2px solid {{ $tolBorder }};">
+                                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                                <div class="tolerance-icon" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                                                    <i class="fas {{ $tolIcon }}" style="color: {{ $tolColor }};"></i>
+                                                                </div>
+                                                                <div style="flex: 1;">
+                                                                    <div class="tolerance-value" style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">{{ $tolText }}</div>
+                                                                    <div class="tolerance-reason" style="font-size: 12px; color: #64748b;">Berdasarkan Skor Risiko & Pengendalian</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <input type="hidden" name="items[{{$index}}][kolom18_toleransi]" class="tolerance-input" value="{{ $tolerance }}">
+                                                        <input type="hidden" name="items[{{$index}}][kolom18_auto]" class="tolerance-auto" value="1">
+                                                    </div>
+
+                                                    <!-- Column 19: Rencana Pengendalian (Program Title) -->
+                                                    <div class="kolom19-section" style="{{ $tolerance == 'Tidak' ? 'display:block;' : 'display:none;' }} margin-top: 20px;">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Kolom 19: Rencana Pengendalian Tindak Lanjut <span class="required">*</span></label>
+                                                            <textarea class="form-control kolom19-input" name="items[{{$index}}][kolom19_rencana]" rows="3" placeholder="Rencana/Judul Program..." {{ $tolerance == 'Tidak' ? 'required' : '' }}>{{ $item->kolom19_rencana }}</textarea>
+                                                            <small class="text-muted"><i class="fas fa-info-circle"></i> Menjadi Judul Program PUK/PMK</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Risk After Control (Kolom 20-22) -->
+                                                    <div class="risk-after-control-section" style="{{ $tolerance == 'Tidak' ? 'display:block;' : 'display:none;' }} margin-top: 25px;">
+                                                        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 20px; border-radius: 12px; border: 2px solid #93c5fd; margin-bottom: 20px;">
+                                                            <h4 style="color: #1e40af; margin-bottom: 15px; font-size: 15px; font-weight: 700;"><i class="fas fa-chart-line"></i> Risiko Setelah Pengendalian Tindak Lanjut</h4>
+                                                            <div style="display: flex; gap: 20px; align-items: flex-start;">
+                                                                <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Kolom 20: L</label>
+                                                                        <select class="form-control likelihood-select-after" name="items[{{$index}}][kolom20_kemungkinan_lanjut]" onchange="calculateRiskAfterControl(this)">
+                                                                            <option value="">--</option>
+                                                                            @foreach([1,2,3,4,5] as $v) <option value="{{$v}}" {{ $v == $item->kolom20_kemungkinan_lanjut ? 'selected' : '' }}>{{$v}}</option> @endforeach
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Kolom 21: S</label>
+                                                                        <select class="form-control severity-select-after" name="items[{{$index}}][kolom21_konsekuensi_lanjut]" onchange="calculateRiskAfterControl(this)">
+                                                                            <option value="">--</option>
+                                                                            @foreach([1,2,3,4,5] as $v) <option value="{{$v}}" {{ $v == $item->kolom21_konsekuensi_lanjut ? 'selected' : '' }}>{{$v}}</option> @endforeach
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div style="flex: 0 0 160px; text-align:center;">
+                                                                    @php
+                                                                        $resScore = ($item->kolom20_kemungkinan_lanjut ?? 0) * ($item->kolom21_konsekuensi_lanjut ?? 0);
+                                                                        $resLevel = $item->kolom22_level_lanjut ?? 'PENDING';
+                                                                        $resBg = $resScore > 0 ? ($resScore >= 20 ? '#7f1d1d' : ($resScore >= 10 ? '#dc2626' : ($resScore >= 5 ? '#f59e0b' : '#10b981'))) : '#e2e8f0';
+                                                                        $resColor = $resScore > 0 ? '#fff' : '#64748b';
+                                                                    @endphp
+                                                                    <label class="form-label">Level</label>
+                                                                    <div class="risk-result-box-after" style="padding:15px; border-radius:8px; background: {{ $resBg }}; color: {{ $resColor }}; border: 1px solid #cbd5e1;">
+                                                                        <div class="risk-score-after" style="font-size: 24px; font-weight: 800;">{{ $resScore > 0 ? $resScore : '-' }}</div>
+                                                                        <span class="risk-level-after" style="font-size: 11px; font-weight: 700; text-transform: uppercase;">{{ $resLevel }}</span>
+                                                                    </div>
+                                                                    <input type="hidden" name="items[{{$index}}][kolom22_tingkat_risiko_lanjut]" class="input-score-after" value="{{ $resScore }}">
+                                                                    <input type="hidden" name="items[{{$index}}][kolom22_level_lanjut]" class="input-level-after" value="{{ $resLevel }}">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Program Section -->
+                                                    <div class="program-section" style="{{ $tolerance == 'Tidak' ? 'display:block;' : 'display:none;' }} margin-top: 25px;">
+                                                        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 12px; border: 2px solid #fbbf24; margin-bottom: 20px;">
+                                                            <h4 style="color: #92400e; margin-bottom: 15px; font-size: 15px; font-weight: 700;">
+                                                                <i class="fas fa-clipboard-list"></i> Program Pengendalian Lanjutan
+                                                            </h4>
+                                                            <div class="form-group">
+                                                                <label class="form-label">Jenis Program <span class="required">*</span></label>
+                                                                <select class="form-control program-type-select" name="items[{{$index}}][kolom19_program_type]">
+                                                                    <option value="">-- Pilih --</option>
+                                                                    <option value="PUK" class="option-puk" {{ $item->kolom19_program_type == 'PUK' ? 'selected' : '' }}>PUK - Program Unit Kerja</option>
+                                                                    <option value="PMK" class="option-pmk" {{ $item->kolom19_program_type == 'PMK' ? 'selected' : '' }}>PMK - Program Manajemen Korporat</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- PUK/PMK Form Container -->
+                                                        <div class="program-form-container" style="{{ $item->kolom19_program_type ? 'display:block;' : 'display:none;' }}">
+                                                            @if($item->kolom19_program_type)
+                                                                <div class="program-form" style="background: white; padding: 25px; border-radius: 12px; border: 2px solid #e5e7eb; margin-top: 20px;">
+                                                                    <h5 class="program-form-title" style="color: #1e40af; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #dbeafe; font-size: 14px; font-weight: 700;">
+                                                                        Form {{ $item->kolom19_program_type }}
+                                                                    </h5>
+                                                                    
+                                                                    <!-- Fields -->
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">1. Judul Program</label>
+                                                                        <input type="text" class="form-control program-judul" readonly value="{{ $item->kolom19_rencana }}" style="background:#f3f4f6; font-weight:600;">
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">2. Tujuan <span class="required">*</span></label>
+                                                                        <textarea class="form-control program-field" name="items[{{$index}}][program_tujuan]" rows="3" required>{{ $item->program_tujuan }}</textarea>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">3. Sasaran <span class="required">*</span></label>
+                                                                        <textarea class="form-control program-field" name="items[{{$index}}][program_sasaran]" rows="3" required>{{ $item->program_sasaran }}</textarea>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">4. Penanggung Jawab</label>
+                                                                        <input type="text" class="form-control program-field program-pj" name="items[{{$index}}][program_penanggung_jawab]" readonly value="{{ $item->program_penanggung_jawab ?? $user->unit->nama_unit ?? '' }}" style="background:#f8fafc; color:#64748b;">
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">5. Uraian Revisi</label>
+                                                                        <textarea class="form-control program-field" name="items[{{$index}}][program_uraian_revisi]" rows="3">{{ $item->program_uraian_revisi }}</textarea>
+                                                                    </div>
+
+                                                                    <!-- Table Program Kerja -->
+                                                                    <div class="form-group">
+                                                                        <label class="form-label" style="display:block; margin-bottom:10px;">6. Program Kerja <span class="required">*</span></label>
+                                                                        <div class="program-kerja-scroll" style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                                                                            <table class="table program-kerja-table table-bordered" style="margin-bottom:0; min-width:1400px; width:max-content;">
+                                                                                <thead>
+                                                                                    <tr style="background:#5c7cfa; color:white; font-size:12px; font-weight:600;">
+                                                                                        <th rowspan="2" style="width:40px; text-align:center; vertical-align:middle;">No</th>
+                                                                                        <th rowspan="2" style="min-width:150px; vertical-align:middle;">Uraian Kegiatan</th>
+                                                                                        <th rowspan="2" class="col-koordinator" style="min-width:1400px; vertical-align:middle;">{{ $item->kolom19_program_type == 'PMK' ? 'PIC' : 'Koordinator' }}</th>
+                                                                                        <th rowspan="2" class="col-pelaksana" style="min-width:1400px; vertical-align:middle; display: {{ $item->kolom19_program_type == 'PMK' ? 'none' : 'table-cell' }};">Pelaksana</th>
+                                                                                        <th colspan="12" style="text-align:center;">Target (%)</th>
+                                                                                        <th rowspan="2" class="col-anggaran" style="min-width:120px; vertical-align:middle; display: {{ $item->kolom19_program_type == 'PMK' ? 'table-cell' : 'none' }};">Anggaran (Rp)</th>
+                                                                                        <th rowspan="2" style="width:40px; text-align:center;">Aksi</th>
+                                                                                    </tr>
+                                                                                    <tr style="background:#748ffc; color:white; font-size:11px;">
+                                                                                        @for($i=1; $i<=12; $i++) <th style="text-align:center; width:40px;">{{$i}}</th> @endfor
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody class="program-kerja-tbody">
+                                                                                    @if(!empty($item->program_kerja) && is_array($item->program_kerja))
+                                                                                        @foreach($item->program_kerja as $pkKey => $pk)
+                                                                                            <tr>
+                                                                                                <td style="text-align:center; vertical-align:middle;">{{ $loop->iteration }}</td>
+                                                                                                <td style="padding:0;"><textarea class="form-control" name="items[{{$index}}][program_kerja][{{$pkKey}}][uraian]" required style="border:none; width:100%; min-width:150px; padding:6px; resize:vertical;" rows="3">{{ $pk['uraian'] ?? '' }}</textarea></td>
+                                                                                                <td style="padding:0;">
+                                                                                                    @if($item->kolom19_program_type == 'PMK')
+                                                                                                        <select class="form-select" name="items[{{$index}}][program_kerja][{{$pkKey}}][koordinator]" required style="border:none; width:100%;">
+                                                                                                            <option value="">--</option>
+                                                                                                            @foreach($pmkPicUsers ?? [] as $u) <option value="{{$u->nama_user}}" {{ ($pk['koordinator'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{$u->nama_user}}</option> @endforeach
+                                                                                                        </select>
+                                                                                                    @else
+                                                                                                        <select class="form-select" name="items[{{$index}}][program_kerja][{{$pkKey}}][koordinator]" required style="border:none; width:100%;">
+                                                                                                            <option value="">--</option>
+                                                                                                            @foreach($band3Users ?? [] as $u) <option value="{{$u->nama_user}}" {{ ($pk['koordinator'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{$u->nama_user}}</option> @endforeach
+                                                                                                        </select>
+                                                                                                    @endif
+                                                                                                </td>
+                                                                                                <td style="padding:0; display: {{ $item->kolom19_program_type == 'PMK' ? 'none' : 'table-cell' }};">
+                                                                                                    @if($item->kolom19_program_type != 'PMK')
+                                                                                                        <select class="form-select" name="items[{{$index}}][program_kerja][{{$pkKey}}][pelaksana]" required style="border:none; width:100%;">
+                                                                                                            <option value="">--</option>
+                                                                                                            @foreach($band4Users ?? [] as $u) <option value="{{$u->nama_user}}" {{ ($pk['pelaksana'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{$u->nama_user}}</option> @endforeach
+                                                                                                        </select>
+                                                                                                    @else
+                                                                                                        <input type="hidden" name="items[{{$index}}][program_kerja][{{$pkKey}}][pelaksana]" value="-">
+                                                                                                    @endif
+                                                                                                </td>
+                                                                                                @for($i=0; $i<12; $i++)
+                                                                                                    <td style="padding:2px; width:40px;"><input type="number" class="form-control" name="items[{{$index}}][program_kerja][{{$pkKey}}][target][{{$i}}]" value="{{ $pk['target'][$i] ?? '' }}" min="0" max="100" style="border:none; width:100%; text-align:center;"></td>
+                                                                                                @endfor
+                                                                                                <td style="padding:0; display: {{ $item->kolom19_program_type == 'PMK' ? 'table-cell' : 'none' }};">
+                                                                                                    <input type="number" class="form-control" name="items[{{$index}}][program_kerja][{{$pkKey}}][anggaran]" value="{{ $pk['anggaran'] ?? '' }}" style="border:none; width:100%;">
+                                                                                                </td>
+                                                                                                <td style="text-align:center; vertical-align:middle; padding:4px;">
+                                                                                                    <button type="button" onclick="this.closest('tr').remove(); renumberProgramKerja(this)" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:4px;"><i class="fas fa-trash"></i></button>
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        @endforeach
+                                                                                    @endif
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                        <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addProgramKerjaRow(this)" style="background:#6366f1; color:white; border:none; padding:8px 16px; border-radius:6px;"><i class="fas fa-plus"></i> Tambah Baris</button>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
 
                                         </div>
                                     </div>
                                 </div>
-                            @endif
+
                         @endforeach
                     </div>
 
 
 
-                    <div class="action-bar" style="display:flex; justify-content:space-between; align-items:center; gap:20px;">
-                        <input type="hidden" name="action" id="action_input" value="submit">
-                        
-                        <div class="action-buttons">
-                            <!-- Draft Button -->
-                            <button type="button" class="btn" onclick="validateAndSubmit('draft')" 
-                                    style="border: 2px solid #7c3aed; background: white; color: #7c3aed; font-weight: 700;">
-                                <i class="fas fa-save"></i> Simpan Draft
-                            </button>
-                        </div>
-                        
-                        <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 15px;">
-                            <div style="flex: 1; max-width: 500px; position: relative;">
-                                <textarea name="revision_comment" class="form-control" rows="1" placeholder="Tulis catatan (opsional)..." style="resize: none; border-radius: 20px; padding: 10px 20px; border: 1px solid #cbd5e1; padding-right: 40px; min-height: 45px;"></textarea>
-                                <i class="fas fa-comment-dots" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                            </div>
-
-                            <button type="button" class="btn btn-primary" id="btnSubmit" onclick="validateAndSubmit('submit')">
-                                <i class="fas fa-paper-plane"></i> {{ ($document->status == 'draft' || $document->status == 'pending_level1') ? 'Kirim ke Atasan' : 'Submit Revisi' }}
-                            </button>
-                        </div>
+                    <div class="form-footer" style="padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; border-radius: 0 0 12px 12px; margin-top: 30px; display: flex; justify-content: flex-end;">
+                        <input type="hidden" name="action" id="action_input" value="save_only">
+                        <button type="button" class="btn btn-primary" id="btnSave" onclick="confirmSave()" 
+                                style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; padding: 12px 32px; border-radius: 10px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3); transition: all 0.2s;">
+                            <i class="fas fa-save" style="margin-right: 8px;"></i> Simpan Perubahan
+                        </button>
                     </div>
                 </form>
 
     <script>
         function validateAndSubmit(actionType) {
+            console.log('validateAndSubmit called with actionType:', actionType); // DEBUG
             // Set Action Input
             const actionInput = document.getElementById('action_input');
             if (actionInput) actionInput.value = actionType;
-            const isDraft = actionType === 'draft';
+            const isDraft = actionType === 'draft' || actionType === 'save_only';
+            console.log('isDraft:', isDraft); // DEBUG
 
             // Revision Comment Logic (Specific to Edit)
-            // Use logical OR for revision status check
             const isRevision = @json(($document->status_she == 'revision' || $document->status_security == 'revision'));
             
             // If submitting a Revision, allow strict comment check OR rely on backend?
-            // User requested: "Adding Revision History". 
-            // Usually comment is specific to the *Change*.
-            // If I am just editing a draft, maybe no comment needed?
-            // But if I am Submitting, and it WAS a revision, I should probably explain what I fixed.
+            // "save_only" skips this check.
             
             const commentField = document.querySelector('textarea[name="revision_comment"]');
             if (!isDraft && actionType === 'submit' && isRevision) {
@@ -1008,12 +1118,12 @@
                             item.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
 
-                        // STRICT Checks (Only if NOT Draft)
+                        // STRICT Checks (Only if NOT Draft/SaveOnly)
                         if (isValid && !isDraft) {
                             const scoreInput = item.querySelector('.input-score');
                             const resScoreInput = item.querySelector('.input-res-score');
                             const s = scoreInput ? scoreInput.value : 0;
-                            const residualS = resScoreInput ? resScoreInput.value : 0;
+                            const resS = resScoreInput ? resScoreInput.value : 0;
                             const kondisi = item.querySelector('.condition-select')?.value;
 
                             // Validate Conditions
@@ -1037,9 +1147,6 @@
                                     setTimeout(() => box.style.border = '', 3000);
                                 }
                             }
-
-                            // Validate Residual Risk - REMOVED per user request
-                            // Logic removed
                         }
                     });
                 }
@@ -1055,17 +1162,18 @@
                 }
 
                 // Show Loading
-                const btn = document.getElementById('btnSubmit');
+                // Try finding btnSubmit first (legacy), then btnSave
+                const btn = document.getElementById('btnSubmit') || document.getElementById('btnSave');
                 const originalText = btn ? btn.innerHTML : 'Submit';
                 if(btn) {
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
                     btn.disabled = true;
                 }
 
                 // Submit
                 const form = document.getElementById('hiradcForm');
                 if (isDraft) {
-                    // Bypass HTML5 validation for draft
+                    // Bypass HTML5 validation for draft/save_only
                     form.noValidate = true;
                     form.submit();
                 } else {
@@ -1083,10 +1191,11 @@
             } catch (e) {
                 console.error(e);
                 Swal.fire('System Error', e.message, 'error');
-                const btn = document.getElementById('btnSubmit');
+                const btn = document.getElementById('btnSubmit') || document.getElementById('btnSave');
                 if (btn) btn.disabled = false;
             }
         }
+    </script>
             </div>
         </main>
     </div>
@@ -1562,23 +1671,10 @@
         const autoProbis = document.getElementById('auto_probis_value').value;
 
         const categories = {
-            @if(!isset($document) || ($document->status_she == 'revision' && $document->status_security != 'revision'))
-                'K3': { label: 'K3', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
-                'KO': { label: 'KO', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
-                'Lingkungan': { label: 'Lingkungan', conditions: ['Normal', 'Abnormal', 'Emergency'] },
-            @endif
-            @if(!isset($document) || ($document->status_security == 'revision' && $document->status_she != 'revision'))
-                'Keamanan': { label: 'Keamanan', conditions: ['Emergency'] }
-            @endif
-            // If both are revision, all will be printed.
-            // If full revision (legacy), both statuses might be 'revision' or null, so we print all.
-            // Fallback for full revision where both are active:
-            @if(isset($document) && $document->status_she == 'revision' && $document->status_security == 'revision')
-                'K3': { label: 'K3', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
-                'KO': { label: 'KO', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
-                'Lingkungan': { label: 'Lingkungan', conditions: ['Normal', 'Abnormal', 'Emergency'] },
-                'Keamanan': { label: 'Keamanan', conditions: ['Emergency'] }
-            @endif
+            'K3': { label: 'K3', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
+            'KO': { label: 'KO', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
+            'Lingkungan': { label: 'Lingkungan', conditions: ['Normal', 'Abnormal', 'Emergency'] },
+            'Keamanan': { label: 'Keamanan', conditions: ['Emergency'] }
         };
 
         // Note: 'hazards' array logic is removed in favor of create.blade.php's explicit HTML structure logic
@@ -2430,6 +2526,30 @@
                 row.cells[0].textContent = idx + 1;
             });
         }
+
+        function confirmSave() {
+            console.log('confirmSave() called'); // DEBUG
+            Swal.fire({
+                title: 'Simpan Perubahan?',
+                text: "Apakah Anda yakin ingin memperbarui data form ini?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Simpan',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                console.log('SweetAlert result:', result); // DEBUG
+                if (result.isConfirmed) {
+                    console.log('Calling validateAndSubmit with save_only'); // DEBUG
+                    validateAndSubmit('save_only');
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+           // No initialization needed for save button
+        });
 
     </script>
 </body>

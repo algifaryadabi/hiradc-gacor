@@ -148,6 +148,66 @@
         .pp-profile { display: flex; gap: 16px; align-items: center; }
         .pp-avatar { width: 56px; height: 56px; background: #e0e7ff; color: #3730a3; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; }
         .pp-status { padding: 8px 20px; border-radius: 100px; font-size: 13px; font-weight: 700; text-transform: uppercase; background: #fffbeb; color: #d97706; border: 1px solid #f59e0b; }
+
+        /* Tabs Styling */
+        .page-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-sub);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+            background: rgba(196, 30, 58, 0.05);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .badge-count {
+            background: var(--primary);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 100px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 
@@ -207,18 +267,60 @@
             </div>
         </div>
 
+        @php
+            $puk = $document->pukProgram;
+            $pmk = $document->pmkProgram;
+            // Direktur only reviews PMK, so count only PMK
+            $programCount = $pmk ? 1 : 0;
+        @endphp
+
+        <!-- Tab Navigation -->
+        <div class="page-tabs">
+            <button type="button" class="tab-btn active" onclick="openTab(event, 'tab-hiradc')">
+                <i class="fas fa-table"></i> HIRADC
+            </button>
+            <button type="button" class="tab-btn" onclick="openTab(event, 'tab-programs')">
+                <i class="fas fa-tasks"></i> Program Kerja
+                @if($programCount > 0)
+                    <span class="badge-count">{{ $programCount }}</span>
+                @endif
+            </button>
+        </div>
+
         <!-- Review Form Wrapper -->
         <form id="reviewForm" method="POST" action="">
             @csrf
             
+            
+            <!-- Tab Content: HIRADC -->
+            <div id="tab-hiradc" class="tab-content active">
             <!-- HIRADC Document Title -->
             <div class="doc-title-block">
                 <div>
                     <div class="doc-label">Judul Dokumen HIRADC</div>
                     <div class="doc-main-title">{{ $document->judul_dokumen ?? $document->kolom2_kegiatan }}</div>
                 </div>
-                <div>
+                <div style="display: flex; align-items: center; gap: 12px;">
                     <span class="doc-label" style="background:var(--primary); color:white; padding:4px 10px; border-radius:20px;">HIRADC + PMK</span>
+                    
+                    {{-- Export Buttons --}}
+                    <div style="display: flex; gap: 8px;">
+                        {{-- HIRADC Detail Export --}}
+                        <a href="{{ route('documents.export.detail.pdf', $document->id) }}" 
+                           target="_blank"
+                           style="padding: 8px 14px; background: #ef4444; color: white; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                           onmouseover="this.style.background='#dc2626'" 
+                           onmouseout="this.style.background='#ef4444'">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                        <a href="{{ route('documents.export.detail.excel', $document->id) }}" 
+                           target="_blank"
+                           style="padding: 8px 14px; background: #22c55e; color: white; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                           onmouseover="this.style.background='#16a34a'" 
+                           onmouseout="this.style.background='#22c55e'">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -408,13 +510,119 @@
                 </table>
             </div>
 
+            <!-- Riwayat Approval -->
+            <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #3b82f6;">
+                <div class="doc-header">
+                    <i class="fas fa-history" style="color: #3b82f6; font-size: 20px;"></i>
+                    <h2 style="margin:0; font-size:18px; color:#1e293b;">Riwayat Approval</h2>
+                </div>
+                <div class="doc-body">
+                    @php
+                        // Get all approvals with proper eager loading
+                        $approvals = $document->approvals()->with(['approver.unit', 'approver.departemen'])->orderBy('created_at', 'desc')->get();
+                    @endphp
+                    
+                    @if($approvals && $approvals->count() > 0)
+                        <div style="position: relative; padding-left: 40px;">
+                            <!-- Timeline Line -->
+                            <div style="position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: #e2e8f0;"></div>
+                            
+                            @foreach($approvals as $approval)
+                            @php
+                                $approver = $approval->approver;
+                                $approverName = $approver->nama_user ?? $approver->nama_lengkap ?? 'Unknown';
+                                $approverUnit = $approver->unit->nama_unit ?? ($approver->departemen->nama_dept ?? '-');
+                                $approverJabatan = $approver->jabatan ?? $approver->role_jabatan_name ?? '-';
+                                
+                                // Determine action color and label
+                                $actionColor = '#f59e0b';
+                                $actionBg = '#fef3c7';
+                                $actionText = '#92400e';
+                                $actionLabel = strtoupper($approval->action);
+                                
+                                if ($approval->action == 'approved') {
+                                    $actionColor = '#22c55e'; $actionBg = '#dcfce7'; $actionText = '#166534'; $actionLabel = 'APPROVED';
+                                } elseif ($approval->action == 'rejected' || $approval->action == 'revision') {
+                                    $actionColor = '#ef4444'; $actionBg = '#fee2e2'; $actionText = '#991b1b'; $actionLabel = $approval->action == 'rejected' ? 'REJECTED' : 'REVISI';
+                                } elseif ($approval->action == 'reviewed') {
+                                    $actionColor = '#3b82f6'; $actionBg = '#dbeafe'; $actionText = '#1e40af'; $actionLabel = 'REVIEWED';
+                                } elseif ($approval->action == 'disposition') {
+                                    $actionColor = '#f59e0b'; $actionBg = '#fef3c7'; $actionText = '#92400e'; $actionLabel = 'DISPOSITION';
+                                }
+                            @endphp
+                            <div style="position: relative; margin-bottom: 24px;">
+                                <!-- Timeline Dot -->
+                                <div style="position: absolute; left: -25px; width: 12px; height: 12px; border-radius: 50%; background: {{ $actionColor }}; border: 3px solid white; box-shadow: 0 0 0 2px #e2e8f0;"></div>
+                                
+                                <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 700; color: #1e293b; font-size: 14px;">{{ $approverName }}</div>
+                                            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">{{ $approverJabatan }}</div>
+                                            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
+                                                <i class="fas fa-building" style="margin-right: 4px;"></i>{{ $approverUnit }}
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <span style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; background: {{ $actionBg }}; color: {{ $actionText }};">
+                                                {{ $actionLabel }}
+                                            </span>
+                                            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
+                                                <i class="fas fa-clock" style="margin-right: 4px;"></i>{{ $approval->created_at->format('d M Y, H:i') }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if($approval->catatan)
+                                        <div style="margin-top: 12px; padding: 12px; background: white; border-radius: 6px; border-left: 3px solid {{ $actionColor }};">
+                                            <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 4px;">CATATAN:</div>
+                                            <div style="font-size: 13px; color: #334155; line-height: 1.5;">{{ $approval->catatan }}</div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                            <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                            <div style="font-size: 14px; font-weight: 600;">Belum ada riwayat approval</div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            </div><!-- End tab-hiradc -->
+
+            <!-- Tab Content: Program Kerja -->
+            <div id="tab-programs" class="tab-content">
+
             <!-- PMK Section -->
             @php $pmk = $document->pmkProgram; @endphp
             @if($pmk)
-            <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #c026d3;">
-                <div class="doc-header">
-                    <i class="fas fa-project-diagram" style="color: #c026d3; font-size: 20px;"></i>
-                    <h2 style="margin:0; font-size:18px; color:#1e293b;">Review Program Manajemen Korporat (PMK)</h2>
+            <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #dc2626;">
+                <div class="doc-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-project-diagram" style="color: #dc2626; font-size: 20px;"></i>
+                        <h2 style="margin:0; font-size:18px; color:#1e293b;">Review Program Manajemen Korporat (PMK)</h2>
+                    </div>
+                    
+                    <!-- PMK Export Buttons -->
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{{ route('documents.export.pmk.pdf', $document->id) }}" 
+                           target="_blank"
+                           style="padding: 8px 16px; background: #ef4444; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                           onmouseover="this.style.background='#dc2626'" 
+                           onmouseout="this.style.background='#ef4444'">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                        <a href="{{ route('documents.export.pmk.excel', $document->id) }}" 
+                           target="_blank"
+                           style="padding: 8px 16px; background: #22c55e; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                           onmouseover="this.style.background='#16a34a'" 
+                           onmouseout="this.style.background='#22c55e'">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </a>
+                    </div>
                 </div>
                 
                 <div class="doc-body">
@@ -424,6 +632,9 @@
                             <tr><td class="info-label">Tujuan</td><td class="info-value">: {{ $pmk->tujuan }}</td></tr>
                             <tr><td class="info-label">Sasaran</td><td class="info-value">: {{ $pmk->sasaran }}</td></tr>
                             <tr><td class="info-label">Penanggung Jawab</td><td class="info-value">: {{ $pmk->penanggung_jawab }}</td></tr>
+                            @if($pmk->uraian_revisi)
+                            <tr><td class="info-label">Uraian Revisi</td><td class="info-value">: {{ $pmk->uraian_revisi }}</td></tr>
+                            @endif
                         </table>
                     </div>
 
@@ -542,7 +753,9 @@
                         </div>
                     @endif
                 </div>
-            </div>
+            </div>            </div>
+
+            </div><!-- End tab-programs -->
 
             <!-- Action Bar -->
             <div class="action-bar">
@@ -554,6 +767,12 @@
                     <textarea name="catatan" class="note-input" placeholder="Tambahkan catatan untuk approval atau revisi (opsional)..." style="min-height: 80px;"></textarea>
                 </div>
                 <div style="display:flex; gap:12px; align-items: flex-end;">
+                    @if(isset($pmk) && in_array($pmk->status, ['draft', 'pending_direksi']))
+                    <button type="button" class="btn-action" style="background: linear-gradient(135deg, #db2777 0%, #be185d 100%);" onclick="submitPmkRevision()">
+                        <i class="fas fa-file-contract"></i> Revisi PMK
+                    </button>
+                    @endif
+                    
                     <button type="button" class="btn-action btn-reject" onclick="submitDecision('reject')">
                         <i class="fas fa-undo"></i> Revisi
                     </button>
@@ -566,6 +785,30 @@
     </main>
 
     <script>
+        function submitPmkRevision() {
+            const form = document.getElementById('reviewForm');
+            const note = document.querySelector('textarea[name="catatan"]').value;
+
+            if (!note.trim()) {
+                Swal.fire('Error', 'Harap isi catatan revisi PMK.', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Revisi PMK?',
+                text: 'Program Manajemen Korporat akan dikembalikan ke User untuk revisi.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#be185d',
+                confirmButtonText: 'Ya, Revisi PMK'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.action = "{{ route('pmk.request_revision', $pmk->id ?? 0) }}";
+                    form.submit();
+                }
+            });
+        }
+
         function submitDecision(action) {
             const form = document.getElementById('reviewForm');
             const note = document.querySelector('textarea[name="catatan"]').value;
@@ -601,6 +844,23 @@
                     form.submit();
                 }
             });
+        }
+
+        // Tab switching function
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove('active');
+            }
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.className += " active";
         }
     </script>
 </body>

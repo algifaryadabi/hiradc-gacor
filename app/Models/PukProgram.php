@@ -21,12 +21,18 @@ class PukProgram extends Model
         'approved_by_kepala_unit',
         'approved_at',
         'rejection_note',
+        'revision_note',
+        'revised_by',
+        'revised_at',
+        'resubmitted_at',
         'created_by',
     ];
 
     protected $casts = [
         'program_kerja' => 'array',
         'approved_at' => 'datetime',
+        'revised_at' => 'datetime',
+        'resubmitted_at' => 'datetime',
     ];
 
     public function documentDetail()

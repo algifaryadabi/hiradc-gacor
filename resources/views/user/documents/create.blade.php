@@ -2351,6 +2351,8 @@
         // Add Program Kerja Row
         function addProgramKerjaRow(btn) {
             const table = btn.previousElementSibling.querySelector('.program-kerja-tbody');
+            // Use unique timestamp for ID to prevent collisions
+            const uniqueId = Date.now();
             const rowCount = table.querySelectorAll('tr').length + 1;
 
             const item = btn.closest('.doc-item');
@@ -2395,7 +2397,7 @@
                     <td style="text-align: center; border: 1px solid #d1d5db; vertical-align: middle;">${rowCount}</td>
                     
                     <td style="border: 1px solid #d1d5db; padding: 0;">
-                        <textarea class="form-control" name="items[${itemIndex}][program_kerja][${rowCount - 1}][uraian]" 
+                        <textarea class="form-control" name="items[${itemIndex}][program_kerja][${uniqueId}][uraian]" 
                                placeholder="Uraian kegiatan..." required 
                                style="border: none; width: 100%; min-width: 150px; resize: vertical; padding: 6px;" rows="3"></textarea>
                     </td>
@@ -2403,10 +2405,10 @@
                     <!-- Reuse the Koordinator column for PIC -->
                     <td style="border: 1px solid #d1d5db; padding: 4px; min-width: 160px; vertical-align: middle;">
                         <!-- Hidden values for compatibility -->
-                        <input type="hidden" name="items[${itemIndex}][program_kerja][${rowCount - 1}][pelaksana]" value="-">
+                        <input type="hidden" name="items[${itemIndex}][program_kerja][${uniqueId}][pelaksana]" value="-">
                         
                         <!-- Map PIC dropdown to 'koordinator' field to reuse logic, or keep consistent keys -->
-                        <select class="form-select" name="items[${itemIndex}][program_kerja][${rowCount - 1}][koordinator]" required 
+                        <select class="form-select" name="items[${itemIndex}][program_kerja][${uniqueId}][koordinator]" required 
                                 style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px;">
                             ${pmkPicOptions}
                         </select>
@@ -2431,14 +2433,14 @@
 
                     ${Array.from({ length: 12 }, (_, i) => `
                         <td style="border: 1px solid #d1d5db; padding: 2px; width: 40px; min-width: 40px;">
-                            <input type="number" class="form-control" name="items[${itemIndex}][program_kerja][${rowCount - 1}][target][${i}]" 
+                            <input type="number" class="form-control" name="items[${itemIndex}][program_kerja][${uniqueId}][target][${i}]" 
                                    min="0" max="100" placeholder="-" 
                                    style="border: none; width: 100%; height: 100%; text-align: center; padding: 0; font-size: 11px;">
                         </td>
                     `).join('')}
                     
                     <td style="border: 1px solid #d1d5db; padding: 0;">
-                        <input type="number" class="form-control" name="items[${itemIndex}][program_kerja][${rowCount - 1}][anggaran]" 
+                        <input type="number" class="form-control" name="items[${itemIndex}][program_kerja][${uniqueId}][anggaran]" 
                                placeholder="Rp 0" min="0"
                                style="border: none; width: 100%; min-width: 120px; padding: 6px; font-size: 12px;">
                     </td>

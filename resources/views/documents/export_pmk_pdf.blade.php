@@ -6,364 +6,326 @@
     <title>Program Manajemen Korporat (PMK)</title>
     <style>
         @page {
-            margin: 15mm 10mm;
+            margin: 15mm 15mm;
             size: A4 landscape;
         }
         
         body {
             font-family: 'Arial', 'Helvetica', sans-serif;
-            font-size: 9pt;
+            font-size: 11pt;
             line-height: 1.3;
-            color: #1a1a1a;
+            color: #000;
         }
 
-        /* Cover Page */
-        .cover-page {
-            page-break-after: always;
-            text-align: center;
-            padding-top: 60px;
+        /* Utility */
+        .text-center { text-align: center; }
+        .text-bold { font-weight: bold; }
+        .uppercase { text-transform: uppercase; }
+        .page-break { page-break-after: always; }
+        .w-100 { width: 100%; }
+
+        /* COVER PAGE */
+        .cover-container {
             position: relative;
-        }
-
-        .logo-container {
-            margin: 0 auto 25px;
-        }
-
-        .logo {
-            width: 90px;
-            height: 90px;
+            height: 90vh; /* Approximate height to center content effectively */
+            text-align: center;
+            padding-top: 40px;
         }
 
         .cover-title {
-            font-size: 18pt;
+            font-size: 20pt;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
+            margin-top: 60px;
             text-transform: uppercase;
-            color: #1e40af;
-            letter-spacing: 1px;
         }
 
-        .cover-subtitle {
-            font-size: 14pt;
+        .cover-unit {
+            font-size: 16pt;
             font-weight: bold;
             margin-bottom: 40px;
-            color: #334155;
+            text-transform: uppercase;
         }
 
-        .cover-info {
-            margin: 60px 0;
+        .logo {
+            width: 120px;
+            height: auto;
+            margin: 20px auto;
+        }
+
+        .cover-details {
+            margin-top: 40px;
             font-size: 11pt;
-        }
-
-        .cover-info-item {
-            margin: 10px 0;
-            font-weight: 500;
-        }
-
-        .signature-section {
-            display: table;
+            text-align: center;
             width: 100%;
-            margin-top: 80px;
         }
 
-        .signature-box {
-            display: table-cell;
-            width: 50%;
+        .cover-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 16pt;
+            font-weight: bold;
+        }
+
+        /* SIGNATURE PAGE */
+        .signature-title {
+            text-align: center;
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-decoration: underline;
+        }
+        
+        .signature-table {
+            width: 100%;
+            margin-top: 100px;
+            border-collapse: separate;
+            border-spacing: 20px 0;
+        }
+
+        .signature-cell {
+            width: 33%;
             text-align: center;
             vertical-align: top;
-            padding: 0 30px;
         }
 
-        .signature-label {
+        .sign-label {
+            margin-bottom: 100px;
             font-weight: bold;
-            margin-bottom: 90px;
-            font-size: 11pt;
         }
 
-        .signature-name {
+        .sign-name {
             font-weight: bold;
-            border-top: 2px solid #000;
-            padding-top: 8px;
-            display: inline-block;
-            min-width: 220px;
-            font-size: 11pt;
+            text-decoration: underline;
+            margin-bottom: 5px;
         }
 
-        .signature-title {
-            font-size: 10pt;
-            margin-top: 5px;
-            color: #475569;
+        .sign-jabatan {
+            
         }
 
-        /* Content Page */
-        .content-page {
-            padding: 5px 0;
-        }
-
-        .info-section {
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 15px;
+        /* CONTENT PAGE */
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 12pt;
         }
 
         .info-table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 20px;
         }
 
         .info-table td {
-            padding: 6px 0;
+            padding: 5px;
             vertical-align: top;
-            border: none;
         }
 
-        .info-table td:first-child {
-            width: 150px;
-            font-weight: 600;
-            color: #475569;
-        }
-
-        .info-table td:nth-child(2) {
-            width: 15px;
-            color: #64748b;
-        }
-
-        .info-table td:last-child {
-            color: #0f172a;
-        }
-
-        .section-header {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin: 15px 0 10px 0;
-            font-size: 11pt;
+        .info-label {
+            width: 180px;
             font-weight: bold;
         }
 
-        /* Table */
-        .table-container {
-            width: 100%;
-            overflow: visible;
+        .info-colon {
+            width: 20px;
+            text-align: center;
         }
 
-        table.program-table {
+        /* Program Table */
+        .program-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 7.5pt;
-            margin: 10px auto;
+            font-size: 8pt;
         }
 
-        table.program-table th {
-            background-color: #1e293b;
-            color: white;
-            padding: 8px 4px;
-            text-align: center;
-            border: 1px solid #0f172a;
-            font-weight: bold;
-            font-size: 7.5pt;
+        .program-table th, .program-table td {
+            border: 1px solid #000;
+            padding: 4px;
         }
 
-        table.program-table td {
-            padding: 6px 4px;
-            border: 1px solid #475569;
-            vertical-align: middle;
-            font-size: 7.5pt;
-        }
-
-        table.program-table td.center {
-            text-align: center;
-        }
-
-        table.program-table td.number {
+        .program-table th {
+            background-color: #e2e8f0;
             text-align: center;
             font-weight: bold;
-            background: #f1f5f9;
         }
 
-        .target-header {
-            background-color: #334155 !important;
-            color: white;
-            font-size: 7pt;
-        }
+        .bg-grey { background-color: #f1f5f9; }
+        .text-right { text-align: right; }
 
-        .target-cell {
-            background: #eff6ff;
-            text-align: center;
-            font-weight: 600;
-            color: #1e40af;
-        }
-
-        .empty-cell {
-            text-align: center;
-            color: #94a3b8;
-        }
-
-        .anggaran-cell {
-            text-align: right;
-            font-weight: 600;
-            color: #059669;
-            font-size: 7pt;
-        }
     </style>
 </head>
 <body>
     @php
-        use App\Models\User;
-        
-        // Get Kepala Seksi: User with role_jabatan = 4 (Kepala Seksi) from submitter's seksi
-        $kaSeksi = null;
-        $kaSeksiJabatan = 'Ka. Seksi';
-        if ($document->user && $document->user->id_seksi) {
-            $kaSeksi = User::where('id_seksi', $document->user->id_seksi)
-                           ->where('role_jabatan', 4)
-                           ->where('user_aktif', 1)
-                           ->with('roleJabatan')
-                           ->first();
-            if ($kaSeksi && $kaSeksi->roleJabatan) {
-                $kaSeksiJabatan = $kaSeksi->roleJabatan->nama_role_jabatan;
-            }
+        // Determine Category Title
+        $categoryTitle = 'KO.K3/LINGKUNGAN';
+        if ($document->kategori === 'Keamanan' || $document->managing_unit === 'Security' || ($document->status_security != 'none')) {
+            $categoryTitle = 'PENGAMANAN';
         }
+
+        $unitName = $document->unit ? $document->unit->nama_unit : ($document->kolom3_lokasi ?? 'UNIT KERJA');
+        $currentYear = date('Y');
         
-        // Get Kepala Unit: User with role_jabatan = 3 (Kepala Unit) from document's unit
-        $kaUnit = null;
-        $kaUnitJabatan = 'Ka. Unit';
-        if ($document->id_unit) {
-            $kaUnit = User::where('id_unit', $document->id_unit)
-                          ->where('role_jabatan', 3)
-                          ->where('user_aktif', 1)
-                          ->with('roleJabatan')
-                          ->first();
-            if ($kaUnit && $kaUnit->roleJabatan) {
-                $kaUnitJabatan = $kaUnit->roleJabatan->nama_role_jabatan;
-            }
-        }
+        // Document Number Logic (Mock or Real)
+        $docNo = "DOC-" . str_pad($document->id, 5, '0', STR_PAD_LEFT);
+        $revision = "0"; // Default
         
-        $unitName = $document->unit ? $document->unit->nama_unit : '-';
-        $tanggal = $PMKProgram->approved_at ? $PMKProgram->approved_at->locale('id')->isoFormat('D MMMM YYYY') : now()->locale('id')->isoFormat('D MMMM YYYY');
+        // Date formatting
+        $date = now()->locale('id')->isoFormat('D MMMM YYYY');
     @endphp
 
-    <!-- COVER PAGE -->
-    <div class="cover-page">
-        <div class="logo-container">
-            <img src="{{ public_path('images/logo-semen-padang.png') }}" alt="Logo PT Semen Padang" class="logo">
-        </div>
-        
-        <div class="cover-title">Program Manajemen Korporat (PMK)</div>
-        <div class="cover-subtitle">K3/KO/LINGKUNGAN/PENGAMANAN</div>
+    <!-- PAGE 1: COVER -->
+    <div class="cover-container page-break">
+        <div class="cover-title">PROGRAM MANAJEMEN {{ $categoryTitle }}</div>
+        <div class="cover-unit">{{ strtoupper($unitName) }}</div>
 
-        <div class="cover-info">
-            <div class="cover-info-item"><strong>Unit:</strong> {{ $unitName }}</div>
-            <div class="cover-info-item"><strong>Tanggal:</strong> Padang, {{ $tanggal }}</div>
+        <img src="{{ public_path('images/logo-semen-padang.png') }}" alt="Logo" class="logo">
+
+        <div class="cover-details">
+            <table style="margin: 0 auto; border: none;">
+                <tr>
+                    <td style="padding: 2px 10px; text-align: left; width: 80px;">No. Dok.</td>
+                    <td style="padding: 2px 5px; text-align: center; width: 10px;">:</td>
+                    <td style="padding: 2px 10px; text-align: left;">{{ $docNo }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 2px 10px; text-align: left;">Revisi</td>
+                    <td style="padding: 2px 5px; text-align: center;">:</td>
+                    <td style="padding: 2px 10px; text-align: left;">{{ $revision }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 2px 10px; text-align: left;">Tanggal</td>
+                    <td style="padding: 2px 5px; text-align: center;">:</td>
+                    <td style="padding: 2px 10px; text-align: left;">{{ $date }}</td>
+                </tr>
+            </table>
         </div>
 
-        <div class="signature-section">
-            <div class="signature-box">
-                <div class="signature-label">Disiapkan oleh</div>
-                <div class="signature-name">{{ $kaSeksi ? $kaSeksi->nama_user : '........................' }}</div>
-                <div class="signature-title">{{ $kaSeksiJabatan }}</div>
-            </div>
-            <div class="signature-box">
-                <div class="signature-label">Disahkan oleh</div>
-                <div class="signature-name">{{ $kaUnit ? $kaUnit->nama_user : '........................' }}</div>
-                <div class="signature-title">{{ $kaUnitJabatan }}</div>
-            </div>
+        <div class="cover-footer">
+            PT SEMEN PADANG<br>
+            TAHUN {{ $currentYear }}
         </div>
     </div>
 
-    <!-- CONTENT PAGE -->
-    <div class="content-page">
-        <!-- Program Information -->
-        <div class="info-section">
-            <table class="info-table">
-                <tr>
-                    <td>Judul Program</td>
-                    <td>:</td>
-                    <td><strong>{{ $PMKProgram->judul }}</strong></td>
-                </tr>
-                <tr>
-                    <td>Tujuan</td>
-                    <td>:</td>
-                    <td>{{ $PMKProgram->tujuan }}</td>
-                </tr>
-                <tr>
-                    <td>Sasaran</td>
-                    <td>:</td>
-                    <td>{{ $PMKProgram->sasaran }}</td>
-                </tr>
-                <tr>
-                    <td>Penanggung Jawab</td>
-                    <td>:</td>
-                    <td><strong>{{ $PMKProgram->penanggung_jawab }}</strong></td>
-                </tr>
-                @if($PMKProgram->uraian_revisi)
-                <tr>
-                    <td>Uraian Revisi</td>
-                    <td>:</td>
-                    <td>{{ $PMKProgram->uraian_revisi }}</td>
-                </tr>
-                @endif
-            </table>
+    <!-- PAGE 2: SIGNATURES -->
+    <div class="page-break">
+        <div style="margin-top: 50px;">
+            <div class="cover-title text-center">PROGRAM MANAJEMEN {{ $categoryTitle }}</div>
+            <div class="cover-unit text-center">{{ strtoupper($unitName) }}</div>
         </div>
 
-        <!-- Program Kerja Table -->
-        <div class="section-header">
-            Detail Kegiatan
+        <div style="margin-top: 150px; text-align: center;">Padang, {{ $date }}</div>
+
+        <table class="signature-table">
+            <tr>
+                <td class="signature-cell">
+                    <div class="sign-label">Disiapkan oleh</div>
+                    <div class="sign-name uppercase">{{ $kaUnit ? $kaUnit->nama_user : '........................' }}</div>
+                    <div class="sign-jabatan">{{ $kaUnit && $kaUnit->roleJabatan ? $kaUnit->roleJabatan->nama_role_jabatan : 'Kepala Unit' }}</div>
+                </td>
+                <td class="signature-cell">
+                    <div class="sign-label">Disetujui oleh</div>
+                    <div class="sign-name uppercase">{{ $kaDept ? $kaDept->nama_user : '........................' }}</div>
+                    <div class="sign-jabatan">{{ $kaDept && $kaDept->roleJabatan ? $kaDept->roleJabatan->nama_role_jabatan : 'Kepala Departemen' }}</div>
+                </td>
+                <td class="signature-cell">
+                    <div class="sign-label">Disahkan oleh</div>
+                    <div class="sign-name uppercase">{{ $direktur ? $direktur->nama_user : '........................' }}</div>
+                    <div class="sign-jabatan">Direktur</div> <!-- Usually just 'Direktur' or specific title -->
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- PAGE 3: CONTENT -->
+    <div>
+        <!-- Program Info -->
+        <table class="info-table">
+            <tr>
+                <td class="info-label">1. Judul</td>
+                <td class="info-colon">:</td>
+                <td>{{ $pmkProgram->judul }}</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td style="font-style: italic; color: #555;">(Judul Program Manajemen)</td>
+            </tr>
+            
+            <tr>
+                <td class="info-label">2. Tujuan</td>
+                <td class="info-colon">:</td>
+                <td>{{ $pmkProgram->tujuan }}</td>
+            </tr>
+            
+            <tr>
+                <td class="info-label">3. Sasaran</td>
+                <td class="info-colon">:</td>
+                <td>{{ $pmkProgram->sasaran }}</td>
+            </tr>
+            
+            <tr>
+                <td class="info-label">4. Penanggung Jawab</td>
+                <td class="info-colon">:</td>
+                <td>{{ $pmkProgram->penanggung_jawab }}</td>
+            </tr>
+            
+            <tr>
+                <td class="info-label">5. Uraian Revisi</td>
+                <td class="info-colon">:</td>
+                <td>{{ $pmkProgram->uraian_revisi ?? '-' }}</td>
+            </tr>
+        </table>
+
+        <div class="section-title">6. Program Kerja</div>
+        <div style="font-style: italic; color: #555; margin-bottom: 10px;">
+            (menjelaskan tentang Uraian kegiatan program skedul pelaksanaan, PIC, target dan anggaran program yang diisi pada tabel dibawah)
         </div>
 
-        @if($PMKProgram->program_kerja && is_array($PMKProgram->program_kerja) && count($PMKProgram->program_kerja) > 0)
-        <div class="table-container">
-            <table class="program-table">
-                <thead>
-                    <tr>
-                        <th rowspan="2" style="width: 25px;">NO</th>
-                        <th rowspan="2" style="width: 140px;">URAIAN KEGIATAN</th>
-                        <th rowspan="2" style="width: 70px;">KOORDINATOR</th>
-                        <th rowspan="2" style="width: 70px;">PELAKSANA</th>
-                        <th colspan="12">TARGET (%)</th>
-                        <th rowspan="2" style="width: 70px;">ANGGARAN</th>
-                    </tr>
-                    <tr class="target-header">
-                        @for($m=1; $m<=12; $m++)
-                            <th style="width: 22px;">{{ $m }}</th>
-                        @endfor
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($PMKProgram->program_kerja as $index => $item)
-                    <tr>
-                        <td class="number">{{ $index + 1 }}</td>
-                        <td>{{ $item['uraian'] ?? '-' }}</td>
-                        <td>{{ $item['koordinator'] ?? '-' }}</td>
-                        <td>{{ $item['pelaksana'] ?? '-' }}</td>
-                        @php
-                            $targets = $item['target'] ?? [];
-                        @endphp
-                        @for($m=0; $m<12; $m++)
-                            @if(isset($targets[$m]) && $targets[$m] !== '' && $targets[$m] !== null)
-                                <td class="target-cell">{{ $targets[$m] }}</td>
-                            @else
-                                <td class="empty-cell">-</td>
-                            @endif
-                        @endfor
-                        <td class="anggaran-cell">
-                            @if(isset($item['anggaran']) && $item['anggaran'])
-                                Rp {{ number_format($item['anggaran'], 0, ',', '.') }}
-                            @else
-                                -
-                            @endif
+        @if($pmkProgram->program_kerja && is_array($pmkProgram->program_kerja) && count($pmkProgram->program_kerja) > 0)
+        <table class="program-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 30px;">No.</th>
+                    <th rowspan="2">Uraian Kegiatan</th>
+                    <th rowspan="2" style="width: 140px;">PIC</th>
+                    <th colspan="12">Target (%)</th>
+                    <th rowspan="2" style="width: 80px;">Anggaran</th>
+                </tr>
+                <tr>
+                    @for($m=1; $m<=12; $m++)
+                        <th style="width: 20px;">{{ $m }}</th>
+                    @endfor
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($pmkProgram->program_kerja as $index => $item)
+                <tr>
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td>{{ $item['uraian'] ?? '-' }}</td>
+                    <td class="text-center">{{ (!empty($item['koordinator']) && $item['koordinator'] !== '-') ? $item['koordinator'] : ($item['pelaksana'] ?? $item['pic'] ?? '-') }}</td>
+                    @php
+                        $targets = $item['target'] ?? [];
+                    @endphp
+                    @for($m=0; $m<12; $m++)
+                        <td class="text-center bg-grey">
+                            {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '' }}
                         </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+                    @endfor
+                    <td class="text-right">
+                        {{ isset($item['anggaran']) && $item['anggaran'] ? number_format($item['anggaran'], 0, ',', '.') : '-' }}
+                    </td>
+                </tr>
+                @endforeach
+                <!-- Add empty rows if needed for styling, but dynamic is better -->
+            </tbody>
+        </table>
         @else
-        <div style="padding: 15px; text-align: center; color: #64748b; font-style: italic; background: #f8fafc; border-radius: 6px;">
-            Belum ada detail program kerja
+        <div style="padding: 20px; text-align: center; border: 1px solid #ccc; background: #f9f9f9;">
+            Tidak ada data program kerja.
         </div>
         @endif
     </div>

@@ -1006,14 +1006,6 @@
                         @endif
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank"
-                            style="padding: 6px 12px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
-                            <i class="fas fa-file-pdf" style="margin-right: 5px;"></i> PDF
-                        </a>
-                        <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank"
-                            style="padding: 6px 12px; background: #27ae60; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center;">
-                            <i class="fas fa-file-excel" style="margin-right: 5px;"></i> Excel
-                        </a>
                         <div class="risk-pill" style="background:var(--primary); font-size:13px; padding:6px 12px;">
                             HIRADC
                         </div>
@@ -1040,7 +1032,28 @@
                 </div>
 
                 <div id="tab-hiradc" class="tab-content active">
-                    <div class="table-wrapper">
+                    {{-- HIRADC Section Header with Export Buttons --}}
+                    <div style="background: #f8fafc; padding: 16px 24px; border: 1px solid #e2e8f0; border-bottom: none; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-table" style="color: var(--primary); font-size: 18px;"></i>
+                            <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--text-main);">Tabel HIRADC</h3>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank"
+                                style="padding: 6px 14px; background: #ef4444; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                                onmouseover="this.style.background='#dc2626'" 
+                                onmouseout="this.style.background='#ef4444'">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </a>
+                            <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank"
+                                style="padding: 6px 14px; background: #22c55e; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                                onmouseover="this.style.background='#16a34a'" 
+                                onmouseout="this.style.background='#22c55e'">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </a>
+                        </div>
+                    </div>
+                    <div class="table-wrapper" style="border-radius: 0 0 12px 12px;">
                     <table class="excel-table">
                         <thead>
                             <!-- Header Row 1: Main Sections (BAGIAN 1-5) -->
@@ -1508,9 +1521,25 @@
 
                 @if($puk)
                 <div class="doc-card" style="margin-top: 24px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                    <div class="card-header-slim" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9;">
-                        <i class="fas fa-tasks" style="color: #3b82f6;"></i>
-                        <h2 style="font-size: 16px; margin: 0;">Review Program Unit Kerja (PUK)</h2>
+                    <div class="card-header-slim" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-tasks" style="color: #3b82f6;"></i>
+                            <h2 style="font-size: 16px; margin: 0;">Review Program Unit Kerja (PUK)</h2>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <a href="{{ route('documents.export.puk.pdf', $document->id) }}" target="_blank"
+                                style="padding: 6px 14px; background: #ef4444; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                                onmouseover="this.style.background='#dc2626'" 
+                                onmouseout="this.style.background='#ef4444'">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </a>
+                            <a href="{{ route('documents.export.puk.excel', $document->id) }}" target="_blank"
+                                style="padding: 6px 14px; background: #22c55e; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                                onmouseover="this.style.background='#16a34a'" 
+                                onmouseout="this.style.background='#22c55e'">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </a>
+                        </div>
                     </div>
                     <div style="padding: 20px;">
                         <!-- Informasi Program (Compact) -->
@@ -1532,6 +1561,12 @@
                                     <td style="font-weight: 600; color: #64748b;">Penanggung Jawab</td>
                                     <td style="color: #334155;">: {{ $puk->penanggung_jawab }}</td>
                                 </tr>
+                                @if($puk->uraian_revisi)
+                                <tr>
+                                    <td style="font-weight: 600; color: #64748b; vertical-align: top;">Uraian Revisi</td>
+                                    <td style="color: #334155;">: {{ $puk->uraian_revisi }}</td>
+                                </tr>
+                                @endif
                             </table>
                         </div>
 
@@ -1588,9 +1623,25 @@
 
                 @if($pmk)
                 <div class="doc-card" style="margin-top: 24px; border-left: 4px solid #c026d3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                    <div class="card-header-slim" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9;">
-                        <i class="fas fa-project-diagram" style="color: #c026d3;"></i>
-                        <h2 style="font-size: 16px; margin: 0;">Review Program Manajemen Korporat (PMK)</h2>
+                    <div class="card-header-slim" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-project-diagram" style="color: #c026d3;"></i>
+                            <h2 style="font-size: 16px; margin: 0;">Review Program Manajemen Korporat (PMK)</h2>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <a href="{{ route('documents.export.pmk.pdf', $document->id) }}" target="_blank"
+                                style="padding: 6px 14px; background: #ef4444; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                                onmouseover="this.style.background='#dc2626'" 
+                                onmouseout="this.style.background='#ef4444'">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </a>
+                            <a href="{{ route('documents.export.pmk.excel', $document->id) }}" target="_blank"
+                                style="padding: 6px 14px; background: #22c55e; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                                onmouseover="this.style.background='#16a34a'" 
+                                onmouseout="this.style.background='#22c55e'">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </a>
+                        </div>
                     </div>
                     <div style="padding: 20px;">
                         <div style="background: #faf5ff; padding: 16px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #e9d5ff;">
@@ -1611,6 +1662,12 @@
                                     <td style="font-weight: 600; color: #64748b;">Penanggung Jawab</td>
                                     <td style="color: #334155;">: {{ $pmk->penanggung_jawab }}</td>
                                 </tr>
+                                @if($pmk->uraian_revisi)
+                                <tr>
+                                    <td style="font-weight: 600; color: #64748b; vertical-align: top;">Uraian Revisi</td>
+                                    <td style="color: #334155;">: {{ $pmk->uraian_revisi }}</td>
+                                </tr>
+                                @endif
                             </table>
                         </div>
 

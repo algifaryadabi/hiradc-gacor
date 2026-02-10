@@ -302,7 +302,7 @@ class DocumentController extends Controller
         }
 
         // Load necessary relations
-        $document->load(['pmkProgram.createdBy', 'pmkProgram.approvedBy', 'user.roleJabatan', 'user.seksi', 'unit', 'departemen', 'direktorat']);
+        $document->load(['pmkProgram.createdBy', 'user.roleJabatan', 'user.seksi', 'unit', 'departemen', 'direktorat']);
 
         // Check if PMK program exists
         if (!$document->pmkProgram) {
@@ -311,7 +311,25 @@ class DocumentController extends Controller
 
         $pmkProgram = $document->pmkProgram;
 
-        $pdf = Pdf::loadView('documents.export_pmk_pdf', compact('document', 'pmkProgram'));
+        // Fetch Signatories
+        $kaUnit = \App\Models\User::where('id_unit', $document->id_unit)
+            ->where('role_jabatan', 3) // Kepala Unit
+            ->where('user_aktif', 1)
+            ->first();
+
+        // For Ka Dept, we assume it matches the document's dept
+        $kaDept = \App\Models\User::where('id_dept', $document->id_dept)
+            ->where('role_jabatan', 2) // Kepala Departemen
+            ->where('user_aktif', 1)
+            ->first();
+
+        // For Direktur, we fetch based on document's directorate
+        $direktur = \App\Models\User::where('id_direktorat', $document->id_direktorat)
+            ->where('role_jabatan', 1) // Direktur
+            ->where('user_aktif', 1)
+            ->first();
+
+        $pdf = Pdf::loadView('documents.export_pmk_pdf', compact('document', 'pmkProgram', 'kaUnit', 'kaDept', 'direktur'));
         $pdf->setPaper('a4', 'portrait');
 
         $unitName = $document->unit ? $this->sanitizeFilename($document->unit->nama_unit) : 'Unit';
@@ -436,12 +454,52 @@ class DocumentController extends Controller
             ->pluck('year');
 
         // Load counts (Unit-wide)
-        $allDocs = Document::where('id_unit', $user->id_unit)->get();
+        $allDocs = Document::where('id_unit', $user->id_unit)
+            ->with(['pukProgram', 'pmkProgram'])
+            ->get();
+            
         $myPending = $allDocs->whereIn('status', ['pending_level1', 'pending_level2', 'pending_level3']);
-        $myRevision = $allDocs->where('status', 'revision');
+        
+        // Revision: Check Main Document OR PUK OR PMK
+        $myRevision = $allDocs->filter(function($doc) {
+            return $doc->status === 'revision' || 
+                   ($doc->pukProgram && $doc->pukProgram->status === 'revision') ||
+                   ($doc->pmkProgram && $doc->pmkProgram->status === 'revision');
+        });
+
         $myDraft = $allDocs->where('status', 'draft');
 
         return view('user.documents.index', compact('documents', 'myPending', 'myRevision', 'myDraft', 'years'));
+    }
+
+    public function submitRevision(Request $request, Document $document)
+    {
+        $request->validate([
+            'revision_comment' => 'required|string',
+        ]);
+
+        \DB::transaction(function() use ($request, $document) {
+            // Log the submission using Relationship
+            $document->approvals()->create([
+                'level' => 1,
+                'approver_id' => \Auth::id(),
+                'action' => 'resubmitted', // Matches update() logic
+                'catatan' => $request->revision_comment,
+            ]);
+
+            // Update Status
+            $document->status = 'pending_level1';
+            $document->current_level = 1;
+            
+            // If specific tracks were in revision, update them too
+            if ($document->status_she == 'revision') $document->status_she = 'pending_level1';
+            if ($document->status_security == 'revision') $document->status_security = 'pending_level1';
+            
+            $document->save();
+        });
+
+        return redirect()->route('documents.show', $document->id)
+            ->with('success', 'Revisi berhasil dikirim ke Kepala Unit Kerja.');
     }
 
     /**
@@ -573,7 +631,10 @@ class DocumentController extends Controller
                 'items.*.kolom5_kondisi' => 'required|string',
                 'items.*.residual_score' => 'nullable|numeric|min:0',
                 'items.*.residual_level' => 'nullable|string',
-            ]);
+                // Program Kerja Validation (Strict)
+                'items.*.program_kerja.*.uraian' => 'required|string', 
+                'items.*.program_kerja.*.koordinator' => 'required|string', // Ensure Koordinator/PIC is set
+           ]);
         }
 
         $request->validate($rules);
@@ -738,7 +799,7 @@ class DocumentController extends Controller
                         'tujuan' => $item['program_tujuan'] ?? '',
                         'sasaran' => $item['program_sasaran'] ?? '',
                         'penanggung_jawab' => $item['program_penanggung_jawab'] ?? '', // Should be Unit Name
-                        'program_kerja' => $item['program_kerja'] ?? [], // JSON array
+                        'program_kerja' => isset($item['program_kerja']) ? array_values($item['program_kerja']) : [], // Normalize Keys
                         'created_by' => Auth::id(),
                     ];
 
@@ -774,6 +835,19 @@ class DocumentController extends Controller
      */
     public function show(Document $document)
     {
+        // Eager load necessary relationships
+        $document->load([
+            'details',
+            'details.pukProgram',
+            'details.pmkProgram',
+            'pmkProgram',
+            'pukProgram',
+            'user',
+            'unit',
+            'departemen',
+            'direktorat'
+        ]);
+        
         return view('user.documents.show', compact('document'));
     }
 
@@ -853,13 +927,17 @@ class DocumentController extends Controller
             'items.*.kolom2_kegiatan' => 'required|string',
         ];
 
-        // Strict rules for Submit action
-        if ($request->input('action') !== 'draft') {
+        // Strict rules for Submit action (not for draft or save_only)
+        $isDraftOrSave = in_array($request->input('action'), ['draft', 'save_only']);
+        if (!$isDraftOrSave) {
             $rules = array_merge($rules, [
                 'revision_comment' => 'required|string|min:5',
                 'items.*.kategori' => 'required|in:K3,KO,Lingkungan,Keamanan',
                 'items.*.kolom2_proses' => 'required|string',
                 // Add other strict validations if needed
+                // Program Kerja Validation (Strict)
+                'items.*.program_kerja.*.uraian' => 'required|string',
+                'items.*.program_kerja.*.koordinator' => 'required|string',
             ]);
         }
 
@@ -910,8 +988,11 @@ class DocumentController extends Controller
                 'residual_score' => $firstItem['residual_score'] ?? (($firstItem['residual_kemungkinan'] ?? 1) * ($firstItem['residual_konsekuensi'] ?? 1)),
 
                 // Determine Status based on Action
-                'status' => $request->input('action') === 'draft' ? 'draft' : 'pending_level1',
-                'current_level' => $request->input('action') === 'draft' ? 0 : 1
+                // If action is 'save_only', KEEP existing status and level.
+                // If action is 'draft', set to 'draft' and level 0.
+                // Otherwise (submit), set to 'pending_level1' and level 1.
+                'status' => $request->input('action') === 'draft' ? 'draft' : ($request->input('action') === 'save_only' ? $document->status : 'pending_level1'),
+                'current_level' => $request->input('action') === 'draft' ? 0 : ($request->input('action') === 'save_only' ? $document->current_level : 1)
             ]);
 
             // 2. SYNC DETAILS
@@ -1099,6 +1180,12 @@ class DocumentController extends Controller
                 ->with('success', 'Draft berhasil diperbarui.');
         }
 
+        // Redirect for Save Only (Edit Form)
+        if ($request->input('action') === 'save_only') {
+            return redirect()->route('documents.show', $document->id)
+                ->with('success', 'Perubahan berhasil disimpan.');
+        }
+
         return redirect()->route('documents.index')
             ->with('success', 'Revisi berhasil disubmit ulang.')
             ->with('open_tab', 'tab_pending');
@@ -1108,13 +1195,25 @@ class DocumentController extends Controller
     /**
      * Submit document for approval
      */
-    public function submit(Document $document)
+    public function submit(Request $request, Document $document)
     {
         if ($document->id_user != Auth::user()->id_user) {
             abort(403);
         }
 
+        $request->validate([
+            'submission_notes' => 'required|string',
+        ]);
+
         $document->submitForApproval();
+
+        // Log the submission with notes
+        $document->approvals()->create([
+            'level' => 1,
+            'approver_id' => Auth::id(),
+            'action' => 'submitted',
+            'catatan' => $request->submission_notes,
+        ]);
 
         return redirect()->route('documents.index')
             ->with('success', 'Dokumen berhasil dikirim untuk approval.')
@@ -4050,5 +4149,300 @@ class DocumentController extends Controller
     {
         // Placeholder for AJAX data if needed
         return response()->json(['data' => []]);
+    }
+
+    /**
+     * Request revision for PMK Program (Direksi)
+     */
+    public function requestPmkRevision(Request $request, $pmkId)
+    {
+        $request->validate([
+            'catatan' => 'required|string|max:1000',
+        ]);
+
+        $user = Auth::user();
+        
+        // Find PMK
+        $pmk = \App\Models\PmkProgram::findOrFail($pmkId);
+        
+        // Authorization: Must be Direksi
+        if (!$user->isDirektur()) {
+            abort(403, 'Hanya Direksi yang dapat meminta revisi PMK.');
+        }
+
+        // Update PMK status to revision
+        $pmk->update([
+            'status' => 'revision',
+            'revision_note' => $request->catatan,
+            'revised_by' => $user->id_user,
+            'revised_at' => now(),
+        ]);
+
+        // Create approval history
+        $document = $pmk->documentDetail->document;
+        $document->approvals()->create([
+            'approver_id' => $user->id_user,
+            'level' => 4,
+            'action' => 'pmk_revision',
+            'catatan' => 'PMK Revision: ' . $request->catatan,
+            'ip_address' => $request->ip()
+        ]);
+
+        return redirect()->back()->with('success', 'PMK dikembalikan untuk revisi.');
+    }
+
+    /**
+     * Resubmit PMK after revision (Submitter)
+     */
+    public function resubmitPmk(Request $request, $pmkId)
+    {
+        $pmk = \App\Models\PmkProgram::findOrFail($pmkId);
+
+        $request->validate([
+            'judul' => 'sometimes|string|max:500',
+            'tujuan' => 'sometimes|string',
+            'sasaran' => 'sometimes|string',
+            'penanggung_jawab' => 'sometimes|string|max:255',
+            'uraian_revisi' => 'nullable|string',
+            'note' => 'nullable|string', // Support 'note' alias
+            'program_kerja' => 'sometimes|json',
+        ]);
+
+        $user = Auth::user();
+        
+        // Authorization: Must be the creator
+        if ($pmk->created_by != $user->id_user) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit PMK ini.');
+        }
+
+        // Verify PMK is in revision status
+        if ($pmk->status != 'revision') {
+            return response()->json(['success' => false, 'message' => 'PMK tidak dalam status revisi.'], 400);
+        }
+
+        // Update PMK data (Partial Update)
+        $pmk->update([
+            'judul' => $request->judul ?? $pmk->judul,
+            'tujuan' => $request->tujuan ?? $pmk->tujuan,
+            'sasaran' => $request->sasaran ?? $pmk->sasaran,
+            'penanggung_jawab' => $request->penanggung_jawab ?? $pmk->penanggung_jawab,
+            'uraian_revisi' => $request->note ?? $request->uraian_revisi ?? $pmk->uraian_revisi,
+            'program_kerja' => $request->program_kerja ? json_decode($request->program_kerja, true) : $pmk->program_kerja,
+            'status' => 'pending_level1', // Reset to start of approval flow
+            'revision_note' => null,
+            'resubmitted_at' => now(),
+        ]);
+
+        // Create resubmission history
+        $document = $pmk->documentDetail->document;
+        $document->approvals()->create([
+            'approver_id' => $user->id_user,
+            'level' => 0,
+            'action' => 'pmk_resubmit',
+            'catatan' => $request->note ?? $request->uraian_revisi ?? 'PMK telah direvisi dan dikirim ulang',
+            'ip_address' => $request->ip()
+        ]);
+
+        if($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'PMK berhasil direvisi dan dikirim ulang ke Direksi.']);
+        }
+
+        return redirect()->route('user.documents.show', $document->id)
+            ->with('success', 'PMK berhasil direvisi dan dikirim ulang ke Direksi.');
+    }
+
+    /**
+     * Request revision for PUK Program (Kepala Unit)
+     */
+    public function requestPukRevision(Request $request, $pukId)
+    {
+        $request->validate([
+            'catatan' => 'required|string|max:1000',
+        ]);
+
+        $user = Auth::user();
+        
+        // Find PUK
+        $puk = \App\Models\PukProgram::findOrFail($pukId);
+        $document = $puk->documentDetail->document;
+        
+        // Authorization: Must be Kepala Unit of the same unit
+        if (!$user->isKepalaUnit() || $user->id_unit != $document->id_unit) {
+            abort(403, 'Hanya Kepala Unit terkait yang dapat meminta revisi PUK.');
+        }
+
+        // Update PUK status to revision
+        $puk->update([
+            'status' => 'revision',
+            'revision_note' => $request->catatan,
+            'revised_by' => $user->id_user,
+            'revised_at' => now(),
+        ]);
+
+        // Create approval history
+        $document->approvals()->create([
+            'approver_id' => $user->id_user,
+            'level' => 1,
+            'action' => 'puk_revision',
+            'catatan' => 'PUK Revision: ' . $request->catatan,
+            'ip_address' => $request->ip()
+        ]);
+
+        return redirect()->back()->with('success', 'PUK dikembalikan untuk revisi.');
+    }
+
+    /**
+     * Resubmit PUK after revision (Submitter)
+     */
+    public function resubmitPuk(Request $request, $pukId)
+    {
+        $puk = \App\Models\PukProgram::findOrFail($pukId);
+
+        $request->validate([
+            'judul' => 'sometimes|string|max:500',
+            'tujuan' => 'sometimes|string',
+            'sasaran' => 'sometimes|string',
+            'penanggung_jawab' => 'sometimes|string|max:255',
+            'uraian_revisi' => 'nullable|string',
+            'note' => 'nullable|string', // Support 'note' alias
+            'program_kerja' => 'sometimes|json',
+        ]);
+
+        $user = Auth::user();
+        
+        // Authorization: Must be the creator
+        if ($puk->created_by != $user->id_user) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit PUK ini.');
+        }
+
+        // Verify PUK is in revision status
+        if ($puk->status != 'revision') {
+            return response()->json(['success' => false, 'message' => 'PUK tidak dalam status revisi.'], 400);
+        }
+
+        // Update PUK data (Partial Update)
+        $puk->update([
+            'judul' => $request->judul ?? $puk->judul,
+            'tujuan' => $request->tujuan ?? $puk->tujuan,
+            'sasaran' => $request->sasaran ?? $puk->sasaran,
+            'penanggung_jawab' => $request->penanggung_jawab ?? $puk->penanggung_jawab,
+            'uraian_revisi' => $request->note ?? $request->uraian_revisi ?? $puk->uraian_revisi,
+            'program_kerja' => $request->program_kerja ? json_decode($request->program_kerja, true) : $puk->program_kerja,
+            'status' => 'pending_level1', // Reset to start of approval flow
+            'revision_note' => null,
+            'resubmitted_at' => now(),
+        ]);
+
+        // Create resubmission history
+        $document = $puk->documentDetail->document;
+        $document->approvals()->create([
+            'approver_id' => $user->id_user,
+            'level' => 0,
+            'action' => 'puk_resubmit',
+            'catatan' => $request->note ?? $request->uraian_revisi ?? 'PUK telah direvisi dan dikirim ulang',
+            'ip_address' => $request->ip()
+        ]);
+
+        if($request->wantsJson()) {
+             return response()->json(['success' => true, 'message' => 'PUK berhasil direvisi dan dikirim ulang ke Kepala Unit.']);
+        }
+
+        return redirect()->route('documents.show', $document->id)
+            ->with('success', 'PUK berhasil direvisi dan dikirim ulang ke Kepala Unit.');
+    }
+
+    /**
+     * Update PUK Program Data (AJAX)
+     */
+    public function editPrograms(Document $document)
+    {
+        $user = Auth::user();
+
+        // Authorization: Must be owner or have edit rights
+        if ($document->id_user != $user->id_user) {
+             // Or check if it's currently in revision for PUK/PMK and user is the relevant role? 
+             // For now, let's assume only the submitter (owner) accesses this formatted page for revision.
+             abort(403);
+        }
+
+        $document->load(['pukProgram', 'pmkProgram']);
+
+        return view('user.documents.edit_programs', compact('document'));
+    }
+
+    public function updatePukProgram(Request $request, $pukId)
+    {
+        $user = Auth::user();
+        $puk = \App\Models\PukProgram::findOrFail($pukId);
+        
+        // Authorization: Must be the creator
+        if ($puk->created_by != $user->id_user) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengedit PUK ini.'], 403);
+        }
+
+        // Verify PUK is in revision status
+        if ($puk->status != 'revision') {
+            return response()->json(['success' => false, 'message' => 'PUK tidak dalam status revisi.'], 400);
+        }
+
+        // Validate program_kerja data
+        $request->validate([
+            'program_kerja' => 'required|array',
+            'program_kerja.*.uraian' => 'required|string',
+            'program_kerja.*.koordinator' => 'required|string',
+            'program_kerja.*.pelaksana' => 'required|string',
+            'program_kerja.*.target' => 'required|array|size:12',
+            'program_kerja.*.target.*' => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        // Update program_kerja
+        $puk->update([
+            'program_kerja' => $request->program_kerja,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data tabel PUK berhasil diperbarui.'
+        ]);
+    }
+
+    /**
+     * Update PMK Program Data (AJAX)
+     */
+    public function updatePmkProgram(Request $request, $pmkId)
+    {
+        $user = Auth::user();
+        $pmk = \App\Models\PmkProgram::findOrFail($pmkId);
+        
+        // Authorization: Must be the creator
+        if ($pmk->created_by != $user->id_user) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengedit PMK ini.'], 403);
+        }
+
+        // Verify PMK is in revision status
+        if ($pmk->status != 'revision') {
+            return response()->json(['success' => false, 'message' => 'PMK tidak dalam status revisi.'], 400);
+        }
+
+        // Validate program_kerja data
+        $request->validate([
+            'program_kerja' => 'required|array',
+            'program_kerja.*.uraian' => 'required|string',
+            'program_kerja.*.koordinator' => 'required|string',
+            'program_kerja.*.pelaksana' => 'required|string',
+            'program_kerja.*.target' => 'required|array|size:12',
+            'program_kerja.*.target.*' => 'nullable|numeric|min:0|max:100',
+            'program_kerja.*.anggaran' => 'required|numeric|min:0',
+        ]);
+
+        // Update program_kerja
+        $pmk->update([
+            'program_kerja' => $request->program_kerja,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data tabel PMK berhasil diperbarui.'
+        ]);
     }
 }

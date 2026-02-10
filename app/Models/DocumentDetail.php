@@ -96,4 +96,38 @@ class DocumentDetail extends Model
             return 'Sedang';
         return 'Rendah';
     }
+
+    // ==================== PROGRAM ACCESSORS ====================
+    // Helper to get active program
+    public function getActiveProgramAttribute()
+    {
+        if ($this->kolom19_program_type === 'PUK') return $this->pukProgram;
+        if ($this->kolom19_program_type === 'PMK') return $this->pmkProgram;
+        return $this->pukProgram ?? $this->pmkProgram;
+    }
+
+    public function getProgramTujuanAttribute()
+    {
+        return $this->active_program->tujuan ?? null;
+    }
+
+    public function getProgramSasaranAttribute()
+    {
+        return $this->active_program->sasaran ?? null;
+    }
+
+    public function getProgramPenanggungJawabAttribute()
+    {
+        return $this->active_program->penanggung_jawab ?? null;
+    }
+
+    public function getProgramUraianRevisiAttribute()
+    {
+        return $this->active_program->uraian_revisi ?? null;
+    }
+
+    public function getProgramKerjaAttribute()
+    {
+        return $this->active_program->program_kerja ?? [];
+    }
 }

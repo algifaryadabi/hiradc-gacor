@@ -171,17 +171,15 @@
                 <td>Penanggung Jawab</td>
                 <td>: <strong>{{ $PMKProgram->penanggung_jawab }}</strong></td>
             </tr>
-            @if($PMKProgram->uraian_revisi)
             <tr>
                 <td>Uraian Revisi</td>
-                <td>: {{ $PMKProgram->uraian_revisi }}</td>
+                <td>: {{ $PMKProgram->uraian_revisi ?? '-' }}</td>
             </tr>
-            @endif
         </table>
     </div>
 
     <!-- TABLE -->
-    <div class="section-header">Detail Kegiatan</div>
+    <div class="section-header">PROGRAM KERJA</div>
 
     @if($PMKProgram->program_kerja && is_array($PMKProgram->program_kerja) && count($PMKProgram->program_kerja) > 0)
     <table class="program-table">

@@ -1416,44 +1416,45 @@
                         <tbody>
                             @forelse($document->details as $index => $item)
                                 @php
-                                    // Logic Partial Revision View - Same as show.blade.php
-                                    $isRev = $document->status == 'revision';
-
-                                    // Check which categories are locked (approved/published)
-                                    $isSheLocked = ($document->status_she == 'approved' || $document->status_she == 'published');
-                                    $isSecLocked = ($document->status_security == 'approved' || $document->status_security == 'published');
-
-                                    // Check which categories are in revision
-                                    $isSheRevision = ($document->status_she == 'revision');
-                                    $isSecRevision = ($document->status_security == 'revision');
-
                                     $skip = false;
+                                    
+                                    // ONLY apply filtering logic if document is in revision mode
+                                    if ($document->status == 'revision') {
+                                        // Check which categories are locked (approved/published)
+                                        $isSheLocked = ($document->status_she == 'approved' || $document->status_she == 'published');
+                                        $isSecLocked = ($document->status_security == 'approved' || $document->status_security == 'published');
 
-                                    // Priority 1: If a specific track is in revision, ONLY show that track
-                                    if ($isSheRevision && !$isSecRevision) {
-                                        // SHE is revising, Security is NOT revising
-                                        // Show ONLY SHE categories (K3, KO, Lingkungan)
-                                        if (!in_array($item->kategori, ['K3', 'KO', 'Lingkungan'])) {
-                                            $skip = true;
-                                        }
-                                    } elseif ($isSecRevision && !$isSheRevision) {
-                                        // Security is revising, SHE is NOT revising
-                                        // Show ONLY Security category (Keamanan)
-                                        if ($item->kategori != 'Keamanan') {
-                                            $skip = true;
-                                        }
-                                    } elseif ($isSheRevision && $isSecRevision) {
-                                        // Both are revising - show all items
-                                        // No filtering needed
-                                    } else {
-                                        // Neither is revising - check for locked status
-                                        if ($item->kategori == 'Keamanan' && $isSecLocked) {
-                                            $skip = true;
-                                        }
-                                        if (in_array($item->kategori, ['K3', 'KO', 'Lingkungan']) && $isSheLocked) {
-                                            $skip = true;
+                                        // Check which categories are in revision
+                                        $isSheRevision = ($document->status_she == 'revision');
+                                        $isSecRevision = ($document->status_security == 'revision');
+
+                                        // Priority 1: If a specific track is in revision, ONLY show that track
+                                        if ($isSheRevision && !$isSecRevision) {
+                                            // SHE is revising, Security is NOT revising
+                                            // Show ONLY SHE categories (K3, KO, Lingkungan)
+                                            if (!in_array($item->kategori, ['K3', 'KO', 'Lingkungan'])) {
+                                                $skip = true;
+                                            }
+                                        } elseif ($isSecRevision && !$isSheRevision) {
+                                            // Security is revising, SHE is NOT revising
+                                            // Show ONLY Security category (Keamanan)
+                                            if ($item->kategori != 'Keamanan') {
+                                                $skip = true;
+                                            }
+                                        } elseif ($isSheRevision && $isSecRevision) {
+                                            // Both are revising - show all items
+                                            // No filtering needed
+                                        } else {
+                                            // Neither is revising - check for locked status
+                                            if ($item->kategori == 'Keamanan' && $isSecLocked) {
+                                                $skip = true;
+                                            }
+                                            if (in_array($item->kategori, ['K3', 'KO', 'Lingkungan']) && $isSheLocked) {
+                                                $skip = true;
+                                            }
                                         }
                                     }
+                                    // If not in revision mode, show everything
                                 @endphp
                                 @if($skip) @continue @endif
 
@@ -1790,11 +1791,11 @@
 
 
             @if($puk)
-                <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #3b82f6;">
+                <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #dc2626;">
                     <div class="card-header-slim" style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px; color: #dc2626;">
                             <i class="fas fa-tasks"></i>
-                            <h2>Review Program Unit Kerja (PUK)</h2>
+                            <h2 style="color: #dc2626;">Review Program Unit Kerja (PUK)</h2>
                         </div>
                         <!-- Download Buttons for PUK -->
                         <div style="display: flex; gap: 8px;">
@@ -1822,6 +1823,11 @@
                                 
                                 <div style="font-weight: 600; color: #475569;">Sasaran</div>
                                 <div style="color: #0f172a;">: {{ $puk->sasaran }}</div>
+
+                                @if($puk->uraian_revisi)
+                                <div style="font-weight: 600; color: #475569;">Uraian Revisi</div>
+                                <div style="color: #0f172a;">: {{ $puk->uraian_revisi }}</div>
+                                @endif
                             </div>
                         </div>
                    <style>
@@ -2008,10 +2014,10 @@
             @endif
 
             @if($pmk)
-                <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #c026d3;">
-                    <div class="card-header-slim">
+                <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #dc2626;">
+                    <div class="card-header-slim" style="color: #dc2626;">
                         <i class="fas fa-project-diagram"></i>
-                        <h2>Review Program Manajemen Korporat (PMK)</h2>
+                        <h2 style="color: #dc2626;">Review Program Manajemen Korporat (PMK)</h2>
                     </div>
                     <div style="padding: 24px;">
                         <!-- Informasi Program -->
@@ -2028,6 +2034,11 @@
                                 
                                 <div style="font-weight: 600; color: #475569;">Penanggung Jawab</div>
                                 <div style="color: #0f172a;">: {{ $pmk->penanggung_jawab }}</div>
+
+                                @if($pmk->uraian_revisi)
+                                <div style="font-weight: 600; color: #475569;">Uraian Revisi</div>
+                                <div style="color: #0f172a;">: {{ $pmk->uraian_revisi }}</div>
+                                @endif
                             </div>
                         </div>
 
@@ -2334,6 +2345,13 @@
                         ->whereNotNull('catatan')
                         ->latest()
                         ->value('catatan');
+                    
+                    // Check if PUK exists and is pending for Kepala Unit
+                    $puk = $document->pukProgram;
+                    // Logic: Kepala Unit can revise PUK if it's draft or pending_kepala_unit
+                    // Assuming Auth logic is handled by $document->canBeApprovedBy or we check role explicitly if needed.
+                    // Ideally we should use the same logic as before.
+                    $canRevisePuk = $puk && in_array($puk->status, ['draft', 'pending_kepala_unit']) && Auth::user()->hasRole('kepala_unit');
                 @endphp
                 <input type="text" class="notes-input" id="notes" placeholder="Catatan Review (Wajib jika Revisi)..."
                     value="{{ $latestNote ?? '' }}" @if(!$document->canBeApprovedBy(Auth::user())) readonly disabled
@@ -2341,6 +2359,12 @@
             </div>
             <div class="action-btns">
                 @if($document->canBeApprovedBy(Auth::user()))
+                    @if(isset($canRevisePuk) && $canRevisePuk)
+                    <button type="button" class="btn" style="background: linear-gradient(135deg, #db2777 0%, #be185d 100%); color: white; margin-right: 10px;" onclick="confirmPukRevision()">
+                        <i class="fas fa-file-contract"></i> Revisi PUK
+                    </button>
+                    @endif
+
                     <!-- (Global Edit Removed) -->
                     <button type="button" class="btn btn-revise" onclick="confirmAction('revise')">
                         <i class="fas fa-undo"></i> Revisi
@@ -2390,6 +2414,46 @@
     <script>
         const routeApprove = "{{ route('approver.approve', $document->id) }}";
         const routeRevise = "{{ route('approver.revise', $document->id) }}";
+        
+        function confirmPukRevision() {
+            const notes = document.getElementById('notes').value.trim();
+            
+            if (notes.length < 5) {
+                Swal.fire({ icon: 'warning', title: 'Catatan Wajib', text: 'Untuk revisi PUK, wajib memberikan catatan saran.' });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Revisi PUK?',
+                text: 'Program Unit Kerja akan dikembalikan ke User untuk revisi.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Revisi PUK',
+                confirmButtonColor: '#be185d'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    // Create hidden form to submit
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = "{{ route('puk.request_revision', $document->pukProgram->id ?? 0) }}";
+                    
+                    const csrf = document.createElement('input');
+                    csrf.type = 'hidden';
+                    csrf.name = '_token';
+                    csrf.value = "{{ csrf_token() }}";
+                    form.appendChild(csrf);
+                    
+                    const noteInput = document.createElement('input');
+                    noteInput.type = 'hidden';
+                    noteInput.name = 'catatan';
+                    noteInput.value = notes;
+                    form.appendChild(noteInput);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
 
         // Auto-Grow Textareas
         document.querySelectorAll('.auto-grow').forEach(el => {

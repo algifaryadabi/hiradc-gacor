@@ -188,6 +188,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
     Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
     Route::post('/documents/{document}/submit', [DocumentController::class, 'submit'])->name('documents.submit');
+    Route::post('/documents/{document}/submit-revision', [DocumentController::class, 'submitRevision'])->name('documents.submit_revision');
+
 
     // ==================== APPROVER (KEPALA UNIT) ROUTES ====================
     Route::get('/approver/dashboard', [DocumentController::class, 'approverDashboard'])->name('approver.dashboard');
@@ -382,6 +384,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/direksi/documents/{document}/review', [DocumentController::class, 'review'])->name('direksi.review');
     Route::post('/direksi/documents/{document}/approve', [DocumentController::class, 'approve'])->name('direksi.approve');
     Route::post('/direksi/documents/{document}/revise', [DocumentController::class, 'revise'])->name('direksi.revise');
+
+    // ==================== PMK/PUK REVISION ROUTES ====================
+    // PMK Revision (Direksi)
+    Route::post('/pmk/{pmk}/request-revision', [DocumentController::class, 'requestPmkRevision'])->name('pmk.request_revision');
+    Route::post('/pmk/{pmk}/resubmit', [DocumentController::class, 'resubmitPmk'])->name('pmk.resubmit');
+    
+    // Edit Programs Page
+    Route::get('/documents/{document}/edit-programs', [DocumentController::class, 'editPrograms'])->name('documents.edit_programs');
+    
+    // Update PUK/PMK Program Data
+    Route::post('/puk/{puk}/update-program', [DocumentController::class, 'updatePukProgram'])->name('puk.update.program');
+    Route::post('/pmk/{pmk}/update-program', [DocumentController::class, 'updatePmkProgram'])->name('pmk.update.program');
+
+    // PUK Revision (Kepala Unit)
+    Route::post('/puk/{puk}/request-revision', [DocumentController::class, 'requestPukRevision'])->name('puk.request_revision');
+    Route::post('/puk/{puk}/resubmit', [DocumentController::class, 'resubmitPuk'])->name('puk.resubmit');
 
 
     // ==================== ADMIN ROUTES ====================
