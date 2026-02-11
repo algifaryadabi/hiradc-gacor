@@ -953,7 +953,7 @@
                     @endif
 
                     <!-- Edit Program Kerja Button (Primary Action) -->
-                    @if(in_array($document->status, ['draft', 'pending_level1', 'revision']) || ($document->pukProgram && $document->pukProgram->status == 'revision') || ($document->pmkProgram && $document->pmkProgram->status == 'revision'))
+                    @if($document->status != 'revision' && (in_array($document->status, ['draft', 'pending_level1']) || ($document->pukProgram && $document->pukProgram->status == 'revision') || ($document->pmkProgram && $document->pmkProgram->status == 'revision')))
                         <a href="{{ route('documents.edit_programs', $document->id) }}" class="btn-edit-programs"
                            style="background: linear-gradient(135deg, #c41e3a 0%, #9f1239 100%); color: white; border: none; box-shadow: 0 4px 6px -1px rgba(196, 30, 58, 0.3);">
                             <i class="fas fa-tasks"></i> Edit Program Kerja
