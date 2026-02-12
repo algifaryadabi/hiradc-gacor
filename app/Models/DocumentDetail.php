@@ -85,6 +85,14 @@ class DocumentDetail extends Model
         return $this->hasOne(PmkProgram::class, 'document_detail_id');
     }
 
+    /**
+     * Relationship for compatibility with views expecting multiple programs (hasMany)
+     */
+    public function pukPrograms()
+    {
+        return $this->hasMany(PukProgram::class, 'document_detail_id');
+    }
+
     // ==================== HELPERS ====================
 
     public function getRiskLevelAttribute(): string
@@ -101,8 +109,10 @@ class DocumentDetail extends Model
     // Helper to get active program
     public function getActiveProgramAttribute()
     {
-        if ($this->kolom19_program_type === 'PUK') return $this->pukProgram;
-        if ($this->kolom19_program_type === 'PMK') return $this->pmkProgram;
+        if ($this->kolom19_program_type === 'PUK')
+            return $this->pukProgram;
+        if ($this->kolom19_program_type === 'PMK')
+            return $this->pmkProgram;
         return $this->pukProgram ?? $this->pmkProgram;
     }
 

@@ -513,7 +513,7 @@
 <body>
     <div class="container">
         <!-- Sidebar -->
-        @include('user.partials.sidebar')
+        @include('partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">

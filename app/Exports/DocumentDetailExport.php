@@ -25,8 +25,23 @@ class DocumentDetailExport implements FromView, WithTitle, WithStyles, WithColum
 
     public function view(): View
     {
+        // Fetch latest revision note
+        $latestRevision = null;
+        $lastApproval = $this->document->approvals()->whereIn('action', ['resubmitted', 'puk_resubmit', 'pmk_resubmit'])->latest()->first();
+        if ($lastApproval) {
+            $latestRevision = $lastApproval->catatan;
+        }
+
+        // Fetch revision histories for export
+        $histories = $this->document->histories()
+            ->with(['archivedBy'])
+            ->orderBy('revision_number', 'desc')
+            ->get();
+
         return view('documents.export_detail_excel', [
-            'document' => $this->document
+            'document' => $this->document,
+            'latestRevision' => $latestRevision,
+            'histories' => $histories
         ]);
     }
 
@@ -79,13 +94,13 @@ class DocumentDetailExport implements FromView, WithTitle, WithStyles, WithColum
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
-                
+
                 // 1. Global Font and Alignment
                 $sheet->getParent()->getDefaultStyle()->getFont()->setName('Arial');
                 $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
-                
+
                 $lastRow = $sheet->getHighestRow();
                 $lastColumn = 'AA'; // Updated last column to AA (27 cols)
                 $range = "A1:{$lastColumn}{$lastRow}";
@@ -99,27 +114,33 @@ class DocumentDetailExport implements FromView, WithTitle, WithStyles, WithColum
                 // Row 4-7: Metadata (inc. Mines Business)
                 // Row 8: Spacer
                 // Row 9-10: Table Headers
-                
+    
                 $headerRange = "A9:{$lastColumn}10";
                 $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
                 $sheet->getStyle($headerRange)->getFont()->setBold(true);
                 $sheet->getStyle($headerRange)->getFill()
-                      ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                      ->getStartColor()->setARGB('E0E0E0E0'); // Light Gray
-
+                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('E0E0E0E0'); // Light Gray
+    
                 // 4. Center align specific small columns (Risk matrix values, Levels, No, etc.)
                 $centerColumns = [
                     'A', // No
                     'D', // Kategori
                     'E', // Kondisi
-                    'N', 'O', 'P', // Risk Initial (L, S, Level)
+                    'N',
+                    'O',
+                    'P', // Risk Initial (L, S, Level)
                     'R', // Aspek Penting - wait, actually Aspek Penting might be text? Let's check typical content. Blade says text. Keep 'T' (Toleransi) instead.
                     'T', // Toleransi
-                    'V', 'W', 'X', // Risk Lanjut
-                    'Y', 'Z', 'AA' // Residual
+                    'V',
+                    'W',
+                    'X', // Risk Lanjut
+                    'Y',
+                    'Z',
+                    'AA' // Residual
                 ];
-                
+
                 foreach ($centerColumns as $col) {
                     $sheet->getStyle("{$col}9:{$col}{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
@@ -130,11 +151,11 @@ class DocumentDetailExport implements FromView, WithTitle, WithStyles, WithColum
 
                 // 6. Distinct Separator for Header (Thick bottom border on Row 10)
                 $sheet->getStyle("A10:{$lastColumn}10")->getBorders()->getBottom()->setBorderStyle(Border::BORDER_MEDIUM);
-                
+
                 // 7. Title Styling adjustments
                 $sheet->getStyle('A1')->getFont()->setSize(14)->setBold(true);
                 $sheet->getStyle('A2')->getFont()->setSize(12)->setBold(true);
-                
+
                 // 8. Metadata styling (Row 4-7)
                 $sheet->getStyle('A4:C7')->getFont()->setBold(true); // Labels Left
                 $sheet->getStyle('K4:M6')->getFont()->setBold(true); // Labels Right

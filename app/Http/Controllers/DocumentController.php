@@ -163,7 +163,20 @@ class DocumentController extends Controller
 
         $document->load(['details', 'user', 'unit', 'approvals.approver', 'departemen', 'direktorat']);
 
-        $pdf = Pdf::loadView('documents.export_detail_pdf', compact('document'));
+        // Fetch latest revision note
+        $latestRevision = null;
+        $lastApproval = $document->approvals()->whereIn('action', ['resubmitted', 'puk_resubmit', 'pmk_resubmit'])->latest()->first();
+        if ($lastApproval) {
+            $latestRevision = $lastApproval->catatan;
+        }
+
+        // Fetch revision histories for export
+        $histories = $document->histories()
+            ->with(['archivedBy'])
+            ->orderBy('revision_number', 'desc')
+            ->get();
+
+        $pdf = Pdf::loadView('documents.export_detail_pdf', compact('document', 'latestRevision', 'histories'));
         $pdf->setPaper('a4', 'landscape');
 
         $filename = $this->generateStandardFilename($document, 'pdf');
@@ -201,22 +214,21 @@ class DocumentController extends Controller
      */
     public function exportPukPdf(Document $document)
     {
-        // Access Control: Submitter, Kepala Unit Kerja, Kepala Unit Pengelola, Reviewer, Verifikator, Kepala Departemen, Direktur, Admin
+        // Access Control: Author, Same Unit Users, Kepala Unit, Unit Pengelola, Kepala Dept, Direksi, Admin
         $user = Auth::user();
         if (!$user) {
             abort(403, 'Unauthorized');
         }
 
         $isAuthor = $user->id_user == $document->id_user;
-        $isKepalaUnit = $user->isKepalaUnit() && $document->id_unit == $user->id_unit;
-        $isUnitPengelola = $user->isUnitPengelola();
-        $isReviewer = $user->is_reviewer == 1;
-        $isVerifier = $user->is_verifier == 1;
+        $isSameUnit = $document->id_unit && $user->id_unit == $document->id_unit; // Any user from same unit
+        $isKepalaUnitPengelola = $user->isUnitPengelola(); // Kepala Unit from SHE/Security  
+        $isStaffUnitPengelola = in_array($user->id_unit, [55, 56]) && ($user->is_reviewer == 1 || $user->is_verifier == 1); // Staff from SHE/Security
         $isKepalaDept = $user->isKepalaDepartemen() && $document->user && $document->user->id_dept == $user->id_dept;
         $isDirektur = $user->isDirektur();
         $isAdmin = $user->isAdmin();
 
-        if (!$isAuthor && !$isKepalaUnit && !$isUnitPengelola && !$isReviewer && !$isVerifier && !$isKepalaDept && !$isDirektur && !$isAdmin) {
+        if (!$isAuthor && !$isSameUnit && !$isKepalaUnitPengelola && !$isStaffUnitPengelola && !$isKepalaDept && !$isDirektur && !$isAdmin) {
             abort(403, 'Unauthorized access to export PUK program.');
         }
 
@@ -230,7 +242,18 @@ class DocumentController extends Controller
 
         $pukProgram = $document->pukProgram;
 
-        $pdf = Pdf::loadView('documents.export_puk_pdf', compact('document', 'pukProgram'));
+        // Fetch latest revision note (if PUK uraian_revisi is empty, check approvals)
+        $latestRevision = null;
+        if (!empty($document->pukProgram->uraian_revisi)) {
+            $latestRevision = $document->pukProgram->uraian_revisi;
+        } else {
+            $lastApproval = $document->approvals()->whereIn('action', ['resubmitted', 'puk_resubmit'])->latest()->first();
+            if ($lastApproval) {
+                $latestRevision = $lastApproval->catatan;
+            }
+        }
+
+        $pdf = Pdf::loadView('documents.export_puk_pdf', compact('document', 'pukProgram', 'latestRevision'));
         $pdf->setPaper('a4', 'portrait');
 
         $unitName = $document->unit ? $this->sanitizeFilename($document->unit->nama_unit) : 'Unit';
@@ -251,15 +274,14 @@ class DocumentController extends Controller
         }
 
         $isAuthor = $user->id_user == $document->id_user;
-        $isKepalaUnit = $user->isKepalaUnit() && $document->id_unit == $user->id_unit;
-        $isUnitPengelola = $user->isUnitPengelola();
-        $isReviewer = $user->is_reviewer == 1;
-        $isVerifier = $user->is_verifier == 1;
+        $isSameUnit = $document->id_unit && $user->id_unit == $document->id_unit; // Any user from same unit
+        $isKepalaUnitPengelola = $user->isUnitPengelola(); // Kepala Unit from SHE/Security
+        $isStaffUnitPengelola = in_array($user->id_unit, [55, 56]) && ($user->is_reviewer == 1 || $user->is_verifier == 1); // Staff from SHE/Security
         $isKepalaDept = $user->isKepalaDepartemen() && $document->user && $document->user->id_dept == $user->id_dept;
         $isDirektur = $user->isDirektur();
         $isAdmin = $user->isAdmin();
 
-        if (!$isAuthor && !$isKepalaUnit && !$isUnitPengelola && !$isReviewer && !$isVerifier && !$isKepalaDept && !$isDirektur && !$isAdmin) {
+        if (!$isAuthor && !$isSameUnit && !$isKepalaUnitPengelola && !$isStaffUnitPengelola && !$isKepalaDept && !$isDirektur && !$isAdmin) {
             abort(403, 'Unauthorized access to export PUK program.');
         }
 
@@ -282,22 +304,21 @@ class DocumentController extends Controller
      */
     public function exportPmkPdf(Document $document)
     {
-        // Access Control: Same as PUK
+        // Access Control: Author, Same Unit Users, Unit Pengelola, Kepala Dept, Direksi, Admin
         $user = Auth::user();
         if (!$user) {
             abort(403, 'Unauthorized');
         }
 
         $isAuthor = $user->id_user == $document->id_user;
-        $isKepalaUnit = $user->isKepalaUnit() && $document->id_unit == $user->id_unit;
-        $isUnitPengelola = $user->isUnitPengelola();
-        $isReviewer = $user->is_reviewer == 1;
-        $isVerifier = $user->is_verifier == 1;
+        $isSameUnit = $document->id_unit && $user->id_unit == $document->id_unit; // Any user from same unit
+        $isKepalaUnitPengelola = $user->isUnitPengelola(); // Kepala Unit from SHE/Security
+        $isStaffUnitPengelola = in_array($user->id_unit, [55, 56]) && ($user->is_reviewer == 1 || $user->is_verifier == 1); // Staff from SHE/Security
         $isKepalaDept = $user->isKepalaDepartemen() && $document->user && $document->user->id_dept == $user->id_dept;
         $isDirektur = $user->isDirektur();
         $isAdmin = $user->isAdmin();
 
-        if (!$isAuthor && !$isKepalaUnit && !$isUnitPengelola && !$isReviewer && !$isVerifier && !$isKepalaDept && !$isDirektur && !$isAdmin) {
+        if (!$isAuthor && !$isSameUnit && !$isKepalaUnitPengelola && !$isStaffUnitPengelola && !$isKepalaDept && !$isDirektur && !$isAdmin) {
             abort(403, 'Unauthorized access to export PMK program.');
         }
 
@@ -329,7 +350,18 @@ class DocumentController extends Controller
             ->where('user_aktif', 1)
             ->first();
 
-        $pdf = Pdf::loadView('documents.export_pmk_pdf', compact('document', 'pmkProgram', 'kaUnit', 'kaDept', 'direktur'));
+        // Fetch latest revision note (if PMK uraian_revisi is empty, check approvals)
+        $latestRevision = null;
+        if (!empty($document->pmkProgram->uraian_revisi)) {
+            $latestRevision = $document->pmkProgram->uraian_revisi;
+        } else {
+            $lastApproval = $document->approvals()->whereIn('action', ['resubmitted', 'pmk_resubmit'])->latest()->first();
+            if ($lastApproval) {
+                $latestRevision = $lastApproval->catatan;
+            }
+        }
+
+        $pdf = Pdf::loadView('documents.export_pmk_pdf', compact('document', 'pmkProgram', 'kaUnit', 'kaDept', 'direktur', 'latestRevision'));
         $pdf->setPaper('a4', 'portrait');
 
         $unitName = $document->unit ? $this->sanitizeFilename($document->unit->nama_unit) : 'Unit';
@@ -350,20 +382,29 @@ class DocumentController extends Controller
         }
 
         $isAuthor = $user->id_user == $document->id_user;
-        $isKepalaUnit = $user->isKepalaUnit() && $document->id_unit == $user->id_unit;
-        $isUnitPengelola = $user->isUnitPengelola();
-        $isReviewer = $user->is_reviewer == 1;
-        $isVerifier = $user->is_verifier == 1;
+        $isSameUnit = $document->id_unit && $user->id_unit == $document->id_unit; // Any user from same unit
+        $isKepalaUnitPengelola = $user->isUnitPengelola(); // Kepala Unit from SHE/Security
+        $isStaffUnitPengelola = in_array($user->id_unit, [55, 56]) && ($user->is_reviewer == 1 || $user->is_verifier == 1); // Staff from SHE/Security
         $isKepalaDept = $user->isKepalaDepartemen() && $document->user && $document->user->id_dept == $user->id_dept;
         $isDirektur = $user->isDirektur();
         $isAdmin = $user->isAdmin();
 
-        if (!$isAuthor && !$isKepalaUnit && !$isUnitPengelola && !$isReviewer && !$isVerifier && !$isKepalaDept && !$isDirektur && !$isAdmin) {
+        if (!$isAuthor && !$isSameUnit && !$isKepalaUnitPengelola && !$isStaffUnitPengelola && !$isKepalaDept && !$isDirektur && !$isAdmin) {
             abort(403, 'Unauthorized access to export PMK program.');
         }
 
         // Load necessary relations
-        $document->load(['pmkProgram.createdBy', 'pmkProgram.approvedBy', 'user.roleJabatan', 'user.seksi', 'unit', 'departemen', 'direktorat']);
+        $document->load([
+            'pmkProgram.createdBy',
+            'pmkProgram.approvedByUnit',
+            'pmkProgram.approvedByDept',
+            'pmkProgram.approvedByDireksi',
+            'user.roleJabatan',
+            'user.seksi',
+            'unit',
+            'departemen',
+            'direktorat'
+        ]);
 
         // Check if PMK program exists
         if (!$document->pmkProgram) {
@@ -416,11 +457,12 @@ class DocumentController extends Controller
             return redirect()->route('dashboard')->with('error', 'Akses Ditolak: Anda bukan PIC dokumen.');
         }
 
-        // SCOPE: Unit-based (Shared Drafts/Docs)
+        // 1. Base Query (Filters: Unit, Category, Month, Year)
+        // We clone this query for counting before applying pagination or list-specific filters
         $query = Document::where('id_unit', $user->id_unit)
-            ->with(['unit', 'approvals.approver', 'details']); // Eager load details for PUK/PMK check
+            ->with(['unit', 'approvals.approver', 'details', 'pukProgram', 'pmkProgram']);
 
-        // Filter: Category (SHE vs Security)
+        // Filter: Category
         if ($request->filled('category')) {
             if ($request->category === 'SHE') {
                 $query->whereIn('kategori', ['K3', 'KO', 'Lingkungan']);
@@ -439,37 +481,51 @@ class DocumentController extends Controller
             $query->whereYear('created_at', $request->year);
         }
 
-        // Filter: Status (Final/Publish)
+        // 2. Calculate Counts based on Base Filters (Before Status Filter)
+        // This ensures the dashboard stats reflect the Year/Month/Category context
+        $filteredDocs = $query->get();
+
+        $countTotal = $filteredDocs->count();
+        $countDraft = $filteredDocs->where('status', 'draft')->count();
+
+        $countPending = $filteredDocs->filter(function ($d) {
+            return in_array($d->status, ['pending_level1', 'pending_level2', 'pending_level3', 'pending_direksi']);
+        })->count();
+
+        $countRevision = $filteredDocs->filter(function ($doc) {
+            return $doc->status === 'revision' ||
+                ($doc->pukProgram && $doc->pukProgram->status === 'revision') ||
+                ($doc->pmkProgram && $doc->pmkProgram->status === 'revision');
+        })->count();
+
+        $countApproved = $filteredDocs->filter(function ($d) {
+            return in_array($d->status, ['approved', 'published']);
+        })->count();
+
+        $stats = [
+            'total' => $countTotal,
+            'draft' => $countDraft,
+            'pending' => $countPending,
+            'revision' => $countRevision,
+            'approved' => $countApproved
+        ];
+
+        // 3. Apply Status Filter for the List (Server Side)
         if ($request->filled('status_filter') && $request->status_filter == 'final') {
             $query->whereIn('status', ['approved', 'published']);
         }
 
         $documents = $query->orderBy('created_at', 'desc')->get();
 
-        // Get Available Years for Filter
+        // 4. Get Available Years for Filter
         $years = Document::where('id_unit', $user->id_unit)
             ->selectRaw('YEAR(created_at) as year')
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year');
 
-        // Load counts (Unit-wide)
-        $allDocs = Document::where('id_unit', $user->id_unit)
-            ->with(['pukProgram', 'pmkProgram'])
-            ->get();
-            
-        $myPending = $allDocs->whereIn('status', ['pending_level1', 'pending_level2', 'pending_level3']);
-        
-        // Revision: Check Main Document OR PUK OR PMK
-        $myRevision = $allDocs->filter(function($doc) {
-            return $doc->status === 'revision' || 
-                   ($doc->pukProgram && $doc->pukProgram->status === 'revision') ||
-                   ($doc->pmkProgram && $doc->pmkProgram->status === 'revision');
-        });
-
-        $myDraft = $allDocs->where('status', 'draft');
-
-        return view('user.documents.index', compact('documents', 'myPending', 'myRevision', 'myDraft', 'years'));
+        // Note: passing stats array to replace old count variables
+        return view('user.documents.index', compact('documents', 'years', 'stats'));
     }
 
     public function submitRevision(Request $request, Document $document)
@@ -478,7 +534,7 @@ class DocumentController extends Controller
             'revision_comment' => 'required|string',
         ]);
 
-        \DB::transaction(function() use ($request, $document) {
+        \DB::transaction(function () use ($request, $document) {
             // Log the submission using Relationship
             $document->approvals()->create([
                 'level' => 1,
@@ -490,11 +546,13 @@ class DocumentController extends Controller
             // Update Status
             $document->status = 'pending_level1';
             $document->current_level = 1;
-            
+
             // If specific tracks were in revision, update them too
-            if ($document->status_she == 'revision') $document->status_she = 'pending_level1';
-            if ($document->status_security == 'revision') $document->status_security = 'pending_level1';
-            
+            if ($document->status_she == 'revision')
+                $document->status_she = 'pending_level1';
+            if ($document->status_security == 'revision')
+                $document->status_security = 'pending_level1';
+
             $document->save();
         });
 
@@ -632,9 +690,9 @@ class DocumentController extends Controller
                 'items.*.residual_score' => 'nullable|numeric|min:0',
                 'items.*.residual_level' => 'nullable|string',
                 // Program Kerja Validation (Strict)
-                'items.*.program_kerja.*.uraian' => 'required|string', 
+                'items.*.program_kerja.*.uraian' => 'required|string',
                 'items.*.program_kerja.*.koordinator' => 'required|string', // Ensure Koordinator/PIC is set
-           ]);
+            ]);
         }
 
         $request->validate($rules);
@@ -847,7 +905,7 @@ class DocumentController extends Controller
             'departemen',
             'direktorat'
         ]);
-        
+
         return view('user.documents.show', compact('document'));
     }
 
@@ -1072,7 +1130,7 @@ class DocumentController extends Controller
                         $processedIds[] = $item['id'];
                     }
                 }
-                
+
                 if (!$currentDetail) {
                     // Create new
                     $currentDetail = $document->details()->create($detailData);
@@ -1087,7 +1145,7 @@ class DocumentController extends Controller
 
                     // Only process if program type is selected AND tolerance is Tidak
                     if ($programType && $tolerance === 'Tidak') {
-                         $programData = [
+                        $programData = [
                             'document_detail_id' => $currentDetail->id,
                             'judul' => $rencanaPengendalian ?? 'Program Pengendalian',
                             'tujuan' => $item['program_tujuan'] ?? '',
@@ -1113,9 +1171,9 @@ class DocumentController extends Controller
                             );
                         }
                     } elseif ($tolerance === 'Ya') {
-                         // Remove programs if tolerance is now acceptable
-                         $currentDetail->pukProgram()->delete();
-                         $currentDetail->pmkProgram()->delete();
+                        // Remove programs if tolerance is now acceptable
+                        $currentDetail->pukProgram()->delete();
+                        $currentDetail->pmkProgram()->delete();
                     }
                 }
             }
@@ -1156,9 +1214,9 @@ class DocumentController extends Controller
             }
 
             // Only log if submitting (not saving draft)
-            if ($request->input('action') === 'submit') { 
+            if ($request->input('action') === 'submit') {
                 $document->approvals()->create([
-                    'level' => 1, 
+                    'level' => 1,
                     'approver_id' => $user->id_user,
                     'action' => $logAction,
                     'catatan' => $request->revision_comment,
@@ -1275,6 +1333,7 @@ class DocumentController extends Controller
             // Level 1: Kepala Unit Asal
             // Only see documents from own unit
             $documents = Document::where('id_unit', $user->id_unit)
+                ->whereNotIn('status', ['draft', 'revision'])
                 ->with([
                     'user',
                     'unit',
@@ -1750,16 +1809,16 @@ class DocumentController extends Controller
         // Let's explicitly check Direksi role name.
         $role = auth()->user()->getRoleName();
         if (auth()->user()->isDirektur()) { // Helper I created
-             $role = 'direksi';
-             
-             // FILTER: Direktur hanya melihat details yang memiliki PMK
-             // Ini penting untuk performa dengan data besar - filter di memory setelah eager load
-             $detailsWithPmk = $document->details->filter(function($detail) {
-                 return $detail->pmkProgram !== null;
-             });
-             
-             // Replace the details relation dengan yang sudah difilter
-             $document->setRelation('details', $detailsWithPmk);
+            $role = 'direksi';
+
+            // FILTER: Direktur hanya melihat details yang memiliki PMK
+            // Ini penting untuk performa dengan data besar - filter di memory setelah eager load
+            $detailsWithPmk = $document->details->filter(function ($detail) {
+                return $detail->pmkProgram !== null;
+            });
+
+            // Replace the details relation dengan yang sudah difilter
+            $document->setRelation('details', $detailsWithPmk);
         }
 
         $view = match ($role) {
@@ -2169,7 +2228,7 @@ class DocumentController extends Controller
                 ]);
             } elseif ($document->current_level == 4) {
                 // Level 4 Approval (Direksi)
-                
+
                 // 1. If not yet published (Standard Flow), publish it
                 if ($document->status != 'published') {
                     $document->update([
@@ -2181,7 +2240,7 @@ class DocumentController extends Controller
                 // 2. Approve PMK Programs (Split Flow & Standard Flow)
                 // If there are specific PMK programs pending, approve them
                 $pendingPmks = $document->pmkPrograms()->where('status', 'pending_direksi')->get();
-                foreach($pendingPmks as $pmk) {
+                foreach ($pendingPmks as $pmk) {
                     $pmk->update([
                         'status' => 'approved',
                         'approved_by_direksi' => $user->id_user,
@@ -2268,41 +2327,41 @@ class DocumentController extends Controller
         // 1. Standard Level 4 Pending (Not yet published)
         // 2. Published Documents with Pending PMK Programs
         $documents = Document::where(function ($q) {
-                $q->where('current_level', 4)
-                  ->where('status', '!=', 'published');
-            })
+            $q->where('current_level', 4)
+                ->where('status', '!=', 'published');
+        })
             ->orWhere(function ($q) {
                 $q->where('status', 'published')
-                  ->whereHas('pmkPrograms', function ($pmk) {
-                      $pmk->where('status', 'pending_direksi');
-                  });
+                    ->whereHas('pmkPrograms', function ($pmk) {
+                        $pmk->where('status', 'pending_direksi');
+                    });
             })
             ->with(['user', 'unit', 'approvals', 'pmkPrograms'])
             ->orderBy('updated_at', 'desc')
             ->get();
 
         $documentsData = $documents->map(function ($doc) {
-           // Helper for status label
-           $status = 'Menunggu Approval';
-           if ($doc->status == 'published') {
-               $status = 'Menunggu Approval PMK';
-           } elseif ($doc->status == 'revision') {
-               $status = 'Revisi';
-           }
+            // Helper for status label
+            $status = 'Menunggu Approval';
+            if ($doc->status == 'published') {
+                $status = 'Menunggu Approval PMK';
+            } elseif ($doc->status == 'revision') {
+                $status = 'Revisi';
+            }
 
-           return [
-               'id' => $doc->id,
-               'unit' => $doc->unit->nama_unit ?? '-',
-               'department' => $doc->user && $doc->user->departemen ? $doc->user->departemen->nama_dept : '-',
-               'submitter' => $doc->user->nama_user ?? 'Unknown',
-               'title' => $doc->judul_dokumen ?? $doc->kolom2_kegiatan,
-               'date_submit' => $doc->created_at->format('d M Y'),
-               'time_submit' => $doc->created_at->format('H:i') . ' WIB',
-               'status' => $status,
-               'current_level' => 4,
-               'viewUrl' => route('direksi.review', $doc->id), // Fixed: Changed from direksi.documents.review to direksi.review
-               'has_pmk' => $doc->hasPmk()
-           ];
+            return [
+                'id' => $doc->id,
+                'unit' => $doc->unit->nama_unit ?? '-',
+                'department' => $doc->user && $doc->user->departemen ? $doc->user->departemen->nama_dept : '-',
+                'submitter' => $doc->user->nama_user ?? 'Unknown',
+                'title' => $doc->judul_dokumen ?? $doc->kolom2_kegiatan,
+                'date_submit' => $doc->created_at->format('d M Y'),
+                'time_submit' => $doc->created_at->format('H:i') . ' WIB',
+                'status' => $status,
+                'current_level' => 4,
+                'viewUrl' => route('direksi.review', $doc->id), // Fixed: Changed from direksi.documents.review to direksi.review
+                'has_pmk' => $doc->hasPmk()
+            ];
         });
 
         // Also fetch history (Recently Approved) for context?
@@ -2315,6 +2374,9 @@ class DocumentController extends Controller
     /**
      * List documents pending approval for Kepala Departemen (Level 3)
      */
+    /**
+     * List documents pending approval for Kepala Departemen (Level 3)
+     */
     public function kepalaDepartemenPending()
     {
         $user = Auth::user();
@@ -2323,22 +2385,9 @@ class DocumentController extends Controller
             abort(403, 'Akses ditolak. Hanya Kepala Departemen yang dapat mengakses halaman ini.');
         }
 
-        // Fetch Pending (Level 3 or Level 2 Partial) & History
+        // Fetch All Documents for the Department (Pending, Approved, Revision)
+        // We fetch everything to populate the dashboard counters dynamically
         $documents = Document::where('id_dept', $user->id_dept)
-            ->where(function ($q) {
-                $q->where('current_level', 3) // Fully Pending
-                    ->orWhere(function ($sub) {
-                        // Parallel Entry OR Revision Visibility
-                        // We want to show the document IF at least one track is 'approved' OR 'published'
-                        // regardless of global status (even if 'revision' or 'pending_level1' or 'pending_level2')
-                        $sub->where(function ($p) {
-                            $p->whereIn('status_she', ['approved', 'published'])
-                                ->orWhereIn('status_security', ['approved', 'published']);
-                        });
-                    })
-                    ->orWhere('status', 'approved') // Published Global
-                    ->orWhere('status', 'published');
-            })
             ->with(['user', 'unit', 'approvals'])
             ->orderBy('updated_at', 'desc')
             ->get();
@@ -2347,8 +2396,7 @@ class DocumentController extends Controller
             $items = [];
 
             // Helper to build item
-            $buildItem = function ($catType, $statusLabel, $isPublished = false) use ($doc) {
-                // Friendly Unit Name & Department
+            $buildItem = function ($catType, $statusLabel, $filterStatus) use ($doc) {
                 $unitName = $doc->unit->nama_unit ?? '-';
                 $submitterName = $doc->user->nama_user ?? $doc->user->username ?? 'Unknown';
 
@@ -2361,37 +2409,50 @@ class DocumentController extends Controller
                     'risk_level' => $doc->risk_level ?? 'High',
                     'date_submit' => $doc->created_at->format('d M Y'),
                     'time_submit' => $doc->created_at->format('H:i') . ' WIB',
-                    'status' => $statusLabel,
+                    'status' => $filterStatus, // 'Menunggu', 'Disetujui', 'Revisi'
+                    'display_status' => $statusLabel, // Text to show in UI
                     'category_label' => $catType, // SHE or Security
                     'current_level' => $doc->current_level,
-                    // Pass filter param to review page
                     'viewUrl' => route('kepala_departemen.review', ['document' => $doc->id, 'filter' => $catType]),
-                    'is_published' => $isPublished
+                    'is_published' => in_array($filterStatus, ['Disetujui'])
                 ];
             };
 
-            // 1. CHECKS FOR PENDING/VISIBLE TASKS
-            // Check SHE Status
+            // 1. Analyze SHE Track
             if ($doc->hasSheContent()) {
                 if ($doc->status_she == 'approved') {
-                    $items[] = $buildItem('SHE', 'Verified by Kepala Unit SHE');
-                } elseif ($doc->status_she == 'published') {
-                    $items[] = $buildItem('SHE', 'Terpublikasi (SHE)', true);
+                    $items[] = $buildItem('SHE', 'Menunggu Verifikasi (SHE)', 'Menunggu');
+                } elseif ($doc->status_she == 'published' || $doc->status_she == 'level3_approved') {
+                    $items[] = $buildItem('SHE', 'Telah Disetujui (SHE)', 'Disetujui');
+                } elseif ($doc->status_she == 'revision') {
+                    $items[] = $buildItem('SHE', 'Dikembalikan (SHE)', 'Revisi');
                 }
             }
 
-            // Check Security Status
+            // 2. Analyze Security Track
             if ($doc->hasSecurityContent()) {
                 if ($doc->status_security == 'approved') {
-                    $items[] = $buildItem('Security', 'Verified by Kepala Unit Keamanan');
-                } elseif ($doc->status_security == 'published') {
-                    $items[] = $buildItem('Security', 'Terpublikasi (Security)', true);
+                    $items[] = $buildItem('Security', 'Menunggu Verifikasi (Security)', 'Menunggu');
+                } elseif ($doc->status_security == 'published' || $doc->status_security == 'level3_approved') {
+                    $items[] = $buildItem('Security', 'Telah Disetujui (Security)', 'Disetujui');
+                } elseif ($doc->status_security == 'revision') {
+                    $items[] = $buildItem('Security', 'Dikembalikan (Security)', 'Revisi');
                 }
             }
 
-            // FALLBACK: If standard Level 3 (legacy) or just created
-            if (empty($items) && $doc->current_level == 3 && $doc->status == 'pending_level3') {
-                $items[] = $buildItem('ALL', 'Menunggu Approval');
+            // 3. Fallback / Standard Flow (if not SHE/Security specific or mixed)
+            // If it's a legacy document or strictly level-based without parallel tracks active?
+            // Usually hasSheContent checks unit ID.
+
+            // If no items added yet, check explicit levels
+            if (empty($items)) {
+                if ($doc->current_level == 3 && $doc->status == 'pending_level3') {
+                    $items[] = $buildItem('ALL', 'Menunggu Verifikasi', 'Menunggu');
+                } elseif ($doc->status == 'approved' || $doc->status == 'published') {
+                    $items[] = $buildItem('ALL', 'Telah Disetujui', 'Disetujui');
+                } elseif ($doc->status == 'revision') {
+                    $items[] = $buildItem('ALL', 'Dikembalikan', 'Revisi');
+                }
             }
 
             return $items;
@@ -2423,7 +2484,7 @@ class DocumentController extends Controller
             }
         } elseif ($user->isDirektur()) {
             // Direksi can revise if level 4
-             if ($document->current_level != 4) {
+            if ($document->current_level != 4) {
                 abort(403, 'Anda hanya dapat merevisi dokumen pada tahap Direksi.');
             }
         } elseif (!$document->canBeApprovedBy($user)) {
@@ -2528,10 +2589,10 @@ class DocumentController extends Controller
 
             return redirect()->route($route)->with('success', $msg);
         }
-        
+
         // Log for Direksi
         if ($document->getOriginal('current_level') == 4) {
-             $document->approvals()->create([
+            $document->approvals()->create([
                 'approver_id' => $user->id_user,
                 'level' => 4,
                 'action' => 'revision',
@@ -2596,12 +2657,14 @@ class DocumentController extends Controller
 
         // 3. Fallback: If status is solely 'pending_level3' but tracks aren't explicitly used/set
         if ($document->current_level == 3 && $document->status == 'pending_level3') {
-             // If manual approval without specific tracks logic
-             if ($filter == 'ALL') {
-                 if ($document->status_she == 'approved') $document->update(['status_she' => 'published']);
-                 if ($document->status_security == 'approved') $document->update(['status_security' => 'published']);
-                 $approvedSomething = true;
-             }
+            // If manual approval without specific tracks logic
+            if ($filter == 'ALL') {
+                if ($document->status_she == 'approved')
+                    $document->update(['status_she' => 'published']);
+                if ($document->status_security == 'approved')
+                    $document->update(['status_security' => 'published']);
+                $approvedSomething = true;
+            }
         }
 
         if (!$approvedSomething) {
@@ -2619,7 +2682,7 @@ class DocumentController extends Controller
         if ($sheDone && $secDone) {
             // DECISION POINT: Mixed Content (PUK + PMK) Handling
             $hasPmk = $document->hasPmk();
-            
+
             if ($hasPmk) {
                 // PARTIAL PUBLISH STRATEGY:
                 // 1. We PUBLISH the document so PUK/HIRADC is visible (Level 3 complete)
@@ -2635,7 +2698,7 @@ class DocumentController extends Controller
                 foreach ($document->pmkPrograms as $pmk) {
                     $pmk->update(['status' => 'pending_direksi']);
                 }
-                
+
                 // ALSO set document's 'pending_direksi' flag if possible, OR rely on querying PmkProgram status for Director.
                 // To make sure Director sees it, we might need a status on Document too?
                 // The User implied the Document goes to Director. 
@@ -2643,12 +2706,12 @@ class DocumentController extends Controller
                 // Let's use a hybrid status on Document if needed, OR update Director Dashboard query.
                 // Re-reading user request: "sedangkan hiradc yang mengandung pmk masuk ke sistem direktur".
                 // If I keep Document status 'published', Director Dashboard query must look for `hasPmk()` AND `pmk_status != approved`.
-                
+
                 $finalMsg = 'Dokumen HIRADC/PUK telah Terbit via Dashboard. Bagian PMK telah diteruskan ke Direksi untuk persetujuan terpisah.';
             } else {
                 // Regular documents (HIRADC/PUK only) are published immediately
                 $document->update([
-                    'current_level' => 3, 
+                    'current_level' => 3,
                     'status' => 'published',
                     'published_at' => now()
                 ]);
@@ -2661,11 +2724,13 @@ class DocumentController extends Controller
 
         // Log approval history with track information
         $catatan = $request->catatan ?? 'Dokumen disetujui oleh Kepala Departemen';
-        
+
         // Add context to note
-        if ($filter == 'SHE') $catatan .= ' (Track SHE)';
-        elseif ($filter == 'Security') $catatan .= ' (Track Security)';
-        
+        if ($filter == 'SHE')
+            $catatan .= ' (Track SHE)';
+        elseif ($filter == 'Security')
+            $catatan .= ' (Track Security)';
+
         if ($isFinalStep && $document->hasPmk()) {
             $catatan .= ' - PMK Forwarded to Direksi';
         } elseif ($isFinalStep) {
@@ -3266,10 +3331,10 @@ class DocumentController extends Controller
             $puk = \App\Models\PukProgram::findOrFail($id);
             $document = $puk->documentDetail->document;
             $user = Auth::user();
-            
+
             // Check Permissions
             $canEdit = false;
-            
+
             // 1. Kepala Unit Kerja (Before Approval)
             if ($user->isKepalaUnit() && $user->id_unit == $document->id_unit) {
                 // Check if already approved by this user
@@ -3278,9 +3343,10 @@ class DocumentController extends Controller
                     ->where('level', 1)
                     ->where('action', 'approved')
                     ->exists();
-                if (!$hasApproved) $canEdit = true;
+                if (!$hasApproved)
+                    $canEdit = true;
             }
-            
+
             // 2. Unit Pengelola (Reviewer/Verifikator) - Before Their Approval
             if (in_array($user->id_unit, [55, 56])) {
                 // Check if already approved/verified by this user at level 2
@@ -3290,10 +3356,10 @@ class DocumentController extends Controller
                     ->where('level', 2)
                     ->whereIn('action', ['approved', 'verified', 'reviewed'])
                     ->exists();
-                
+
                 // Allow edit if they are staff (4,5,6) and haven't approved yet, AND current level is 2
                 if (in_array($user->role_jabatan, [4, 5, 6]) && !$hasApproved && $document->current_level == 2) {
-                   $canEdit = true;
+                    $canEdit = true;
                 }
             }
 
@@ -3333,10 +3399,10 @@ class DocumentController extends Controller
             $pmk = \App\Models\PmkProgram::findOrFail($id);
             $document = $pmk->documentDetail->document;
             $user = Auth::user();
-            
+
             // Check Permissions (Same logic as PUK)
             $canEdit = false;
-            
+
             // 1. Kepala Unit Kerja
             if ($user->isKepalaUnit() && $user->id_unit == $document->id_unit) {
                 $hasApproved = $document->approvals()
@@ -3344,9 +3410,10 @@ class DocumentController extends Controller
                     ->where('level', 1)
                     ->where('action', 'approved')
                     ->exists();
-                if (!$hasApproved) $canEdit = true;
+                if (!$hasApproved)
+                    $canEdit = true;
             }
-            
+
             // 2. Unit Pengelola
             if (in_array($user->id_unit, [55, 56])) {
                 $hasApproved = $document->approvals()
@@ -3354,9 +3421,9 @@ class DocumentController extends Controller
                     ->where('level', 2)
                     ->whereIn('action', ['approved', 'verified', 'reviewed'])
                     ->exists();
-                
+
                 if (in_array($user->role_jabatan, [4, 5, 6]) && !$hasApproved && $document->current_level == 2) {
-                   $canEdit = true;
+                    $canEdit = true;
                 }
             }
 
@@ -3390,16 +3457,16 @@ class DocumentController extends Controller
     {
         // Eager load necessary relations including nested PMK programs for checking status
         $document->load([
-            'user', 
-            'approvals.approver', 
-            'direktorat', 
-            'departemen', 
-            'unit', 
+            'user',
+            'approvals.approver',
+            'direktorat',
+            'departemen',
+            'unit',
             'seksi',
             'details.pmkProgram', // Load nested to check status
-            'pmkProgram' => function($q) {
-                 // Only load main PMK relation if approved (for the separate PMK table)
-                 $q->where('status', 'approved');
+            'pmkProgram' => function ($q) {
+                // Only load main PMK relation if approved (for the separate PMK table)
+                $q->where('status', 'approved');
             }
         ]);
 
@@ -3774,20 +3841,28 @@ class DocumentController extends Controller
 
         $publishedData = $publishedDocuments->map(function ($doc) {
             $lastApproval = $doc->approvals()->where('action', 'approved')->latest()->first();
-            // Broad Categories
-            $cats = [];
-            // Broad Categories - Strict Check
-            $cats = [];
+
+            // Unit Type (SHE/Security) - for filtering
+            $unitTypes = [];
             if ($doc->hasSheContent() && ($doc->status == 'published' || $doc->status_she == 'published'))
-                $cats[] = 'SHE';
+                $unitTypes[] = 'SHE';
             if ($doc->hasSecurityContent() && ($doc->status == 'published' || $doc->status_security == 'published'))
-                $cats[] = 'Security';
-            $categoryLabel = empty($cats) ? '-' : implode(', ', $cats);
+                $unitTypes[] = 'Security';
+            $unitTypeLabel = empty($unitTypes) ? '-' : implode(', ', $unitTypes);
+
+            // Category Display Label (Simplified to 2 options)
+            $categoryDisplay = '-';
+            if (in_array('SHE', $unitTypes)) {
+                $categoryDisplay = 'K3/KO/Lingkungan';
+            } elseif (in_array('Security', $unitTypes)) {
+                $categoryDisplay = 'Keamanan';
+            }
 
             return [
                 'id' => $doc->id,
                 'title' => $doc->judul_dokumen ?? $doc->kolom2_kegiatan,
-                'category' => $categoryLabel,
+                'category' => $unitTypeLabel, // Keep for filtering (SHE/Security)
+                'doc_categories' => $categoryDisplay, // Simplified display: K3/KO/Lingkungan or Keamanan
                 'date' => $doc->published_at ? $doc->published_at->format('d M Y') : '-',
                 'author' => $doc->user->nama_user ?? '-',
                 'approver' => $lastApproval ? ($lastApproval->approver->nama_user ?? '-') : '-',
@@ -4097,14 +4172,14 @@ class DocumentController extends Controller
         // Logic:
         // 1. Document is at Level 4 (Standard Flow)
         // 2. OR Document has PMK Programs explicitly marked as 'pending_direksi' (Split Flow)
-        $pendingDocuments = \App\Models\Document::where(function($q) {
-                $q->where('current_level', 4)
-                  ->where('status', 'pending_direksi');
-            })
-            ->orWhere(function($q) {
+        $pendingDocuments = \App\Models\Document::where(function ($q) {
+            $q->where('current_level', 4)
+                ->where('status', 'pending_direksi');
+        })
+            ->orWhere(function ($q) {
                 // Split Flow: Document might be 'published' OR 'pending_direksi'
                 // But specifically check for PMK programs waiting
-                $q->whereHas('pmkPrograms', function($sub) {
+                $q->whereHas('pmkPrograms', function ($sub) {
                     $sub->where('status', 'pending_direksi');
                 });
             })
@@ -4115,10 +4190,10 @@ class DocumentController extends Controller
         $pendingCount = $pendingDocuments->count();
 
         // Fetch History (Approved by Me)
-        $approvedDocuments = \App\Models\Document::whereHas('approvals', function($q) use ($user) {
-                $q->where('approver_id', $user->id_user)
-                  ->where('level', 4);
-            })
+        $approvedDocuments = \App\Models\Document::whereHas('approvals', function ($q) use ($user) {
+            $q->where('approver_id', $user->id_user)
+                ->where('level', 4);
+        })
             ->with(['user', 'unit'])
             ->orderBy('updated_at', 'desc')
             ->limit(20)
@@ -4131,13 +4206,13 @@ class DocumentController extends Controller
         $seksis = \App\Models\Seksi::all();
 
         return view('direksi.dashboard', compact(
-            'user', 
-            'pendingDocuments', 
-            'pendingCount', 
+            'user',
+            'pendingDocuments',
+            'pendingCount',
             'approvedDocuments',
-            'direktorats', 
-            'departemens', 
-            'units', 
+            'direktorats',
+            'departemens',
+            'units',
             'seksis'
         ) + [
             'publishedData' => $approvedDocuments,
@@ -4161,10 +4236,10 @@ class DocumentController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         // Find PMK
         $pmk = \App\Models\PmkProgram::findOrFail($pmkId);
-        
+
         // Authorization: Must be Direksi
         if (!$user->isDirektur()) {
             abort(403, 'Hanya Direksi yang dapat meminta revisi PMK.');
@@ -4209,7 +4284,7 @@ class DocumentController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         // Authorization: Must be the creator
         if ($pmk->created_by != $user->id_user) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit PMK ini.');
@@ -4243,7 +4318,7 @@ class DocumentController extends Controller
             'ip_address' => $request->ip()
         ]);
 
-        if($request->wantsJson()) {
+        if ($request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'PMK berhasil direvisi dan dikirim ulang ke Direksi.']);
         }
 
@@ -4261,11 +4336,11 @@ class DocumentController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         // Find PUK
         $puk = \App\Models\PukProgram::findOrFail($pukId);
         $document = $puk->documentDetail->document;
-        
+
         // Authorization: Must be Kepala Unit of the same unit
         if (!$user->isKepalaUnit() || $user->id_unit != $document->id_unit) {
             abort(403, 'Hanya Kepala Unit terkait yang dapat meminta revisi PUK.');
@@ -4309,7 +4384,7 @@ class DocumentController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         // Authorization: Must be the creator
         if ($puk->created_by != $user->id_user) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit PUK ini.');
@@ -4343,8 +4418,8 @@ class DocumentController extends Controller
             'ip_address' => $request->ip()
         ]);
 
-        if($request->wantsJson()) {
-             return response()->json(['success' => true, 'message' => 'PUK berhasil direvisi dan dikirim ulang ke Kepala Unit.']);
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'PUK berhasil direvisi dan dikirim ulang ke Kepala Unit.']);
         }
 
         return redirect()->route('documents.show', $document->id)
@@ -4360,9 +4435,9 @@ class DocumentController extends Controller
 
         // Authorization: Must be owner or have edit rights
         if ($document->id_user != $user->id_user) {
-             // Or check if it's currently in revision for PUK/PMK and user is the relevant role? 
-             // For now, let's assume only the submitter (owner) accesses this formatted page for revision.
-             abort(403);
+            // Or check if it's currently in revision for PUK/PMK and user is the relevant role? 
+            // For now, let's assume only the submitter (owner) accesses this formatted page for revision.
+            abort(403);
         }
 
         $document->load(['pukProgram', 'pmkProgram']);
@@ -4374,7 +4449,7 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         $puk = \App\Models\PukProgram::findOrFail($pukId);
-        
+
         // Authorization: Must be the creator
         if ($puk->created_by != $user->id_user) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengedit PUK ini.'], 403);
@@ -4413,7 +4488,7 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         $pmk = \App\Models\PmkProgram::findOrFail($pmkId);
-        
+
         // Authorization: Must be the creator
         if ($pmk->created_by != $user->id_user) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengedit PMK ini.'], 403);
@@ -4444,5 +4519,86 @@ class DocumentController extends Controller
             'success' => true,
             'message' => 'Data tabel PMK berhasil diperbarui.'
         ]);
+    }
+
+    /**
+     * Initiate document revision (Manual Trigger by Submitter)
+     * NOTE: Revision number will be incremented ONLY when final approver approves
+     */
+    public function initiateRevision(Request $request, Document $document)
+    {
+        $user = Auth::user();
+
+        // 1. Authorization: Only document owner can initiate revision
+        if ($document->id_user !== $user->id_user) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk merevisi dokumen ini.');
+        }
+
+        // 2. Check if document is published
+        if ($document->status !== 'published') {
+            return back()->with('error', 'Hanya dokumen yang sudah terpublikasi yang dapat direvisi.');
+        }
+
+        // 3. Validate revision reason (MANDATORY)
+        $request->validate([
+            'revision_reason' => 'required|string|min:10|max:500',
+        ], [
+            'revision_reason.required' => 'Alasan revisi wajib diisi.',
+            'revision_reason.min' => 'Alasan revisi minimal 10 karakter.',
+            'revision_reason.max' => 'Alasan revisi maksimal 500 karakter.',
+        ]);
+
+        try {
+            \DB::beginTransaction();
+
+            // 4. Create history snapshot BEFORE making changes
+            // This saves the current PUBLISHED version with current revision_number
+            $document->createHistorySnapshot($user, $request->revision_reason);
+
+            // 5. Save revision reason to document for current revision
+            $document->revision_reason = $request->revision_reason;
+
+            // 6. Mark document as "in revision" - revision_number will increment ONLY on final approval
+            $document->is_in_revision = true;
+
+            // 7. Reset status to draft for editing
+            $document->status = 'draft';
+            $document->current_level = 0;
+
+            // 8. Reset workflow statuses
+            $document->status_she = null;
+            $document->status_security = null;
+
+            // 9. Clear need evaluation flag
+            $document->is_need_evaluation = false;
+
+            // 10. Keep published_at, last_review_date, and revision_number
+            // revision_number will be incremented when final approver approves this revision
+
+            $document->save();
+
+            \DB::commit();
+
+            $nextRevNumber = $document->revision_number + 1;
+            return redirect()->route('documents.edit', $document->id)
+                ->with('success', "Dokumen masuk mode revisi. Setelah disetujui akan menjadi Rev {$nextRevNumber}. Silakan edit dan submit kembali untuk approval.");
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return back()->with('error', 'Gagal memulai revisi: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get revision history for a document
+     */
+    public function getRevisionHistory(Document $document)
+    {
+        $histories = $document->histories()
+            ->with('archivedBy')
+            ->orderBy('revision_number', 'desc')
+            ->get();
+
+        return response()->json($histories);
     }
 }

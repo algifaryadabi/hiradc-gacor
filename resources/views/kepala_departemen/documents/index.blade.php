@@ -592,41 +592,7 @@
 <body>
     <div class="layout-container" style="display:flex;">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System</div>
-            </div>
-            <nav class="nav-menu">
-                <a href="{{ route('kepala_departemen.dashboard') }}" class="nav-item">
-                    <i class="fas fa-th-large"></i><span>Dashboard</span>
-                </a>
-                <a href="{{ route('kepala_departemen.check_documents') }}" class="nav-item active">
-                    <i class="fas fa-file-signature"></i><span>Review Dokumen</span>
-                </a>
-            </nav>
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">{{ substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2) }}</div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user }}</div>
-                        <div class="user-role">{{ Auth::user()->departemen->nama_dept ?? 'Kepala Departemen' }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Keluar
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
-            </div>
-        </aside>
+        @include('partials.sidebar')
 
         <main class="main-content">
             <div class="header-content">
@@ -772,12 +738,12 @@
                 // Status Logic
                 let statusClass = 'status-pending';
                 let statusIcon = '<i class="fas fa-clock"></i>';
-                let statusLabel = doc.status; // Use enriched status from controller
+                let statusLabel = doc.display_status || doc.status;
 
-                if (doc.status.includes('Siap Approval')) {
-                    statusClass = 'status-pending'; // Keep orange or make special blue?
-                    statusIcon = '<i class="fas fa-exclamation-circle"></i>';
-                } else if (['Disetujui', 'Approved'].includes(doc.status)) {
+                if (doc.status === 'Menunggu') {
+                    statusClass = 'status-pending';
+                    statusIcon = '<i class="fas fa-clock"></i>';
+                } else if (doc.status === 'Disetujui') {
                     statusClass = 'status-approved';
                     statusIcon = '<i class="fas fa-check-circle"></i>';
                 } else if (doc.status === 'Revisi') {
@@ -819,7 +785,7 @@
                             </div>
                             <div class="doc-title">${doc.title}</div>
                             <div class="doc-submitter" style="margin-bottom:4px;"><i class="fas fa-user-edit"></i> ${doc.submitter}</div>
-                            ${doc.category_label ? `<div style="margin-bottom:6px; padding:4px 10px; background:#fef3c7; border:1px solid #f59e0b; border-radius:6px; display:inline-block;"><i class="fas fa-tag" style="color:#d97706;"></i> <span style="font-size:12px; color:#92400e; font-weight:600;">Dari Unit Pengelola ${doc.category_label}</span></div>` : ''}
+                            ${doc.category_label && doc.category_label !== 'ALL' ? `<div style="margin-bottom:6px; padding:4px 10px; background:#fef3c7; border:1px solid #f59e0b; border-radius:6px; display:inline-block;"><i class="fas fa-tag" style="color:#d97706;"></i> <span style="font-size:12px; color:#92400e; font-weight:600;">Dari Unit Pengelola ${doc.category_label}</span></div>` : ''}
                             <div style="display:flex; gap:6px; flex-wrap:wrap;">${badgesHtml}</div>
                         </div>
 

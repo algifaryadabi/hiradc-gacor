@@ -65,4 +65,12 @@ class PmkProgram extends Model
     {
         return $this->belongsTo(User::class, 'approved_by_direksi');
     }
+
+    /**
+     * Alias for approved_by_kepala_unit (for compatibility with PUK)
+     */
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by_kepala_unit');
+    }
 }

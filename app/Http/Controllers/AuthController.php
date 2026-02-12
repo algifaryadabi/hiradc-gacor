@@ -45,7 +45,7 @@ class AuthController extends Controller
 
         // Check if user is active
         if (!$user->isActive()) {
-            return back()->with('error', 'Akun Anda tidak aktif. Hubungi administrator.');
+            return back()->with('error', 'Akun Anda dinonaktifkan. Silakan hubungi administrator.');
         }
 
         // Verify password - check both hashed and plain text (for legacy data)

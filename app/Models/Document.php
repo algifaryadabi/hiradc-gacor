@@ -63,6 +63,11 @@ class Document extends Model
         'security_approved_at',
         'compliance_checklist_she',
         'compliance_checklist_security',
+        'revision_number',
+        'revision_reason',
+        'last_review_date',
+        'is_need_evaluation',
+        'is_in_revision',
     ];
 
     protected $casts = [
@@ -109,6 +114,11 @@ class Document extends Model
     public function details(): HasMany
     {
         return $this->hasMany(DocumentDetail::class, 'document_id');
+    }
+
+    public function histories(): HasMany
+    {
+        return $this->hasMany(DocumentHistory::class, 'document_id')->orderBy('revision_number', 'desc');
     }
 
     public function pukProgram()
@@ -228,12 +238,14 @@ class Document extends Model
                 // No PMK -> Finish (Publish)
                 $this->status = 'published';
                 $this->published_at = now();
+                $this->last_review_date = now(); // Set review date on publish
             }
 
         } elseif ($this->current_level == 4) {
             // Level 4: Direksi (PMK Only)
             $this->status = 'published';
             $this->published_at = now();
+            $this->last_review_date = now(); // Set review date on publish
         }
 
         $this->save();
@@ -416,5 +428,27 @@ class Document extends Model
     public function isSecurityApproved(): bool
     {
         return $this->status_security === 'approved' || !$this->hasSecurityContent();
+    }
+
+    /**
+     * Create a snapshot of current document state before revision
+     */
+    public function createHistorySnapshot(User $user, string $reason = null): void
+    {
+        // Prepare snapshot data
+        $snapshot = [
+            'document' => $this->toArray(),
+            'details' => $this->details()->get()->toArray(),
+            'approvals' => $this->approvals()->get()->toArray(),
+        ];
+
+        // Create history record
+        $this->histories()->create([
+            'revision_number' => $this->revision_number,
+            'revision_reason' => $reason ?? $this->revision_reason,
+            'archived_by' => $user->id_user,
+            'snapshot_data' => $snapshot,
+            'archived_at' => now(),
+        ]);
     }
 }

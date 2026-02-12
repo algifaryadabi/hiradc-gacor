@@ -1,41 +1,38 @@
 <?php
 require __DIR__ . '/vendor/autoload.php';
 $app = require_once __DIR__ . '/bootstrap/app.php';
-$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
-echo "=== RECENT DOCUMENTS ===\n";
-$docs = DB::table('documents')
-    ->orderBy('id_document', 'desc')
-    ->limit(3)
-    ->get(['id_document', 'id_user', 'id_unit', 'status', 'current_level', 'kategori', 'created_at']);
+use App\Models\User;
+use App\Models\Document;
 
-foreach ($docs as $doc) {
-    echo sprintf(
-        "ID: %d | User: %d | Unit: %d | Status: %s | Level: %d | Kategori: %s | Created: %s\n",
-        $doc->id_document,
-        $doc->id_user,
-        $doc->id_unit,
-        $doc->status,
-        $doc->current_level,
-        $doc->kategori,
-        $doc->created_at
-    );
+// Try to find a user with documents
+$docs = Document::take(1)->first();
+if (!$docs) {
+    echo "No documents found in DB\n";
+    exit;
+}
+$unitId = $docs->id_unit;
+echo "Testing with Unit ID: $unitId from Doc ID: {$docs->id}\n";
+
+$query = Document::where('id_unit', $unitId);
+$total = $query->count();
+echo "Total Docs (Unit): $total\n";
+
+$drafts = Document::where('id_unit', $unitId)->where('status', 'draft')->get();
+echo "Drafts (Total): " . $drafts->count() . "\n";
+foreach ($drafts as $d) {
+    echo " - ID: {$d->id}, Created: {$d->created_at}, Year: " . ($d->created_at ? $d->created_at->format('Y') : 'null') . "\n";
 }
 
-echo "\n=== USER INFO (Senior Manager Security) ===\n";
-$users = DB::table('ms_users')
-    ->where('nama_user', 'like', '%senior%')
-    ->orWhere('nama_user', 'like', '%manager%')
-    ->get(['id_user', 'nama_user', 'id_unit', 'role_user', 'id_role_user', 'role_jabatan', 'id_role_jabatan']);
+// Check filtering logic
+$year = 2026;
+$filteredQuery = Document::where('id_unit', $unitId)->whereYear('created_at', $year);
+echo "Docs in $year: " . $filteredQuery->count() . "\n";
+echo "Drafts in $year: " . $filteredQuery->where('status', 'draft')->count() . "\n";
 
-foreach ($users as $user) {
-    echo sprintf(
-        "ID: %d | Name: %s | Unit: %d | role_user: %s | id_role_user: %s | role_jabatan: %s\n",
-        $user->id_user,
-        $user->nama_user,
-        $user->id_unit ?? 0,
-        $user->role_user ?? 'null',
-        $user->id_role_user ?? 'null',
-        $user->role_jabatan ?? 'null'
-    );
-}
+$year = 2025;
+$filteredQuery = Document::where('id_unit', $unitId)->whereYear('created_at', $year);
+echo "Docs in $year: " . $filteredQuery->count() . "\n";
+echo "Drafts in $year: " . $filteredQuery->where('status', 'draft')->count() . "\n";

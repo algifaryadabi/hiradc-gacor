@@ -27,7 +27,6 @@ class User extends Authenticatable
         'id_role_jabatan', // Added as fallback
         'foto_user',
         'role_user',
-        'id_role_user',
         'user_aktif',
         'can_create_documents',
         'is_reviewer',
@@ -147,7 +146,7 @@ class User extends Authenticatable
         if (($this->role_user ?? $this->id_role_user) == 1) {
             return 'admin';
         }
-        
+
         // 2. Direksi (Level 4 Approver)
         if ($this->isDirektur()) {
             return 'direksi';

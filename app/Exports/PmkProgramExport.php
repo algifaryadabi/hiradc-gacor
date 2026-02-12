@@ -10,9 +10,11 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
+use Maatwebsite\Excel\Concerns\WithDrawings;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class PmkProgramExport implements FromView, WithTitle, WithStyles, WithColumnWidths, WithEvents
+class PmkProgramExport implements FromView, WithTitle, WithStyles, WithColumnWidths, WithEvents, WithDrawings
 {
     protected $document;
 
@@ -21,74 +23,136 @@ class PmkProgramExport implements FromView, WithTitle, WithStyles, WithColumnWid
         $this->document = $document;
     }
 
+    public function drawings()
+    {
+        $logoPath = public_path('images/logo-semen-padang.png');
+        if (file_exists($logoPath)) {
+            $drawing = new Drawing();
+            $drawing->setName('Logo Semen Padang');
+            $drawing->setDescription('Logo PT Semen Padang');
+            $drawing->setPath($logoPath);
+            $drawing->setHeight(80);
+            $drawing->setCoordinates('I6'); // Centered around column I
+            $drawing->setOffsetX(-40); // Slightly shift left to center
+
+            return $drawing;
+        }
+        return [];
+    }
+
     public function view(): View
     {
         $pmkProgram = $this->document->pmkProgram;
+
+        // Fetch latest revision note
+        $latestRevision = null;
+        if (!empty($pmkProgram->uraian_revisi)) {
+            $latestRevision = $pmkProgram->uraian_revisi;
+        } else {
+            $lastApproval = $this->document->approvals()->whereIn('action', ['resubmitted', 'pmk_resubmit'])->latest()->first();
+            if ($lastApproval) {
+                $latestRevision = $lastApproval->catatan;
+            }
+        }
+
+        // === Signatory Logic ===
+        // 1. Kepala Unit
+        $kaUnit = $pmkProgram->approvedByUnit;
+        if (!$kaUnit && $this->document->id_unit) {
+            $kaUnit = \App\Models\User::where('id_unit', $this->document->id_unit)
+                ->where('role_jabatan', 3) // Kepala Unit
+                ->where('user_aktif', 1)
+                ->first();
+        }
+
+        // 2. Kepala Departemen
+        $kaDept = $pmkProgram->approvedByDept;
+        if (!$kaDept && $this->document->id_dept) {
+            $kaDept = \App\Models\User::where('id_dept', $this->document->id_dept)
+                ->where('role_jabatan', 2) // Kepala Departemen
+                ->where('user_aktif', 1)
+                ->first();
+        }
+
+        // 3. Direktur
+        $direktur = $pmkProgram->approvedByDireksi;
+        if (!$direktur && $this->document->id_direktorat) {
+            $direktur = \App\Models\User::where('id_direktorat', $this->document->id_direktorat)
+                ->where('role_jabatan', 1) // Direktur
+                ->where('user_aktif', 1)
+                ->first();
+        }
+
         return view('documents.export_pmk_excel', [
             'document' => $this->document,
-            'pmkProgram' => $pmkProgram
+            'pmkProgram' => $pmkProgram,
+            'latestRevision' => $latestRevision,
+            'kaUnit' => $kaUnit,
+            'kaDept' => $kaDept,
+            'direktur' => $direktur
         ]);
     }
 
     public function title(): string
     {
         $unitName = $this->document->unit ? $this->document->unit->nama_unit : 'Unit';
-        return 'PMK_' . substr($unitName, 0, 20);
+
+        // Remove invalid characters for Excel sheet names: \ / ? * [ ] :
+        $cleanName = str_replace(['\\', '/', '?', '*', '[', ']', ':'], '', $unitName);
+
+        // Prefix
+        $title = 'PMK ' . $cleanName;
+
+        // Strict limit to 31 characters
+        return mb_substr($title, 0, 31);
     }
 
     public function columnWidths(): array
     {
         return [
             'A' => 5,   // No
-            'B' => 35,  // Uraian Kegiatan
+            'B' => 45,  // Uraian Kegiatan (Wider)
             'C' => 15,  // PIC
-            'D' => 6,   // Target 1
-            'E' => 6,   // Target 2
-            'F' => 6,   // Target 3
-            'G' => 6,   // Target 4
-            'H' => 6,   // Target 5
-            'I' => 6,   // Target 6
-            'J' => 6,   // Target 7
-            'K' => 6,   // Target 8
-            'L' => 6,   // Target 9
-            'M' => 6,   // Target 10
-            'N' => 6,   // Target 11
-            'O' => 6,   // Target 12
-            'P' => 15,  // Anggaran
+            'D' => 15,  // Pelaksana
+            // E-P Target Columns (Auto or fixed small)
+            'E' => 5,
+            'F' => 5,
+            'G' => 5,
+            'H' => 5,
+            'I' => 5,
+            'J' => 5,
+            'K' => 5,
+            'L' => 5,
+            'M' => 5,
+            'N' => 5,
+            'O' => 5,
+            'P' => 5,
+            'Q' => 20,  // Anggaran
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
         return [
-            1 => ['font' => ['bold' => true, 'size' => 12]],
+            // Default font
+            1 => ['font' => ['name' => 'Arial', 'size' => 11]],
         ];
     }
 
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
-                
-                // Apply borders to all cells
-                $highestRow = $sheet->getHighestRow();
-                $highestColumn = $sheet->getHighestColumn();
-                
-                $sheet->getStyle('A1:' . $highestColumn . $highestRow)
-                    ->applyFromArray([
-                        'borders' => [
-                            'allBorders' => [
-                                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                                'color' => ['argb' => '000000'],
-                            ],
-                        ],
-                    ]);
-                
-                // Auto-size columns
-                foreach(range('A', $highestColumn) as $col) {
-                    $sheet->getColumnDimension($col)->setAutoSize(false);
-                }
+
+                // 1. Text Wrap & Alignment for Content
+                $sheet->getStyle('B')->getAlignment()->setWrapText(true);
+                $sheet->getStyle('A')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('E:P')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('Q')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+
+                // 2. Vertical Align Middle for ease of reading
+                $sheet->getStyle('A:Q')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
             },
         ];
     }

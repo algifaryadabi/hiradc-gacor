@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,7 @@
             margin: 15mm 10mm;
             size: A4 landscape;
         }
-        
+
         body {
             font-family: 'Arial', 'Helvetica', sans-serif;
             font-size: 9pt;
@@ -106,7 +107,7 @@
             margin-bottom: 20px;
             page-break-inside: avoid;
         }
-        
+
         .info-header {
             background: #1e293b;
             color: white;
@@ -128,7 +129,7 @@
             border-bottom: 1px solid #e2e8f0;
             line-height: 1.6;
         }
-        
+
         .info-table tr:last-child td {
             border-bottom: none;
         }
@@ -232,38 +233,39 @@
         }
     </style>
 </head>
+
 <body>
     @php
         use App\Models\User;
-        
+
         // Get Kepala Seksi: User with role_jabatan = 4 (Kepala Seksi) from submitter's seksi
         $kaSeksi = null;
         $kaSeksiJabatan = 'Ka. Seksi';
         if ($document->user && $document->user->id_seksi) {
             $kaSeksi = User::where('id_seksi', $document->user->id_seksi)
-                           ->where('role_jabatan', 4)
-                           ->where('user_aktif', 1)
-                           ->with('roleJabatan')
-                           ->first();
+                ->where('role_jabatan', 4)
+                ->where('user_aktif', 1)
+                ->with('roleJabatan')
+                ->first();
             if ($kaSeksi && $kaSeksi->roleJabatan) {
                 $kaSeksiJabatan = $kaSeksi->roleJabatan->nama_role_jabatan;
             }
         }
-        
+
         // Get Kepala Unit: User with role_jabatan = 3 (Kepala Unit) from document's unit
         $kaUnit = null;
         $kaUnitJabatan = 'Ka. Unit';
         if ($document->id_unit) {
             $kaUnit = User::where('id_unit', $document->id_unit)
-                          ->where('role_jabatan', 3)
-                          ->where('user_aktif', 1)
-                          ->with('roleJabatan')
-                          ->first();
+                ->where('role_jabatan', 3)
+                ->where('user_aktif', 1)
+                ->with('roleJabatan')
+                ->first();
             if ($kaUnit && $kaUnit->roleJabatan) {
                 $kaUnitJabatan = $kaUnit->roleJabatan->nama_role_jabatan;
             }
         }
-        
+
         $unitName = $document->unit ? $document->unit->nama_unit : '-';
         $tanggal = $pukProgram->approved_at ? $pukProgram->approved_at->locale('id')->isoFormat('D MMMM YYYY') : now()->locale('id')->isoFormat('D MMMM YYYY');
     @endphp
@@ -273,12 +275,16 @@
         <div class="logo-container">
             <img src="{{ public_path('images/logo-semen-padang.png') }}" alt="Logo PT Semen Padang" class="logo">
         </div>
-        
+
         <div class="cover-title">PROGRAM UNIT KERJA (PUK)</div>
         <div class="cover-subtitle">K3/KO/LINGKUNGAN/PENGAMANAN</div>
 
         <div class="cover-info">
             <div class="cover-info-item"><strong>Unit:</strong> {{ $unitName }}</div>
+            <div class="cover-info-item"><strong>Departemen:</strong> {{ $document->departemen->nama_dept ?? '-' }}
+            </div>
+            <div class="cover-info-item"><strong>Nomor Dokumen:</strong>
+                DOC-{{ str_pad($document->id, 3, '0', STR_PAD_LEFT) }}</div>
             <div class="cover-info-item"><strong>Tanggal:</strong> Padang, {{ $tanggal }}</div>
         </div>
 
@@ -325,7 +331,7 @@
                 <tr>
                     <td>Uraian Revisi</td>
                     <td>:</td>
-                    <td>{{ $pukProgram->uraian_revisi ?? '-' }}</td>
+                    <td>{{ $latestRevision ?? '-' }}</td>
                 </tr>
             </table>
         </div>
@@ -336,57 +342,59 @@
         </div>
 
         @if($pukProgram->program_kerja && is_array($pukProgram->program_kerja) && count($pukProgram->program_kerja) > 0)
-        <div class="table-container">
-            <table class="program-table">
-                <thead>
-                    <tr>
-                        <th rowspan="2" style="width: 25px;">NO</th>
-                        <th rowspan="2" style="width: 140px;">URAIAN KEGIATAN</th>
-                        <th rowspan="2" style="width: 70px;">KOORDINATOR</th>
-                        <th rowspan="2" style="width: 70px;">PELAKSANA</th>
-                        <th colspan="12">TARGET (%)</th>
-                        <th rowspan="2" style="width: 70px;">ANGGARAN</th>
-                    </tr>
-                    <tr class="target-header">
-                        @for($m=1; $m<=12; $m++)
-                            <th style="width: 22px;">{{ $m }}</th>
-                        @endfor
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($pukProgram->program_kerja as $index => $item)
-                    <tr>
-                        <td class="number">{{ $index + 1 }}</td>
-                        <td>{{ $item['uraian'] ?? '-' }}</td>
-                        <td>{{ $item['koordinator'] ?? '-' }}</td>
-                        <td>{{ $item['pelaksana'] ?? '-' }}</td>
-                        @php
-                            $targets = $item['target'] ?? [];
-                        @endphp
-                        @for($m=0; $m<12; $m++)
-                            @if(isset($targets[$m]) && $targets[$m] !== '' && $targets[$m] !== null)
-                                <td class="target-cell">{{ $targets[$m] }}</td>
-                            @else
-                                <td class="empty-cell">-</td>
-                            @endif
-                        @endfor
-                        <td class="anggaran-cell">
-                            @if(isset($item['anggaran']) && $item['anggaran'])
-                                Rp {{ number_format($item['anggaran'], 0, ',', '.') }}
-                            @else
-                                -
-                            @endif
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+            <div class="table-container">
+                <table class="program-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="width: 25px;">NO</th>
+                            <th rowspan="2" style="width: 140px;">URAIAN KEGIATAN</th>
+                            <th rowspan="2" style="width: 70px;">KOORDINATOR</th>
+                            <th rowspan="2" style="width: 70px;">PELAKSANA</th>
+                            <th colspan="12">TARGET (%)</th>
+                            <th rowspan="2" style="width: 70px;">ANGGARAN</th>
+                        </tr>
+                        <tr class="target-header">
+                            @for($m = 1; $m <= 12; $m++)
+                                <th style="width: 22px;">{{ $m }}</th>
+                            @endfor
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($pukProgram->program_kerja as $index => $item)
+                            <tr>
+                                <td class="number">{{ $index + 1 }}</td>
+                                <td>{{ $item['uraian'] ?? '-' }}</td>
+                                <td>{{ $item['koordinator'] ?? '-' }}</td>
+                                <td>{{ $item['pelaksana'] ?? '-' }}</td>
+                                @php
+                                    $targets = $item['target'] ?? [];
+                                @endphp
+                                @for($m = 0; $m < 12; $m++)
+                                    @if(isset($targets[$m]) && $targets[$m] !== '' && $targets[$m] !== null)
+                                        <td class="target-cell">{{ $targets[$m] }}</td>
+                                    @else
+                                        <td class="empty-cell">-</td>
+                                    @endif
+                                @endfor
+                                <td class="anggaran-cell">
+                                    @if(isset($item['anggaran']) && $item['anggaran'])
+                                        Rp {{ number_format($item['anggaran'], 0, ',', '.') }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         @else
-        <div style="padding: 15px; text-align: center; color: #64748b; font-style: italic; background: #f8fafc; border-radius: 6px;">
-            Belum ada detail program kerja
-        </div>
+            <div
+                style="padding: 15px; text-align: center; color: #64748b; font-style: italic; background: #f8fafc; border-radius: 6px;">
+                Belum ada detail program kerja
+            </div>
         @endif
     </div>
 </body>
+
 </html>

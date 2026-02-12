@@ -171,7 +171,7 @@ Route::middleware('auth')->group(function () {
     Route::get('documents/{document}/export-detail-pdf', [\App\Http\Controllers\DocumentController::class, 'exportDetailPdf'])
         ->name('documents.export.detail.pdf');
     Route::get('/documents/{document}/export/excel', [DocumentController::class, 'exportDetailExcel'])->name('documents.export.detail.excel');
-    
+
     // PUK/PMK Export Routes
     Route::get('/documents/{document}/export/puk/pdf', [DocumentController::class, 'exportPukPdf'])->name('documents.export.puk.pdf');
     Route::get('/documents/{document}/export/puk/excel', [DocumentController::class, 'exportPukExcel'])->name('documents.export.puk.excel');
@@ -302,17 +302,17 @@ Route::middleware('auth')->group(function () {
             // Check SHE
             if ($doc->hasSheContent()) {
                 if ($doc->status_she == 'approved') {
-                    $items[] = $buildItem('SHE', 'Menunggu Approval (SHE)', false);
+                    $items[] = $buildItem('SHE', 'Menunggu Approval (K3/KO/Lingkungan)', false);
                 } elseif ($doc->status_she == 'published') {
-                    $items[] = $buildItem('SHE', 'Terpublikasi (SHE)', true);
+                    $items[] = $buildItem('SHE', 'Terpublikasi (K3/KO/Lingkungan)', true);
                 }
             }
             // Check Security
             if ($doc->hasSecurityContent()) {
                 if ($doc->status_security == 'approved') {
-                    $items[] = $buildItem('Security', 'Menunggu Approval (Security)', false);
+                    $items[] = $buildItem('Security', 'Menunggu Approval (Keamanan)', false);
                 } elseif ($doc->status_security == 'published') {
-                    $items[] = $buildItem('Security', 'Terpublikasi (Security)', true);
+                    $items[] = $buildItem('Security', 'Terpublikasi (Keamanan)', true);
                 }
             }
 
@@ -378,7 +378,7 @@ Route::middleware('auth')->group(function () {
     // ==================== DIREKSI (LEVEL 4) ROUTES ====================
     Route::get('/direksi/dashboard', [DocumentController::class, 'direksiDashboard'])->name('direksi.dashboard');
     Route::get('/direksi/dashboard/data', [DocumentController::class, 'getDireksiDashboardData'])->name('direksi.dashboard.data');
-    
+
     Route::get('/direksi/documents/check', [DocumentController::class, 'direksiPending'])->name('direksi.check_documents');
 
     Route::get('/direksi/documents/{document}/review', [DocumentController::class, 'review'])->name('direksi.review');
@@ -389,10 +389,10 @@ Route::middleware('auth')->group(function () {
     // PMK Revision (Direksi)
     Route::post('/pmk/{pmk}/request-revision', [DocumentController::class, 'requestPmkRevision'])->name('pmk.request_revision');
     Route::post('/pmk/{pmk}/resubmit', [DocumentController::class, 'resubmitPmk'])->name('pmk.resubmit');
-    
+
     // Edit Programs Page
     Route::get('/documents/{document}/edit-programs', [DocumentController::class, 'editPrograms'])->name('documents.edit_programs');
-    
+
     // Update PUK/PMK Program Data
     Route::post('/puk/{puk}/update-program', [DocumentController::class, 'updatePukProgram'])->name('puk.update.program');
     Route::post('/pmk/{pmk}/update-program', [DocumentController::class, 'updatePmkProgram'])->name('pmk.update.program');
@@ -529,5 +529,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/master', function () {
         return view('admin.master');
     })->name('admin.master');
+
+    // Document Revision Routes
+    Route::post('/documents/{document}/initiate-revision', [\App\Http\Controllers\DocumentController::class, 'initiateRevision'])->name('documents.initiate_revision');
+    Route::get('/documents/{document}/revision-history', [\App\Http\Controllers\DocumentController::class, 'getRevisionHistory'])->name('documents.revision_history');
 });
 

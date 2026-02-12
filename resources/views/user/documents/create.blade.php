@@ -783,8 +783,7 @@
             style="background: white; border-radius: 28px; padding: 48px; max-width: 750px; width: 95%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); position: relative; animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
 
             <!-- Close Button -->
-            <button onclick="window.location.href='{{ route('documents.index') }}'"
-                type="button"
+            <button onclick="window.location.href='{{ route('documents.index') }}'" type="button"
                 title="Tutup / Kembali"
                 style="position: absolute; top: 24px; right: 24px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 50%; color: #64748b; font-size: 16px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);">
                 <i class="fas fa-times"></i>
@@ -796,14 +795,17 @@
                     color: #ef4444 !important;
                     transform: rotate(90deg) scale(1.1);
                 }
+
                 .form-type-card:hover {
                     transform: translateY(-8px);
                     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
                     border-color: var(--primary-light) !important;
                 }
+
                 .form-type-card:hover .card-icon {
                     transform: scale(1.1) rotate(-5deg);
                 }
+
                 .form-type-card:hover .action-text {
                     color: var(--primary);
                     gap: 10px;
@@ -815,7 +817,9 @@
                     style="width: 72px; height: 72px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 20px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2); transform: rotate(-5deg);">
                     <i class="fas fa-layer-group" style="font-size: 32px; color: white;"></i>
                 </div>
-                <h2 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.025em;">Pilih Kategori Dokumen</h2>
+                <h2
+                    style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.025em;">
+                    Pilih Kategori Dokumen</h2>
                 <p style="color: #64748b; font-size: 15px; max-width: 400px; margin: 0 auto; line-height: 1.6;">
                     Silakan pilih kategori dokumen HIRADC yang ingin Anda buat untuk memulai.
                 </p>
@@ -825,17 +829,18 @@
                 <!-- K3/KO/Lingkungan Option -->
                 <div onclick="selectFormType('SHE')" class="form-type-card"
                     style="border: 2px solid #e2e8f0; border-radius: 24px; padding: 32px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-align: left; background: white; position: relative; overflow: hidden;">
-                    
+
                     <div class="card-icon"
                         style="width: 56px; height: 56px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 16px; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <i class="fas fa-leaf" style="font-size: 24px; color: white;"></i>
                     </div>
-                    
-                    <h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">K3, KO & Lingkungan</h3>
+
+                    <h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">K3, KO &
+                        Lingkungan</h3>
                     <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 24px; height: 42px;">
                         Dokumen terkait Keselamatan, Kesehatan Kerja, dan Lingkungan.
                     </p>
-                    
+
                     <div class="action-text"
                         style="display: inline-flex; align-items: center; gap: 6px; color: #059669; font-size: 13px; font-weight: 700; transition: all 0.3s;">
                         Mulai Buat <i class="fas fa-arrow-right"></i>
@@ -845,17 +850,17 @@
                 <!-- Pengamanan Option -->
                 <div onclick="selectFormType('Security')" class="form-type-card"
                     style="border: 2px solid #e2e8f0; border-radius: 24px; padding: 32px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-align: left; background: white; position: relative; overflow: hidden;">
-                    
+
                     <div class="card-icon"
                         style="width: 56px; height: 56px; background: linear-gradient(135deg, #f97316, #ea580c); border-radius: 16px; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(234, 88, 12, 0.2); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <i class="fas fa-shield-alt" style="font-size: 24px; color: white;"></i>
                     </div>
-                    
+
                     <h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Pengamanan</h3>
                     <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 24px; height: 42px;">
                         Dokumen terkait sistem dan operasional pengamanan perusahaan.
                     </p>
-                    
+
                     <div class="action-text"
                         style="display: inline-flex; align-items: center; gap: 6px; color: #ea580c; font-size: 13px; font-weight: 700; transition: all 0.3s;">
                         Mulai Buat <i class="fas fa-arrow-right"></i>
@@ -897,7 +902,7 @@
     <div class="container">
         <!-- Sidebar -->
         <!-- Sidebar -->
-        @include('user.partials.sidebar')
+        @include('partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
@@ -1030,11 +1035,10 @@
                             <div class="form-group">
                                 <label class="form-label">Proses Bisnis <span class="required">*</span></label>
                                 @if($probis->count() == 1)
-                                    <input type="text" class="form-control" 
-                                           value="{{ $probis->first()->nama_probis }}" 
-                                           readonly 
-                                           style="background-color: #f3f4f6; color: #6b7280; font-weight: 600;">
-                                    <input type="hidden" class="probis-input" name="items[{index}][kolom2_proses]" value="{{ $probis->first()->nama_probis }}">
+                                    <input type="text" class="form-control" value="{{ $probis->first()->nama_probis }}"
+                                        readonly style="background-color: #f3f4f6; color: #6b7280; font-weight: 600;">
+                                    <input type="hidden" class="probis-input" name="items[{index}][kolom2_proses]"
+                                        value="{{ $probis->first()->nama_probis }}">
                                 @else
                                     <select class="form-control probis-input" name="items[{index}][kolom2_proses]" required>
                                         <option value="">-- Pilih Proses Bisnis --</option>
@@ -1462,7 +1466,8 @@
                                         </h4>
 
                                         <div style="display: flex; gap: 20px; align-items: flex-start;">
-                                            <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                            <div
+                                                style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                                                 <div class="form-group">
                                                     <label class="form-label">Kolom 20: L (Likelihood)</label>
                                                     <select class="form-control likelihood-select-after"
@@ -1494,13 +1499,18 @@
                                                 <label class="form-label">Kolom 22: Level</label>
                                                 <div class="risk-result-box-after"
                                                     style="padding:15px; border-radius:8px; transition: background 0.3s; background: #e2e8f0; border: 1px solid #cbd5e1;">
-                                                    <div class="risk-score-after" style="font-size: 24px; font-weight: 800; color: #64748b;">-</div>
+                                                    <div class="risk-score-after"
+                                                        style="font-size: 24px; font-weight: 800; color: #64748b;">-
+                                                    </div>
                                                     <span class="risk-level-after"
                                                         style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">PENDING</span>
                                                 </div>
                                                 <!-- Hidden inputs for columns 20, 21, 22 are already named correctly in selects/logic -->
-                                                <input type="hidden" name="items[{index}][kolom22_tingkat_risiko_lanjut]" class="input-score-after">
-                                                <input type="hidden" name="items[{index}][kolom22_level_lanjut]" class="input-level-after">
+                                                <input type="hidden"
+                                                    name="items[{index}][kolom22_tingkat_risiko_lanjut]"
+                                                    class="input-score-after">
+                                                <input type="hidden" name="items[{index}][kolom22_level_lanjut]"
+                                                    class="input-level-after">
                                             </div>
                                         </div>
                                     </div>
@@ -1805,6 +1815,100 @@
             }
         }
 
+        /**
+         * Handle Scope Category Change
+         * Shows/hides appropriate input based on selected category
+         */
+        function handleScopeCategory(selectElement) {
+            const formGroup = selectElement.closest('.form-grid-2');
+            const scopeContainer = formGroup.querySelector('.scope-value-container');
+            const scopeLabel = formGroup.querySelector('.scope-value-label');
+            const scopeDropdown = formGroup.querySelector('.scope-value-dropdown');
+            const scopeText = formGroup.querySelector('.scope-value-text');
+
+            const category = selectElement.value;
+
+            if (!category) {
+                scopeContainer.style.display = 'none';
+                scopeDropdown.style.display = 'none';
+                scopeText.style.display = 'none';
+                return;
+            }
+
+            // Show container
+            scopeContainer.style.display = 'block';
+
+            // Reset both inputs
+            scopeDropdown.style.display = 'none';
+            scopeText.style.display = 'none';
+            scopeDropdown.removeAttribute('name');
+            scopeText.removeAttribute('name');
+
+            if (category === 'proses_bisnis') {
+                scopeLabel.innerHTML = 'Nama Proses Bisnis <span class="required">*</span>';
+                scopeDropdown.style.display = 'block';
+                scopeDropdown.setAttribute('name', scopeDropdown.getAttribute('name').replace('scope_value_text', 'scope_value'));
+
+                // Fetch business processes
+                fetchBusinessProcesses(scopeDropdown);
+            }
+            else if (category === 'kegiatan') {
+                scopeLabel.innerHTML = 'Nama Kegiatan <span class="required">*</span>';
+                scopeText.style.display = 'block';
+                scopeText.setAttribute('name', scopeText.getAttribute('name').replace('scope_value_text', 'scope_value'));
+                scopeText.setAttribute('placeholder', 'Masukkan nama kegiatan...');
+                scopeText.setAttribute('required', 'required');
+                scopeDropdown.removeAttribute('required');
+            }
+            else if (category === 'aset') {
+                scopeLabel.innerHTML = 'Nama Aset <span class="required">*</span>';
+                scopeText.style.display = 'block';
+                scopeText.setAttribute('name', scopeText.getAttribute('name').replace('scope_value_text', 'scope_value'));
+                scopeText.setAttribute('placeholder', 'Masukkan nama aset...');
+                scopeText.setAttribute('required', 'required');
+                scopeDropdown.removeAttribute('required');
+            }
+        }
+
+        /**
+         * Fetch Business Processes from API
+         */
+        async function fetchBusinessProcesses(selectElement) {
+            selectElement.innerHTML = '<option value="">Memuat...</option>';
+
+            try {
+                const response = await fetch('/api/business-processes', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const processes = await response.json();
+
+                selectElement.innerHTML = '<option value="">-- Pilih Proses Bisnis --</option>';
+                processes.forEach(process => {
+                    const option = document.createElement('option');
+                    option.value = process.name;
+                    option.textContent = process.name;
+                    selectElement.appendChild(option);
+                });
+
+                selectElement.setAttribute('required', 'required');
+                scopeText.removeAttribute('required');
+
+            } catch (error) {
+                console.error('Failed to fetch business processes:', error);
+                selectElement.innerHTML = '<option value="">Error loading data</option>';
+            }
+        }
+
         function updateSummary(input) {
             const item = input.closest('.doc-item');
             const summary = item.querySelector('.item-summary');
@@ -2046,10 +2150,10 @@
                     // Risk >= 20: SANGAT TINGGI -> FORCE PMK ONLY
                     pukOption.disabled = true;
                     pukOption.style.display = 'none'; // Sembunyikan opsi PUK
-                    
+
                     pmkOption.disabled = false;
                     pmkOption.textContent = 'PMK - Program Manajemen Korporat (Wajib untuk Risiko Sangat Tinggi)';
-                    
+
                     // Force select PMK if not selected
                     if (typeSelect.value !== 'PMK') {
                         pmkOption.selected = true;
@@ -2061,34 +2165,34 @@
                     // Risk 10-19: TINGGI -> ALLOW BOTH, SUGGEST PMK
                     pukOption.disabled = false;
                     pukOption.style.display = 'block';
-                    
+
                     pmkOption.disabled = false;
                     pmkOption.textContent = 'PMK - Program Manajemen Korporat (Disarankan untuk Risiko Tinggi)';
-                    
+
                     // Default behavior (optional): Don't force change if user already selected something valid
                     // But if empty, maybe default to PMK? Keeping it neutral or strictly suggestive.
-                    
+
                 } else {
                     // Risk < 10: STANDARD -> PMK DISABLED (Usually)
                     pmkOption.disabled = true;
-                    if(pmkOption.selected) {
+                    if (pmkOption.selected) {
                         pmkOption.selected = false;
                         typeSelect.value = ''; // Reset if it was PMK
                     }
-                    
+
                     pmkOption.textContent = 'PMK - Program Manajemen Korporat (Hanya untuk Risiko Tinggi/Sangat Tinggi)';
 
                     pukOption.disabled = false;
                     pukOption.style.display = 'block';
-                    
+
                     // If we forced reset above, or it's empty, default to PUK?
                     // Let's leave it to user to pick PUK, but since PMK is disabled, they only have 1 choice.
                     // Better UX: Auto-select PUK if PMK is disabled and nothing selected
-                     if (typeSelect.value !== 'PUK') {
+                    if (typeSelect.value !== 'PUK') {
                         pukOption.selected = true;
                         typeSelect.value = 'PUK';
                         typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                     }
+                    }
                 }
             }
 
@@ -2154,25 +2258,25 @@
             if (tolerance === 'Tidak') {
                 kolom19Section.style.display = 'block';
                 programSection.style.display = 'block';
-                if(riskAfterControlSection) riskAfterControlSection.style.display = 'block';
+                if (riskAfterControlSection) riskAfterControlSection.style.display = 'block';
 
                 // Ensure required attributes if validatable? 
                 // For now, no strict required on hidden fields as standard HTML behavior.
-            
+
             } else {
                 kolom19Section.style.display = 'none';
                 programSection.style.display = 'none';
-                if(riskAfterControlSection) {
+                if (riskAfterControlSection) {
                     riskAfterControlSection.style.display = 'none';
-                    
+
                     // Reset values when hidden
                     const lSelect = riskAfterControlSection.querySelector('.likelihood-select-after');
                     const sSelect = riskAfterControlSection.querySelector('.severity-select-after');
-                    if(lSelect) lSelect.value = '';
-                    if(sSelect) sSelect.value = '';
-                    
+                    if (lSelect) lSelect.value = '';
+                    if (sSelect) sSelect.value = '';
+
                     // Trigger calc to reset score/level
-                    if(lSelect) calculateRiskAfterControl(lSelect);
+                    if (lSelect) calculateRiskAfterControl(lSelect);
                 }
 
                 // Clear inputs if hiding to prevent submitting hidden data
@@ -2190,7 +2294,7 @@
         function calculateRiskAfterControl(el) {
             const item = el.closest('.doc-item');
             const section = item.querySelector('.risk-after-control-section');
-            if(!section) return;
+            if (!section) return;
 
             const likelihood = parseInt(section.querySelector('.likelihood-select-after').value) || 0;
             const severity = parseInt(section.querySelector('.severity-select-after').value) || 0;
@@ -2209,7 +2313,7 @@
             // User request: "jika tdapat ditoleransi itu nilainya '-'" -> implies NULL or displayed as -.
 
             let level = '-';
-            let bg = '#e2e8f0'; 
+            let bg = '#e2e8f0';
             let textColor = '#64748b';
 
             if (score > 0) {
@@ -2236,7 +2340,7 @@
             // If hidden (likelihood=0), level should be empty string or '-'?
             if (score === 0) levelEl.textContent = '-';
 
-            inputLevel.value = (score > 0) ? level : ''; 
+            inputLevel.value = (score > 0) ? level : '';
             riskBox.style.background = (score > 0) ? bg : '#e2e8f0';
             riskBox.style.color = (score > 0) ? textColor : '#64748b';
         }
@@ -2727,12 +2831,12 @@
                         const targetRows = document.querySelectorAll('.program-kerja-tbody tr');
                         targetRows.forEach(row => {
                             if (!isValid) return; // Stop if already found error
-                            
+
                             const inputs = row.querySelectorAll('.target-input');
                             if (inputs.length > 0) {
                                 let total = 0;
                                 inputs.forEach(el => total += parseInt(el.value) || 0);
-                                
+
                                 if (total > 100) {
                                     isValid = false;
                                     errorMsg = 'Total target (%) pada Program Kerja tidak boleh melebihi 100%. Silakan periksa kembali.';
@@ -2917,7 +3021,7 @@
                     </div>
                 `;
                 hiddenInput.value = '';
-                
+
                 // IMPORTANT: Trigger calc to update Tolerance (e.g. set to "Tidak" if Medium Risk)
                 // We must call this even (and especially) when unchecked.
                 calculateItemRisk(checkbox);
@@ -2989,7 +3093,7 @@
 
             // Initial update of hidden input
             updateHiddenInput(item);
-            
+
             // Trigger Risk Calculation to update Tolerance in Real-Time
             calculateItemRisk(checkbox);
         }
@@ -3066,7 +3170,7 @@
                 // Reset Visual
                 inputs.forEach(el => {
                     el.style.color = '#3b82f6'; // Original Blue
-                    el.style.backgroundColor = 'transparent'; 
+                    el.style.backgroundColor = 'transparent';
                 });
                 row.classList.remove('target-invalid');
             }

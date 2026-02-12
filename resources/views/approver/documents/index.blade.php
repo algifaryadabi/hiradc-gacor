@@ -642,7 +642,7 @@
 <body>
     <div class="container">
         <!-- Sidebar -->
-        @include('approver.partials.sidebar')
+        @include('partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">

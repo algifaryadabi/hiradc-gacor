@@ -95,7 +95,7 @@
                 <div class="title">HAZARD IDENTIFICATION, RISK ASSESSMENT AND DETERMINING CONTROL (HIRADC)</div>
             </td>
             <td width="20%">
-                No. Dokumen: {{ $document->dcoument_number ?? $document->id }}/HIRADC/{{ date('Y') }}<br>
+                No. Dokumen: {{ str_pad($document->id, 3, '0', STR_PAD_LEFT) }}/HIRADC/{{ date('Y') }}<br>
                 Revisi: {{ $document->revision_number ?? 0 }}
             </td>
         </tr>
@@ -122,6 +122,12 @@
                 <td><strong>Tanggal</strong></td>
                 <td>: {{ $document->created_at->format('d M Y') }}</td>
             </tr>
+            @if(isset($latestRevision) && $latestRevision)
+            <tr>
+                <td><strong>Uraian Revisi</strong></td>
+                <td colspan="3">: {{ $latestRevision }}</td>
+            </tr>
+            @endif
         </table>
     </div>
 
@@ -297,6 +303,37 @@
             @endforeach
         </tbody>
     </table>
+
+    <br>
+    
+    {{-- PUK and PMK Programs sections removed as per user request (HIRADC Form Only) --}}
+    
+    {{-- Revision History (If Available) --}}
+    @if(isset($histories) && count($histories) > 0)
+        <div style="page-break-inside: avoid;">
+            <p class="title" style="text-align: left; font-size:10px; margin-bottom:5px;">RIWAYAT REVISI DOKUMEN</p>
+            <table class="main-table" style="font-size: 8px;">
+                <thead>
+                    <tr>
+                        <th width="10%">Rev No.</th>
+                        <th width="20%">Tanggal Arsip</th>
+                        <th width="20%">Diarsipkan Oleh</th>
+                        <th width="50%">Keterangan Revisi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($histories as $history)
+                        <tr>
+                            <td align="center">{{ $history->revision_number }}</td>
+                            <td align="center">{{ $history->archived_at ? \Carbon\Carbon::parse($history->archived_at)->format('d M Y H:i') : '-' }}</td>
+                            <td align="center">{{ $history->archivedBy->nama_user ?? '-' }}</td>
+                            <td>{{ $history->revision_reason ?? '-' }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
 
     <br>
     <div style="width: 100%; border-top: 1px dotted #ccc; margin-top: 20px; padding-top: 10px;">

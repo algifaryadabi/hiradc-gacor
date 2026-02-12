@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* ========================================
            DESIGN SYSTEM - CSS CUSTOM PROPERTIES
@@ -857,7 +859,7 @@
 
     <div class="container">
         <!-- Sidebar -->
-        @include('user.partials.sidebar')
+        @include('partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
@@ -944,27 +946,27 @@
                     <div class="stat-card active" onclick="filterByStatus('all', this)">
                         <div class="stat-icon icon-blue"><i class="fas fa-file-alt"></i></div>
                         <div class="stat-info"><span class="stat-label">Total Form</span><span
-                                class="stat-value">{{ $documents->count() }}</span></div>
+                                class="stat-value">{{ $stats['total'] }}</span></div>
                     </div>
                     <div class="stat-card" onclick="filterByStatus('draft', this)">
                         <div class="stat-icon" style="background: #f3e8ff; color: #7c3aed;"><i class="fas fa-file-pen"></i></div>
                         <div class="stat-info"><span class="stat-label">Draft</span><span
-                                class="stat-value">{{ $myDraft->count() }}</span></div>
+                                class="stat-value">{{ $stats['draft'] }}</span></div>
                     </div>
                     <div class="stat-card" onclick="filterByStatus('pending', this)">
                         <div class="stat-icon icon-orange"><i class="fas fa-clock"></i></div>
                         <div class="stat-info"><span class="stat-label">Menunggu</span><span
-                                class="stat-value">{{ $myPending->count() }}</span></div>
+                                class="stat-value">{{ $stats['pending'] }}</span></div>
                     </div>
                     <div class="stat-card" onclick="filterByStatus('revision', this)">
                         <div class="stat-icon icon-red"><i class="fas fa-redo"></i></div>
                         <div class="stat-info"><span class="stat-label">Perlu Revisi</span><span
-                                class="stat-value">{{ $myRevision->count() }}</span></div>
+                                class="stat-value">{{ $stats['revision'] }}</span></div>
                     </div>
                     <div class="stat-card" onclick="filterByStatus('approved', this)">
                         <div class="stat-icon icon-green"><i class="fas fa-check-circle"></i></div>
                         <div class="stat-info"><span class="stat-label">Disetujui</span><span
-                                class="stat-value">{{ $documents->filter(fn($d) => $d->status == 'approved')->count() }}</span>
+                                class="stat-value">{{ $stats['approved'] }}</span>
                         </div>
                     </div>
                 </div>
@@ -1046,7 +1048,7 @@
                                 data-title="{{ strtolower($doc->kolom2_kegiatan) }}" 
                                 data-status="{{ $statusKey }}"
                                 data-category-group="{{ $catGroup }}"
-                                style="border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.2s;">
+                                style="border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.2s; padding: 20px;">
                                 
                                 <!-- Card Header: Badges -->
                                 <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:12px;">
@@ -1056,7 +1058,7 @@
                                             {{ $catDisplay }}
                                         </span>
                                         
-                                        <!-- Program Badge (Right Aligned) -->
+                                        <!-- Program Badge -->
                                         <div style="display:flex; gap:4px;">
                                             @if($hasPuk)
                                                 <span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700; background:#f0f9ff; color:#0369a1; border:1px solid #bae6fd;" title="Program Untuk Kesesuaian">
@@ -1075,6 +1077,13 @@
                                             @endif
                                         </div>
                                     </div>
+                                    
+                                    <!-- Revision Badge (Right Side) -->
+                                    @if($statusKey == 'approved' && $doc->status == 'published')
+                                        <span style="font-size:11px; padding:4px 10px; border-radius:6px; font-weight:600; background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; white-space:nowrap;" title="Nomor Revisi">
+                                            <i class="fas fa-code-branch"></i> Rev {{ $doc->revision_number }}
+                                        </span>
+                                    @endif
                                 </div>
 
                                 <!-- Title -->
@@ -1179,6 +1188,19 @@
                                                 if ($ctx == 'sec_rev') $filterParam['filter'] = 'security';
                                             }
                                         @endphp
+                                        
+                                        
+                                        {{-- Revision Button for Published Documents --}}
+                                        @if($statusKey == 'approved' && $doc->status == 'published')
+                                            <button type="button" 
+                                                    onclick="showRevisionConfirm({{ $doc->id }})" 
+                                                    style="font-size:11px; padding:6px 12px; border-radius:6px; font-weight:600; background:#f59e0b; color:white; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s; margin-right:8px;" 
+                                                    onmouseover="this.style.background='#d97706'" 
+                                                    onmouseout="this.style.background='#f59e0b'">
+                                                <i class="fas fa-edit"></i> Evaluasi / Revisi
+                                            </button>
+                                        @endif
+                                        
                                         <a href="{{ route('documents.show', array_merge(['document' => $doc->id], $filterParam)) }}" 
                                            class="view-link"
                                            style="border-radius:8px; padding:6px 14px; background:white; border:1px solid #e2e8f0; color:#0f172a; box-shadow:0 1px 2px rgba(0,0,0,0.05); text-decoration:none;">
@@ -1222,6 +1244,87 @@
                     item.style.display = 'flex';
                 } else {
                     item.style.display = 'none';
+                }
+            });
+        }
+
+        /**
+         * Show SweetAlert confirmation for document revision
+         * Requires user to input revision reason before proceeding
+         */
+        function showRevisionConfirm(documentId) {
+            Swal.fire({
+                title: '<i class="fas fa-edit" style="color:#f59e0b;"></i> Evaluasi / Revisi Dokumen',
+                html: `
+                    <div style="text-align:left; margin-top:20px;">
+                        <p style="color:#64748b; margin-bottom:16px;">
+                            Anda akan memulai proses revisi pada dokumen ini. 
+                            Data versi saat ini akan disimpan ke riwayat (history).
+                        </p>
+                        <label for="revision-reason" style="display:block; font-weight:600; color:#0f172a; margin-bottom:8px;">
+                            Alasan Revisi <span style="color:#dc2626;">*</span>
+                        </label>
+                        <textarea 
+                            id="revision-reason" 
+                            class="swal2-input" 
+                            placeholder="Contoh: Penambahan mitigasi risiko akibat insiden tgl 10 Feb 2026"
+                            style="width:100%; height:100px; padding:12px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; resize:vertical;"
+                            maxlength="500"
+                        ></textarea>
+                        <small style="color:#94a3b8; font-size:12px;">Maksimal 500 karakter</small>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f59e0b',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: '<i class="fas fa-check"></i> Ya, Mulai Revisi',
+                cancelButtonText: '<i class="fas fa-times"></i> Batal',
+                focusConfirm: false,
+                width: '600px',
+                preConfirm: () => {
+                    const reason = document.getElementById('revision-reason').value.trim();
+                    if (!reason) {
+                        Swal.showValidationMessage('Alasan revisi wajib diisi!');
+                        return false;
+                    }
+                    if (reason.length < 10) {
+                        Swal.showValidationMessage('Alasan revisi minimal 10 karakter!');
+                        return false;
+                    }
+                    return { reason: reason };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Memproses...',
+                        html: 'Menyimpan snapshot dan memulai revisi',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Submit form via AJAX
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/documents/${documentId}/initiate-revision`;
+                    
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_token';
+                    csrfInput.value = '{{ csrf_token() }}';
+                    
+                    const reasonInput = document.createElement('input');
+                    reasonInput.type = 'hidden';
+                    reasonInput.name = 'revision_reason';
+                    reasonInput.value = result.value.reason;
+                    
+                    form.appendChild(csrfInput);
+                    form.appendChild(reasonInput);
+                    document.body.appendChild(form);
+                    form.submit();
                 }
             });
         }

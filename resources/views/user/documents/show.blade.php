@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -875,9 +875,10 @@
             background: white;
             border: 1px solid #e2e8f0;
             border-bottom-color: transparent;
-            margin-bottom: -3px; /* Cover the bottom border */
+            margin-bottom: -3px;
+            /* Cover the bottom border */
             z-index: 2;
-            box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
         .tab-btn.active::after {
@@ -889,7 +890,7 @@
             height: 4px;
             background: white;
         }
-        
+
         .tab-btn .badge-counter {
             background: #e2e8f0;
             color: #475569;
@@ -898,7 +899,7 @@
             border-radius: 99px;
             transition: all 0.2s;
         }
-        
+
         .tab-btn.active .badge-counter {
             background: var(--primary-light);
             color: var(--primary);
@@ -914,8 +915,27 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
         }
     </style>
 </head>
@@ -924,7 +944,7 @@
     <div class="container">
         <!-- Sidebar -->
         <!-- Sidebar -->
-        @include('user.partials.sidebar')
+        @include('partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
@@ -943,19 +963,50 @@
                             {{ $document->created_at->format('d M Y') }}</span>
                     </p>
                 </div>
-                <div class="action-buttons">
-                    <!-- Edit Form Button (Styled Better) -->
-                    @if(in_array($document->status, ['draft', 'pending_level1', 'revision']))
-                        <a href="{{ route('documents.edit', $document->id) }}" class="btn-edit-programs" 
-                           style="background: linear-gradient(135deg, #c41e3a 0%, #9f1239 100%); color: white; border: none; box-shadow: 0 4px 6px -1px rgba(196, 30, 58, 0.3);">
-                            <i class="fas fa-edit"></i> Edit Form
+                <div class="action-buttons" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                    {{-- Revision Info Badges (for Published) --}}
+                    @if($document->status == 'published')
+                        @if($document->is_need_evaluation)
+                            <span
+                                style="font-size:12px; padding:8px 14px; border-radius:8px; font-weight:700; background:#fef3c7; color:#92400e; border:1px solid #f59e0b; display:flex; align-items:center; gap:8px; animation: pulse 2s infinite;"
+                                title="Dokumen perlu evaluasi tahunan">
+                                <i class="fas fa-exclamation-triangle"></i> Perlu Evaluasi Tahunan
+                            </span>
+                        @endif
+
+                        <span
+                            style="font-size:12px; padding:8px 14px; border-radius:8px; font-weight:600; background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; display:flex; align-items:center; gap:8px;">
+                            <i class="fas fa-code-branch"></i> Revisi {{ $document->revision_number }}
+                        </span>
+
+                        {{-- Revision Button --}}
+                        <form method="POST" action="{{ route('documents.initiate_revision', $document->id) }}"
+                            style="display:inline;"
+                            onsubmit="return confirm('Yakin ingin merevisi dokumen ini?\n\n✓ Data saat ini akan disimpan ke history\n✓ Status akan kembali ke draft\n✓ Perlu approval ulang setelah revisi');">
+                            @csrf
+                            <button type="submit"
+                                style="padding:10px 20px; background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:10px; box-shadow:0 4px 6px -1px rgba(245, 158, 11, 0.3); transition:all 0.2s;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px -2px rgba(245, 158, 11, 0.4)';"
+                                onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 6px -1px rgba(245, 158, 11, 0.3)';">
+                                <i class="fas fa-edit"></i> Evaluasi / Revisi Dokumen
+                            </button>
+                        </form>
+                    @endif
+
+                    {{-- Edit Form Button (Draft/Revision) --}}
+                    @if(in_array($document->status, ['draft', 'revision']))
+                        <a href="{{ route('documents.edit', $document->id) }}" class="btn-edit-programs"
+                            style="background: linear-gradient(135deg, #c41e3a 0%, #9f1239 100%); color: white; border: none; box-shadow: 0 4px 6px -1px rgba(196, 30, 58, 0.3); padding:10px 20px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;"
+                            onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='';">
+                            <i class="fas fa-edit"></i> Edit Form HIRADC
                         </a>
                     @endif
 
-                    <!-- Edit Program Kerja Button (Primary Action) -->
-                    @if($document->status != 'revision' && (in_array($document->status, ['draft', 'pending_level1']) || ($document->pukProgram && $document->pukProgram->status == 'revision') || ($document->pmkProgram && $document->pmkProgram->status == 'revision')))
+                    {{-- Edit Program Kerja Button --}}
+                    @if($document->status != 'revision' && ($document->status == 'draft' || ($document->pukProgram && $document->pukProgram->status == 'revision') || ($document->pmkProgram && $document->pmkProgram->status == 'revision')))
                         <a href="{{ route('documents.edit_programs', $document->id) }}" class="btn-edit-programs"
-                           style="background: linear-gradient(135deg, #c41e3a 0%, #9f1239 100%); color: white; border: none; box-shadow: 0 4px 6px -1px rgba(196, 30, 58, 0.3);">
+                            style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3); padding:10px 20px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;"
+                            onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='';">
                             <i class="fas fa-tasks"></i> Edit Program Kerja
                         </a>
                     @endif
@@ -1014,7 +1065,7 @@
                 // Fetch ALL programs (hasManyThrough)
                 $pukPrograms = $document->pukPrograms;
                 $pmkPrograms = $document->pmkPrograms;
-                
+
                 // Determine if we should show the Program Tab
                 $hasPrograms = $pukPrograms->count() > 0 || $pmkPrograms->count() > 0;
             @endphp
@@ -1024,475 +1075,483 @@
                     <i class="fas fa-table"></i> HIRADC
                 </button>
                 @if($hasPrograms)
-                <button type="button" class="tab-btn" onclick="openTab(event, 'tab-programs')">
-                    <i class="fas fa-tasks"></i> Program Kerja
-                    <span class="badge-counter">{{ $pukPrograms->count() + $pmkPrograms->count() }}</span>
-                </button>
+                    <button type="button" class="tab-btn" onclick="openTab(event, 'tab-programs')">
+                        <i class="fas fa-tasks"></i> Program Kerja
+                        <span class="badge-counter">{{ $pukPrograms->count() + $pmkPrograms->count() }}</span>
+                    </button>
                 @endif
             </div>
 
             <!-- TAB 1: HIRADC CONTENT -->
             <div id="tab-hiradc" class="tab-content active">
-                
+
                 <!-- Export Buttons (Moved from Header) -->
                 @php
                     $user = Auth::user();
                     $canExport = ($user->id_unit == $document->id_unit) || in_array($user->id_unit, [55, 56]) || in_array($user->role_jabatan, [1, 2]);
                 @endphp
                 @if($canExport)
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 12px;">
-                    <a href="{{ route('documents.export.detail.pdf', $document->id) }}" class="btn-print"
-                        target="_blank"
-                        style="background:#ef4444; color:white; border-color:#ef4444; text-decoration:none; font-size: 12px; padding: 6px 12px;">
-                        <i class="fas fa-file-pdf"></i> Export PDF
-                    </a>
-                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" class="btn-print"
-                        target="_blank"
-                        style="background:#22c55e; color:white; border-color:#22c55e; text-decoration:none; font-size: 12px; padding: 6px 12px;">
-                        <i class="fas fa-file-excel"></i> Export Excel
-                    </a>
-                </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 12px;">
+                        <a href="{{ route('documents.export.detail.pdf', $document->id) }}" class="btn-print"
+                            target="_blank"
+                            style="background:#ef4444; color:white; border-color:#ef4444; text-decoration:none; font-size: 12px; padding: 6px 12px;">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </a>
+                        <a href="{{ route('documents.export.detail.excel', $document->id) }}" class="btn-print"
+                            target="_blank"
+                            style="background:#22c55e; color:white; border-color:#22c55e; text-decoration:none; font-size: 12px; padding: 6px 12px;">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </a>
+                    </div>
                 @endif
 
                 <div class="hiradc-wrapper">
-                <table class="excel-table">
-                    <thead>
-                        <!-- Header Row 1: Main Sections (BAGIAN 1-5) -->
-                        <tr>
-                            <th rowspan="2" style="width: 40px;">No</th>
-                            <th colspan="4" class="section-border-right">BAGIAN 1: Identifikasi Aktivitas</th>
-                            <th colspan="6" class="section-border-right">BAGIAN 2: Identifikasi</th>
-                            <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal</th>
-                            <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
-                            <th colspan="5">BAGIAN 5: Mitigasi Lanjutan</th>
-                        </tr>
-                        <!-- Header Row 2: Column Details -->
-                        <tr>
-                            <!-- BAGIAN 1 (Kolom 2-5) -->
-                            <th style="width: 180px;">Proses/Kegiatan<br><small>(Kol 2)</small></th>
-                            <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
-                            <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
-                            <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol 5)</small></th>
+                    <table class="excel-table">
+                        <thead>
+                            <!-- Header Row 1: Main Sections (BAGIAN 1-5) -->
+                            <tr>
+                                <th rowspan="2" style="width: 40px;">No</th>
+                                <th colspan="4" class="section-border-right">BAGIAN 1: Identifikasi Aktivitas</th>
+                                <th colspan="6" class="section-border-right">BAGIAN 2: Identifikasi</th>
+                                <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal
+                                </th>
+                                <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
+                                <th colspan="5">BAGIAN 5: Mitigasi Lanjutan</th>
+                            </tr>
+                            <!-- Header Row 2: Column Details -->
+                            <tr>
+                                <!-- BAGIAN 1 (Kolom 2-5) -->
+                                <th style="width: 180px;">Proses/Kegiatan<br><small>(Kol 2)</small></th>
+                                <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
+                                <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
+                                <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol 5)</small>
+                                </th>
 
-                            <!-- BAGIAN 2 (Kolom 6-9) -->
-                            <th style="width: 150px;">Potensi Bahaya<br><small>(Kol 6)</small></th>
-                            <th style="width: 150px;">Aspek Lingkungan<br><small>(Kol 7)</small></th>
-                            <th style="width: 150px;">Ancaman Keamanan<br><small>(Kol 8)</small></th>
+                                <!-- BAGIAN 2 (Kolom 6-9) -->
+                                <th style="width: 150px;">Potensi Bahaya<br><small>(Kol 6)</small></th>
+                                <th style="width: 150px;">Aspek Lingkungan<br><small>(Kol 7)</small></th>
+                                <th style="width: 150px;">Ancaman Keamanan<br><small>(Kol 8)</small></th>
 
-                            <th style="width: 150px;">RISIKO (K3/KO)<br><small>(Kol 9)</small></th>
-                            <th style="width: 150px;">DAMPAK (Lingk)<br><small>(Kol 9)</small></th>
-                            <th style="width: 150px;" class="section-border-right">CELAH (Keamanan)<br><small>(Kol
-                                    9)</small></th>
+                                <th style="width: 150px;">RISIKO (K3/KO)<br><small>(Kol 9)</small></th>
+                                <th style="width: 150px;">DAMPAK (Lingk)<br><small>(Kol 9)</small></th>
+                                <th style="width: 150px;" class="section-border-right">CELAH (Keamanan)<br><small>(Kol
+                                        9)</small></th>
 
-                            <!-- BAGIAN 3 (Kolom 10-14) -->
-                            <th style="width: 250px;">Hirarki Pengendalian<br><small>(Kol 10)</small></th>
-                            <th style="width: 250px;">Pengendalian Existing<br><small>(Kol 11)</small></th>
-                            <th style="width: 50px;">L<br><small>(Kol 12)</small></th>
-                            <th style="width: 50px;">S<br><small>(Kol 13)</small></th>
-                            <th style="width: 80px;" class="section-border-right">Level<br><small>(Kol 14)</small></th>
+                                <!-- BAGIAN 3 (Kolom 10-14) -->
+                                <th style="width: 250px;">Hirarki Pengendalian<br><small>(Kol 10)</small></th>
+                                <th style="width: 250px;">Pengendalian Existing<br><small>(Kol 11)</small></th>
+                                <th style="width: 50px;">L<br><small>(Kol 12)</small></th>
+                                <th style="width: 50px;">S<br><small>(Kol 13)</small></th>
+                                <th style="width: 80px;" class="section-border-right">Level<br><small>(Kol 14)</small>
+                                </th>
 
-                            <!-- BAGIAN 4 (Kolom 15-17) -->
-                            <th style="width: 200px;">Regulasi<br><small>(Kol 15)</small></th>
-                            <th style="width: 80px;">Aspek Penting<br><small>(Kol 16)</small></th>
-                            <th style="width: 200px;" class="section-border-right">Peluang & Risiko<br><small>(Kol
-                                    17)</small></th>
+                                <!-- BAGIAN 4 (Kolom 15-17) -->
+                                <th style="width: 200px;">Regulasi<br><small>(Kol 15)</small></th>
+                                <th style="width: 80px;">Aspek Penting<br><small>(Kol 16)</small></th>
+                                <th style="width: 200px;" class="section-border-right">Peluang & Risiko<br><small>(Kol
+                                        17)</small></th>
 
-                            <!-- BAGIAN 5 (Kolom 18-22) -->
-                            <th style="width: 100px;">Toleransi<br><small>(Kol 18)</small></th>
-                            <th style="width: 200px;">Pengendalian Lanjut<br><small>(Kol 19)</small></th>
-                            <th style="width: 50px;">L<br><small>(Kol 20)</small></th>
-                            <th style="width: 50px;">S<br><small>(Kol 21)</small></th>
-                            <th style="width: 80px;">Level<br><small>(Kol 22)</small></th>
+                                <!-- BAGIAN 5 (Kolom 18-22) -->
+                                <th style="width: 100px;">Toleransi<br><small>(Kol 18)</small></th>
+                                <th style="width: 200px;">Pengendalian Lanjut<br><small>(Kol 19)</small></th>
+                                <th style="width: 50px;">L<br><small>(Kol 20)</small></th>
+                                <th style="width: 50px;">S<br><small>(Kol 21)</small></th>
+                                <th style="width: 80px;">Level<br><small>(Kol 22)</small></th>
 
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($document->details as $index => $item)
-                            @php
-                                $skip = false;
-                                
-                                // ONLY apply filtering logic if document is in revision mode
-                                // For normal viewing (draft, pending, approved, published), show ALL details
-                                if ($document->status == 'revision') {
-                                    // Check which categories are locked (approved/published)
-                                    $isSheLocked = ($document->status_she == 'approved' || $document->status_she == 'published');
-                                    $isSecLocked = ($document->status_security == 'approved' || $document->status_security == 'published');
-                                    
-                                    // Check which categories are in revision
-                                    $isSheRevision = ($document->status_she == 'revision');
-                                    $isSecRevision = ($document->status_security == 'revision');
-                                    
-                                    // Priority 1: If a specific track is in revision, ONLY show that track
-                                    if ($isSheRevision && !$isSecRevision) {
-                                        // SHE is revising, Security is NOT revising
-                                        // Show ONLY SHE categories (K3, KO, Lingkungan)
-                                        if (!in_array($item->kategori, ['K3', 'KO', 'Lingkungan'])) {
-                                            $skip = true;
-                                        }
-                                    } elseif ($isSecRevision && !$isSheRevision) {
-                                        // Security is revising, SHE is NOT revising
-                                        // Show ONLY Security category (Keamanan)
-                                        if ($item->kategori != 'Keamanan') {
-                                            $skip = true;
-                                        }
-                                    } elseif ($isSheRevision && $isSecRevision) {
-                                        // Both are revising - show all items
-                                        // No filtering needed
-                                    } else {
-                                        // Neither is revising - check for locked status
-                                        if ($item->kategori == 'Keamanan' && $isSecLocked) {
-                                            $skip = true;
-                                        }
-                                        if (in_array($item->kategori, ['K3', 'KO', 'Lingkungan']) && $isSheLocked) {
-                                            $skip = true;
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($document->details as $index => $item)
+                                @php
+                                    $skip = false;
+
+                                    // ONLY apply filtering logic if document is in revision mode
+                                    // For normal viewing (draft, pending, approved, published), show ALL details
+                                    if ($document->status == 'revision') {
+                                        // Check which categories are locked (approved/published)
+                                        $isSheLocked = ($document->status_she == 'approved' || $document->status_she == 'published');
+                                        $isSecLocked = ($document->status_security == 'approved' || $document->status_security == 'published');
+
+                                        // Check which categories are in revision
+                                        $isSheRevision = ($document->status_she == 'revision');
+                                        $isSecRevision = ($document->status_security == 'revision');
+
+                                        // Priority 1: If a specific track is in revision, ONLY show that track
+                                        if ($isSheRevision && !$isSecRevision) {
+                                            // SHE is revising, Security is NOT revising
+                                            // Show ONLY SHE categories (K3, KO, Lingkungan)
+                                            if (!in_array($item->kategori, ['K3', 'KO', 'Lingkungan'])) {
+                                                $skip = true;
+                                            }
+                                        } elseif ($isSecRevision && !$isSheRevision) {
+                                            // Security is revising, SHE is NOT revising
+                                            // Show ONLY Security category (Keamanan)
+                                            if ($item->kategori != 'Keamanan') {
+                                                $skip = true;
+                                            }
+                                        } elseif ($isSheRevision && $isSecRevision) {
+                                            // Both are revising - show all items
+                                            // No filtering needed
+                                        } else {
+                                            // Neither is revising - check for locked status
+                                            if ($item->kategori == 'Keamanan' && $isSecLocked) {
+                                                $skip = true;
+                                            }
+                                            if (in_array($item->kategori, ['K3', 'KO', 'Lingkungan']) && $isSheLocked) {
+                                                $skip = true;
+                                            }
                                         }
                                     }
-                                }
-                                // If not in revision mode, show everything ($skip remains false)
-                            @endphp
-                            @if($skip) @continue @endif
+                                    // If not in revision mode, show everything ($skip remains false)
+                                @endphp
+                                @if($skip) @continue @endif
 
-                            <tr>
-                                <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
-                                    {{ $index + 1 }}
-                                </td>
-                                <!-- BAGIAN 1: Identifikasi Aktivitas -->
-                                <!-- Kolom 2: Kegiatan -->
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom2_kegiatan }}</div>
-                                </td>
-                                <!-- Kolom 3: Lokasi -->
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom3_lokasi }}</div>
-                                </td>
-                                <!-- Kolom 4: Kategori -->
-                                <td>
-                                    <div class="cell-input"
-                                        style="display:flex; align-items:center; justify-content:center;">
-                                        <span class="doc-meta-badge" style="background:#e0e7ff; color:#3730a3;">
-                                            {{ $item->kategori }}
-                                        </span>
-                                    </div>
-                                </td>
-                                <!-- Kolom 5: Kondisi -->
-                                <td class="section-border-right">
-                                    <div class="cell-input"
-                                        style="display:flex; align-items:center; justify-content:center;">
-                                        <span class="doc-meta-badge" style="background:#f1f5f9; color:#475569;">
-                                            {{ $item->kolom5_kondisi }}
-                                        </span>
-                                    </div>
-                                </td>
-
-                                <!-- BAGIAN 2: Identifikasi -->
-
-                                <!-- Kolom 6: Potensi Bahaya (K3/KO Only) -->
-                                <td>
-                                    @if($item->kategori == 'K3' || $item->kategori == 'KO')
-                                        <div class="cell-checkbox-group">
-                                            @php $bahayaDetails = $item->kolom6_bahaya['details'] ?? []; @endphp
-                                            @foreach($bahayaDetails as $detail)
-                                                <div class="cell-checkbox-item">
-                                                    <i class="fas fa-exclamation-triangle"
-                                                        style="color:#ef4444; font-size:10px; margin-top:3px;"></i>
-                                                    <span>{{ $detail }}</span>
-                                                </div>
-                                            @endforeach
-                                            @if(!empty($item->kolom6_bahaya['manual']))
-                                                <div
-                                                    style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
-                                                    <strong>Lainnya:</strong> {{ $item->kolom6_bahaya['manual'] }}
-                                                </div>
-                                            @endif
+                                <tr>
+                                    <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
+                                        {{ $index + 1 }}
+                                    </td>
+                                    <!-- BAGIAN 1: Identifikasi Aktivitas -->
+                                    <!-- Kolom 2: Kegiatan -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom2_kegiatan }}</div>
+                                    </td>
+                                    <!-- Kolom 3: Lokasi -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom3_lokasi }}</div>
+                                    </td>
+                                    <!-- Kolom 4: Kategori -->
+                                    <td>
+                                        <div class="cell-input"
+                                            style="display:flex; align-items:center; justify-content:center;">
+                                            <span class="doc-meta-badge" style="background:#e0e7ff; color:#3730a3;">
+                                                {{ $item->kategori }}
+                                            </span>
                                         </div>
-                                    @else
-                                        <div style="color:#94a3b8; text-align:center;">-</div>
-                                    @endif
-                                </td>
-
-                                <!-- Kolom 7: Aspek Lingkungan (Lingkungan Only) -->
-                                <td>
-                                    @if($item->kategori == 'Lingkungan')
-                                        <div class="cell-checkbox-group">
-                                            @php
-                                                $col7 = $item->kolom7_aspek_lingkungan ?? [];
-                                                $details7 = $col7['details'] ?? ((is_array($col7) && !array_key_exists('details', $col7)) ? $col7 : []);
-                                                $manual7 = $col7['manual'] ?? '';
-                                            @endphp
-                                            @foreach($details7 as $aspek)
-                                                <div class="cell-checkbox-item">
-                                                    <i class="fas fa-leaf"
-                                                        style="color:#22c55e; font-size:10px; margin-top:3px;"></i>
-                                                    <span>{{ $aspek }}</span>
-                                                </div>
-                                            @endforeach
-                                            @if(!empty($manual7))
-                                                <div
-                                                    style="font-size:13px; margin-top:8px; padding:6px; background:#f0fdf4; border:1px dashed #22c55e; border-radius:4px; color:#15803d;">
-                                                    <strong>Lainnya:</strong> {{ $manual7 }}
-                                                </div>
-                                            @endif
+                                    </td>
+                                    <!-- Kolom 5: Kondisi -->
+                                    <td class="section-border-right">
+                                        <div class="cell-input"
+                                            style="display:flex; align-items:center; justify-content:center;">
+                                            <span class="doc-meta-badge" style="background:#f1f5f9; color:#475569;">
+                                                {{ $item->kolom5_kondisi }}
+                                            </span>
                                         </div>
-                                    @else
-                                        <div style="color:#94a3b8; text-align:center;">-</div>
-                                    @endif
-                                </td>
+                                    </td>
 
-                                <!-- Kolom 8: Ancaman Keamanan (Keamanan Only) -->
-                                <td>
-                                    @if($item->kategori == 'Keamanan')
-                                        <div class="cell-checkbox-group">
-                                            @php
-                                                $col8 = $item->kolom8_ancaman ?? [];
-                                                $details8 = $col8['details'] ?? ((is_array($col8) && !array_key_exists('details', $col8)) ? $col8 : []);
-                                                $manual8 = $col8['manual'] ?? '';
-                                            @endphp
-                                            @foreach($details8 as $threat)
-                                                <div class="cell-checkbox-item">
-                                                    <i class="fas fa-shield-alt"
-                                                        style="color:#dc2626; font-size:10px; margin-top:3px;"></i>
-                                                    <span>{{ $threat }}</span>
-                                                </div>
-                                            @endforeach
-                                            @if(!empty($manual8))
-                                                <div
-                                                    style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
-                                                    <strong>Lainnya:</strong> {{ $manual8 }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <div style="color:#94a3b8; text-align:center;">-</div>
-                                    @endif
-                                </td>
+                                    <!-- BAGIAN 2: Identifikasi -->
 
-                                <!-- Kolom 9a: RISIKO (K3/KO) -->
-                                <td>
-                                    @if($item->kategori == 'K3' || $item->kategori == 'KO')
-                                        <div class="cell-text">{{ $item->kolom9_risiko_k3ko ?? $item->kolom9_risiko }}</div>
-                                    @else
-                                        <div style="color:#94a3b8; text-align:center;">-</div>
-                                    @endif
-                                </td>
-
-                                <!-- Kolom 9b: DAMPAK (Lingkungan) -->
-                                <td>
-                                    @if($item->kategori == 'Lingkungan')
-                                        <div class="cell-text">{{ $item->kolom9_dampak_lingkungan ?? $item->kolom9_risiko }}
-                                        </div>
-                                    @else
-                                        <div style="color:#94a3b8; text-align:center;">-</div>
-                                    @endif
-                                </td>
-
-                                <!-- Kolom 9c: CELAH (Keamanan) -->
-                                <td class="section-border-right">
-                                    @if($item->kategori == 'Keamanan')
-                                        <div class="cell-text">{{ $item->kolom9_celah_keamanan ?? $item->kolom9_risiko }}</div>
-                                    @else
-                                        <div style="color:#94a3b8; text-align:center;">-</div>
-                                    @endif
-                                </td>
-
-                                <!-- BAGIAN 3: Pengendalian & Penilaian -->
-                                <!-- Kolom 10: Hirarki Pengendalian -->
-                                <td>
-                                    <div class="cell-checkbox-group">
-                                        @php $hs = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
-                                        @foreach($hs as $h)
-                                            <div class="cell-checkbox-item">
-                                                <i class="fas fa-check-square" style="color:#10b981;"></i>
-                                                <span style="font-weight:600;">{{ $h }}</span>
+                                    <!-- Kolom 6: Potensi Bahaya (K3/KO Only) -->
+                                    <td>
+                                        @if($item->kategori == 'K3' || $item->kategori == 'KO')
+                                            <div class="cell-checkbox-group">
+                                                @php $bahayaDetails = $item->kolom6_bahaya['details'] ?? []; @endphp
+                                                @foreach($bahayaDetails as $detail)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-exclamation-triangle"
+                                                            style="color:#ef4444; font-size:10px; margin-top:3px;"></i>
+                                                        <span>{{ $detail }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($item->kolom6_bahaya['manual']))
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                        <strong>Lainnya:</strong> {{ $item->kolom6_bahaya['manual'] }}
+                                                    </div>
+                                                @endif
                                             </div>
-                                        @endforeach
-                                    </div>
-                                </td>
-                                <!-- Kolom 11: Pengendalian Existing -->
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom11_existing }}</div>
-                                </td>
-                                <!-- Kolom 12-14: Penilaian Risiko Awal -->
-                                <td class="risk-col" style="vertical-align:middle; text-align:center;">
-                                    <div style="font-weight:800; font-size:16px;">{{ $item->kolom12_kemungkinan }}</div>
-                                </td>
-                                <td class="risk-col" style="vertical-align:middle; text-align:center;">
-                                    <div style="font-weight:800; font-size:16px;">{{ $item->kolom13_konsekuensi }}</div>
-                                </td>
-                                <td class="risk-col section-border-right" style="vertical-align:middle;">
-                                    <div class="risk-score-box">
-                                        <div class="risk-val">{{ $item->kolom14_score }}</div>
-                                        <div
-                                            class="risk-badge {{ $item->kolom14_score >= 15 ? 'bg-high' : ($item->kolom14_score >= 8 ? 'bg-med' : 'bg-low') }}">
-                                            {{ $item->kolom14_score >= 15 ? 'TINGGI' : ($item->kolom14_score >= 8 ? 'SEDANG' : 'RENDAH') }}
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <!-- BAGIAN 4: Legalitas & Signifikansi -->
-                                <!-- Kolom 15: Regulasi -->
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom15_regulasi }}</div>
-                                </td>
-                                <!-- Kolom 16: Aspek Lingkungan Penting (Only for Lingkungan) -->
-                                <td style="text-align:center; vertical-align:middle;">
-                                    @if($item->kategori == 'Lingkungan' && $item->kolom16_aspek)
-                                        <div class="doc-meta-badge"
-                                            style="{{ $item->kolom16_aspek == 'P' ? 'background:#dbeafe; color:#1e40af;' : 'background:#f1f5f9; color:#64748b;' }}">
-                                            {{ $item->kolom16_aspek }}
-                                        </div>
-                                    @else
-                                        <div style="color:#94a3b8;">-</div>
-                                    @endif
-                                </td>
-                                <!-- Kolom 17: Peluang & Risiko -->
-                                <td class="section-border-right">
-                                    <div class="risk-section">
-                                        @if($item->kolom17_risiko)
-                                            <div class="risk-label">RISIKO (-):</div>
-                                            <div class="risk-text">{{ $item->kolom17_risiko }}</div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
                                         @endif
-                                        @if($item->kolom17_peluang)
-                                            <div class="risk-label"
-                                                style="border-top:1px solid #e2e8f0; margin-top:6px; padding-top:6px;">
-                                                PELUANG (+):</div>
-                                            <div class="risk-text">{{ $item->kolom17_peluang }}</div>
-                                        @endif
-                                    </div>
-                                </td>
+                                    </td>
 
-                                <!-- BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa -->
-                                <!-- Kolom 18: Toleransi -->
-                                <td style="text-align:center; vertical-align:middle;">
-                                    <div class="doc-meta-badge"
-                                        style="{{ $item->kolom18_toleransi == 'Ya' ? 'background:#dcfce7; color:#166534;' : 'background:#fee2e2; color:#991b1b;' }}">
-                                        {{ $item->kolom18_toleransi == 'Ya' ? 'Ya' : 'Tidak' }}
-                                    </div>
-                                </td>
-                                <!-- Kolom 19-22: Follow-up Risk (Only if Tolerance = Tidak) -->
-                                @if($item->kolom18_toleransi == 'Tidak')
-                                    <!-- Kolom 19: Pengendalian Lanjut -->
+                                    <!-- Kolom 7: Aspek Lingkungan (Lingkungan Only) -->
                                     <td>
-                                        <div class="cell-text">{{ $item->kolom19_pengendalian_lanjut }}</div>
+                                        @if($item->kategori == 'Lingkungan')
+                                            <div class="cell-checkbox-group">
+                                                @php
+                                                    $col7 = $item->kolom7_aspek_lingkungan ?? [];
+                                                    $details7 = $col7['details'] ?? ((is_array($col7) && !array_key_exists('details', $col7)) ? $col7 : []);
+                                                    $manual7 = $col7['manual'] ?? '';
+                                                @endphp
+                                                @foreach($details7 as $aspek)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-leaf"
+                                                            style="color:#22c55e; font-size:10px; margin-top:3px;"></i>
+                                                        <span>{{ $aspek }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($manual7))
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#f0fdf4; border:1px dashed #22c55e; border-radius:4px; color:#15803d;">
+                                                        <strong>Lainnya:</strong> {{ $manual7 }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
                                     </td>
-                                    <!-- Kolom 20-22: Penilaian Risiko Lanjut -->
-                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
-                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom20_kemungkinan_lanjut }}
-                                        </div>
+
+                                    <!-- Kolom 8: Ancaman Keamanan (Keamanan Only) -->
+                                    <td>
+                                        @if($item->kategori == 'Keamanan')
+                                            <div class="cell-checkbox-group">
+                                                @php
+                                                    $col8 = $item->kolom8_ancaman ?? [];
+                                                    $details8 = $col8['details'] ?? ((is_array($col8) && !array_key_exists('details', $col8)) ? $col8 : []);
+                                                    $manual8 = $col8['manual'] ?? '';
+                                                @endphp
+                                                @foreach($details8 as $threat)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-shield-alt"
+                                                            style="color:#dc2626; font-size:10px; margin-top:3px;"></i>
+                                                        <span>{{ $threat }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($manual8))
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                        <strong>Lainnya:</strong> {{ $manual8 }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
                                     </td>
-                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
-                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom21_konsekuensi_lanjut }}
-                                        </div>
+
+                                    <!-- Kolom 9a: RISIKO (K3/KO) -->
+                                    <td>
+                                        @if($item->kategori == 'K3' || $item->kategori == 'KO')
+                                            <div class="cell-text">{{ $item->kolom9_risiko_k3ko ?? $item->kolom9_risiko }}</div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
                                     </td>
-                                    <td class="risk-col" style="vertical-align:middle;">
-                                        <div class="risk-score-box">
-                                            <div class="risk-val">{{ $item->kolom22_tingkat_risiko_lanjut }}</div>
-                                            @if($item->kolom22_tingkat_risiko_lanjut)
-                                                <div
-                                                    class="risk-badge {{ $item->kolom22_tingkat_risiko_lanjut >= 15 ? 'bg-high' : ($item->kolom22_tingkat_risiko_lanjut >= 8 ? 'bg-med' : 'bg-low') }}">
-                                                    {{ $item->kolom22_level_lanjut }}
+
+                                    <!-- Kolom 9b: DAMPAK (Lingkungan) -->
+                                    <td>
+                                        @if($item->kategori == 'Lingkungan')
+                                            <div class="cell-text">{{ $item->kolom9_dampak_lingkungan ?? $item->kolom9_risiko }}
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- Kolom 9c: CELAH (Keamanan) -->
+                                    <td class="section-border-right">
+                                        @if($item->kategori == 'Keamanan')
+                                            <div class="cell-text">{{ $item->kolom9_celah_keamanan ?? $item->kolom9_risiko }}
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- BAGIAN 3: Pengendalian & Penilaian -->
+                                    <!-- Kolom 10: Hirarki Pengendalian -->
+                                    <td>
+                                        <div class="cell-checkbox-group">
+                                            @php $hs = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
+                                            @foreach($hs as $h)
+                                                <div class="cell-checkbox-item">
+                                                    <i class="fas fa-check-square" style="color:#10b981;"></i>
+                                                    <span style="font-weight:600;">{{ $h }}</span>
                                                 </div>
+                                            @endforeach
+                                        </div>
+                                    </td>
+                                    <!-- Kolom 11: Pengendalian Existing -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom11_existing }}</div>
+                                    </td>
+                                    <!-- Kolom 12-14: Penilaian Risiko Awal -->
+                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom12_kemungkinan }}</div>
+                                    </td>
+                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom13_konsekuensi }}</div>
+                                    </td>
+                                    <td class="risk-col section-border-right" style="vertical-align:middle;">
+                                        <div class="risk-score-box">
+                                            <div class="risk-val">{{ $item->kolom14_score }}</div>
+                                            <div
+                                                class="risk-badge {{ $item->kolom14_score >= 15 ? 'bg-high' : ($item->kolom14_score >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                {{ $item->kolom14_score >= 15 ? 'TINGGI' : ($item->kolom14_score >= 8 ? 'SEDANG' : 'RENDAH') }}
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- BAGIAN 4: Legalitas & Signifikansi -->
+                                    <!-- Kolom 15: Regulasi -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom15_regulasi }}</div>
+                                    </td>
+                                    <!-- Kolom 16: Aspek Lingkungan Penting (Only for Lingkungan) -->
+                                    <td style="text-align:center; vertical-align:middle;">
+                                        @if($item->kategori == 'Lingkungan' && $item->kolom16_aspek)
+                                            <div class="doc-meta-badge"
+                                                style="{{ $item->kolom16_aspek == 'P' ? 'background:#dbeafe; color:#1e40af;' : 'background:#f1f5f9; color:#64748b;' }}">
+                                                {{ $item->kolom16_aspek }}
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8;">-</div>
+                                        @endif
+                                    </td>
+                                    <!-- Kolom 17: Peluang & Risiko -->
+                                    <td class="section-border-right">
+                                        <div class="risk-section">
+                                            @if($item->kolom17_risiko)
+                                                <div class="risk-label">RISIKO (-):</div>
+                                                <div class="risk-text">{{ $item->kolom17_risiko }}</div>
+                                            @endif
+                                            @if($item->kolom17_peluang)
+                                                <div class="risk-label"
+                                                    style="border-top:1px solid #e2e8f0; margin-top:6px; padding-top:6px;">
+                                                    PELUANG (+):</div>
+                                                <div class="risk-text">{{ $item->kolom17_peluang }}</div>
                                             @endif
                                         </div>
                                     </td>
-                                @else
-                                    <!-- Empty cells when tolerance = Ya -->
-                                    <td>
-                                        <div style="color:#94a3b8; text-align:center;">-</div>
-                                    </td>
-                                    <td>
-                                        <div style="color:#94a3b8; text-align:center;">-</div>
-                                    </td>
-                                    <td>
-                                        <div style="color:#94a3b8; text-align:center;">-</div>
-                                    </td>
-                                    <td>
-                                        <div style="color:#94a3b8; text-align:center;">-</div>
-                                    </td>
-                                @endif
 
-
-                            </tr>
-                        @empty
-                            <!-- FALLBACK FOR LEGACY DATA (Single Row from Header) -->
-                            <tr>
-                                <td style="text-align:center;">1</td>
-                                <td>{{ $document->kolom2_kegiatan }}</td>
-                                <td>{{ $document->kolom3_lokasi }}</td>
-                                <td class="section-border-right">
-                                    @if($document->kolom5_kondisi == 'N') Normal
-                                    @elseif($document->kolom5_kondisi == 'AN') Abnormal
-                                    @else Emergency @endif
-                                </td>
-                                <td>
-                                    <ul class="ul-dense">
-                                        @foreach($document->kolom6_bahaya['details'] ?? [] as $d) <li>{{$d}}</li>
-                                        @endforeach
-                                        @foreach($document->kolom6_bahaya['aspects'] ?? [] as $d) <li>{{$d}}</li>
-                                        @endforeach
-                                        @if(!empty($document->kolom6_bahaya['manual']))
-                                        <li>{{$document->kolom6_bahaya['manual']}}</li> @endif
-                                    </ul>
-                                </td>
-                                <td>{{ $document->kolom7_dampak }}</td>
-                                <td class="section-border-right">{{ $document->kolom9_risiko }}</td>
-                                <td>
-                                    <div style="margin-bottom:8px;">
-                                        <strong>Hirarki:</strong><br>
-                                        {{ implode(', ', $document->kolom10_pengendalian['hierarchy'] ?? []) }}
-                                    </div>
-                                    @if(!empty($document->kolom10_pengendalian['existing']))
-                                        <div style="border-top:1px dashed #cbd5e1; padding-top:8px;">
-                                            <strong style="color:#0f172a; font-size:11px;">EXISTING:</strong><br>
-                                            {{ $document->kolom10_pengendalian['existing'] }}
+                                    <!-- BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa -->
+                                    <!-- Kolom 18: Toleransi -->
+                                    <td style="text-align:center; vertical-align:middle;">
+                                        <div class="doc-meta-badge"
+                                            style="{{ $item->kolom18_toleransi == 'Ya' ? 'background:#dcfce7; color:#166534;' : 'background:#fee2e2; color:#991b1b;' }}">
+                                            {{ $item->kolom18_toleransi == 'Ya' ? 'Ya' : 'Tidak' }}
                                         </div>
+                                    </td>
+                                    <!-- Kolom 19-22: Follow-up Risk (Only if Tolerance = Tidak) -->
+                                    @if($item->kolom18_toleransi == 'Tidak')
+                                        <!-- Kolom 19: Pengendalian Lanjut -->
+                                        <td>
+                                            <div class="cell-text">{{ $item->kolom19_pengendalian_lanjut }}</div>
+                                        </td>
+                                        <!-- Kolom 20-22: Penilaian Risiko Lanjut -->
+                                        <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                            <div style="font-weight:800; font-size:16px;">
+                                                {{ $item->kolom20_kemungkinan_lanjut }}
+                                            </div>
+                                        </td>
+                                        <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                            <div style="font-weight:800; font-size:16px;">
+                                                {{ $item->kolom21_konsekuensi_lanjut }}
+                                            </div>
+                                        </td>
+                                        <td class="risk-col" style="vertical-align:middle;">
+                                            <div class="risk-score-box">
+                                                <div class="risk-val">{{ $item->kolom22_tingkat_risiko_lanjut }}</div>
+                                                @if($item->kolom22_tingkat_risiko_lanjut)
+                                                    <div
+                                                        class="risk-badge {{ $item->kolom22_tingkat_risiko_lanjut >= 15 ? 'bg-high' : ($item->kolom22_tingkat_risiko_lanjut >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                        {{ $item->kolom22_level_lanjut }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    @else
+                                        <!-- Empty cells when tolerance = Ya -->
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
                                     @endif
-                                </td>
-                                <td class="section-border-right">{{ $document->kolom11_existing }}</td>
-                                <td style="text-align:center;">{{ $document->kolom12_kemungkinan }}</td>
-                                <td style="text-align:center;">{{ $document->kolom13_konsekuensi }}</td>
-                                <td class="section-border-right">
-                                    @php
-                                        $sc = $document->kolom14_score;
-                                        $lvl = 'LOW';
-                                        $bg = 'bg-low';
-                                        if ($sc > 4 && $sc <= 12) {
-                                            $lvl = 'MED';
-                                            $bg = 'bg-med';
-                                        }
-                                        if ($sc > 12) {
-                                            $lvl = 'HIGH';
-                                            $bg = 'bg-high';
-                                        }
-                                    @endphp
-                                    <div class="risk-score-box">
-                                        <div class="risk-val">{{ $sc }}</div>
-                                        <div class="risk-badge {{ $bg }}">{{ $lvl }}</div>
-                                    </div>
-                                </td>
-                                <td>{{ $document->kolom15_regulasi }}</td>
-                                <td class="section-border-right" style="text-align: center; font-weight: bold;">
-                                    {{ $document->kolom16_aspek }}
-                                </td>
 
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+
+                                </tr>
+                            @empty
+                                <!-- FALLBACK FOR LEGACY DATA (Single Row from Header) -->
+                                <tr>
+                                    <td style="text-align:center;">1</td>
+                                    <td>{{ $document->kolom2_kegiatan }}</td>
+                                    <td>{{ $document->kolom3_lokasi }}</td>
+                                    <td class="section-border-right">
+                                        @if($document->kolom5_kondisi == 'N') Normal
+                                        @elseif($document->kolom5_kondisi == 'AN') Abnormal
+                                        @else Emergency @endif
+                                    </td>
+                                    <td>
+                                        <ul class="ul-dense">
+                                            @foreach($document->kolom6_bahaya['details'] ?? [] as $d) <li>{{$d}}</li>
+                                            @endforeach
+                                            @foreach($document->kolom6_bahaya['aspects'] ?? [] as $d) <li>{{$d}}</li>
+                                            @endforeach
+                                            @if(!empty($document->kolom6_bahaya['manual']))
+                                            <li>{{$document->kolom6_bahaya['manual']}}</li> @endif
+                                        </ul>
+                                    </td>
+                                    <td>{{ $document->kolom7_dampak }}</td>
+                                    <td class="section-border-right">{{ $document->kolom9_risiko }}</td>
+                                    <td>
+                                        <div style="margin-bottom:8px;">
+                                            <strong>Hirarki:</strong><br>
+                                            {{ implode(', ', $document->kolom10_pengendalian['hierarchy'] ?? []) }}
+                                        </div>
+                                        @if(!empty($document->kolom10_pengendalian['existing']))
+                                            <div style="border-top:1px dashed #cbd5e1; padding-top:8px;">
+                                                <strong style="color:#0f172a; font-size:11px;">EXISTING:</strong><br>
+                                                {{ $document->kolom10_pengendalian['existing'] }}
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="section-border-right">{{ $document->kolom11_existing }}</td>
+                                    <td style="text-align:center;">{{ $document->kolom12_kemungkinan }}</td>
+                                    <td style="text-align:center;">{{ $document->kolom13_konsekuensi }}</td>
+                                    <td class="section-border-right">
+                                        @php
+                                            $sc = $document->kolom14_score;
+                                            $lvl = 'LOW';
+                                            $bg = 'bg-low';
+                                            if ($sc > 4 && $sc <= 12) {
+                                                $lvl = 'MED';
+                                                $bg = 'bg-med';
+                                            }
+                                            if ($sc > 12) {
+                                                $lvl = 'HIGH';
+                                                $bg = 'bg-high';
+                                            }
+                                        @endphp
+                                        <div class="risk-score-box">
+                                            <div class="risk-val">{{ $sc }}</div>
+                                            <div class="risk-badge {{ $bg }}">{{ $lvl }}</div>
+                                        </div>
+                                    </td>
+                                    <td>{{ $document->kolom15_regulasi }}</td>
+                                    <td class="section-border-right" style="text-align: center; font-weight: bold;">
+                                        {{ $document->kolom16_aspek }}
+                                    </td>
+
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
             </div> <!-- End of tab-hiradc -->
 
             <!-- TAB 2: PROGRAM KERJA CONTENT -->
             <div id="tab-programs" class="tab-content" style="padding-top: 10px;">
-                
+
                 @if(!$hasPrograms)
-                    <div style="text-align: center; padding: 40px; background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0; color: #64748b;">
+                    <div
+                        style="text-align: center; padding: 40px; background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0; color: #64748b;">
                         <i class="fas fa-clipboard-list" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
                         <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Tidak Ada Program Kerja</h3>
-                        <p>Dokumen ini tidak memiliki item dengan risiko yang memerlukan Program Unit Kerja (PUK) atau Program Manajemen Korporat (PMK).</p>
+                        <p>Dokumen ini tidak memiliki item dengan risiko yang memerlukan Program Unit Kerja (PUK) atau
+                            Program Manajemen Korporat (PMK).</p>
                     </div>
                 @endif
-                
+
                 @foreach($document->details as $detailIndex => $detail)
                     @php
                         $puk = $detail->pukProgram;
@@ -1500,234 +1559,274 @@
                     @endphp
 
                     @if($puk || $pmk)
-                    <div class="group-container" style="margin-bottom: 40px;">
-                        <!-- Activity Header (Matches HIRADC Row) -->
-                        <div style="background: #f1f5f9; padding: 12px 20px; border-radius: 8px; border-left: 4px solid #475569; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
-                            <div style="background: #475569; color: white; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 700; font-size: 12px;">
-                                {{ $detailIndex + 1 }}
+                        <div class="group-container" style="margin-bottom: 40px;">
+                            <!-- Activity Header (Matches HIRADC Row) -->
+                            <div
+                                style="background: #f1f5f9; padding: 12px 20px; border-radius: 8px; border-left: 4px solid #475569; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+                                <div
+                                    style="background: #475569; color: white; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 700; font-size: 12px;">
+                                    {{ $detailIndex + 1 }}
+                                </div>
+                                <div style="font-weight: 700; color: #334155; font-size: 15px;">
+                                    Kegiatan: <span
+                                        style="font-weight: 600; color: #475569;">{{ $detail->kolom2_kegiatan }}</span>
+                                </div>
                             </div>
-                            <div style="font-weight: 700; color: #334155; font-size: 15px;">
-                                Kegiatan: <span style="font-weight: 600; color: #475569;">{{ $detail->kolom2_kegiatan }}</span>
-                            </div>
-                        </div>
 
-                        <!-- PUK CARD -->
-                        @if($puk)
-                        <div class="content-card" style="margin-bottom: 30px; border-left: 4px solid #dc2626; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-left: 20px;">
-                            <div class="card-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 15px 20px; border-radius: 12px 12px 0 0;">
-                                <div style="display: flex; align-items: center; justify-content: space-between;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <div>
-                                            <div style="font-size: 16px; font-weight: 700;">PROGRAM UNIT KERJA (PUK)</div>
-                                            <div style="font-size: 12px; opacity: 0.9;">{{ $puk->judul }}</div>
+                            <!-- PUK CARD -->
+                            @if($puk)
+                                <div class="content-card"
+                                    style="margin-bottom: 30px; border-left: 4px solid #dc2626; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-left: 20px;">
+                                    <div class="card-header"
+                                        style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 15px 20px; border-radius: 12px 12px 0 0;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <div>
+                                                    <div style="font-size: 16px; font-weight: 700;">PROGRAM UNIT KERJA (PUK)</div>
+                                                    <div style="font-size: 12px; opacity: 0.9;">{{ $puk->judul }}</div>
+                                                </div>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <!-- Download Buttons -->
+                                                <a href="{{ route('documents.export.puk.pdf', $document->id) }}" class="btn btn-sm"
+                                                    style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
+                                                    onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
+                                                    onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
+                                                    <i class="fas fa-file-pdf"></i> PDF
+                                                </a>
+                                                <a href="{{ route('documents.export.puk.excel', $document->id) }}"
+                                                    class="btn btn-sm"
+                                                    style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
+                                                    onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
+                                                    onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
+                                                    <i class="fas fa-file-excel"></i> Excel
+                                                </a>
+                                                <span
+                                                    style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ $puk->status ?? 'Draft' }}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div style="display: flex; align-items: center; gap: 8px;">
-                                        <!-- Download Buttons -->
-                                        <a href="{{ route('documents.export.puk.pdf', $document->id) }}" 
-                                           class="btn btn-sm" 
-                                           style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
-                                           onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
-                                           onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
-                                            <i class="fas fa-file-pdf"></i> PDF
-                                        </a>
-                                        <a href="{{ route('documents.export.puk.excel', $document->id) }}" 
-                                           class="btn btn-sm" 
-                                           style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
-                                           onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
-                                           onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
-                                            <i class="fas fa-file-excel"></i> Excel
-                                        </a>
-                                        <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ $puk->status ?? 'Draft' }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div style="padding: 24px; background: #ffffff;">
-                                <!-- Informasi Program -->
-                                <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
-                                    <table style="width: 100%; font-size: 14px;">
-                                        <tr>
-                                            <td style="padding: 8px 0; width: 180px; font-weight: 600; color: #475569;">Judul Program</td>
-                                            <td style="padding: 8px 0; color: #0f172a;">: <strong>{{ $puk->judul }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Tujuan</td>
-                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->tujuan }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Sasaran</td>
-                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->sasaran }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 8px 0; font-weight: 600; color: #475569;">Penanggung Jawab</td>
-                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->penanggung_jawab }}</td>
-                                        </tr>
-                                        @if($puk->uraian_revisi)
-                                        <tr>
-                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Uraian Revisi</td>
-                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->uraian_revisi }}</td>
-                                        </tr>
-                                        @endif
-                                    </table>
-                                </div>
 
-                                <!-- Tabel Program Kerja -->
-                                @if($puk->program_kerja && is_array($puk->program_kerja) && count($puk->program_kerja) > 0)
-                                <div>
-                                    <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">
-                                        <i class="fas fa-list-check" style="color: #dc2626; margin-right: 6px;"></i> Detail Kegiatan
-                                    </h4>
-                                    <div class="hiradc-wrapper" style="margin-bottom: 0;">
-                                        <table class="excel-table" style="min-width: 100%;">
-                                            <thead>
-                                                <tr style="background: #1e293b; color: white;">
-                                                    <th rowspan="2" style="width: 40px; text-align: center;">No</th>
-                                                    <th rowspan="2" style="text-align: left;">Uraian Kegiatan</th>
-                                                    <th rowspan="2" style="text-align: left; width: 120px;">Koordinator</th>
-                                                    <th rowspan="2" style="text-align: left; width: 120px;">Pelaksana</th>
-                                                    <th colspan="12" style="text-align: center;">Target (%)</th>
-
-                                                </tr>
-                                                <tr style="background: #334155; color: white;">
-                                                    @for($m=1; $m<=12; $m++) <th style="text-align: center; width: 30px; font-size: 10px;">{{ $m }}</th> @endfor
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($puk->program_kerja as $itemIndex => $item)
+                                    <div style="padding: 24px; background: #ffffff;">
+                                        <!-- Informasi Program -->
+                                        <div
+                                            style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+                                            <table style="width: 100%; font-size: 14px;">
                                                 <tr>
-                                                    <td style="text-align: center;">{{ $itemIndex + 1 }}</td>
-                                                    <td>{{ $item['uraian'] ?? '-' }}</td>
-                                                    <td>{{ $item['koordinator'] ?? '-' }}</td>
-                                                    <td>{{ $item['pelaksana'] ?? '-' }}</td>
-                                                    @php $targets = $item['target'] ?? []; @endphp
-                                                    @for($m=0; $m<12; $m++)
-                                                        <td style="text-align: center; font-size: 11px; background: {{ (isset($targets[$m]) && $targets[$m] != '') ? '#eff6ff' : 'transparent' }};">
-                                                            {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '' }}
-                                                        </td>
-                                                    @endfor
-
+                                                    <td style="padding: 8px 0; width: 180px; font-weight: 600; color: #475569;">
+                                                        Judul Program</td>
+                                                    <td style="padding: 8px 0; color: #0f172a;">: <strong>{{ $puk->judul }}</strong>
+                                                    </td>
                                                 </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
+                                                <tr>
+                                                    <td
+                                                        style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">
+                                                        Tujuan</td>
+                                                    <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->tujuan }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td
+                                                        style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">
+                                                        Sasaran</td>
+                                                    <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->sasaran }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 8px 0; font-weight: 600; color: #475569;">Penanggung Jawab
+                                                    </td>
+                                                    <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->penanggung_jawab }}</td>
+                                                </tr>
+                                                @if($puk->uraian_revisi)
+                                                    <tr>
+                                                        <td
+                                                            style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">
+                                                            Uraian Revisi</td>
+                                                        <td style="padding: 8px 0; color: #0f172a;">: {{ $puk->uraian_revisi }}</td>
+                                                    </tr>
+                                                @endif
+                                            </table>
+                                        </div>
+
+                                        <!-- Tabel Program Kerja -->
+                                        @if($puk->program_kerja && is_array($puk->program_kerja) && count($puk->program_kerja) > 0)
+                                            <div>
+                                                <h4
+                                                    style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">
+                                                    <i class="fas fa-list-check" style="color: #dc2626; margin-right: 6px;"></i> Detail
+                                                    Kegiatan
+                                                </h4>
+                                                <div class="hiradc-wrapper" style="margin-bottom: 0;">
+                                                    <table class="excel-table" style="min-width: 100%;">
+                                                        <thead>
+                                                            <tr style="background: #1e293b; color: white;">
+                                                                <th rowspan="2" style="width: 40px; text-align: center;">No</th>
+                                                                <th rowspan="2" style="text-align: left;">Uraian Kegiatan</th>
+                                                                <th rowspan="2" style="text-align: left; width: 120px;">Koordinator</th>
+                                                                <th rowspan="2" style="text-align: left; width: 120px;">Pelaksana</th>
+                                                                <th colspan="12" style="text-align: center;">Target (%)</th>
+
+                                                            </tr>
+                                                            <tr style="background: #334155; color: white;">
+                                                                @for($m = 1; $m <= 12; $m++)
+                                                                    <th style="text-align: center; width: 30px; font-size: 10px;">{{ $m }}
+                                                                </th> @endfor
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($puk->program_kerja as $itemIndex => $item)
+                                                                <tr>
+                                                                    <td style="text-align: center;">{{ $itemIndex + 1 }}</td>
+                                                                    <td>{{ $item['uraian'] ?? '-' }}</td>
+                                                                    <td>{{ $item['koordinator'] ?? '-' }}</td>
+                                                                    <td>{{ $item['pelaksana'] ?? '-' }}</td>
+                                                                    @php $targets = $item['target'] ?? []; @endphp
+                                                                    @for($m = 0; $m < 12; $m++)
+                                                                        <td
+                                                                            style="text-align: center; font-size: 11px; background: {{ (isset($targets[$m]) && $targets[$m] != '') ? '#eff6ff' : 'transparent' }};">
+                                                                            {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '' }}
+                                                                        </td>
+                                                                    @endfor
+
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
-                                @endif
-                            </div>
-                        </div>
-                        @endif
+                            @endif
 
-                        <!-- PMK PROGRAMS -->
-                        @if($pmk)
-                        <div class="content-card" style="margin-bottom: 30px; border-left: 4px solid #dc2626; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-left: 20px;">
-                            <div class="card-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 15px 20px; border-radius: 12px 12px 0 0;">
-                                <div style="display: flex; align-items: center; justify-content: space-between;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <div>
-                                            <div style="font-size: 16px; font-weight: 700;">PROGRAM MANAJEMEN KORPORAT (PMK)</div>
-                                            <div style="font-size: 12px; opacity: 0.9;">{{ $pmk->judul }}</div>
+                            <!-- PMK PROGRAMS -->
+                            @if($pmk)
+                                <div class="content-card"
+                                    style="margin-bottom: 30px; border-left: 4px solid #dc2626; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-left: 20px;">
+                                    <div class="card-header"
+                                        style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 15px 20px; border-radius: 12px 12px 0 0;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <div>
+                                                    <div style="font-size: 16px; font-weight: 700;">PROGRAM MANAJEMEN KORPORAT (PMK)
+                                                    </div>
+                                                    <div style="font-size: 12px; opacity: 0.9;">{{ $pmk->judul }}</div>
+                                                </div>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <!-- Download Buttons -->
+                                                <a href="{{ route('documents.export.pmk.pdf', $document->id) }}" class="btn btn-sm"
+                                                    style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
+                                                    onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
+                                                    onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
+                                                    <i class="fas fa-file-pdf"></i> PDF
+                                                </a>
+                                                <a href="{{ route('documents.export.pmk.excel', $document->id) }}"
+                                                    class="btn btn-sm"
+                                                    style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
+                                                    onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
+                                                    onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
+                                                    <i class="fas fa-file-excel"></i> Excel
+                                                </a>
+                                                <span
+                                                    style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ $pmk->status ?? 'Draft' }}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div style="display: flex; align-items: center; gap: 8px;">
-                                        <!-- Download Buttons -->
-                                        <a href="{{ route('documents.export.pmk.pdf', $document->id) }}" 
-                                           class="btn btn-sm" 
-                                           style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
-                                           onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
-                                           onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
-                                            <i class="fas fa-file-pdf"></i> PDF
-                                        </a>
-                                        <a href="{{ route('documents.export.pmk.excel', $document->id) }}" 
-                                           class="btn btn-sm" 
-                                           style="background-color: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;"
-                                           onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'"
-                                           onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">
-                                            <i class="fas fa-file-excel"></i> Excel
-                                        </a>
-                                        <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ $pmk->status ?? 'Draft' }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div style="padding: 24px; background: #ffffff;">
-                                <!-- Informasi Program -->
-                                <div style="background: #faf5ff; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e9d5ff;">
-                                    <table style="width: 100%; font-size: 14px;">
-                                        <tr>
-                                            <td style="padding: 8px 0; width: 180px; font-weight: 600; color: #475569;">Judul Program</td>
-                                            <td style="padding: 8px 0; color: #0f172a;">: <strong>{{ $pmk->judul }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Tujuan</td>
-                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->tujuan }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Sasaran</td>
-                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->sasaran }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 8px 0; font-weight: 600; color: #475569;">Penanggung Jawab</td>
-                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->penanggung_jawab }}</td>
-                                        </tr>
-                                        @if($pmk->uraian_revisi)
-                                        <tr>
-                                            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Uraian Revisi</td>
-                                            <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->uraian_revisi }}</td>
-                                        </tr>
-                                        @endif
-                                    </table>
-                                </div>
 
-                                <!-- Tabel Program Kerja -->
-                                @if($pmk->program_kerja && is_array($pmk->program_kerja) && count($pmk->program_kerja) > 0)
-                                <div>
-                                    <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">
-                                        <i class="fas fa-list-check" style="color: #dc2626; margin-right: 6px;"></i> Detail Kegiatan
-                                    </h4>
-                                    <div class="hiradc-wrapper" style="margin-bottom: 0;">
-                                        <table class="excel-table" style="min-width: 100%;">
-                                            <thead>
-                                                <tr style="background: #1e293b; color: white;">
-                                                    <th rowspan="2" style="width: 40px; text-align: center;">No</th>
-                                                    <th rowspan="2" style="text-align: left;">Uraian Kegiatan</th>
-                                                    <th rowspan="2" style="text-align: left; width: 120px;">PIC</th>
-                                                    <th colspan="12" style="text-align: center;">Target (%)</th>
-                                                    <th rowspan="2" style="text-align: left; width: 120px;">Anggaran</th>
-                                                </tr>
-                                                <tr style="background: #334155; color: white;">
-                                                    @for($m=1; $m<=12; $m++) <th style="text-align: center; width: 30px; font-size: 10px;">{{ $m }}</th> @endfor
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($pmk->program_kerja as $itemIndex => $item)
+                                    <div style="padding: 24px; background: #ffffff;">
+                                        <!-- Informasi Program -->
+                                        <div
+                                            style="background: #faf5ff; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e9d5ff;">
+                                            <table style="width: 100%; font-size: 14px;">
                                                 <tr>
-                                                    <td style="text-align: center;">{{ $itemIndex + 1 }}</td>
-                                                    <td>{{ $item['uraian'] ?? '-' }}</td>
-                                                    <td>{{ (!empty($item['koordinator']) && $item['koordinator'] !== '-') ? $item['koordinator'] : ($item['pelaksana'] ?? $item['pic'] ?? '-') }}</td>
-                                                    @php $targets = $item['target'] ?? []; @endphp
-                                                    @for($m=0; $m<12; $m++)
-                                                        <td style="text-align: center; font-size: 11px; background: {{ (isset($targets[$m]) && $targets[$m] != '') ? '#eff6ff' : 'transparent' }};">
-                                                            {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '' }}
-                                                        </td>
-                                                    @endfor
-                                                    <td>{{ isset($item['anggaran']) ? 'Rp ' . number_format($item['anggaran'], 0, ',', '.') : '-' }}</td>
+                                                    <td style="padding: 8px 0; width: 180px; font-weight: 600; color: #475569;">
+                                                        Judul Program</td>
+                                                    <td style="padding: 8px 0; color: #0f172a;">: <strong>{{ $pmk->judul }}</strong>
+                                                    </td>
                                                 </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
+                                                <tr>
+                                                    <td
+                                                        style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">
+                                                        Tujuan</td>
+                                                    <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->tujuan }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td
+                                                        style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">
+                                                        Sasaran</td>
+                                                    <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->sasaran }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 8px 0; font-weight: 600; color: #475569;">Penanggung Jawab
+                                                    </td>
+                                                    <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->penanggung_jawab }}</td>
+                                                </tr>
+                                                @if($pmk->uraian_revisi)
+                                                    <tr>
+                                                        <td
+                                                            style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">
+                                                            Uraian Revisi</td>
+                                                        <td style="padding: 8px 0; color: #0f172a;">: {{ $pmk->uraian_revisi }}</td>
+                                                    </tr>
+                                                @endif
+                                            </table>
+                                        </div>
+
+                                        <!-- Tabel Program Kerja -->
+                                        @if($pmk->program_kerja && is_array($pmk->program_kerja) && count($pmk->program_kerja) > 0)
+                                            <div>
+                                                <h4
+                                                    style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">
+                                                    <i class="fas fa-list-check" style="color: #dc2626; margin-right: 6px;"></i> Detail
+                                                    Kegiatan
+                                                </h4>
+                                                <div class="hiradc-wrapper" style="margin-bottom: 0;">
+                                                    <table class="excel-table" style="min-width: 100%;">
+                                                        <thead>
+                                                            <tr style="background: #1e293b; color: white;">
+                                                                <th rowspan="2" style="width: 40px; text-align: center;">No</th>
+                                                                <th rowspan="2" style="text-align: left;">Uraian Kegiatan</th>
+                                                                <th rowspan="2" style="text-align: left; width: 120px;">PIC</th>
+                                                                <th colspan="12" style="text-align: center;">Target (%)</th>
+                                                                <th rowspan="2" style="text-align: left; width: 120px;">Anggaran</th>
+                                                            </tr>
+                                                            <tr style="background: #334155; color: white;">
+                                                                @for($m = 1; $m <= 12; $m++)
+                                                                    <th style="text-align: center; width: 30px; font-size: 10px;">{{ $m }}
+                                                                </th> @endfor
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($pmk->program_kerja as $itemIndex => $item)
+                                                                <tr>
+                                                                    <td style="text-align: center;">{{ $itemIndex + 1 }}</td>
+                                                                    <td>{{ $item['uraian'] ?? '-' }}</td>
+                                                                    <td>{{ (!empty($item['koordinator']) && $item['koordinator'] !== '-') ? $item['koordinator'] : ($item['pelaksana'] ?? $item['pic'] ?? '-') }}
+                                                                    </td>
+                                                                    @php $targets = $item['target'] ?? []; @endphp
+                                                                    @for($m = 0; $m < 12; $m++)
+                                                                        <td
+                                                                            style="text-align: center; font-size: 11px; background: {{ (isset($targets[$m]) && $targets[$m] != '') ? '#eff6ff' : 'transparent' }};">
+                                                                            {{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '' }}
+                                                                        </td>
+                                                                    @endfor
+                                                                    <td>{{ isset($item['anggaran']) ? 'Rp ' . number_format($item['anggaran'], 0, ',', '.') : '-' }}
+                                                                    </td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
-                                @endif
-                            </div>
-                        </div>
-                        @endif
+                            @endif
 
-                    </div>
+                        </div>
                     @endif
                 @endforeach
             </div>
-            
+
             <!-- Approval History -->
             <div class="timeline-card">
                 <div class="timeline-header">
@@ -1771,204 +1870,199 @@
             @endphp
 
             @if($canEdit)
-            <div class="action-card" id="action-section" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px; margin-bottom: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-top: 32px;">
-                <div style="margin-bottom: 24px;">
-                    <h4 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-paper-plane" style="color: #c41e3a;"></i> Aksi Dokumen
-                    </h4>
-                    <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
-                        @if($isDraft)
-                            Anda dapat menyimpan dokumen sebagai draft atau mengirimkannya ke Kepala Unit Kerja untuk proses approval.
-                        @else
-                            Setelah selesai memperbaiki data, silakan tulis catatan perbaikan dan kirimkan kembali ke Kepala Unit Kerja.
-                        @endif
-                    </p>
+                <div class="action-card" id="action-section"
+                    style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px; margin-bottom: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-top: 32px;">
+                    <div style="margin-bottom: 24px;">
+                        <h4
+                            style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-paper-plane" style="color: #c41e3a;"></i> Aksi Dokumen
+                        </h4>
+                        <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                            @if($isDraft)
+                                Anda dapat menyimpan dokumen sebagai draft atau mengirimkannya ke Kepala Unit Kerja untuk proses
+                                approval.
+                            @else
+                                Setelah selesai memperbaiki data, silakan tulis catatan perbaikan dan kirimkan kembali ke Kepala
+                                Unit Kerja.
+                            @endif
+                        </p>
+                    </div>
+
+                    <form id="actionForm" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
+                        @csrf
+                        <input type="hidden" name="action_type" id="action_type" value="">
+
+                        <!-- Notes Textarea -->
+                        <div>
+                            <label for="submission_notes"
+                                style="display: block; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 8px;">
+                                Catatan <span style="color: #ef4444;" id="required_indicator">(Wajib diisi untuk
+                                    Submit/Revisi)</span>
+                            </label>
+                            {{-- Use different name for revision to match controller expectation --}}
+                            <textarea name="{{ $isRevision ? 'revision_comment' : 'submission_notes' }}"
+                                id="submission_notes" rows="4"
+                                placeholder="{{ $isRevision ? 'Jelaskan bagian mana saja yang telah diperbaiki...' : 'Tuliskan catatan atau keterangan tambahan mengenai dokumen ini...' }}"
+                                oninput="validateNotes()"
+                                style="width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; resize: vertical; transition: all 0.2s; line-height: 1.6;"
+                                onfocus="this.style.borderColor='#c41e3a'; this.style.boxShadow='0 0 0 3px rgba(196, 30, 58, 0.1)'"
+                                onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'"></textarea>
+                            <div id="notes_hint" style="font-size: 12px; color: #94a3b8; margin-top: 6px;">
+                                <i class="fas fa-info-circle"></i> Catatan wajib diisi
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+                            <!-- Save Draft Button (Only for Draft) -->
+                            @if($isDraft)
+                                <button type="button" onclick="submitAction('draft')" class="btn-draft"
+                                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);"
+                                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px -2px rgba(16, 185, 129, 0.4)'"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(16, 185, 129, 0.3)'">
+                                    <i class="fas fa-save"></i>
+                                    <span>Simpan Draft</span>
+                                </button>
+                            @endif
+
+                            <!-- Submit Button -->
+                            <button type="button" id="btn_submit"
+                                onclick="submitAction('{{ $isRevision ? 'revision' : 'submit' }}')" disabled
+                                style="background: #94a3b8; color: white; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: not-allowed; transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(148, 163, 184, 0.3);">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>{{ $isRevision ? 'Kirim Revisi' : 'Submit ke Kepala Unit' }}</span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
-                <form id="actionForm" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
-                    @csrf
-                    <input type="hidden" name="action_type" id="action_type" value="">
-                    
-                    <!-- Notes Textarea -->
-                    <div>
-                        <label for="submission_notes" style="display: block; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 8px;">
-                            Catatan <span style="color: #ef4444;" id="required_indicator">(Wajib diisi untuk Submit/Revisi)</span>
-                        </label>
-                        {{-- Use different name for revision to match controller expectation --}}
-                        <textarea 
-                            name="{{ $isRevision ? 'revision_comment' : 'submission_notes' }}" 
-                            id="submission_notes" 
-                            rows="4"
-                            placeholder="{{ $isRevision ? 'Jelaskan bagian mana saja yang telah diperbaiki...' : 'Tuliskan catatan atau keterangan tambahan mengenai dokumen ini...' }}"
-                            oninput="validateNotes()"
-                            style="width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; resize: vertical; transition: all 0.2s; line-height: 1.6;"
-                            onfocus="this.style.borderColor='#c41e3a'; this.style.boxShadow='0 0 0 3px rgba(196, 30, 58, 0.1)'"
-                            onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'"
-                        ></textarea>
-                        <div id="notes_hint" style="font-size: 12px; color: #94a3b8; margin-top: 6px;">
-                            <i class="fas fa-info-circle"></i> Catatan wajib diisi
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
-                        <!-- Save Draft Button (Only for Draft) -->
-                        @if($isDraft)
-                        <button 
-                            type="button" 
-                            onclick="submitAction('draft')"
-                            class="btn-draft"
-                            style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px -2px rgba(16, 185, 129, 0.4)'"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(16, 185, 129, 0.3)'"
-                        >
-                            <i class="fas fa-save"></i>
-                            <span>Simpan Draft</span>
-                        </button>
-                        @endif
-
-                        <!-- Submit Button -->
-                        <button 
-                            type="button" 
-                            id="btn_submit"
-                            onclick="submitAction('{{ $isRevision ? 'revision' : 'submit' }}')"
-                            disabled
-                            style="background: #94a3b8; color: white; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: not-allowed; transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(148, 163, 184, 0.3);"
-                        >
-                            <i class="fas fa-paper-plane"></i>
-                            <span>{{ $isRevision ? 'Kirim Revisi' : 'Submit ke Kepala Unit' }}</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <script>
-                // Scroll to action section if needed
-                document.addEventListener('DOMContentLoaded', function() {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    if (urlParams.has('action_needed')) {
-                        document.getElementById('action-section').scrollIntoView({ behavior: 'smooth' });
-                    }
-                });
-
-                function validateNotes() {
-                    const notes = document.getElementById('submission_notes').value.trim();
-                    const submitBtn = document.getElementById('btn_submit');
-                    const hint = document.getElementById('notes_hint');
-                    
-                    if (notes.length > 0) {
-                        // Enable submit button
-                        submitBtn.disabled = false;
-                        submitBtn.style.background = 'linear-gradient(135deg, #c41e3a 0%, #a01729 100%)';
-                        submitBtn.style.cursor = 'pointer';
-                        submitBtn.style.boxShadow = '0 4px 6px -1px rgba(196, 30, 58, 0.3)';
-                        submitBtn.onmouseover = function() {
-                            this.style.transform = 'translateY(-2px)';
-                            this.style.boxShadow = '0 6px 12px -2px rgba(196, 30, 58, 0.4)';
-                        };
-                        submitBtn.onmouseout = function() {
-                            this.style.transform = 'translateY(0)';
-                            this.style.boxShadow = '0 4px 6px -1px rgba(196, 30, 58, 0.3)';
-                        };
-                        hint.style.color = '#10b981';
-                        hint.innerHTML = '<i class="fas fa-check-circle"></i> Catatan sudah cukup untuk submit';
-                    } else {
-                        // Disable submit button
-                        submitBtn.disabled = true;
-                        submitBtn.style.background = '#94a3b8';
-                        submitBtn.style.cursor = 'not-allowed';
-                        submitBtn.style.boxShadow = '0 4px 6px -1px rgba(148, 163, 184, 0.3)';
-                        submitBtn.onmouseover = null;
-                        submitBtn.onmouseout = null;
-                        submitBtn.style.transform = 'translateY(0)';
-                        hint.style.color = '#94a3b8';
-                        hint.innerHTML = '<i class="fas fa-info-circle"></i> Catatan wajib diisi';
-                    }
-                }
-
-                function submitAction(actionType) {
-                    const notes = document.getElementById('submission_notes').value.trim();
-                    const form = document.getElementById('actionForm');
-                    
-                    // Validation for submit/revision action
-                    if ((actionType === 'submit' || actionType === 'revision') && notes.length === 0) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Catatan Diperlukan',
-                            text: 'Silakan isi catatan sebelum submit dokumen.',
-                            confirmButtonColor: '#c41e3a'
-                        });
-                        return;
-                    }
-                    
-                    // Set action type
-                    document.getElementById('action_type').value = actionType;
-                    
-                    // Confirmation dialog text
-                    let title, text, confirmText, icon;
-                    
-                    if (actionType === 'draft') {
-                        title = 'Simpan sebagai Draft?';
-                        text = 'Dokumen akan disimpan sebagai draft dan dapat diedit kembali.';
-                        confirmText = 'Ya, Simpan';
-                        icon = 'question';
-                    } else if (actionType === 'revision') {
-                        title = 'Kirim Revisi?';
-                        text = 'Dokumen yang telah diperbaiki akan dikirim kembali ke Kepala Unit Kerja untuk diperiksa.';
-                        confirmText = 'Ya, Kirim Revisi';
-                        icon = 'info';
-                    } else {
-                        title = 'Submit ke Kepala Unit?';
-                        text = 'Dokumen akan dikirim ke Kepala Unit Kerja untuk proses approval.';
-                        confirmText = 'Ya, Submit';
-                        icon = 'info';
-                    }
-                    
-                    Swal.fire({
-                        title: title,
-                        text: text,
-                        icon: icon,
-                        showCancelButton: true,
-                        confirmButtonColor: actionType === 'draft' ? '#10b981' : '#c41e3a',
-                        cancelButtonColor: '#94a3b8',
-                        confirmButtonText: confirmText,
-                        cancelButtonText: 'Batal'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Set form action based on type
-                            if (actionType === 'draft') {
-                                form.action = '{{ route("documents.update", $document->id) }}';
-                                form.method = 'POST';
-                                // Add method spoofing for PUT
-                                let methodInput = document.createElement('input');
-                                methodInput.type = 'hidden';
-                                methodInput.name = '_method';
-                                methodInput.value = 'PUT';
-                                form.appendChild(methodInput);
-                            } else if (actionType === 'revision') {
-                                form.action = '{{ route("documents.submit_revision", $document->id) }}';
-                                form.method = 'POST';
-                            } else {
-                                form.action = '{{ route("documents.submit", $document->id) }}';
-                                form.method = 'POST';
-                            }
-                            
-                            // Show loading
-                            Swal.fire({
-                                title: 'Memproses...',
-                                text: 'Mohon tunggu sebentar',
-                                allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-                            
-                            // Submit form
-                            form.submit();
+                <script>
+                    // Scroll to action section if needed
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (urlParams.has('action_needed')) {
+                            document.getElementById('action-section').scrollIntoView({ behavior: 'smooth' });
                         }
                     });
-                }
-            </script>
+
+                    function validateNotes() {
+                        const notes = document.getElementById('submission_notes').value.trim();
+                        const submitBtn = document.getElementById('btn_submit');
+                        const hint = document.getElementById('notes_hint');
+
+                        if (notes.length > 0) {
+                            // Enable submit button
+                            submitBtn.disabled = false;
+                            submitBtn.style.background = 'linear-gradient(135deg, #c41e3a 0%, #a01729 100%)';
+                            submitBtn.style.cursor = 'pointer';
+                            submitBtn.style.boxShadow = '0 4px 6px -1px rgba(196, 30, 58, 0.3)';
+                            submitBtn.onmouseover = function () {
+                                this.style.transform = 'translateY(-2px)';
+                                this.style.boxShadow = '0 6px 12px -2px rgba(196, 30, 58, 0.4)';
+                            };
+                            submitBtn.onmouseout = function () {
+                                this.style.transform = 'translateY(0)';
+                                this.style.boxShadow = '0 4px 6px -1px rgba(196, 30, 58, 0.3)';
+                            };
+                            hint.style.color = '#10b981';
+                            hint.innerHTML = '<i class="fas fa-check-circle"></i> Catatan sudah cukup untuk submit';
+                        } else {
+                            // Disable submit button
+                            submitBtn.disabled = true;
+                            submitBtn.style.background = '#94a3b8';
+                            submitBtn.style.cursor = 'not-allowed';
+                            submitBtn.style.boxShadow = '0 4px 6px -1px rgba(148, 163, 184, 0.3)';
+                            submitBtn.onmouseover = null;
+                            submitBtn.onmouseout = null;
+                            submitBtn.style.transform = 'translateY(0)';
+                            hint.style.color = '#94a3b8';
+                            hint.innerHTML = '<i class="fas fa-info-circle"></i> Catatan wajib diisi';
+                        }
+                    }
+
+                    function submitAction(actionType) {
+                        const notes = document.getElementById('submission_notes').value.trim();
+                        const form = document.getElementById('actionForm');
+
+                        // Validation for submit/revision action
+                        if ((actionType === 'submit' || actionType === 'revision') && notes.length === 0) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Catatan Diperlukan',
+                                text: 'Silakan isi catatan sebelum submit dokumen.',
+                                confirmButtonColor: '#c41e3a'
+                            });
+                            return;
+                        }
+
+                        // Set action type
+                        document.getElementById('action_type').value = actionType;
+
+                        // Confirmation dialog text
+                        let title, text, confirmText, icon;
+
+                        if (actionType === 'draft') {
+                            title = 'Simpan sebagai Draft?';
+                            text = 'Dokumen akan disimpan sebagai draft dan dapat diedit kembali.';
+                            confirmText = 'Ya, Simpan';
+                            icon = 'question';
+                        } else if (actionType === 'revision') {
+                            title = 'Kirim Revisi?';
+                            text = 'Dokumen yang telah diperbaiki akan dikirim kembali ke Kepala Unit Kerja untuk diperiksa.';
+                            confirmText = 'Ya, Kirim Revisi';
+                            icon = 'info';
+                        } else {
+                            title = 'Submit ke Kepala Unit?';
+                            text = 'Dokumen akan dikirim ke Kepala Unit Kerja untuk proses approval.';
+                            confirmText = 'Ya, Submit';
+                            icon = 'info';
+                        }
+
+                        Swal.fire({
+                            title: title,
+                            text: text,
+                            icon: icon,
+                            showCancelButton: true,
+                            confirmButtonColor: actionType === 'draft' ? '#10b981' : '#c41e3a',
+                            cancelButtonColor: '#94a3b8',
+                            confirmButtonText: confirmText,
+                            cancelButtonText: 'Batal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Set form action based on type
+                                if (actionType === 'draft') {
+                                    form.action = '{{ route("documents.update", $document->id) }}';
+                                    form.method = 'POST';
+                                    // Add method spoofing for PUT
+                                    let methodInput = document.createElement('input');
+                                    methodInput.type = 'hidden';
+                                    methodInput.name = '_method';
+                                    methodInput.value = 'PUT';
+                                    form.appendChild(methodInput);
+                                } else if (actionType === 'revision') {
+                                    form.action = '{{ route("documents.submit_revision", $document->id) }}';
+                                    form.method = 'POST';
+                                } else {
+                                    form.action = '{{ route("documents.submit", $document->id) }}';
+                                    form.method = 'POST';
+                                }
+
+                                // Show loading
+                                Swal.fire({
+                                    title: 'Memproses...',
+                                    text: 'Mohon tunggu sebentar',
+                                    allowOutsideClick: false,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                    }
+                                });
+
+                                // Submit form
+                                form.submit();
+                            }
+                        });
+                    }
+                </script>
             @endif
 
         </main>
@@ -1977,20 +2071,20 @@
     <script>
         function openTab(evt, tabName) {
             var i, tabcontent, tablinks;
-            
+
             // Hide all tab content
             tabcontent = document.getElementsByClassName("tab-content");
             for (i = 0; i < tabcontent.length; i++) {
                 tabcontent[i].classList.remove("active");
                 tabcontent[i].style.display = "none";
             }
-            
+
             // Remove active class from buttons
             tablinks = document.getElementsByClassName("tab-btn");
             for (i = 0; i < tablinks.length; i++) {
                 tablinks[i].classList.remove("active");
             }
-            
+
             // Show current tab and activate button
             var currentTab = document.getElementById(tabName);
             if (currentTab) {
@@ -1998,7 +2092,7 @@
                 // Small timeout to allow display block to apply before adding class for animation
                 setTimeout(() => currentTab.classList.add("active"), 10);
             }
-            
+
             if (evt && evt.currentTarget) {
                 evt.currentTarget.classList.add("active");
             }

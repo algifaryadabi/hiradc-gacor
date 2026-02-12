@@ -72,6 +72,12 @@ class ApprovalController extends Controller
                         $document->current_level = 3; // Finished Level 2
                         $document->status = 'published';
                         $document->published_at = now();
+
+                        // Increment revision number if this was a revision
+                        if ($document->is_in_revision) {
+                            $document->revision_number += 1;
+                            $document->is_in_revision = false;
+                        }
                     } else {
                         // Move to Level 3 (Kepala Departemen)
                         $document->current_level = 3;
@@ -86,6 +92,12 @@ class ApprovalController extends Controller
                 // Kepala Departemen -> Publish
                 $document->status = 'published';
                 $document->published_at = now();
+
+                // Increment revision number if this was a revision
+                if ($document->is_in_revision) {
+                    $document->revision_number += 1;
+                    $document->is_in_revision = false;
+                }
             }
 
             $document->save();

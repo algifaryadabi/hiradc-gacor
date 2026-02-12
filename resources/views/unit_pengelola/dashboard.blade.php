@@ -276,72 +276,7 @@
 <body>
     <div class="container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle">
-                    <img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP">
-                </div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System</div>
-            </div>
-
-            <nav class="nav-menu">
-                <a href="{{ route('unit_pengelola.dashboard') }}" class="nav-item active">
-                    <i class="fas fa-th-large"></i>
-                    <span>Dashboard</span>
-                </a>
-
-                {{-- Show Form Saya & Buat Form Baru for staff with create access --}}
-                @if(Auth::user()->can_create_documents)
-                    <a href="{{ route('documents.index') }}" class="nav-item">
-                        <i class="fas fa-folder-open"></i>
-                        <span>Form Saya</span>
-                    </a>
-                    <a href="{{ route('documents.create') }}" class="nav-item">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Buat Form Baru</span>
-                    </a>
-                @endif
-
-                {{-- Review Dokumen: Only for Kepala Unit or Reviewer/Verifikator --}}
-                @if(Auth::user()->role_jabatan == 3 || Auth::user()->is_reviewer || Auth::user()->is_verifier)
-                    <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item">
-                        <i class="fas fa-file-contract"></i>
-                        <span>Review Dokumen</span>
-                        @if(isset($pendingCount) && $pendingCount > 0)
-                            <span
-                                style="background: white; color: var(--primary); padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: auto; font-weight: bold;">
-                                {{ $pendingCount }}
-                            </span>
-                        @endif
-                    </a>
-                @endif
-            </nav>
-
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                            {{ Auth::user()->unit_or_dept_name }}
-                        </div>
-                    </div>
-                </div>
-                <!-- Standard Logout Logic using Form -->
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Keluar
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
-            </div>
-        </aside>
+        @include('partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
@@ -491,43 +426,67 @@
 
     <!-- Detail Document Modal -->
     <div id="detailModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px);">
-        <div class="modal-content" style="background-color: #fefefe; margin: 5% auto; padding: 0; border: 1px solid #888; width: 60%; max-width: 800px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
-            <div class="modal-header" style="padding: 20px 30px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-top-left-radius: 16px; border-top-right-radius: 16px;">
-                <h2 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin:0;">Detail Dokumen</h2>
-                <span class="close" onclick="closeModal()" style="color: #64748b; font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.2s;">&times;</span>
+        <div class="modal-content" style="background-color: #fefefe; margin: 3% auto; padding: 0; border: 1px solid #888; width: 70%; max-width: 900px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <div class="modal-header" style="padding: 20px 30px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #c41e3a 0%, #9a1829 100%); border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: white; margin:0;">
+                    <i class="fas fa-file-alt" style="margin-right: 10px;"></i>Detail Dokumen
+                </h2>
+                <span class="close" onclick="closeModal()" style="color: white; font-size: 28px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; opacity: 0.8;">&times;</span>
             </div>
-            <div class="modal-body" style="padding: 30px;">
-                <div style="margin-bottom: 24px;">
+            <div class="modal-body" style="padding: 30px; max-height: 70vh; overflow-y: auto;">
+                <!-- Document Title -->
+                <div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px solid #e2e8f0;">
                     <h3 id="m_title" style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; line-height: 1.4;"></h3>
-                    <div style="display: flex; gap: 10px;">
-                        <span id="m_status" style="background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;"></span>
-                        <span id="m_unit" style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;"></span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <span id="m_status" style="background: #dcfce7; color: #166534; padding: 6px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;"></span>
+                        <span id="m_category" style="background: #dbeafe; color: #1e40af; padding: 6px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 700;"></span>
+                        <span id="m_risk" style="background: #fef3c7; color: #92400e; padding: 6px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 700;"></span>
                     </div>
                 </div>
-                
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;">
-                    <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                        <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Penulis</label>
-                        <div id="m_author" style="font-weight: 600; color: #334155;"></div>
+
+                <!-- Document Info Grid -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
+                    <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <label style="display: block; font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                            <i class="fas fa-user-edit" style="margin-right: 6px;"></i>Penulis
+                        </label>
+                        <div id="m_author" style="font-weight: 600; color: #1e293b; font-size: 0.95rem;"></div>
                     </div>
-                    <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                         <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Tanggal Publikasi</label>
-                        <div id="m_date" style="font-weight: 600; color: #334155;"></div>
+                    <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <label style="display: block; font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                            <i class="fas fa-calendar-check" style="margin-right: 6px;"></i>Tanggal Publikasi
+                        </label>
+                        <div id="m_date" style="font-weight: 600; color: #1e293b; font-size: 0.95rem;"></div>
                     </div>
-                    <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; grid-column: span 2;">
-                         <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Disetujui Oleh</label>
-                        <div id="m_approver" style="font-weight: 600; color: #334155;"></div>
+                    <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <label style="display: block; font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                            <i class="fas fa-building" style="margin-right: 6px;"></i>Unit
+                        </label>
+                        <div id="m_unit" style="font-weight: 600; color: #1e293b; font-size: 0.95rem;"></div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <label style="display: block; font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                            <i class="fas fa-user-check" style="margin-right: 6px;"></i>Disetujui Oleh
+                        </label>
+                        <div id="m_approver" style="font-weight: 600; color: #1e293b; font-size: 0.95rem;"></div>
+                    </div>
+                </div>
+
+                <!-- Published Programs Section -->
+                <div id="m_programs_section" style="margin-top: 24px; padding-top: 20px; border-top: 2px solid #e2e8f0; display: none;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <i class="fas fa-clipboard-list" style="color: #c41e3a; font-size: 1.2rem;"></i>
+                        <h4 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0;">Program Terpublikasi</h4>
+                    </div>
+                    <div id="m_programs_list" style="display: grid; gap: 10px;">
+                        <!-- Programs will be injected here -->
                     </div>
                 </div>
             </div>
             <div class="modal-footer" style="padding: 20px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; display: flex; justify-content: flex-end; gap: 12px;">
-                <a id="btn_modal_pdf" href="#" target="_blank" style="padding: 10px 24px; background: #c41e3a; color: white; border: none; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.2s;">
-                    <i class="fas fa-file-pdf" style="margin-right: 8px;"></i> Export PDF
-                </a>
-                <a id="btn_modal_excel" href="#" target="_blank" style="padding: 10px 24px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.2s;">
-                    <i class="fas fa-file-excel" style="margin-right: 8px;"></i> Export Excel
-                </a>
-                <button onclick="closeModal()" style="padding: 10px 24px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; color: #475569; font-weight: 600; cursor: pointer; transition: all 0.2s;">Tutup</button>
+                <button onclick="closeModal()" style="padding: 10px 24px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; color: #475569; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <i class="fas fa-times" style="margin-right: 6px;"></i>Tutup
+                </button>
             </div>
         </div>
     </div>
@@ -687,12 +646,20 @@
                 });
             }
 
-            // FILTER
+            // Map display labels to backend categories
+            const categoryMap = {
+                'K3/KO/Lingkungan': 'SHE',
+                'Keamanan': 'Security'
+            };
+
+            // FILTER - map display label to backend category
             if (filterCategory !== 'ALL') {
-                unitDocs = unitDocs.filter(doc => doc.category === filterCategory);
+                const backendCategory = categoryMap[filterCategory] || filterCategory;
+                unitDocs = unitDocs.filter(doc => doc.category === backendCategory);
             }
 
-            const categories = ['SHE', 'Security'];
+            // User-friendly category labels for dropdown
+            const categories = ['K3/KO/Lingkungan', 'Keamanan'];
 
             let html = `
                 <!-- Breadcrumb (Optional if you want it exactly like User Dashboard, but we can stick to Title/Header) -->
@@ -731,13 +698,13 @@
                          <p>Tidak ada dokumen terpublikasi untuk kategori <b>${filterCategory}</b>.</p>
                      </div></div>`;
             } else {
-                html += `
+                 html += `
                      <div style="overflow-x: auto;">
                      <table class="custom-table">
                          <thead>
                              <tr>
                                  <th>Judul Form</th>
-                                 <th>Unit Pengelola</th>
+                                 <th>Kategori</th>
                                  <th>Penulis</th>
                                  <th>Tanggal Publish</th>
                                  <th>Status</th>
@@ -748,15 +715,26 @@
                  `;
 
                 unitDocs.forEach(doc => {
+                    // Color coding for simplified categories
                     let catColor = '#f1f5f9';
                     let catText = '#64748b';
-                    if (doc.category == 'SHE') { catColor = '#dcfce7'; catText = '#166534'; }
-                    else if (doc.category == 'Security') { catColor = '#e0f2fe'; catText = '#075985'; }
+                    
+                    // Get category display
+                    const categories = doc.doc_categories || '-';
+                    
+                    // Color based on category type
+                    if (categories.includes('K3') || categories.includes('KO') || categories.includes('Lingkungan')) {
+                        catColor = '#dcfce7'; 
+                        catText = '#166534';
+                    } else if (categories.includes('Keamanan')) {
+                        catColor = '#e0f2fe'; 
+                        catText = '#075985';
+                    }
 
                     html += `
                          <tr>
                              <td><div style="font-weight: 600; color: var(--text-primary);">${doc.title}</div></td>
-                             <td><span class="status-pill" style="background:${catColor}; color:${catText};">${doc.category || '-'}</span></td>
+                             <td><span class="status-pill" style="background:${catColor}; color:${catText};">${categories}</span></td>
                              <td><div style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">${doc.author}</div></td>
                              <td><div style="font-size: 0.875rem; color: var(--text-secondary);">${doc.date}</div></td>
                              <td><span class="status-pill" style="background: #ecfdf5; color: #059669;">DISETUJUI</span></td>
@@ -767,12 +745,6 @@
                                      </button>
                                      <a href="{{ url('/documents') }}/${doc.id}/published?filter=${doc.category}" class="btn-action" style="background: #2563eb;">
                                          <i class="fas fa-external-link-alt"></i>
-                                     </a>
-                                     <a href="{{ url('/documents') }}/${doc.id}/export-detail-pdf" target="_blank" class="btn-action" style="background: #c41e3a;" title="Export PDF">
-                                         <i class="fas fa-file-pdf"></i>
-                                     </a>
-                                     <a href="{{ url('/documents') }}/${doc.id}/export/excel" target="_blank" class="btn-action" style="background: #10b981;" title="Export Excel">
-                                         <i class="fas fa-file-excel"></i>
                                      </a>
                                  </div>
                              </td>
@@ -788,19 +760,78 @@
         function openDetail(id) {
             const doc = documents.find(d => d.id == id);
             if (doc) {
+                 // Basic Info
                  document.getElementById('m_title').innerText = doc.title;
                  document.getElementById('m_status').innerText = "DISETUJUI";
-                 document.getElementById('m_unit').innerText = selectedUnit ? selectedUnit.name : '-';
+                 document.getElementById('m_unit').innerText = doc.unit || '-';
                  document.getElementById('m_author').innerText = doc.author;
                  document.getElementById('m_date').innerText = doc.date;
-                 document.getElementById('m_approver').innerText = doc.approver || '-'; // Need approver data?
+                 document.getElementById('m_approver').innerText = doc.approver || '-';
                  
-                 // Update Export Links
-                 document.getElementById('btn_modal_pdf').href = `{{ url('/documents') }}/${doc.id}/export-detail-pdf`;
-                 document.getElementById('btn_modal_excel').href = `{{ url('/documents') }}/${doc.id}/export/excel`;
+                 // Category Badge
+                 const categoryBadge = document.getElementById('m_category');
+                 categoryBadge.innerText = doc.doc_categories || '-';
+                 
+                 // Risk Level Badge
+                 const riskBadge = document.getElementById('m_risk');
+                 const riskLevel = doc.risk_level || 'Normal';
+                 riskBadge.innerText = `Risiko: ${riskLevel}`;
+                 
+                 // Color code risk level
+                 if (riskLevel === 'High' || riskLevel === 'Tinggi') {
+                     riskBadge.style.background = '#fee2e2';
+                     riskBadge.style.color = '#991b1b';
+                 } else if (riskLevel === 'Medium' || riskLevel === 'Sedang') {
+                     riskBadge.style.background = '#fef3c7';
+                     riskBadge.style.color = '#92400e';
+                 } else {
+                     riskBadge.style.background = '#d1fae5';
+                     riskBadge.style.color = '#065f46';
+                 }
+                 
+                 // Fetch and display published programs
+                 fetchPublishedPrograms(doc.id);
                  
                  document.getElementById('detailModal').style.display = 'block';
             }
+        }
+
+        // Fetch published programs for a document
+        function fetchPublishedPrograms(docId) {
+            fetch(`{{ url('/api/documents') }}/${docId}/programs`)
+                .then(response => response.json())
+                .then(data => {
+                    const programsSection = document.getElementById('m_programs_section');
+                    const programsList = document.getElementById('m_programs_list');
+                    
+                    if (data.programs && data.programs.length > 0) {
+                        programsList.innerHTML = data.programs.map(prog => {
+                            const typeColor = prog.type === 'PUK' ? '#dbeafe' : '#fce7f3';
+                            const typeTextColor = prog.type === 'PUK' ? '#1e40af' : '#9f1239';
+                            const iconClass = prog.type === 'PUK' ? 'fa-shield-alt' : 'fa-clipboard-check';
+                            
+                            return `
+                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <i class="fas ${iconClass}" style="font-size: 1.2rem; color: #c41e3a;"></i>
+                                        <div>
+                                            <div style="font-weight: 600; color: #1e293b; font-size: 0.9rem; margin-bottom: 4px;">${prog.name || prog.kegiatan}</div>
+                                            <div style="font-size: 0.75rem; color: #64748b;">PIC: ${prog.pic || '-'}</div>
+                                        </div>
+                                    </div>
+                                    <span style="background: ${typeColor}; color: ${typeTextColor}; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700;">${prog.type}</span>
+                                </div>
+                            `;
+                        }).join('');
+                        programsSection.style.display = 'block';
+                    } else {
+                        programsSection.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching programs:', error);
+                    document.getElementById('m_programs_section').style.display = 'none';
+                });
         }
 
         function closeModal() {

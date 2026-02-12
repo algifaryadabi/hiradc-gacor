@@ -634,112 +634,7 @@
             $role = $currentUser->getRoleName();
         @endphp
 
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle"><img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP"></div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System</div>
-            </div>
-
-            <nav class="nav-menu">
-                {{-- 1. USER / STAFF (Role 4,5,6 with Create) --}}
-                @if($role == 'user' || ($role == 'staff' && Auth::user()->can_create_documents == 1))
-                    <a href="{{ route('user.dashboard') }}" class="nav-item">
-                        <i class="fas fa-th-large"></i><span>Dashboard</span>
-                    </a>
-                    <a href="{{ route('documents.index') }}" class="nav-item">
-                        <i class="fas fa-folder-open"></i><span>Form Saya</span>
-                    </a>
-                    <a href="{{ route('documents.create') }}" class="nav-item">
-                        <i class="fas fa-plus-circle"></i><span>Buat Form Baru</span>
-                    </a>
-                @endif
-
-                {{-- 2. UNIT PENGELOLA (Head & Staff) --}}
-                @if($role == 'unit_pengelola')
-                    <a href="{{ route('unit_pengelola.dashboard') }}" class="nav-item">
-                        <i class="fas fa-th-large"></i><span>Dashboard</span>
-                    </a>
-
-                    {{-- If Staff/Head has Create Access (PIC) --}}
-                    @if(Auth::user()->can_create_documents == 1)
-                        <a href="{{ route('documents.index') }}" class="nav-item">
-                            <i class="fas fa-folder-open"></i><span>Form Saya</span>
-                        </a>
-                        <a href="{{ route('documents.create') }}" class="nav-item">
-                            <i class="fas fa-plus-circle"></i><span>Buat Form Baru</span>
-                        </a>
-                    @endif
-
-                    {{-- Review Link (Head vs Staff) --}}
-                    @if(Auth::user()->role_jabatan == 3)
-                        {{-- Head --}}
-                        <a href="{{ route('unit_pengelola.check_documents') }}" class="nav-item">
-                            <i class="fas fa-file-contract"></i><span>Review Dokumen</span>
-                        </a>
-                    @else
-                        {{-- Staff --}}
-                        <a href="{{ route('unit_pengelola.staff.index') }}" class="nav-item">
-                            <i class="fas fa-file-contract"></i><span>Review Dokumen</span>
-                        </a>
-                    @endif
-                @endif
-                
-                {{-- 3. APPROVER (Head of Unit - Not Unit Pengelola) --}}
-                @if($role == 'approver')
-                    <a href="{{ route('approver.check_documents') }}" class="nav-item">
-                        <i class="fas fa-file-contract"></i><span>Review Dokumen</span>
-                    </a>
-                @endif
-
-                {{-- 4. KEPALA DEPARTEMEN --}}
-                @if($role == 'kepala_departemen')
-                     <a href="{{ route('kepala_departemen.dashboard') }}" class="nav-item">
-                        <i class="fas fa-th-large"></i><span>Dashboard</span>
-                    </a>
-                     <a href="{{ route('kepala_departemen.check_documents') }}" class="nav-item">
-                        <i class="fas fa-check-double"></i><span>Review Dokumen</span>
-                    </a>
-                @endif
-
-                {{-- 5. ADMIN --}}
-                @if($role == 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="nav-item">
-                        <i class="fas fa-th-large"></i><span>Dashboard</span>
-                    </a>
-                    <a href="{{ route('admin.users') }}" class="nav-item">
-                        <i class="fas fa-users-cog"></i><span>User Management</span>
-                    </a>
-                     <a href="{{ route('admin.master') }}" class="nav-item">
-                        <i class="fas fa-database"></i><span>Master Data</span>
-                    </a>
-                @endif
-            </nav>
-
-            {{-- User Info Section --}}
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                             {{ Auth::user()->unit ? Auth::user()->unit->nama_unit : (Auth::user()->departemen ? Auth::user()->departemen->nama_dept : '-') }}
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form-published').submit();">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Keluar
-                </a>
-                <form id="logout-form-published" action="{{ route('logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
-            </div>
-        </aside>
+        @include('partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
@@ -769,16 +664,18 @@
                         </span>
                     </div>
                 </div>
-                <div class="action-buttons">
-                    <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank" style="padding: 10px 16px; background: #e74c3c; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; transition: all 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
-                        <i class="fas fa-file-pdf" style="margin-right: 8px;"></i> PDF
-                    </a>
-                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank" style="padding: 10px 16px; background: #27ae60; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; transition: all 0.2s;" onmouseover="this.style.background='#219150'" onmouseout="this.style.background='#27ae60'">
-                        <i class="fas fa-file-excel" style="margin-right: 8px;"></i> Excel
-                    </a>
-                </div>
             </div>
 
+            {{-- Export Buttons Above Table --}}
+            <div style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="{{ route('documents.export.detail.pdf', $document->id) }}" target="_blank" style="padding: 10px 20px; background: #c41e3a; color: white; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(196, 30, 58, 0.2);" onmouseover="this.style.background='#9a1829'; this.style.boxShadow='0 4px 8px rgba(196, 30, 58, 0.3)'" onmouseout="this.style.background='#c41e3a'; this.style.boxShadow='0 2px 4px rgba(196, 30, 58, 0.2)'">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </a>
+                <a href="{{ route('documents.export.detail.excel', $document->id) }}" target="_blank" style="padding: 10px 20px; background: #10b981; color: white; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);" onmouseover="this.style.background='#059669'; this.style.boxShadow='0 4px 8px rgba(16, 185, 129, 0.3)'" onmouseout="this.style.background='#10b981'; this.style.boxShadow='0 2px 4px rgba(16, 185, 129, 0.2)'">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </a>
+            </div>
+            
             <div class="table-wrapper">
                 @php
                     $showShe = $document->hasSheContent();
@@ -1059,8 +956,24 @@
 
 @if($puk)
 <div class="history-card" style="margin-top: 40px; border-left: 5px solid #3b82f6; position: relative;">
-    <div class="timeline-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px; font-weight: 700; font-size: 16px; color: var(--text-main);">
-        <i class="fas fa-tasks" style="color: #3b82f6;"></i> Program Unit Kerja (PUK)
+    <div class="timeline-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; color: var(--text-main);">
+            <i class="fas fa-tasks" style="color: #3b82f6;"></i> Program Unit Kerja (PUK)
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ route('documents.export.puk.pdf', $document->id) }}" target="_blank"
+                style="padding: 6px 14px; background: #ef4444; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                onmouseover="this.style.background='#dc2626'" 
+                onmouseout="this.style.background='#ef4444'">
+                <i class="fas fa-file-pdf"></i> PDF
+            </a>
+            <a href="{{ route('documents.export.puk.excel', $document->id) }}" target="_blank"
+                style="padding: 6px 14px; background: #22c55e; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                onmouseover="this.style.background='#16a34a'" 
+                onmouseout="this.style.background='#22c55e'">
+                <i class="fas fa-file-excel"></i> Excel
+            </a>
+        </div>
     </div>
 
     <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
@@ -1128,8 +1041,24 @@
 
 @if($pmk)
 <div class="history-card" style="margin-top: 40px; border-left: 5px solid #c026d3; position: relative;">
-    <div class="timeline-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px; font-weight: 700; font-size: 16px; color: var(--text-main);">
-        <i class="fas fa-shield-virus" style="color: #c026d3;"></i> Program Manajemen Kesehatan (PMK)
+    <div class="timeline-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; color: var(--text-main);">
+            <i class="fas fa-shield-virus" style="color: #c026d3;"></i> Program Manajemen Kesehatan (PMK)
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ route('documents.export.pmk.pdf', $document->id) }}" target="_blank"
+                style="padding: 6px 14px; background: #ef4444; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                onmouseover="this.style.background='#dc2626'" 
+                onmouseout="this.style.background='#ef4444'">
+                <i class="fas fa-file-pdf"></i> PDF
+            </a>
+            <a href="{{ route('documents.export.pmk.excel', $document->id) }}" target="_blank"
+                style="padding: 6px 14px; background: #22c55e; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                onmouseover="this.style.background='#16a34a'" 
+                onmouseout="this.style.background='#22c55e'">
+                <i class="fas fa-file-excel"></i> Excel
+            </a>
+        </div>
     </div>
 
     <div style="background: #fdf4ff; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #f0abfc;">

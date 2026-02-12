@@ -1259,7 +1259,7 @@
 
     <div class="container">
         <!-- Sidebar Inclusion -->
-        @include('unit_pengelola.partials.sidebar')
+        @include('partials.sidebar')
 
         <main class="main-content">
             <div class="content-wrapper">
@@ -1276,9 +1276,6 @@
                 </div>
                 <!-- Logic for Back button differs slightly per role, defaulting to dashboard -->
                 <div style="display:flex; gap:10px;">
-                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" class="btn" style="background-color:#107c41; color:white;">
-                        <i class="fas fa-file-excel"></i> Export Excel
-                    </a>
                     <a href="{{ route('unit_pengelola.dashboard') }}" class="btn-back"><i class="fas fa-arrow-left"></i>
                         Kembali</a>
                 </div>
@@ -1339,6 +1336,14 @@
             </div>
 
             <div id="tab-hiradc" class="tab-content active">
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:15px;">
+                    <a href="{{ route('documents.export.detail.pdf', $document->id) }}" class="btn" style="background-color:#dc2626; color:white; padding: 8px 16px; border-radius: 8px; text-decoration: none;">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </a>
+                    <a href="{{ route('documents.export.detail.excel', $document->id) }}" class="btn" style="background-color:#107c41; color:white; padding: 8px 16px; border-radius: 8px; text-decoration: none;">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </a>
+                </div>
                 <div class="hiradc-wrapper">
                 <table class="excel-table">
                     <thead>
@@ -1852,9 +1857,22 @@
 
             @if($pmk)
                 <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #c026d3;">
-                    <div class="card-header-slim">
-                        <i class="fas fa-project-diagram"></i>
-                        <h2>Review Program Manajemen Korporat (PMK)</h2>
+                    <div class="card-header-slim" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-project-diagram"></i>
+                            <h2>Review Program Manajemen Korporat (PMK)</h2>
+                        </div>
+                        <!-- Download Buttons for PMK -->
+                        <div style="display: flex; gap: 8px;">
+                            <a href="{{ route('documents.export.pmk.pdf', $document->id) }}" class="btn btn-sm"
+                                style="background-color: #dc2626; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-file-pdf"></i> Download PDF
+                            </a>
+                            <a href="{{ route('documents.export.pmk.excel', $document->id) }}" class="btn btn-sm"
+                                style="background-color: #107c41; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-file-excel"></i> Download Excel
+                            </a>
+                        </div>
                     </div>
                     <div style="padding: 24px;">
                         <div style="background: #faf5ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9d5ff;">

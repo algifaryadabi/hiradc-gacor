@@ -645,55 +645,7 @@
 <body>
     <div class="container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="logo-circle">
-                    <img src="{{ asset('images/logo-semen-padang.png') }}" alt="SP">
-                </div>
-                <div class="logo-text">PT Semen Padang</div>
-                <div class="logo-subtext">HIRADC System</div>
-            </div>
-
-            <nav class="nav-menu">
-                <a href="{{ route('direksi.dashboard') }}" class="nav-item active">
-                    <i class="fas fa-th-large"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="{{ route('direksi.check_documents') }}" class="nav-item">
-                    <i class="fas fa-file-signature"></i>
-                    <span>Review Dokumen</span>
-                    @if(isset($pendingCount) && $pendingCount > 0)
-                        <span
-                            style="background: white; color: var(--primary); padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: auto; font-weight: bold;">
-                            {{ $pendingCount }}
-                        </span>
-                    @endif
-                </a>
-            </nav>
-
-            <div class="user-info-bottom">
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->nama_user ?? Auth::user()->username, 0, 2)) }}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->nama_user ?? Auth::user()->username }}</div>
-                        <div class="user-role">{{ Auth::user()->role_jabatan_name ?? 'Direksi' }}</div>
-                        <div class="user-role" style="font-weight: normal; opacity: 0.8;">
-                           {{ Auth::user()->unit_or_dept_name }}
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ route('logout') }}" class="logout-btn"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Keluar
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
-            </div>
-        </aside>
+        @include('partials.sidebar')
 
         <!-- Main Content -->
         <main class="main-content">
@@ -764,7 +716,7 @@
             'id_dept' => is_array($u) ? $u['id_dept'] : $u->id_dept,
             'nama_unit' => is_array($u) ? $u['nama_unit'] : $u->nama_unit
         ]);
-        
+
         $documentsList = $publishedData->map(fn($d) => [
             'id' => $d->id,
             'title' => $d->judul_dokumen ?? $d->kolom2_kegiatan,
@@ -956,7 +908,7 @@
 
             let unitDocs = [];
             rawDocs.forEach(doc => {
-                 unitDocs.push(doc);
+                unitDocs.push(doc);
             });
 
             // Filter logic (If category needed, but for Direksi it's PMK, maybe broad view)

@@ -69,7 +69,13 @@ class UserManagementController extends Controller
             $units = Unit::all();
             $seksis = Seksi::all();
             $roleJabatans = \App\Models\RoleJabatan::all();
-            $roleUsers = DB::table('role_user')->get();
+
+            // Role User options (Admin = 1, User = 2)
+            // No longer using role_user table - using direct values
+            $roleUsers = collect([
+                (object) ['id_role_user' => 1, 'nama_role' => 'Admin'],
+                (object) ['id_role_user' => 2, 'nama_role' => 'User'],
+            ]);
 
             \Log::info('UserManagement Page Load', [
                 'total_users' => $users->total(),
@@ -93,7 +99,10 @@ class UserManagementController extends Controller
             $units = collect([]);
             $seksis = collect([]);
             $roleJabatans = collect([]);
-            $roleUsers = collect([]);
+            $roleUsers = collect([
+                (object) ['id_role_user' => 1, 'nama_role' => 'Admin'],
+                (object) ['id_role_user' => 2, 'nama_role' => 'User'],
+            ]);
         }
 
         return view('admin.users.index', compact('users', 'direktorats', 'departemens', 'units', 'seksis', 'roleJabatans', 'roleUsers'));

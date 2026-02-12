@@ -303,7 +303,7 @@
 
 <body>
     <aside class="sidebar">
-        @include('admin.partials.sidebar')
+        @include('partials.sidebar')
     </aside>
 
     <main class="main-content">
