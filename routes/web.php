@@ -127,7 +127,8 @@ Route::middleware('auth')->group(function () {
                 'status' => 'DISETUJUI',
                 'risk_level' => $doc->risk_level ?? 'Normal',
                 'approval_date' => $approvalDate,
-                'approval_note' => $approvalNote
+                'approval_note' => $approvalNote,
+                'details' => $doc->details->map(fn($d) => ['kategori' => $d->kategori])->toArray()
             ];
         });
 

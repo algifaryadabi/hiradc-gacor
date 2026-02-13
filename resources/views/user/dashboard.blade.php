@@ -1143,15 +1143,26 @@
 
             // FILTER
             if (filterCategory !== 'ALL') {
-                unitDocs = unitDocs.filter(doc => doc.category === filterCategory);
+                unitDocs = unitDocs.filter(doc => {
+                    // Determine simplified category based on unit category
+                    let simplifiedCategory = '';
+                    if (doc.category && (doc.category.includes('SHE') || doc.category === 'SHE')) {
+                        simplifiedCategory = 'K3/KO/Lingkungan';
+                    } else if (doc.category && (doc.category.includes('Security') || doc.category === 'Security')) {
+                        simplifiedCategory = 'Keamanan';
+                    }
+                    return simplifiedCategory === filterCategory;
+                });
             }
 
-            // Categories available for filter
-            const categories = ['SHE', 'Security'];
+            // Simplified categories for filter - only 2 options
+            const categories = ['K3/KO/Lingkungan', 'Keamanan'];
+
+            const uniqueCategories = [...new Set(unitDocs.map(d => d.category))];
 
             let html = `
-                 <div class="table-section">
-                     <div class="table-header" style="flex-wrap: wrap; gap: 10px;">
+                 <div style="background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
                          <div>
                              <h2 style="margin-bottom:5px;">Dokumen Terpublikasi - ${name}</h2>
                              <div style="font-size:12px; color:#666;">Menampilkan kategori: <b>${filterCategory}</b></div>
@@ -1178,7 +1189,7 @@
                          <thead>
                              <tr>
                                  <th>Judul Form</th>
-                                 <th>Unit Pengelola</th>
+                                 <th>Kategori</th>
                                  <th>Penulis</th>
                                  <th>Tanggal Publish</th>
                                  <th>Status</th>
@@ -1189,25 +1200,33 @@
                  `;
 
                 unitDocs.forEach(doc => {
-                    // Category Badge Color
-                    let catColor = '#e0e0e0';
-                    let catText = '#333';
-                    if (doc.category == 'SHE') { catColor = '#dcfce7'; catText = '#166534'; }
-                    else if (doc.category == 'Security') { catColor = '#e0f2fe'; catText = '#075985'; }
+                    // Determine simplified category display
+                    let categoryDisplay = '';
+                    let badgeColor = { bg: '#e0e0e0', text: '#333' };
+                    
+                    if (doc.category && (doc.category.includes('SHE') || doc.category === 'SHE')) {
+                        categoryDisplay = 'K3/KO/Lingkungan';
+                        badgeColor = { bg: '#dcfce7', text: '#166534' }; // Green
+                    } else if (doc.category && (doc.category.includes('Security') || doc.category === 'Security')) {
+                        categoryDisplay = 'Keamanan';
+                        badgeColor = { bg: '#e0f2fe', text: '#075985' }; // Blue
+                    } else {
+                        categoryDisplay = '-';
+                    }
 
                     html += `
                          <tr>
                              <td>${doc.title}</td>
-                             <td><span class="status-pill" style="background:${catColor}; color:${catText};">${doc.category || '-'}</span></td>
+                             <td><span class="status-pill" style="background:${badgeColor.bg}; color:${badgeColor.text};">${categoryDisplay}</span></td>
                              <td>${doc.author}</td>
                              <td>${doc.date}</td>
                              <td><span class="status-pill approved">DISETUJUI</span></td>
                              <td>
-                                 <a href="#" class="btn-action" onclick="openDetail(${doc.id})">
-                                     <i class="fas fa-eye"></i> Detail
+                                 <a href="#" class="btn-action" onclick="openDetail(${doc.id})" title="Detail">
+                                     <i class="fas fa-eye"></i>
                                  </a>
-                                 <a href="/documents/${doc.id}/published?filter=${doc.category}" class="btn-action" style="background: #2563eb; margin-left: 5px;">
-                                     <i class="fas fa-external-link-alt"></i> Buka
+                                 <a href="/documents/${doc.id}/published?filter=${doc.category}" class="btn-action" style="background: #2563eb; margin-left: 5px;" title="Buka">
+                                     <i class="fas fa-external-link-alt"></i>
                                  </a>
                              </td>
                          </tr>

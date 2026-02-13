@@ -315,7 +315,7 @@
         .sidebar .user-name {
             font-weight: 600;
             font-size: 0.9375rem;
-            color: white;
+            color: #c41e3a; /* Changed from white to red */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -324,13 +324,13 @@
 
         .user-role {
             font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.85);
-            font-weight: 500; /* Dashboard uses default? Let's keep 500 */
+            color: #c41e3a; /* Changed from white to red */
+            font-weight: 500;
         }
         
         .sidebar .user-role {
             font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.85);
+            color: #c41e3a; /* Changed from white to red */
             font-weight: 500;
         }
 
@@ -358,9 +358,9 @@
         .sidebar .logout-btn {
             width: 100%;
             padding: var(--space-3);
-            background: rgba(255, 255, 255, 0.15);
+            background: #c41e3a; /* Changed to red */
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            border: 1px solid #c41e3a; /* Changed to red */
             border-radius: var(--radius-lg);
             font-size: 0.875rem;
             font-weight: 600;
@@ -377,17 +377,17 @@
         }
 
         .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.4); /* Dashboard style? */
+            background: #9a1829; /* Darker red on hover */
+            border-color: #9a1829;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.4);
         }
         
         .sidebar .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.4);
+            background: #9a1829; /* Darker red on hover */
+            border-color: #9a1829;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.4);
         }
 
         /* Main Content */
