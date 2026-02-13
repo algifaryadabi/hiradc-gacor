@@ -329,8 +329,8 @@
                         onerror="this.style.display='none'; this.parentElement.innerText='SP'">
                 </div>
                 <h1 class="brand-title">PT Semen Padang</h1>
-                <p class="brand-subtitle">Sistem Manajemen Identifikasi Bahaya, Penilaian Risiko, dan Penetapan
-                    Pengendalian (HIRADC)</p>
+                <p class="brand-subtitle">Identifikasi Risiko dan Penetapan Program Mitigasi Risiko K3, KO, Aspek
+                    Lingkungan dan Pengamanan</p>
             </div>
         </div>
 

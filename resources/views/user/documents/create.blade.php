@@ -986,1518 +986,821 @@
 
     <!-- ITEM TEMPLATE (Hidden) -->
     <template id="item-template">
-        <div class="doc-item" data-index="{index}" style="margin-bottom: 30px; transition: all 0.3s ease;">
-            <div class="doc-card"
-                style="border-left: 5px solid var(--primary-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border-radius: 12px; overflow: hidden; background: white;">
-
-                <!-- Card Header -->
-                <div class="card-header"
-                    style="justify-content: space-between; background: linear-gradient(to right, #fff1f2, #fff); padding: 15px 25px; border-bottom: 1px solid #fce7f3; cursor: pointer;"
-                    onclick="toggleCollapse(this)">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <div class="header-icon"
-                            style="background: var(--primary-color); color: white; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 2px 4px rgba(196, 30, 58, 0.3);">
-                            <span class="item-number" style="font-weight: 700; font-size: 14px;">#{displayIndex}</span>
-                        </div>
-                        <div class="header-title">
-                            <h2 style="font-size: 16px; margin: 0; color: #881337; font-weight: 700;">Detail Kegiatan
-                            </h2>
-                            <span class="item-summary"
-                                style="font-size: 12px; color: #64748b; font-weight: 500; display: none;">(Klik untuk
-                                expand)</span>
-                        </div>
-                    </div>
-                    <div class="header-actions" style="display: flex; gap: 10px;">
-                        <button type="button" class="btn-collapse"
-                            style="background: transparent; border: none; color: #64748b; cursor: pointer;"
-                            title="Minimize">
-                            <i class="fas fa-chevron-up transition-transform"></i>
-                        </button>
-                        <button type="button" class="btn-remove-item"
-                            onclick="removeItem(this); event.stopPropagation();"
-                            style="background: white; border: 1px solid #fecaca; color: #ef4444; cursor: pointer; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.2s;">
-                            <i class="fas fa-trash-alt"></i> Hapus
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Card Body -->
-                <div class="card-body collapsible-content" style="padding: 25px;">
-
-                    <!-- 1. Basic Info -->
-                    <div style="margin-bottom: 25px;">
-                        <h3
-                            style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
-                            <i class="fas fa-info-circle" style="color: var(--primary-color); margin-right: 8px;"></i>
-                            1. Informasi Dasar
-                        </h3>
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Proses Bisnis <span class="required">*</span></label>
-                                @if($probis->count() == 1)
-                                    <input type="text" class="form-control" value="{{ $probis->first()->nama_probis }}"
-                                        readonly style="background-color: #f3f4f6; color: #6b7280; font-weight: 600;">
-                                    <input type="hidden" class="probis-input" name="items[{index}][kolom2_proses]"
-                                        value="{{ $probis->first()->nama_probis }}">
-                                @else
-                                    <select class="form-control probis-input" name="items[{index}][kolom2_proses]" required>
-                                        <option value="">-- Pilih Proses Bisnis --</option>
-                                        @foreach($probis as $p)
-                                            <option value="{{ $p->nama_probis }}">{{ $p->nama_probis }}</option>
-                                        @endforeach
-                                    </select>
-                                @endif
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Kegiatan <span class="required">*</span></label>
-                                <input type="text" class="form-control item-kegiatan-input"
-                                    name="items[{index}][kolom2_kegiatan]" required
-                                    placeholder="Contoh: Pengelasan Pipa..." oninput="updateSummary(this)">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Lokasi <span class="required">*</span></label>
-                                <input type="text" class="form-control" name="items[{index}][kolom3_lokasi]" required
-                                    placeholder="Contoh: Area Workshop...">
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Kategori <span class="required">*</span></label>
-                                <select class="form-control category-select" name="items[{index}][kategori]" required
-                                    onchange="updateConditions(this)">
-                                    <option value="">-- Pilih --</option>
-                                    @if(in_array(Auth::user()->id_unit, [55, 56]) && Auth::user()->can_create_documents)
-                                        {{-- SHE/Security staff with create access: All categories --}}
-                                        <option value="K3">K3 - Kesehatan & Keselamatan</option>
-                                        <option value="KO">KO - Keselamatan Operasional</option>
-                                        <option value="Lingkungan">Lingkungan</option>
-                                        <option value="Keamanan">Keamanan</option>
-                                    @elseif(Auth::user()->id_unit == 55)
-                                        {{-- Security Unit without create access: Only Keamanan --}}
-                                        <option value="Keamanan">Keamanan</option>
-                                    @elseif(Auth::user()->id_unit == 56)
-                                        {{-- SHE Unit without create access: Only K3, KO, Lingkungan --}}
-                                        <option value="K3">K3 - Kesehatan & Keselamatan</option>
-                                        <option value="KO">KO - Keselamatan Operasional</option>
-                                        <option value="Lingkungan">Lingkungan</option>
-                                    @else
-                                        {{-- Other Units: All categories --}}
-                                        <option value="K3">K3 - Kesehatan & Keselamatan</option>
-                                        <option value="KO">KO - Keselamatan Operasional</option>
-                                        <option value="Lingkungan">Lingkungan</option>
-                                        <option value="Keamanan">Keamanan</option>
-                                    @endif
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Kondisi <span class="required">*</span></label>
-                                <select class="form-control condition-select" name="items[{index}][kolom5_kondisi]"
-                                    required disabled>
-                                    <option value="">-- Pilih Kategori Dulu --</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 2. Identifikasi (Bahaya/Aspek/Ancaman) -->
-                    <div class="bagian-2-container" style="margin-bottom: 25px; display: none;">
-                        <h3
-                            style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
-                            <i class="fas fa-exclamation-triangle" style="color: #f59e0b; margin-right: 8px;"></i>
-                            BAGIAN 2: Identifikasi
-                        </h3>
-
-                        <!-- Column 6: POTENSI BAHAYA (K3/KO) -->
-                        <div class="hazard-section k3-ko-field" data-category="K3,KO"
-                            style="background: #fffbeb; padding: 20px; border-radius: 8px; border: 1px solid #fcd34d; margin-bottom: 15px;">
-                            <label class="form-label" style="font-weight: 600;">
-                                <i class="fas fa-hard-hat" style="color: #f59e0b;"></i>
-                                Kolom 6: POTENSI BAHAYA (K3)
-                            </label>
-                            <div class="hazard-options checkbox-grid"
-                                style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
-                                <label class="checkbox-card"><input type="checkbox"
-                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya Fisika"> Bahaya
-                                    Fisika</label>
-                                <label class="checkbox-card"><input type="checkbox"
-                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya Kimia"> Bahaya
-                                    Kimia</label>
-                                <label class="checkbox-card"><input type="checkbox"
-                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya Biologi"> Bahaya
-                                    Biologi</label>
-                                <label class="checkbox-card"><input type="checkbox"
-                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya Fisiologis/Ergonomi">
-                                    Bahaya Fisiologis/Ergonomi</label>
-                                <label class="checkbox-card"><input type="checkbox"
-                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya Psikologis"> Bahaya
-                                    Psikologis</label>
-                                <label class="checkbox-card"><input type="checkbox"
-                                        name="items[{index}][kolom6_bahaya][]" value="Bahaya dari Prilaku"> Bahaya dari
-                                    Prilaku</label>
-                            </div>
-                            <div class="form-group mt-4">
-                                <label class="form-label">Bahaya Lainnya (Manual)</label>
-                                <input type="text" class="form-control bahaya-manual-input"
-                                    name="items[{index}][bahaya_manual]" placeholder="Deskripsi bahaya lain...">
-                            </div>
-                        </div>
-
-                        <!-- Column 7: ASPEK LINGKUNGAN (Lingkungan) -->
-                        <div class="lingkungan-field" data-category="Lingkungan"
-                            style="background: #ecfdf5; padding: 20px; border-radius: 8px; border: 1px solid #10b981; margin-bottom: 15px; display: none;">
-                            <label class="form-label" style="font-weight: 600;">
-                                <i class="fas fa-leaf" style="color: #10b981;"></i>
-                                Kolom 7: ASPEK LINGKUNGAN
-                            </label>
-                            <div class="checkbox-grid"
-                                style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
-                                <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
-                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Emisi ke udara">
-                                    Emisi ke udara</label>
-                                <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
-                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Pembuangan ke air">
-                                    Pembuangan ke air</label>
-                                <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
-                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Pembuangan ke tanah">
-                                    Pembuangan ke tanah</label>
-                                <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
-                                        name="items[{index}][kolom7_aspek_lingkungan][]"
-                                        value="Penggunaan Bahan Baku dan SDA">
-                                    Penggunaan Bahan Baku dan SDA</label>
-                                <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
-                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Penggunaan energi">
-                                    Penggunaan energi</label>
-                                <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
-                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Paparan energi">
-                                    Paparan energi</label>
-                                <label class="checkbox-card"><input type="checkbox" class="aspek-lingkungan-checkbox"
-                                        name="items[{index}][kolom7_aspek_lingkungan][]" value="Limbah">
-                                    Limbah</label>
-                            </div>
-                            <div class="form-group mt-4">
-                                <label class="form-label">Aspek Lainnya (Manual)</label>
-                                <input type="text" class="form-control aspects-manual-input"
-                                    name="items[{index}][aspek_manual]" placeholder="Deskripsi aspek lain...">
-                            </div>
-                        </div>
-
-                        <!-- Column 8: ANCAMAN KEAMANAN (Keamanan) -->
-                        <div class="keamanan-field" data-category="Keamanan"
-                            style="background: #fef2f2; padding: 20px; border-radius: 8px; border: 1px solid #ef4444; margin-bottom: 15px; display: none;">
-                            <label class="form-label" style="font-weight: 600;">
-                                <i class="fas fa-shield-alt" style="color: #ef4444;"></i>
-                                Kolom 8: ANCAMAN KEAMANAN
-                            </label>
-                            <div class="checkbox-grid"
-                                style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
-                                <label class="checkbox-card"><input type="checkbox" class="ancaman-keamanan-checkbox"
-                                        name="items[{index}][kolom8_ancaman][]" value="Terorisme"> Terorisme</label>
-                                <label class="checkbox-card"><input type="checkbox" class="ancaman-keamanan-checkbox"
-                                        name="items[{index}][kolom8_ancaman][]" value="Sabotase"> Sabotase</label>
-                                <label class="checkbox-card"><input type="checkbox" class="ancaman-keamanan-checkbox"
-                                        name="items[{index}][kolom8_ancaman][]" value="Intimidasi"> Intimidasi</label>
-                                <label class="checkbox-card"><input type="checkbox" class="ancaman-keamanan-checkbox"
-                                        name="items[{index}][kolom8_ancaman][]" value="Pencurian"> Pencurian</label>
-                                <label class="checkbox-card"><input type="checkbox" class="ancaman-keamanan-checkbox"
-                                        name="items[{index}][kolom8_ancaman][]" value="Perusakan aset"> Perusakan
-                                    aset</label>
-                            </div>
-                            <div class="form-group mt-4">
-                                <label class="form-label">Ancaman Lainnya (Manual)</label>
-                                <input type="text" class="form-control threats-manual-input"
-                                    name="items[{index}][ancaman_manual]" placeholder="Deskripsi ancaman lain...">
-                            </div>
-                        </div>
-
-                        <!-- Column 9: RISIKO / DAMPAK / CELAH (3 separate fields based on category) -->
-                        <!-- Kolom 9a: RISIKO (K3/KO) -->
-                        <div class="form-group kolom9-k3ko-field" style="display: none;">
-                            <label class="form-label">
-                                Kolom 9: RISIKO <span class="required">*</span>
-                            </label>
-                            <textarea class="form-control" name="items[{index}][kolom9_risiko_k3ko]"
-                                placeholder="Jelaskan risiko yang dapat terjadi dari bahaya yang teridentifikasi..."
-                                rows="3"></textarea>
-                        </div>
-
-                        <!-- Kolom 9b: DAMPAK LINGKUNGAN (Lingkungan) -->
-                        <div class="form-group kolom9-lingkungan-field" style="display: none;">
-                            <label class="form-label">
-                                Kolom 9: DAMPAK LINGKUNGAN <span class="required">*</span>
-                            </label>
-                            <textarea class="form-control" name="items[{index}][kolom9_dampak_lingkungan]"
-                                placeholder="Jelaskan dampak lingkungan yang dapat terjadi dari aspek lingkungan yang teridentifikasi..."
-                                rows="3"></textarea>
-                        </div>
-
-                        <!-- Kolom 9c: CELAH TIDAK AMAN (Keamanan) -->
-                        <div class="form-group kolom9-keamanan-field" style="display: none;">
-                            <label class="form-label">
-                                Kolom 9: CELAH TIDAK AMAN <span class="required">*</span>
-                            </label>
-                            <textarea class="form-control" name="items[{index}][kolom9_celah_keamanan]"
-                                placeholder="Jelaskan celah tidak aman yang dapat dieksploitasi dari ancaman yang teridentifikasi..."
-                                rows="3"></textarea>
-                        </div>
-
-                        <!-- Removed old Risk Analysis - now part of column 9 above -->
-
-                        <!-- 3. Pengendalian & Penilaian Risiko Saat Ini -->
-                        <div style="margin-bottom: 25px;">
-                            <h3
-                                style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
-                                <i class="fas fa-shield-alt" style="color: #10b981; margin-right: 8px;"></i>
-                                BAGIAN 3: Pengendalian & Penilaian Risiko Saat Ini
-                            </h3>
-
-                            <!-- Columns 10-11: Pengendalian -->
-                            <div class="form-group">
-                                <label class="form-label">Kolom 10: Hirarki Pengendalian Risiko</label>
-                                <div class="checkbox-grid hierarchy-checkboxes"
-                                    style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
-                                    <label class="checkbox-card"><input type="checkbox"
-                                            name="items[{index}][kolom10_pengendalian][]" value="Eliminasi"
-                                            onchange="updateKolom11(this)">
-                                        Eliminasi</label>
-                                    <label class="checkbox-card"><input type="checkbox"
-                                            name="items[{index}][kolom10_pengendalian][]" value="Substitusi"
-                                            onchange="updateKolom11(this)">
-                                        Substitusi</label>
-                                    <label class="checkbox-card"><input type="checkbox"
-                                            name="items[{index}][kolom10_pengendalian][]" value="Rekayasa Teknik"
-                                            onchange="updateKolom11(this)"> Rekayasa
-                                        Teknik</label>
-                                    <label class="checkbox-card"><input type="checkbox"
-                                            name="items[{index}][kolom10_pengendalian][]"
-                                            value="Pengendalian Administratif" onchange="updateKolom11(this)">
-                                        Pengendalian Administratif</label>
-                                    <label class="checkbox-card"><input type="checkbox"
-                                            name="items[{index}][kolom10_pengendalian][]" value="APD"
-                                            onchange="updateKolom11(this)"> APD</label>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Kolom 11: Pengendalian yang Dilakukan <span
-                                        class="required">*</span></label>
-                                <small style="display: block; margin-bottom: 12px; color: #64748b;">
-                                    <i class="fas fa-info-circle"></i> Tambahkan penjelasan detail untuk setiap hierarki
-                                    yang dipilih di atas.
-                                </small>
-
-                                <!-- Dynamic container for hierarchy sections -->
-                                <div class="kolom11-dynamic-container" style="background: #f8fafc; 
-                                            border: 2px solid #e2e8f0; 
-                                            border-radius: 8px; 
-                                            padding: 16px; 
-                                            min-height: 200px;">
-                                    <!-- Empty state -->
-                                    <div class="empty-state" style="padding: 40px; text-align: center; color: #94a3b8;">
-                                        <i class="fas fa-hand-pointer"
-                                            style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
-                                        <p style="margin: 0;">Pilih hierarki pengendalian di atas untuk mulai mengisi
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Hidden input to store combined data for submission -->
-                                <input type="hidden" name="items[{index}][kolom11_existing]"
-                                    class="kolom11-hidden-input">
-                            </div>
-
-                            <!-- Columns 12-14: Penilaian Risiko Awal (was section 4) -->
-                            <div
-                                style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #e2e8f0; margin-top:20px;">
-                                <h4
-                                    style="font-size:13px; font-weight:700; margin-bottom:15px; text-transform:uppercase; color:#334155;">
-                                    Kolom 12-14: Penilaian Risiko Awal (dengan Pengendalian yang Ada)</h4>
-                                <div style="display: flex; gap: 20px; align-items: flex-start;">
-
-
-                                    <div style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                        <div class="form-group">
-                                            <label class="form-label">Kolom 12: Kemungkinan (Likelihood)</label>
-                                            <select class="form-control likelihood-select"
-                                                name="items[{index}][kolom12_kemungkinan]" required
-                                                onchange="calculateItemRisk(this)">
-                                                <option value="">-- Pilih --</option>
-                                                <option value="1">1 - Sangat Jarang</option>
-                                                <option value="2">2 - Jarang</option>
-                                                <option value="3">3 - Kadang-kadang</option>
-                                                <option value="4">4 - Sering</option>
-                                                <option value="5">5 - Sangat Sering</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Kolom 13: Konsekuensi (Severity)</label>
-                                            <select class="form-control severity-select"
-                                                name="items[{index}][kolom13_konsekuensi]" required
-                                                onchange="calculateItemRisk(this)">
-                                                <option value="">-- Pilih --</option>
-                                                <option value="1">1 - Tidak Signifikan</option>
-                                                <option value="2">2 - Minor</option>
-                                                <option value="3">3 - Moderate</option>
-                                                <option value="4">4 - Major</option>
-                                                <option value="5">5 - Catastrophic</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div style="flex: 0 0 160px; text-align:center;">
-                                        <label class="form-label">Kolom 14: Tingkat Risiko</label>
-                                        <div class="risk-result-box"
-                                            style="padding:15px; border-radius:8px; transition: background 0.3s; background: #e2e8f0; border: 1px solid #cbd5e1;">
-                                            <div class="risk-score display-score" style="font-size: 24px;">-</div>
-                                            <span class="risk-level display-level"
-                                                style="font-size: 11px;">PENDING</span>
-                                        </div>
-                                        <input type="hidden" name="items[{index}][kolom14_score]" class="input-score">
-                                        <input type="hidden" name="items[{index}][kolom14_level]" class="input-level">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 4. Legalitas & Signifikansi -->
-                        <div style="margin-bottom: 25px;">
-                            <h3
-                                style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
-                                <i class="fas fa-gavel" style="color: #8b5cf6; margin-right: 8px;"></i>
-                                BAGIAN 4: Legalitas & Signifikansi
-                            </h3>
-
-                            <!-- Column 15: Peraturan -->
-                            <div class="form-group">
-                                <label class="form-label">Kolom 15: Peraturan Perundangan Terkait</label>
-                                <textarea class="form-control" name="items[{index}][kolom15_regulasi]" rows="2"
-                                    placeholder="Referensi UU, PP, Permenaker, atau standar lain yang relevan..."></textarea>
-                            </div>
-
-                            <!-- Column 16: ASPEK LINGKUNGAN PENTING (only for Lingkungan category) -->
-                            <div class="form-group lingkungan-only-field" style="display: none;">
-                                <label class="form-label">Kolom 16: Aspek Lingkungan Penting P/TP</label>
-                                <div style="display:flex; gap:15px; margin-top:10px;">
-                                    <label class="control-radio"
-                                        style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="items[{index}][kolom16_aspek]" value="P"
-                                            style="cursor: pointer;">
-                                        <span>Penting (P)</span>
-                                    </label>
-                                    <label class="control-radio"
-                                        style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="items[{index}][kolom16_aspek]" value="TP" checked
-                                            style="cursor: pointer;">
-                                        <span>Tidak Penting (TP)</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Column 17: Peluang & Risiko -->
-                            <div class="form-grid-2">
-                                <div class="form-group">
-                                    <label class="form-label">Kolom 17: Peluang</label>
-                                    <textarea class="form-control" name="items[{index}][kolom17_peluang]" rows="2"
-                                        placeholder="Jika ada peluang perbaikan atau inovasi..."></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Kolom 17: Risiko</label>
-                                    <textarea class="form-control" name="items[{index}][kolom17_risiko]" rows="2"
-                                        placeholder="Jika ada risiko tambahan yang belum tercover..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 5. PUK/PMK Program Management -->
-                        <div class="bagian-5-section">
-                            <h3
-                                style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#475569; margin-bottom:15px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">
-                                <i class="fas fa-check-double" style="color: #15803d; margin-right: 8px;"></i>
-                                BAGIAN 5: Evaluasi & Program Pengendalian
-                            </h3>
-                            <div
-                                style="background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
-
-                                <!-- Column 18: Auto-Tolerance -->
-                                <div class="form-group">
-                                    <label class="form-label">Kolom 18: Risiko Dapat Ditoleransi?</label>
-                                    <div class="tolerance-display"
-                                        style="background: white; padding: 16px; border-radius: 8px; border: 2px solid #cbd5e1;">
-                                        <div style="display: flex; align-items: center; gap: 12px;">
-                                            <div class="tolerance-icon"
-                                                style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
-                                                <i class="fas fa-spinner"></i>
-                                            </div>
-                                            <div style="flex: 1;">
-                                                <div class="tolerance-value"
-                                                    style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">
-                                                    Menunggu Penilaian Risiko
-                                                </div>
-                                                <div class="tolerance-reason" style="font-size: 12px; color: #64748b;">
-                                                    Hitung risiko di Kolom 12-14 untuk menentukan toleransi
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="items[{index}][kolom18_toleransi]"
-                                        class="tolerance-input">
-                                    <input type="hidden" name="items[{index}][kolom18_auto]" class="tolerance-auto"
-                                        value="1">
-                                </div>
-
-                                <!-- Column 19: Program Title (conditional) -->
-                                <div class="kolom19-section" style="display:none; margin-top: 20px;">
-                                    <div class="form-group">
-                                        <label class="form-label">
-                                            Kolom 19: Rencana Pengendalian Tindak Lanjut <span class="required">*</span>
-                                        </label>
-                                        <textarea class="form-control kolom19-input"
-                                            name="items[{index}][kolom19_rencana]" rows="3"
-                                            placeholder="Masukkan rencana pengendalian yang akan menjadi judul program PUK/PMK..."></textarea>
-                                        <small style="display: block; margin-top: 6px; color: #64748b;">
-                                            <i class="fas fa-info-circle"></i> Ini akan menjadi judul Program PUK/PMK
-                                        </small>
-                                    </div>
-                                </div>
-
-                                <!-- Column 20-22: Risiko Setelah Pengendalian Tindak Lanjut (Moved Here) -->
-                                <div class="risk-after-control-section" style="display:none; margin-top: 25px;">
-                                    <div
-                                        style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 20px; border-radius: 12px; border: 2px solid #93c5fd; margin-bottom: 20px;">
-                                        <h4
-                                            style="color: #1e40af; margin-bottom: 15px; font-size: 15px; font-weight: 700;">
-                                            <i class="fas fa-chart-line"></i> Risiko Setelah Pengendalian Tindak Lanjut
-                                        </h4>
-
-                                        <div style="display: flex; gap: 20px; align-items: flex-start;">
-                                            <div
-                                                style="flex:1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                                <div class="form-group">
-                                                    <label class="form-label">Kolom 20: L (Likelihood)</label>
-                                                    <select class="form-control likelihood-select-after"
-                                                        name="items[{index}][kolom20_kemungkinan_lanjut]"
-                                                        onchange="calculateRiskAfterControl(this)">
-                                                        <option value="">-- Pilih --</option>
-                                                        <option value="1">1 - Sangat Jarang</option>
-                                                        <option value="2">2 - Jarang</option>
-                                                        <option value="3">3 - Kadang-kadang</option>
-                                                        <option value="4">4 - Sering</option>
-                                                        <option value="5">5 - Sangat Sering</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label class="form-label">Kolom 21: S (Severity)</label>
-                                                    <select class="form-control severity-select-after"
-                                                        name="items[{index}][kolom21_konsekuensi_lanjut]"
-                                                        onchange="calculateRiskAfterControl(this)">
-                                                        <option value="">-- Pilih --</option>
-                                                        <option value="1">1 - Tidak Signifikan</option>
-                                                        <option value="2">2 - Minor</option>
-                                                        <option value="3">3 - Moderate</option>
-                                                        <option value="4">4 - Major</option>
-                                                        <option value="5">5 - Catastrophic</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div style="flex: 0 0 160px; text-align:center;">
-                                                <label class="form-label">Kolom 22: Level</label>
-                                                <div class="risk-result-box-after"
-                                                    style="padding:15px; border-radius:8px; transition: background 0.3s; background: #e2e8f0; border: 1px solid #cbd5e1;">
-                                                    <div class="risk-score-after"
-                                                        style="font-size: 24px; font-weight: 800; color: #64748b;">-
-                                                    </div>
-                                                    <span class="risk-level-after"
-                                                        style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">PENDING</span>
-                                                </div>
-                                                <!-- Hidden inputs for columns 20, 21, 22 are already named correctly in selects/logic -->
-                                                <input type="hidden"
-                                                    name="items[{index}][kolom22_tingkat_risiko_lanjut]"
-                                                    class="input-score-after">
-                                                <input type="hidden" name="items[{index}][kolom22_level_lanjut]"
-                                                    class="input-level-after">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Hidden Metadata -->
-                                <input type="hidden" id="user_unit_name" value="{{ $user->unit->nama_unit ?? '' }}">
-
-                                <!-- PUK/PMK Program Section (conditional) -->
-                                <div class="program-section" style="display:none; margin-top: 25px;">
-                                    <div
-                                        style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 12px; border: 2px solid #fbbf24; margin-bottom: 20px;">
-                                        <h4
-                                            style="color: #92400e; margin-bottom: 15px; font-size: 15px; font-weight: 700;">
-                                            <i class="fas fa-clipboard-list"></i> Program Pengendalian Lanjutan
-                                            Diperlukan
-                                        </h4>
-
-                                        <div class="form-group">
-                                            <label class="form-label">Pilih Jenis Program <span
-                                                    class="required">*</span></label>
-                                            <select class="form-control program-type-select"
-                                                name="items[{index}][kolom19_program_type]">
-                                                <option value="">-- Pilih Program --</option>
-                                                <option value="PUK" class="option-puk">PUK - Program Unit Kerja</option>
-                                                <option value="PMK" class="option-pmk">PMK - Program Manajemen Korporat
-                                                </option>
-                                            </select>
-                                            <small style="display: block; margin-top: 8px; color: #78350f;">
-                                                <strong>PUK:</strong> Risiko dapat ditangani di level unit<br>
-                                                <strong>PMK:</strong> Memerlukan keputusan/budget dari Direksi
-                                            </small>
-                                        </div>
-                                    </div>
-
-                                    <!-- PUK/PMK Form Container (shown when type selected) -->
-                                    <div class="program-form-container" style="display:none;"></div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        @include('user.documents.partials.item-form-template')
     </template>
 
-    <!-- PUK/PMK Form Template -->
-    <template id="program-form-template">
-        <div class="program-form"
-            style="background: white; padding: 25px; border-radius: 12px; border: 2px solid #e5e7eb; margin-top: 20px;">
-            <h5 class="program-form-title"
-                style="color: #1e40af; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #dbeafe; font-size: 14px; font-weight: 700;">
-            </h5>
+        <!-- PUK/PMK Form Template -->
+        <template id="program-form-template">
+            @include('user.documents.partials.program-form-template')
+        </template>
 
-            <!-- 1. Judul (Auto-filled from Kolom 19) -->
-            <div class="form-group">
-                <label class="form-label">1. Judul Program <span class="required">*</span></label>
-                <input type="text" class="form-control program-judul" readonly
-                    style="background: #f3f4f6; font-weight: 600;">
-                <small class="text-muted">
-                    <i class="fas fa-link"></i> Diisi otomatis dari Kolom 19
-                </small>
-            </div>
+        <script>
+            let itemIndex = 0;
+            const autoProbis = document.getElementById('auto_probis_value').value;
 
-            <!-- 2. Tujuan -->
-            <div class="form-group">
-                <label class="form-label">2. Tujuan <span class="required">*</span></label>
-                <textarea class="form-control program-field" name="items[{index}][program_tujuan]" rows="3" required
-                    placeholder="Menjelaskan tujuan Program dan target pengurangan dampak..."></textarea>
-                <small class="text-muted">Detail tentang tujuan program dan target yang ingin dicapai</small>
-            </div>
+            // Static Options Data
+            const userUnitId = {{ Auth::user()->id_unit }};
 
-            <!-- 3. Sasaran -->
-            <div class="form-group">
-                <label class="form-label">3. Sasaran <span class="required">*</span></label>
-                <textarea class="form-control program-field" name="items[{index}][program_sasaran]" rows="3" required
-                    placeholder="Menjelaskan sasaran, tahapan pelaksanaan, dan target program..."></textarea>
-                <small class="text-muted">Sasaran konkret, tahapan (tahun), dan target terukur</small>
-            </div>
-
-            <!-- 4. Penanggung Jawab -->
-            <div class="form-group">
-                <label class="form-label">4. Penanggung Jawab <span class="required">*</span></label>
-                <input type="text" class="form-control program-field program-pj"
-                    name="items[{index}][program_penanggung_jawab]" required readonly
-                    style="background-color: #f8fafc; color: #64748b; cursor: not-allowed;">
-                <small class="text-muted">Unit kerja yang bertanggung jawab atas program ini (Auto-filled)</small>
-            </div>
-
-            <!-- 5. Uraian Revisi -->
-            <div class="form-group">
-                <label class="form-label">5. Uraian Revisi <span class="program-type-label"></span></label>
-                <textarea class="form-control program-field" name="items[{index}][program_uraian_revisi]" rows="3"
-                    placeholder="Revisi program, kendala, kajian (opsional jika program lanjutan)"></textarea>
-                <small class="text-muted">Jika program lanjutan, jelaskan revisi, kendala, dan kajiannya</small>
-            </div>
-
-            <!-- 6. Program Kerja Table -->
-            <div class="form-group">
-                <label class="form-label" style="display: block; margin-bottom: 10px;">6. Program Kerja <span
-                        class="required">*</span></label>
-                <div class="program-kerja-scroll"
-                    style="overflow-x: auto; overflow-y: visible; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
-                    <table class="table program-kerja-table table-bordered"
-                        style="margin-bottom: 0; min-width: 1400px; width: max-content;">
-                        <thead>
-                            <tr style="background: #5c7cfa; color: white; font-size: 12px; font-weight: 600;">
-                                <th rowspan="2"
-                                    style="width: 40px; text-align: center; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
-                                    No</th>
-                                <th rowspan="2"
-                                    style="min-width: 150px; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
-                                    Uraian Kegiatan</th>
-                                <th rowspan="2" class="col-koordinator"
-                                    style="min-width: 140px; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
-                                    Koordinator</th>
-                                <th rowspan="2" class="col-pelaksana"
-                                    style="min-width: 140px; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
-                                    Pelaksana</th>
-                                <th colspan="12" style="text-align: center; padding: 6px; border-color: #4c6ef5;">Target
-                                    (%)</th>
-                                <th rowspan="2" class="col-anggaran"
-                                    style="min-width: 120px; vertical-align: middle; display: none; padding: 6px; border-color: #4c6ef5;">
-                                    Anggaran (Rp)</th>
-                                <th rowspan="2"
-                                    style="width: 40px; text-align: center; vertical-align: middle; padding: 6px; border-color: #4c6ef5;">
-                                    Aksi</th>
-                            </tr>
-                            <tr style="background: #748ffc; color: white; font-size: 11px;">
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    1</th>
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    2</th>
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    3</th>
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    4</th>
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    5</th>
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    6</th>
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    7</th>
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    8</th>
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    9</th>
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    10</th>
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    11</th>
-                                <th
-                                    style="text-align: center; padding: 4px; width: 40px; min-width: 40px; border-color: #5c7cfa;">
-                                    12</th>
-                            </tr>
-                        </thead>
-                        <tbody class="program-kerja-tbody">
-                            <!-- Rows will be added dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-                <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addProgramKerjaRow(this)"
-                    style="background: #6366f1; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px;">
-                    <i class="fas fa-plus"></i> Tambah Baris Program Kerja
-                </button>
-            </div>
-        </div>
-    </template>
-
-    <script>
-        let itemIndex = 0;
-        const autoProbis = document.getElementById('auto_probis_value').value;
-
-        // Static Options Data
-        const userUnitId = {{ Auth::user()->id_unit }};
-
-        // Complete Categories Data
-        const allCategories = {
-            'K3': { label: 'K3', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
-            'KO': { label: 'KO', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
-            'Lingkungan': { label: 'Lingkungan', conditions: ['Normal', 'Abnormal', 'Emergency'] },
-            'Keamanan': { label: 'Keamanan', conditions: ['Emergency'] }
-        };
-
-        // Filter Categories based on User Unit (Cross-Audit Rule)
-        let categories = {};
-
-        if (userUnitId == 55) {
-            // Unit Security (55) -> Only Keamanan
-            categories = {
-                'Keamanan': allCategories['Keamanan']
+            // Complete Categories Data
+            const allCategories = {
+                'K3': { label: 'K3', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
+                'KO': { label: 'KO', conditions: ['Rutin', 'Non-Rutin', 'Emergency'] },
+                'Lingkungan': { label: 'Lingkungan', conditions: ['Normal', 'Abnormal', 'Emergency'] },
+                'Keamanan': { label: 'Keamanan', conditions: ['Emergency'] }
             };
-        } else if (userUnitId == 56) {
-            // Unit SHE (56) -> Only K3, KO, Lingkungan
-            categories = {
-                'K3': allCategories['K3'],
-                'KO': allCategories['KO'],
-                'Lingkungan': allCategories['Lingkungan']
-            };
-        } else {
-            // Normal Users -> All Categories
-            categories = allCategories;
-        }
 
+            // Filter Categories based on User Unit (Cross-Audit Rule)
+            let categories = {};
 
-
-        function addItem() {
-            // Collapse all existing first
-            document.querySelectorAll('.doc-item').forEach(el => collapseItem(el));
-
-            const template = document.getElementById('item-template').innerHTML;
-            const container = document.getElementById('items-container');
-
-            // Use simple index for name attributes
-            let html = template.replace(/{index}/g, itemIndex);
-
-            const div = document.createElement('div');
-            div.innerHTML = html;
-            const itemNode = div.firstElementChild;
-
-            // Auto fill probis
-            const probisInput = itemNode.querySelector('.probis-input');
-            if (probisInput) probisInput.value = autoProbis;
-
-            container.appendChild(itemNode);
-
-            // Filter categories in the newly added item
-            const categorySelect = itemNode.querySelector('select[onchange*="updateConditions"]');
-            if (categorySelect && selectedFormType) {
-                filterCategorySelect(categorySelect);
-            }
-
-            // Scroll to new item top
-            itemNode.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-            itemIndex++;
-            updateItemNumbers();
-        }
-
-        function removeItem(btn) {
-            Swal.fire({
-                title: 'Hapus Item?',
-                text: "Data item ini akan dihapus.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    btn.closest('.doc-item').remove();
-                    updateItemNumbers();
-                }
-            });
-        }
-
-        function toggleCollapse(header) {
-            const item = header.closest('.doc-item');
-            const content = item.querySelector('.collapsible-content');
-            const icon = item.querySelector('.btn-collapse i');
-            const summary = item.querySelector('.item-summary');
-
-            if (content.style.display === 'none') {
-                // EXPAND
-                content.style.display = 'block';
-                icon.classList.remove('fa-chevron-down');
-                icon.classList.add('fa-chevron-up');
-                summary.style.display = 'none';
-                item.classList.remove('collapsed');
+            if (userUnitId == 55) {
+                // Unit Security (55) -> Only Keamanan
+                categories = {
+                    'Keamanan': allCategories['Keamanan']
+                };
+            } else if (userUnitId == 56) {
+                // Unit SHE (56) -> Only K3, KO, Lingkungan
+                categories = {
+                    'K3': allCategories['K3'],
+                    'KO': allCategories['KO'],
+                    'Lingkungan': allCategories['Lingkungan']
+                };
             } else {
-                // COLLAPSE
-                content.style.display = 'none';
-                icon.classList.remove('fa-chevron-up');
-                icon.classList.add('fa-chevron-down');
-                summary.style.display = 'inline';
-                item.classList.add('collapsed');
-            }
-        }
-
-        function collapseItem(item) {
-            const content = item.querySelector('.collapsible-content');
-            const icon = item.querySelector('.btn-collapse i');
-            const summary = item.querySelector('.item-summary');
-
-            if (content && icon && summary) {
-                content.style.display = 'none';
-                icon.classList.remove('fa-chevron-up');
-                icon.classList.add('fa-chevron-down');
-                summary.style.display = 'inline';
-                item.classList.add('collapsed');
-            }
-        }
-
-        /**
-         * Handle Scope Category Change
-         * Shows/hides appropriate input based on selected category
-         */
-        function handleScopeCategory(selectElement) {
-            const formGroup = selectElement.closest('.form-grid-2');
-            const scopeContainer = formGroup.querySelector('.scope-value-container');
-            const scopeLabel = formGroup.querySelector('.scope-value-label');
-            const scopeDropdown = formGroup.querySelector('.scope-value-dropdown');
-            const scopeText = formGroup.querySelector('.scope-value-text');
-
-            const category = selectElement.value;
-
-            if (!category) {
-                scopeContainer.style.display = 'none';
-                scopeDropdown.style.display = 'none';
-                scopeText.style.display = 'none';
-                return;
+                // Normal Users -> All Categories
+                categories = allCategories;
             }
 
-            // Show container
-            scopeContainer.style.display = 'block';
 
-            // Reset both inputs
-            scopeDropdown.style.display = 'none';
-            scopeText.style.display = 'none';
-            scopeDropdown.removeAttribute('name');
-            scopeText.removeAttribute('name');
 
-            if (category === 'proses_bisnis') {
-                scopeLabel.innerHTML = 'Nama Proses Bisnis <span class="required">*</span>';
-                scopeDropdown.style.display = 'block';
-                scopeDropdown.setAttribute('name', scopeDropdown.getAttribute('name').replace('scope_value_text', 'scope_value'));
+            function addItem() {
+                // Collapse all existing first
+                document.querySelectorAll('.doc-item').forEach(el => collapseItem(el));
 
-                // Fetch business processes
-                fetchBusinessProcesses(scopeDropdown);
+                const template = document.getElementById('item-template').innerHTML;
+                const container = document.getElementById('items-container');
+
+                // Use simple index for name attributes
+                let html = template.replace(/{index}/g, itemIndex);
+
+                const div = document.createElement('div');
+                div.innerHTML = html;
+                const itemNode = div.firstElementChild;
+
+                // Auto fill probis
+                const probisInput = itemNode.querySelector('.probis-input');
+                if (probisInput) probisInput.value = autoProbis;
+
+                container.appendChild(itemNode);
+
+                // Filter categories in the newly added item
+                const categorySelect = itemNode.querySelector('select[onchange*="updateConditions"]');
+                if (categorySelect && selectedFormType) {
+                    filterCategorySelect(categorySelect);
+                }
+
+                // Scroll to new item top
+                itemNode.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                itemIndex++;
+                updateItemNumbers();
             }
-            else if (category === 'kegiatan') {
-                scopeLabel.innerHTML = 'Nama Kegiatan <span class="required">*</span>';
-                scopeText.style.display = 'block';
-                scopeText.setAttribute('name', scopeText.getAttribute('name').replace('scope_value_text', 'scope_value'));
-                scopeText.setAttribute('placeholder', 'Masukkan nama kegiatan...');
-                scopeText.setAttribute('required', 'required');
-                scopeDropdown.removeAttribute('required');
-            }
-            else if (category === 'aset') {
-                scopeLabel.innerHTML = 'Nama Aset <span class="required">*</span>';
-                scopeText.style.display = 'block';
-                scopeText.setAttribute('name', scopeText.getAttribute('name').replace('scope_value_text', 'scope_value'));
-                scopeText.setAttribute('placeholder', 'Masukkan nama aset...');
-                scopeText.setAttribute('required', 'required');
-                scopeDropdown.removeAttribute('required');
-            }
-        }
 
-        /**
-         * Fetch Business Processes from API
-         */
-        async function fetchBusinessProcesses(selectElement) {
-            selectElement.innerHTML = '<option value="">Memuat...</option>';
-
-            try {
-                const response = await fetch('/api/business-processes', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    credentials: 'same-origin'
+            function removeItem(btn) {
+                Swal.fire({
+                    title: 'Hapus Item?',
+                    text: "Data item ini akan dihapus.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, Hapus!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        btn.closest('.doc-item').remove();
+                        updateItemNumbers();
+                    }
                 });
-
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-
-                const processes = await response.json();
-
-                selectElement.innerHTML = '<option value="">-- Pilih Proses Bisnis --</option>';
-                processes.forEach(process => {
-                    const option = document.createElement('option');
-                    option.value = process.name;
-                    option.textContent = process.name;
-                    selectElement.appendChild(option);
-                });
-
-                selectElement.setAttribute('required', 'required');
-                scopeText.removeAttribute('required');
-
-            } catch (error) {
-                console.error('Failed to fetch business processes:', error);
-                selectElement.innerHTML = '<option value="">Error loading data</option>';
             }
-        }
 
-        function updateSummary(input) {
-            const item = input.closest('.doc-item');
-            const summary = item.querySelector('.item-summary');
-            if (input.value) {
-                const limit = 40;
-                let txt = input.value;
-                if (txt.length > limit) txt = txt.substring(0, limit) + '...';
-                summary.textContent = `(${txt})`;
-            } else {
-                summary.textContent = '(Klik untuk expand)';
-            }
-        }
+            function toggleCollapse(header) {
+                const item = header.closest('.doc-item');
+                const content = item.querySelector('.collapsible-content');
+                const icon = item.querySelector('.btn-collapse i');
+                const summary = item.querySelector('.item-summary');
 
-        function updateItemNumbers() {
-            const items = document.querySelectorAll('.doc-item');
-            items.forEach((item, idx) => {
-                // Update Badge Number
-                const numBadge = item.querySelector('.item-number');
-                if (numBadge) numBadge.textContent = '#' + (idx + 1);
-            });
-            updateRemoveButtons();
-        }
-
-        function updateRemoveButtons() {
-            const buttons = document.querySelectorAll('.btn-remove-item');
-            if (buttons.length === 1) {
-                buttons[0].style.display = 'none';
-            } else {
-                buttons.forEach(b => b.style.display = 'block');
-            }
-        }
-
-        function updateConditions(select) {
-            const item = select.closest('.doc-item');
-            const condSelect = item.querySelector('.condition-select');
-            const cat = select.value;
-            const hazardSection = item.querySelector('.hazard-section');
-            const hazardOptions = item.querySelector('.hazard-options');
-
-            // Toggle BAGIAN 2 Visibility
-            const bagian2Container = item.querySelector('.bagian-2-container');
-            if (bagian2Container) {
-                if (cat) {
-                    bagian2Container.style.display = 'block';
+                if (content.style.display === 'none') {
+                    // EXPAND
+                    content.style.display = 'block';
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                    summary.style.display = 'none';
+                    item.classList.remove('collapsed');
                 } else {
-                    bagian2Container.style.display = 'none';
+                    // COLLAPSE
+                    content.style.display = 'none';
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                    summary.style.display = 'inline';
+                    item.classList.add('collapsed');
                 }
             }
 
-            // Get all conditional field sections using CORRECT classes
-            const k3KoField = item.querySelector('.k3-ko-field'); // Column 6
-            const lingkunganField = item.querySelector('.lingkungan-field'); // Column 7
-            const keamananField = item.querySelector('.keamanan-field'); // Column 8
-            const lingkunganOnlyField = item.querySelector('.lingkungan-only-field'); // Column 16
+            function collapseItem(item) {
+                const content = item.querySelector('.collapsible-content');
+                const icon = item.querySelector('.btn-collapse i');
+                const summary = item.querySelector('.item-summary');
 
-            // Get kolom 9 variants
-            const kolom9K3KO = item.querySelector('.kolom9-k3ko-field');
-            const kolom9Lingkungan = item.querySelector('.kolom9-lingkungan-field');
-            const kolom9Keamanan = item.querySelector('.kolom9-keamanan-field');
-
-            condSelect.innerHTML = '<option value="">-- Pilih --</option>';
-
-            // 1. Reset/Hide All Categories First
-            if (k3KoField) k3KoField.style.display = 'none';
-            if (lingkunganField) lingkunganField.style.display = 'none';
-            if (keamananField) keamananField.style.display = 'none';
-            if (lingkunganOnlyField) lingkunganOnlyField.style.display = 'none';
-
-            // 2. Hide All Kolom 9 Variants & Reset Required
-            if (kolom9K3KO) {
-                kolom9K3KO.style.display = 'none';
-                kolom9K3KO.querySelector('textarea')?.removeAttribute('required');
-            }
-            if (kolom9Lingkungan) {
-                kolom9Lingkungan.style.display = 'none';
-                kolom9Lingkungan.querySelector('textarea')?.removeAttribute('required');
-            }
-            if (kolom9Keamanan) {
-                kolom9Keamanan.style.display = 'none';
-                kolom9Keamanan.querySelector('textarea')?.removeAttribute('required');
-            }
-
-            // 3. Populate Conditions Dropdown
-            if (categories[cat]) {
-                condSelect.disabled = false; // Enable the dropdown
-                categories[cat].conditions.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c;
-                    opt.textContent = c;
-                    condSelect.appendChild(opt);
-                });
-
-                // 4. Show Specific Fields Based on Category
-                if (cat === 'K3' || cat === 'KO') {
-                    // Show Kolom 6 & 9a
-                    if (k3KoField) {
-                        k3KoField.style.display = 'block';
-                        k3KoField.querySelectorAll('input').forEach(i => i.disabled = false);
-                    }
-
-                    if (kolom9K3KO) {
-                        kolom9K3KO.style.display = 'block';
-                        kolom9K3KO.querySelector('textarea')?.setAttribute('required', 'required');
-                    }
-
-                    // Disable others to prevent submission
-                    if (lingkunganField) lingkunganField.querySelectorAll('input').forEach(i => i.disabled = true);
-                    if (keamananField) keamananField.querySelectorAll('input').forEach(i => i.disabled = true);
-
-                } else if (cat === 'Lingkungan') {
-                    // Show Kolom 7, 16 & 9b
-                    if (lingkunganField) {
-                        lingkunganField.style.display = 'block';
-                        lingkunganField.querySelectorAll('input').forEach(i => i.disabled = false);
-                    }
-                    if (lingkunganOnlyField) lingkunganOnlyField.style.display = 'block';
-
-                    if (kolom9Lingkungan) {
-                        kolom9Lingkungan.style.display = 'block';
-                        kolom9Lingkungan.querySelector('textarea')?.setAttribute('required', 'required');
-                    }
-
-                    // Disable others
-                    if (k3KoField) k3KoField.querySelectorAll('input').forEach(i => i.disabled = true);
-                    if (keamananField) keamananField.querySelectorAll('input').forEach(i => i.disabled = true);
-
-                } else if (cat === 'Keamanan') {
-                    // Show Kolom 8 & 9c
-                    if (keamananField) {
-                        keamananField.style.display = 'block';
-                        keamananField.querySelectorAll('input').forEach(i => i.disabled = false);
-                    }
-
-                    if (kolom9Keamanan) {
-                        kolom9Keamanan.style.display = 'block';
-                        kolom9Keamanan.querySelector('textarea')?.setAttribute('required', 'required');
-                    }
-
-                    // Disable others
-                    if (k3KoField) k3KoField.querySelectorAll('input').forEach(i => i.disabled = true);
-                    if (lingkunganField) lingkunganField.querySelectorAll('input').forEach(i => i.disabled = true);
-                }
-            } else {
-                condSelect.disabled = true; // Keep disabled if no category selected
-            }
-        }
-
-
-
-        function calculateItemRisk(el) {
-            const item = el.closest('.doc-item');
-            const likelihood = parseInt(item.querySelector('.likelihood-select').value) || 0;
-            const severity = parseInt(item.querySelector('.severity-select').value) || 0;
-
-            const score = likelihood * severity;
-            const scoreEl = item.querySelector('.display-score');
-            const levelEl = item.querySelector('.display-level');
-            const inputScore = item.querySelector('.input-score');
-            const inputLevel = item.querySelector('.input-level');
-            const riskBox = item.querySelector('.risk-result-box');
-
-            scoreEl.textContent = score || '-';
-            inputScore.value = score;
-
-            let level = 'Rendah';
-            let bg = '#e2e8f0'; // Default gray
-            let textColor = '#64748b';
-
-            if (score > 0) {
-                textColor = '#fff';
-                if (score >= 20) {
-                    level = 'Sangat Tinggi';
-                    bg = '#7f1d1d'; // Dark red for very high
-                }
-                else if (score >= 10) {
-                    level = 'Tinggi';
-                    bg = '#dc2626'; // Red
-                }
-                else if (score >= 5) {
-                    level = 'Sedang';
-                    bg = '#f59e0b'; // Orange
-                }
-                else {
-                    level = 'Rendah';
-                    bg = '#10b981'; // Green
+                if (content && icon && summary) {
+                    content.style.display = 'none';
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                    summary.style.display = 'inline';
+                    item.classList.add('collapsed');
                 }
             }
 
-            levelEl.textContent = (score > 0) ? level : 'PENDING';
-            inputLevel.value = level;
-            riskBox.style.background = bg;
-            riskBox.style.color = textColor;
+            /**
+             * Handle Scope Category Change
+             * Shows/hides appropriate input based on selected category
+             */
+            function handleScopeCategory(selectElement) {
+                const formGroup = selectElement.closest('.form-grid-2');
+                const scopeContainer = formGroup.querySelector('.scope-value-container');
+                const scopeLabel = formGroup.querySelector('.scope-value-label');
+                const scopeDropdown = formGroup.querySelector('.scope-value-dropdown');
+                const scopeText = formGroup.querySelector('.scope-value-text');
 
-            // Show/Hide BAGIAN 5 based on risk level
+                const category = selectElement.value;
 
-
-            // Trigger auto-tolerance calculation
-            calculateAutoTolerance(item, score, level);
-        }
-
-        // calculateItemResidual Removed
-
-
-        // validateForm Removed
-
-
-        // ==================== PUK/PMK Functions ====================
-
-        function calculateAutoTolerance(item, riskScore, riskLevel) {
-            const toleranceDisplay = item.querySelector('.tolerance-display');
-            const toleranceIcon = item.querySelector('.tolerance-icon');
-            const toleranceValue = item.querySelector('.tolerance-value');
-            const toleranceReason = item.querySelector('.tolerance-reason');
-            const toleranceInput = item.querySelector('.tolerance-input');
-            const kolom19Section = item.querySelector('.kolom19-section');
-            const programSection = item.querySelector('.program-section');
-
-            if (!toleranceDisplay) return;
-
-            let tolerance = 'Ya';
-            let icon = 'fa-check-circle';
-            let iconColor = '#10b981';
-            let bgcolor = '#ecfdf5';
-            let borderColor = '#6ee7b7';
-            let valueText = 'Ya - Dapat Ditoleransi';
-            let reasonText = '';
-
-            // Check if there are existing controls (Kolom 11)
-            const existingControls = item.querySelector('.kolom11-hidden-input')?.value;
-            const hasControls = existingControls && existingControls.trim() !== '';
-
-            // PMK Logic: Allowed for Tinggi (Score >= 10) and Sangat Tinggi
-            const pmkOption = item.querySelector('.option-pmk');
-            const pukOption = item.querySelector('option[value="PUK"]');
-            const typeSelect = item.querySelector('.program-type-select');
-
-            if (pmkOption && pukOption) {
-                if (riskScore >= 20) {
-                    // Risk >= 20: SANGAT TINGGI -> FORCE PMK ONLY
-                    pukOption.disabled = true;
-                    pukOption.style.display = 'none'; // Sembunyikan opsi PUK
-
-                    pmkOption.disabled = false;
-                    pmkOption.textContent = 'PMK - Program Manajemen Korporat (Wajib untuk Risiko Sangat Tinggi)';
-
-                    // Force select PMK if not selected
-                    if (typeSelect.value !== 'PMK') {
-                        pmkOption.selected = true;
-                        typeSelect.value = 'PMK'; // Ensure value is set
-                        typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-
-                } else if (riskScore >= 10) {
-                    // Risk 10-19: TINGGI -> ALLOW BOTH, SUGGEST PMK
-                    pukOption.disabled = false;
-                    pukOption.style.display = 'block';
-
-                    pmkOption.disabled = false;
-                    pmkOption.textContent = 'PMK - Program Manajemen Korporat (Disarankan untuk Risiko Tinggi)';
-
-                    // Default behavior (optional): Don't force change if user already selected something valid
-                    // But if empty, maybe default to PMK? Keeping it neutral or strictly suggestive.
-
-                } else {
-                    // Risk < 10: STANDARD -> PMK DISABLED (Usually)
-                    pmkOption.disabled = true;
-                    if (pmkOption.selected) {
-                        pmkOption.selected = false;
-                        typeSelect.value = ''; // Reset if it was PMK
-                    }
-
-                    pmkOption.textContent = 'PMK - Program Manajemen Korporat (Hanya untuk Risiko Tinggi/Sangat Tinggi)';
-
-                    pukOption.disabled = false;
-                    pukOption.style.display = 'block';
-
-                    // If we forced reset above, or it's empty, default to PUK?
-                    // Let's leave it to user to pick PUK, but since PMK is disabled, they only have 1 choice.
-                    // Better UX: Auto-select PUK if PMK is disabled and nothing selected
-                    if (typeSelect.value !== 'PUK') {
-                        pukOption.selected = true;
-                        typeSelect.value = 'PUK';
-                        typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-                }
-            }
-
-            // Auto-tolerance logic (Updated for new scale)
-            if (riskScore >= 10) {
-                // Tinggi & Sangat Tinggi (10+): Auto "Tidak" - always need program
-                // User can choose PUK or PMK (handled above)
-                tolerance = 'Tidak';
-                icon = 'fa-exclamation-triangle';
-                iconColor = '#dc2626';
-                bgcolor = '#fef2f2';
-                borderColor = '#fca5a5';
-                valueText = 'Tidak - Perlu Program Pengendalian (Pilih PUK/PMK)';
-                reasonText = 'Risiko Tinggi/Sangat Tinggi: Wajib membuat Program Pengendalian';
-            } else if (riskScore >= 5) {
-                // Sedang (5-9): Depends on existing controls
-                if (!hasControls) {
-                    // No controls? Need PUK
-                    tolerance = 'Tidak';
-                    icon = 'fa-exclamation-circle';
-                    iconColor = '#f59e0b';
-                    bgcolor = '#fffbeb';
-                    borderColor = '#fcd34d';
-                    valueText = 'Tidak - Perlu Program Pengendalian';
-                    reasonText = 'Risiko Sedang tanpa pengendalian: Program PUK diperlukan';
-                } else {
-                    // Has controls? No PUK needed
-                    tolerance = 'Ya';
-                    icon = 'fa-check-circle';
-                    iconColor = '#10b981';
-                    bgcolor = '#ecfdf5';
-                    borderColor = '#6ee7b7';
-                    valueText = 'Ya - Dapat Ditoleransi (Cukup Pengendalian Kolom 10)';
-                    reasonText = 'Risiko Sedang dengan pengendalian (Kolom 10) sudah cukup. Tidak perlu PUK.';
-                }
-            } else if (riskScore > 0) {
-                // Rendah (1-4): Auto "Ya"
-                valueText = 'Ya - Dapat Ditoleransi';
-                reasonText = 'Risiko Rendah: Tidak perlu pengendalian tambahan';
-            } else {
-                // No risk calculated yet
-                icon = 'fa-spinner';
-                valueText = 'Menunggu Penilaian Risiko';
-                reasonText = 'Hitung risiko di Kolom 12-14 untuk menentukan toleransi';
-                bgcolor = 'white';
-                borderColor = '#cbd5e1';
-                iconColor = '#94a3b8';
-            }
-
-            // Update display
-            toleranceIcon.innerHTML = `<i class="fas ${icon}" style="color: ${iconColor};"></i>`;
-            toleranceValue.textContent = valueText;
-            toleranceReason.textContent = reasonText;
-            toleranceDisplay.style.background = bgcolor;
-            toleranceDisplay.style.borderColor = borderColor;
-            toleranceInput.value = tolerance;
-
-            // Show/hide Kolom 19 and Program section
-            // Show/hide Kolom 19 and Program section
-            // Logic: Show ONLY if Tolerance is "Tidak" (High Risk OR Medium Risk without Controls)
-            const riskAfterControlSection = item.querySelector('.risk-after-control-section');
-
-            if (tolerance === 'Tidak') {
-                kolom19Section.style.display = 'block';
-                programSection.style.display = 'block';
-                if (riskAfterControlSection) riskAfterControlSection.style.display = 'block';
-
-                // Ensure required attributes if validatable? 
-                // For now, no strict required on hidden fields as standard HTML behavior.
-
-            } else {
-                kolom19Section.style.display = 'none';
-                programSection.style.display = 'none';
-                if (riskAfterControlSection) {
-                    riskAfterControlSection.style.display = 'none';
-
-                    // Reset values when hidden
-                    const lSelect = riskAfterControlSection.querySelector('.likelihood-select-after');
-                    const sSelect = riskAfterControlSection.querySelector('.severity-select-after');
-                    if (lSelect) lSelect.value = '';
-                    if (sSelect) sSelect.value = '';
-
-                    // Trigger calc to reset score/level
-                    if (lSelect) calculateRiskAfterControl(lSelect);
-                }
-
-                // Clear inputs if hiding to prevent submitting hidden data
-                const programTypeSelect = item.querySelector('.program-type-select');
-                if (programTypeSelect) programTypeSelect.value = '';
-
-                const programContainer = item.querySelector('.program-form-container');
-                if (programContainer) {
-                    programContainer.style.display = 'none';
-                    programContainer.innerHTML = '';
-                }
-            }
-        }
-
-        function calculateRiskAfterControl(el) {
-            const item = el.closest('.doc-item');
-            const section = item.querySelector('.risk-after-control-section');
-            if (!section) return;
-
-            const likelihood = parseInt(section.querySelector('.likelihood-select-after').value) || 0;
-            const severity = parseInt(section.querySelector('.severity-select-after').value) || 0;
-
-            const score = likelihood * severity;
-            const scoreEl = section.querySelector('.risk-score-after');
-            const levelEl = section.querySelector('.risk-level-after');
-            const inputScore = section.querySelector('.input-score-after');
-            const inputLevel = section.querySelector('.input-level-after');
-            const riskBox = section.querySelector('.risk-result-box-after');
-
-            scoreEl.textContent = score || '-';
-            inputScore.value = score > 0 ? score : ''; // Empty if 0 to allow DB default or NULL? Or just 0. Let's keep empty string for "unset" visual. 
-            // Wait, DB columns are likely nullable or integers. 
-            // If hidden, we want them treated as NULL or "-" (which is 0 or null).
-            // User request: "jika tdapat ditoleransi itu nilainya '-'" -> implies NULL or displayed as -.
-
-            let level = '-';
-            let bg = '#e2e8f0';
-            let textColor = '#64748b';
-
-            if (score > 0) {
-                textColor = '#fff';
-                if (score >= 20) {
-                    level = 'Sangat Tinggi';
-                    bg = '#7f1d1d';
-                }
-                else if (score >= 10) {
-                    level = 'Tinggi';
-                    bg = '#dc2626';
-                }
-                else if (score >= 5) {
-                    level = 'Sedang';
-                    bg = '#f59e0b';
-                }
-                else {
-                    level = 'Rendah';
-                    bg = '#10b981';
-                }
-            }
-
-            levelEl.textContent = (score > 0) ? level : 'PENDING';
-            // If hidden (likelihood=0), level should be empty string or '-'?
-            if (score === 0) levelEl.textContent = '-';
-
-            inputLevel.value = (score > 0) ? level : '';
-            riskBox.style.background = (score > 0) ? bg : '#e2e8f0';
-            riskBox.style.color = (score > 0) ? textColor : '#64748b';
-        }
-
-        // Handle Kolom 19 input changes - auto-fill program title
-        document.addEventListener('input', function (e) {
-            if (e.target.classList.contains('kolom19-input')) {
-                const item = e.target.closest('.doc-item');
-                const programJudul = item.querySelector('.program-judul');
-                if (programJudul) {
-                    programJudul.value = e.target.value;
-                }
-            }
-        });
-
-        // Toggle Headers based on Program Type
-        function toggleProgramHeaders(item) {
-            const isPMK = item.querySelector('.program-type-select')?.value === 'PMK';
-            const table = item.querySelector('.program-kerja-table');
-            if (!table) return;
-
-            const colKoordinator = table.querySelector('.col-koordinator');
-            const colPelaksana = table.querySelector('.col-pelaksana');
-            const colAnggaran = table.querySelector('.col-anggaran');
-
-            if (isPMK) {
-                // PMK: Rename Koord -> PIC, Hide Pelaksana, Show Anggaran
-                if (colKoordinator) {
-                    colKoordinator.textContent = 'PIC'; // Rename header
-                    colKoordinator.style.minWidth = '180px';
-                }
-                if (colPelaksana) colPelaksana.style.display = 'none';
-
-                if (colAnggaran) colAnggaran.style.display = 'table-cell';
-            } else {
-                // PUK: Name Koord -> Koordinator, Show Pelaksana, Hide Anggaran
-                if (colKoordinator) {
-                    colKoordinator.textContent = 'Koordinator'; // Reset header
-                    colKoordinator.style.minWidth = '140px';
-                }
-                if (colPelaksana) colPelaksana.style.display = 'table-cell';
-
-                if (colAnggaran) colAnggaran.style.display = 'none';
-            }
-        }
-
-        // Logic check: Is PMK selected?
-        function isPmkSelected(btn) {
-            // Check if btn itself is the Select (when triggered by change event) or a child
-            let item;
-            if (btn.classList.contains('doc-item')) {
-                item = btn;
-            } else {
-                item = btn.closest('.doc-item');
-            }
-            const type = item.querySelector('.program-type-select');
-            return type && type.value === 'PMK';
-        }
-
-        // Handle Program Type Selection
-        document.addEventListener('change', function (e) {
-            if (e.target.classList.contains('program-type-select')) {
-                const item = e.target.closest('.doc-item');
-                const programType = e.target.value;
-                const container = item.querySelector('.program-form-container');
-                const kolom19Value = item.querySelector('.kolom19-input').value;
-
-                // Get item index from data-index attribute
-                const itemIndex = item.getAttribute('data-index');
-
-                if (!programType) {
-                    container.style.display = 'none';
-                    container.innerHTML = '';
+                if (!category) {
+                    scopeContainer.style.display = 'none';
+                    scopeDropdown.style.display = 'none';
+                    scopeText.style.display = 'none';
                     return;
                 }
 
-                // Clone template
-                const template = document.getElementById('program-form-template').innerHTML;
-                const processedHtml = template.replace(/{index}/g, itemIndex);
+                // Show container
+                scopeContainer.style.display = 'block';
 
-                container.innerHTML = processedHtml;
-                container.style.display = 'block';
+                // Reset both inputs
+                scopeDropdown.style.display = 'none';
+                scopeText.style.display = 'none';
+                scopeDropdown.removeAttribute('name');
+                scopeText.removeAttribute('name');
 
-                // Update headers immediately AFTER injecting HTML
+                if (category === 'proses_bisnis') {
+                    scopeLabel.innerHTML = 'Nama Proses Bisnis <span class="required">*</span>';
+                    scopeDropdown.style.display = 'block';
+                    scopeDropdown.setAttribute('name', scopeDropdown.getAttribute('name').replace('scope_value_text', 'scope_value'));
+
+                    // Fetch business processes
+                    fetchBusinessProcesses(scopeDropdown);
+                }
+                else if (category === 'kegiatan') {
+                    scopeLabel.innerHTML = 'Nama Kegiatan <span class="required">*</span>';
+                    scopeText.style.display = 'block';
+                    scopeText.setAttribute('name', scopeText.getAttribute('name').replace('scope_value_text', 'scope_value'));
+                    scopeText.setAttribute('placeholder', 'Masukkan nama kegiatan...');
+                    scopeText.setAttribute('required', 'required');
+                    scopeDropdown.removeAttribute('required');
+                }
+                else if (category === 'aset') {
+                    scopeLabel.innerHTML = 'Nama Aset <span class="required">*</span>';
+                    scopeText.style.display = 'block';
+                    scopeText.setAttribute('name', scopeText.getAttribute('name').replace('scope_value_text', 'scope_value'));
+                    scopeText.setAttribute('placeholder', 'Masukkan nama aset...');
+                    scopeText.setAttribute('required', 'required');
+                    scopeDropdown.removeAttribute('required');
+                }
+            }
+
+            /**
+             * Fetch Business Processes from API
+             */
+            async function fetchBusinessProcesses(selectElement) {
+                selectElement.innerHTML = '<option value="">Memuat...</option>';
+
+                try {
+                    const response = await fetch('/api/business-processes', {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const processes = await response.json();
+
+                    selectElement.innerHTML = '<option value="">-- Pilih Proses Bisnis --</option>';
+                    processes.forEach(process => {
+                        const option = document.createElement('option');
+                        option.value = process.name;
+                        option.textContent = process.name;
+                        selectElement.appendChild(option);
+                    });
+
+                    selectElement.setAttribute('required', 'required');
+                    scopeText.removeAttribute('required');
+
+                } catch (error) {
+                    console.error('Failed to fetch business processes:', error);
+                    selectElement.innerHTML = '<option value="">Error loading data</option>';
+                }
+            }
+
+            function updateSummary(input) {
+                const item = input.closest('.doc-item');
+                const summary = item.querySelector('.item-summary');
+                if (input.value) {
+                    const limit = 40;
+                    let txt = input.value;
+                    if (txt.length > limit) txt = txt.substring(0, limit) + '...';
+                    summary.textContent = `(${txt})`;
+                } else {
+                    summary.textContent = '(Klik untuk expand)';
+                }
+            }
+
+            function updateItemNumbers() {
+                const items = document.querySelectorAll('.doc-item');
+                items.forEach((item, idx) => {
+                    // Update Badge Number
+                    const numBadge = item.querySelector('.item-number');
+                    if (numBadge) numBadge.textContent = '#' + (idx + 1);
+                });
+                updateRemoveButtons();
+            }
+
+            function updateRemoveButtons() {
+                const buttons = document.querySelectorAll('.btn-remove-item');
+                if (buttons.length === 1) {
+                    buttons[0].style.display = 'none';
+                } else {
+                    buttons.forEach(b => b.style.display = 'block');
+                }
+            }
+
+            function updateConditions(select) {
+                const item = select.closest('.doc-item');
+                const condSelect = item.querySelector('.condition-select');
+                const cat = select.value;
+                const hazardSection = item.querySelector('.hazard-section');
+                const hazardOptions = item.querySelector('.hazard-options');
+
+                // Toggle BAGIAN 2 Visibility
+                const bagian2Container = item.querySelector('.bagian-2-container');
+                if (bagian2Container) {
+                    if (cat) {
+                        bagian2Container.style.display = 'block';
+                    } else {
+                        bagian2Container.style.display = 'none';
+                    }
+                }
+
+                // Get all conditional field sections using CORRECT classes
+                const k3KoField = item.querySelector('.k3-ko-field'); // Column 6
+                const lingkunganField = item.querySelector('.lingkungan-field'); // Column 7
+                const keamananField = item.querySelector('.keamanan-field'); // Column 8
+                const lingkunganOnlyField = item.querySelector('.lingkungan-only-field'); // Column 16
+
+                // Get kolom 9 variants
+                const kolom9K3KO = item.querySelector('.kolom9-k3ko-field');
+                const kolom9Lingkungan = item.querySelector('.kolom9-lingkungan-field');
+                const kolom9Keamanan = item.querySelector('.kolom9-keamanan-field');
+
+                condSelect.innerHTML = '<option value="">-- Pilih --</option>';
+
+                // 1. Reset/Hide All Categories First
+                if (k3KoField) k3KoField.style.display = 'none';
+                if (lingkunganField) lingkunganField.style.display = 'none';
+                if (keamananField) keamananField.style.display = 'none';
+                if (lingkunganOnlyField) lingkunganOnlyField.style.display = 'none';
+
+                // 2. Hide All Kolom 9 Variants & Reset Required
+                if (kolom9K3KO) {
+                    kolom9K3KO.style.display = 'none';
+                    kolom9K3KO.querySelector('textarea')?.removeAttribute('required');
+                }
+                if (kolom9Lingkungan) {
+                    kolom9Lingkungan.style.display = 'none';
+                    kolom9Lingkungan.querySelector('textarea')?.removeAttribute('required');
+                }
+                if (kolom9Keamanan) {
+                    kolom9Keamanan.style.display = 'none';
+                    kolom9Keamanan.querySelector('textarea')?.removeAttribute('required');
+                }
+
+                // 3. Populate Conditions Dropdown
+                if (categories[cat]) {
+                    condSelect.disabled = false; // Enable the dropdown
+                    categories[cat].conditions.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c;
+                        opt.textContent = c;
+                        condSelect.appendChild(opt);
+                    });
+
+                    // 4. Show Specific Fields Based on Category
+                    if (cat === 'K3' || cat === 'KO') {
+                        // Show Kolom 6 & 9a
+                        if (k3KoField) {
+                            k3KoField.style.display = 'block';
+                            k3KoField.querySelectorAll('input').forEach(i => i.disabled = false);
+                        }
+
+                        if (kolom9K3KO) {
+                            kolom9K3KO.style.display = 'block';
+                            kolom9K3KO.querySelector('textarea')?.setAttribute('required', 'required');
+                        }
+
+                        // Disable others to prevent submission
+                        if (lingkunganField) lingkunganField.querySelectorAll('input').forEach(i => i.disabled = true);
+                        if (keamananField) keamananField.querySelectorAll('input').forEach(i => i.disabled = true);
+
+                    } else if (cat === 'Lingkungan') {
+                        // Show Kolom 7, 16 & 9b
+                        if (lingkunganField) {
+                            lingkunganField.style.display = 'block';
+                            lingkunganField.querySelectorAll('input').forEach(i => i.disabled = false);
+                        }
+                        if (lingkunganOnlyField) lingkunganOnlyField.style.display = 'block';
+
+                        if (kolom9Lingkungan) {
+                            kolom9Lingkungan.style.display = 'block';
+                            kolom9Lingkungan.querySelector('textarea')?.setAttribute('required', 'required');
+                        }
+
+                        // Disable others
+                        if (k3KoField) k3KoField.querySelectorAll('input').forEach(i => i.disabled = true);
+                        if (keamananField) keamananField.querySelectorAll('input').forEach(i => i.disabled = true);
+
+                    } else if (cat === 'Keamanan') {
+                        // Show Kolom 8 & 9c
+                        if (keamananField) {
+                            keamananField.style.display = 'block';
+                            keamananField.querySelectorAll('input').forEach(i => i.disabled = false);
+                        }
+
+                        if (kolom9Keamanan) {
+                            kolom9Keamanan.style.display = 'block';
+                            kolom9Keamanan.querySelector('textarea')?.setAttribute('required', 'required');
+                        }
+
+                        // Disable others
+                        if (k3KoField) k3KoField.querySelectorAll('input').forEach(i => i.disabled = true);
+                        if (lingkunganField) lingkunganField.querySelectorAll('input').forEach(i => i.disabled = true);
+                    }
+                } else {
+                    condSelect.disabled = true; // Keep disabled if no category selected
+                }
+            }
+
+
+
+            function calculateItemRisk(el) {
+                const item = el.closest('.doc-item');
+                const likelihood = parseInt(item.querySelector('.likelihood-select').value) || 0;
+                const severity = parseInt(item.querySelector('.severity-select').value) || 0;
+
+                const score = likelihood * severity;
+                const scoreEl = item.querySelector('.display-score');
+                const levelEl = item.querySelector('.display-level');
+                const inputScore = item.querySelector('.input-score');
+                const inputLevel = item.querySelector('.input-level');
+                const riskBox = item.querySelector('.risk-result-box');
+
+                scoreEl.textContent = score || '-';
+                inputScore.value = score;
+
+                let level = 'Rendah';
+                let bg = '#e2e8f0'; // Default gray
+                let textColor = '#64748b';
+
+                if (score > 0) {
+                    textColor = '#fff';
+                    if (score >= 20) {
+                        level = 'Sangat Tinggi';
+                        bg = '#7f1d1d'; // Dark red for very high
+                    }
+                    else if (score >= 10) {
+                        level = 'Tinggi';
+                        bg = '#dc2626'; // Red
+                    }
+                    else if (score >= 5) {
+                        level = 'Sedang';
+                        bg = '#f59e0b'; // Orange
+                    }
+                    else {
+                        level = 'Rendah';
+                        bg = '#10b981'; // Green
+                    }
+                }
+
+                levelEl.textContent = (score > 0) ? level : 'PENDING';
+                inputLevel.value = level;
+                riskBox.style.background = bg;
+                riskBox.style.color = textColor;
+
+                // Show/Hide BAGIAN 5 based on risk level
+
+
+                // Trigger auto-tolerance calculation
+                calculateAutoTolerance(item, score, level);
+            }
+
+            // calculateItemResidual Removed
+
+
+            // validateForm Removed
+
+
+            // ==================== PUK/PMK Functions ====================
+
+            function calculateAutoTolerance(item, riskScore, riskLevel) {
+                const toleranceDisplay = item.querySelector('.tolerance-display');
+                const toleranceIcon = item.querySelector('.tolerance-icon');
+                const toleranceValue = item.querySelector('.tolerance-value');
+                const toleranceReason = item.querySelector('.tolerance-reason');
+                const toleranceInput = item.querySelector('.tolerance-input');
+                const kolom19Section = item.querySelector('.kolom19-section');
+                const programSection = item.querySelector('.program-section');
+
+                if (!toleranceDisplay) return;
+
+                let tolerance = 'Ya';
+                let icon = 'fa-check-circle';
+                let iconColor = '#10b981';
+                let bgcolor = '#ecfdf5';
+                let borderColor = '#6ee7b7';
+                let valueText = 'Ya - Dapat Ditoleransi';
+                let reasonText = '';
+
+                // Check if there are existing controls (Kolom 11)
+                const existingControls = item.querySelector('.kolom11-hidden-input')?.value;
+                const hasControls = existingControls && existingControls.trim() !== '';
+
+                // PMK Logic: Allowed for Tinggi (Score >= 10) and Sangat Tinggi
+                const pmkOption = item.querySelector('.option-pmk');
+                const pukOption = item.querySelector('option[value="PUK"]');
+                const typeSelect = item.querySelector('.program-type-select');
+
+                if (pmkOption && pukOption) {
+                    if (riskScore >= 20) {
+                        // Risk >= 20: SANGAT TINGGI -> FORCE PMK ONLY
+                        pukOption.disabled = true;
+                        pukOption.style.display = 'none'; // Sembunyikan opsi PUK
+
+                        pmkOption.disabled = false;
+                        pmkOption.textContent = 'PMK - Program Manajemen Korporat (Wajib untuk Risiko Sangat Tinggi)';
+
+                        // Force select PMK if not selected
+                        if (typeSelect.value !== 'PMK') {
+                            pmkOption.selected = true;
+                            typeSelect.value = 'PMK'; // Ensure value is set
+                            typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+
+                    } else if (riskScore >= 10) {
+                        // Risk 10-19: TINGGI -> ALLOW BOTH, SUGGEST PMK
+                        pukOption.disabled = false;
+                        pukOption.style.display = 'block';
+
+                        pmkOption.disabled = false;
+                        pmkOption.textContent = 'PMK - Program Manajemen Korporat (Disarankan untuk Risiko Tinggi)';
+
+                        // Default behavior (optional): Don't force change if user already selected something valid
+                        // But if empty, maybe default to PMK? Keeping it neutral or strictly suggestive.
+
+                    } else {
+                        // Risk < 10: STANDARD -> PMK DISABLED (Usually)
+                        pmkOption.disabled = true;
+                        if (pmkOption.selected) {
+                            pmkOption.selected = false;
+                            typeSelect.value = ''; // Reset if it was PMK
+                        }
+
+                        pmkOption.textContent = 'PMK - Program Manajemen Korporat (Hanya untuk Risiko Tinggi/Sangat Tinggi)';
+
+                        pukOption.disabled = false;
+                        pukOption.style.display = 'block';
+
+                        // If we forced reset above, or it's empty, default to PUK?
+                        // Let's leave it to user to pick PUK, but since PMK is disabled, they only have 1 choice.
+                        // Better UX: Auto-select PUK if PMK is disabled and nothing selected
+                        if (typeSelect.value !== 'PUK') {
+                            pukOption.selected = true;
+                            typeSelect.value = 'PUK';
+                            typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }
+                }
+
+                // Auto-tolerance logic (Updated for new scale)
+                if (riskScore >= 10) {
+                    // Tinggi & Sangat Tinggi (10+): Auto "Tidak" - always need program
+                    // User can choose PUK or PMK (handled above)
+                    tolerance = 'Tidak';
+                    icon = 'fa-exclamation-triangle';
+                    iconColor = '#dc2626';
+                    bgcolor = '#fef2f2';
+                    borderColor = '#fca5a5';
+                    valueText = 'Tidak - Perlu Program Pengendalian (Pilih PUK/PMK)';
+                    reasonText = 'Risiko Tinggi/Sangat Tinggi: Wajib membuat Program Pengendalian';
+                } else if (riskScore >= 5) {
+                    // Sedang (5-9): Depends on existing controls
+                    if (!hasControls) {
+                        // No controls? Need PUK
+                        tolerance = 'Tidak';
+                        icon = 'fa-exclamation-circle';
+                        iconColor = '#f59e0b';
+                        bgcolor = '#fffbeb';
+                        borderColor = '#fcd34d';
+                        valueText = 'Tidak - Perlu Program Pengendalian';
+                        reasonText = 'Risiko Sedang tanpa pengendalian: Program PUK diperlukan';
+                    } else {
+                        // Has controls? No PUK needed
+                        tolerance = 'Ya';
+                        icon = 'fa-check-circle';
+                        iconColor = '#10b981';
+                        bgcolor = '#ecfdf5';
+                        borderColor = '#6ee7b7';
+                        valueText = 'Ya - Dapat Ditoleransi (Cukup Pengendalian Kolom 10)';
+                        reasonText = 'Risiko Sedang dengan pengendalian (Kolom 10) sudah cukup. Tidak perlu PUK.';
+                    }
+                } else if (riskScore > 0) {
+                    // Rendah (1-4): Auto "Ya"
+                    valueText = 'Ya - Dapat Ditoleransi';
+                    reasonText = 'Risiko Rendah: Tidak perlu pengendalian tambahan';
+                } else {
+                    // No risk calculated yet
+                    icon = 'fa-spinner';
+                    valueText = 'Menunggu Penilaian Risiko';
+                    reasonText = 'Hitung risiko di Kolom 12-14 untuk menentukan toleransi';
+                    bgcolor = 'white';
+                    borderColor = '#cbd5e1';
+                    iconColor = '#94a3b8';
+                }
+
+                // Update display
+                toleranceIcon.innerHTML = `<i class="fas ${icon}" style="color: ${iconColor};"></i>`;
+                toleranceValue.textContent = valueText;
+                toleranceReason.textContent = reasonText;
+                toleranceDisplay.style.background = bgcolor;
+                toleranceDisplay.style.borderColor = borderColor;
+                toleranceInput.value = tolerance;
+
+                // Show/hide Kolom 19 and Program section
+                // Show/hide Kolom 19 and Program section
+                // Logic: Show ONLY if Tolerance is "Tidak" (High Risk OR Medium Risk without Controls)
+                const riskAfterControlSection = item.querySelector('.risk-after-control-section');
+
+                if (tolerance === 'Tidak') {
+                    kolom19Section.style.display = 'block';
+                    programSection.style.display = 'block';
+                    if (riskAfterControlSection) riskAfterControlSection.style.display = 'block';
+
+                    // Ensure required attributes if validatable? 
+                    // For now, no strict required on hidden fields as standard HTML behavior.
+
+                } else {
+                    kolom19Section.style.display = 'none';
+                    programSection.style.display = 'none';
+                    if (riskAfterControlSection) {
+                        riskAfterControlSection.style.display = 'none';
+
+                        // Reset values when hidden
+                        const lSelect = riskAfterControlSection.querySelector('.likelihood-select-after');
+                        const sSelect = riskAfterControlSection.querySelector('.severity-select-after');
+                        if (lSelect) lSelect.value = '';
+                        if (sSelect) sSelect.value = '';
+
+                        // Trigger calc to reset score/level
+                        if (lSelect) calculateRiskAfterControl(lSelect);
+                    }
+
+                    // Clear inputs if hiding to prevent submitting hidden data
+                    const programTypeSelect = item.querySelector('.program-type-select');
+                    if (programTypeSelect) programTypeSelect.value = '';
+
+                    const programContainer = item.querySelector('.program-form-container');
+                    if (programContainer) {
+                        programContainer.style.display = 'none';
+                        programContainer.innerHTML = '';
+                    }
+                }
+            }
+
+            function calculateRiskAfterControl(el) {
+                const item = el.closest('.doc-item');
+                const section = item.querySelector('.risk-after-control-section');
+                if (!section) return;
+
+                const likelihood = parseInt(section.querySelector('.likelihood-select-after').value) || 0;
+                const severity = parseInt(section.querySelector('.severity-select-after').value) || 0;
+
+                const score = likelihood * severity;
+                const scoreEl = section.querySelector('.risk-score-after');
+                const levelEl = section.querySelector('.risk-level-after');
+                const inputScore = section.querySelector('.input-score-after');
+                const inputLevel = section.querySelector('.input-level-after');
+                const riskBox = section.querySelector('.risk-result-box-after');
+
+                scoreEl.textContent = score || '-';
+                inputScore.value = score > 0 ? score : ''; // Empty if 0 to allow DB default or NULL? Or just 0. Let's keep empty string for "unset" visual. 
+                // Wait, DB columns are likely nullable or integers. 
+                // If hidden, we want them treated as NULL or "-" (which is 0 or null).
+                // User request: "jika tdapat ditoleransi itu nilainya '-'" -> implies NULL or displayed as -.
+
+                let level = '-';
+                let bg = '#e2e8f0';
+                let textColor = '#64748b';
+
+                if (score > 0) {
+                    textColor = '#fff';
+                    if (score >= 20) {
+                        level = 'Sangat Tinggi';
+                        bg = '#7f1d1d';
+                    }
+                    else if (score >= 10) {
+                        level = 'Tinggi';
+                        bg = '#dc2626';
+                    }
+                    else if (score >= 5) {
+                        level = 'Sedang';
+                        bg = '#f59e0b';
+                    }
+                    else {
+                        level = 'Rendah';
+                        bg = '#10b981';
+                    }
+                }
+
+                levelEl.textContent = (score > 0) ? level : 'PENDING';
+                // If hidden (likelihood=0), level should be empty string or '-'?
+                if (score === 0) levelEl.textContent = '-';
+
+                inputLevel.value = (score > 0) ? level : '';
+                riskBox.style.background = (score > 0) ? bg : '#e2e8f0';
+                riskBox.style.color = (score > 0) ? textColor : '#64748b';
+            }
+
+            // Handle Kolom 19 input changes - auto-fill program title
+            document.addEventListener('input', function (e) {
+                if (e.target.classList.contains('kolom19-input')) {
+                    const item = e.target.closest('.doc-item');
+                    const programJudul = item.querySelector('.program-judul');
+                    if (programJudul) {
+                        programJudul.value = e.target.value;
+                    }
+                }
+            });
+
+            // Toggle Headers based on Program Type
+            function toggleProgramHeaders(item) {
+                const isPMK = item.querySelector('.program-type-select')?.value === 'PMK';
+                const table = item.querySelector('.program-kerja-table');
+                if (!table) return;
+
+                const colKoordinator = table.querySelector('.col-koordinator');
+                const colPelaksana = table.querySelector('.col-pelaksana');
+                const colAnggaran = table.querySelector('.col-anggaran');
+
+                if (isPMK) {
+                    // PMK: Rename Koord -> PIC, Hide Pelaksana, Show Anggaran
+                    if (colKoordinator) {
+                        colKoordinator.textContent = 'PIC'; // Rename header
+                        colKoordinator.style.minWidth = '180px';
+                    }
+                    if (colPelaksana) colPelaksana.style.display = 'none';
+
+                    if (colAnggaran) colAnggaran.style.display = 'table-cell';
+                } else {
+                    // PUK: Name Koord -> Koordinator, Show Pelaksana, Hide Anggaran
+                    if (colKoordinator) {
+                        colKoordinator.textContent = 'Koordinator'; // Reset header
+                        colKoordinator.style.minWidth = '140px';
+                    }
+                    if (colPelaksana) colPelaksana.style.display = 'table-cell';
+
+                    if (colAnggaran) colAnggaran.style.display = 'none';
+                }
+            }
+
+            // Logic check: Is PMK selected?
+            function isPmkSelected(btn) {
+                // Check if btn itself is the Select (when triggered by change event) or a child
+                let item;
+                if (btn.classList.contains('doc-item')) {
+                    item = btn;
+                } else {
+                    item = btn.closest('.doc-item');
+                }
+                const type = item.querySelector('.program-type-select');
+                return type && type.value === 'PMK';
+            }
+
+            // Handle Program Type Selection
+            document.addEventListener('change', function (e) {
+                if (e.target.classList.contains('program-type-select')) {
+                    const item = e.target.closest('.doc-item');
+                    const programType = e.target.value;
+                    const container = item.querySelector('.program-form-container');
+                    const kolom19Value = item.querySelector('.kolom19-input').value;
+
+                    // Get item index from data-index attribute
+                    const itemIndex = item.getAttribute('data-index');
+
+                    if (!programType) {
+                        container.style.display = 'none';
+                        container.innerHTML = '';
+                        return;
+                    }
+
+                    // Clone template
+                    const template = document.getElementById('program-form-template').innerHTML;
+                    const processedHtml = template.replace(/{index}/g, itemIndex);
+
+                    container.innerHTML = processedHtml;
+                    container.style.display = 'block';
+
+                    // Update headers immediately AFTER injecting HTML
+                    toggleProgramHeaders(item);
+
+                    // Set title
+                    const title = container.querySelector('.program-form-title');
+                    title.textContent = `Form ${programType} - ${programType === 'PUK' ? 'Program Unit Kerja' : 'Program Manajemen Korporat'}`;
+
+                    // Set judul from Kolom 19
+                    const judulInput = container.querySelector('.program-judul');
+                    judulInput.value = kolom19Value;
+
+                    // Auto-fill Penanggung Jawab
+                    const pjInput = container.querySelector('.program-pj');
+                    const userUnitName = document.getElementById('user_unit_name').value;
+                    if (pjInput) pjInput.value = userUnitName;
+
+                    // Set type label in uraian revisi
+                    const typeLabel = container.querySelector('.program-type-label');
+                    typeLabel.textContent = programType === 'PMK' ? '(Harus diisi untuk PMK)' : '(Opsional)';
+
+                    // Add first row to program kerja
+                    setTimeout(() => {
+                        const addBtn = container.querySelector('button[onclick*="addProgramKerjaRow"]');
+                        if (addBtn) addProgramKerjaRow(addBtn);
+                    }, 100);
+                }
+            });
+
+            // Add Program Kerja Row
+            function addProgramKerjaRow(btn) {
+                const table = btn.previousElementSibling.querySelector('.program-kerja-tbody');
+                // Use unique timestamp for ID to prevent collisions
+                const uniqueId = Date.now();
+                const rowCount = table.querySelectorAll('tr').length + 1;
+
+                const item = btn.closest('.doc-item');
+                const itemIndex = item.getAttribute('data-index');
+                const isPMK = isPmkSelected(btn);
+
+                // Ensure headers are correct state before adding row
                 toggleProgramHeaders(item);
 
-                // Set title
-                const title = container.querySelector('.program-form-title');
-                title.textContent = `Form ${programType} - ${programType === 'PUK' ? 'Program Unit Kerja' : 'Program Manajemen Korporat'}`;
+                // Get Users passed from controller
+                const band3Users = @json($band3Users ?? []); // Roles 4-5 for Koordinator
+                const band4Users = @json($band4Users ?? []); // Role 6 for Pelaksana
+                const pmkPicUsers = @json($pmkPicUsers ?? []); // Managers (Role 3)
 
-                // Set judul from Kolom 19
-                const judulInput = container.querySelector('.program-judul');
-                judulInput.value = kolom19Value;
+                // Generate Options for Band 3 (Koordinator)
+                let band3Options = '<option value="" disabled selected>-- Pilih Koordinator --</option>';
+                band3Users.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+                band3Users.forEach(u => {
+                    band3Options += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+                });
 
-                // Auto-fill Penanggung Jawab
-                const pjInput = container.querySelector('.program-pj');
-                const userUnitName = document.getElementById('user_unit_name').value;
-                if (pjInput) pjInput.value = userUnitName;
+                // Generate Options for Band 4 (Pelaksana)
+                let band4Options = '<option value="" disabled selected>-- Pilih Pelaksana --</option>';
+                band4Users.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+                band4Users.forEach(u => {
+                    band4Options += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+                });
 
-                // Set type label in uraian revisi
-                const typeLabel = container.querySelector('.program-type-label');
-                typeLabel.textContent = programType === 'PMK' ? '(Harus diisi untuk PMK)' : '(Opsional)';
+                // Generate Options for PMK PIC (Manager)
+                let pmkPicOptions = '<option value="" disabled selected>-- Pilih PIC (Manager) --</option>';
+                pmkPicUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+                pmkPicUsers.forEach(u => {
+                    pmkPicOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+                });
 
-                // Add first row to program kerja
-                setTimeout(() => {
-                    const addBtn = container.querySelector('button[onclick*="addProgramKerjaRow"]');
-                    if (addBtn) addProgramKerjaRow(addBtn);
-                }, 100);
-            }
-        });
+                const row = document.createElement('tr');
 
-        // Add Program Kerja Row
-        function addProgramKerjaRow(btn) {
-            const table = btn.previousElementSibling.querySelector('.program-kerja-tbody');
-            // Use unique timestamp for ID to prevent collisions
-            const uniqueId = Date.now();
-            const rowCount = table.querySelectorAll('tr').length + 1;
-
-            const item = btn.closest('.doc-item');
-            const itemIndex = item.getAttribute('data-index');
-            const isPMK = isPmkSelected(btn);
-
-            // Ensure headers are correct state before adding row
-            toggleProgramHeaders(item);
-
-            // Get Users passed from controller
-            const band3Users = @json($band3Users ?? []); // Roles 4-5 for Koordinator
-            const band4Users = @json($band4Users ?? []); // Role 6 for Pelaksana
-            const pmkPicUsers = @json($pmkPicUsers ?? []); // Managers (Role 3)
-
-            // Generate Options for Band 3 (Koordinator)
-            let band3Options = '<option value="" disabled selected>-- Pilih Koordinator --</option>';
-            band3Users.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
-            band3Users.forEach(u => {
-                band3Options += `<option value="${u.nama_user}">${u.nama_user}</option>`;
-            });
-
-            // Generate Options for Band 4 (Pelaksana)
-            let band4Options = '<option value="" disabled selected>-- Pilih Pelaksana --</option>';
-            band4Users.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
-            band4Users.forEach(u => {
-                band4Options += `<option value="${u.nama_user}">${u.nama_user}</option>`;
-            });
-
-            // Generate Options for PMK PIC (Manager)
-            let pmkPicOptions = '<option value="" disabled selected>-- Pilih PIC (Manager) --</option>';
-            pmkPicUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
-            pmkPicUsers.forEach(u => {
-                pmkPicOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
-            });
-
-            const row = document.createElement('tr');
-
-            if (isPMK) {
-                // PMK Table: No | Uraian | PIC (Manager) | Target (12) | Anggaran
-                // Note: Only generate ONE user column
-                row.innerHTML = `
+                if (isPMK) {
+                    // PMK Table: No | Uraian | PIC (Manager) | Target (12) | Anggaran
+                    // Note: Only generate ONE user column
+                    row.innerHTML = `
                     <td style="text-align: center; border: 1px solid #d1d5db; vertical-align: middle;">${rowCount}</td>
                     
                     <td style="border: 1px solid #d1d5db; padding: 0;">
@@ -2556,9 +1859,9 @@
                         </button>
                     </td>
                 `;
-            } else {
-                // PUK Table: No | Uraian | Koordinator | Pelaksana | Target | (No Anggaran)
-                row.innerHTML = `
+                } else {
+                    // PUK Table: No | Uraian | Koordinator | Pelaksana | Target | (No Anggaran)
+                    row.innerHTML = `
                     <td style="text-align: center; border: 1px solid #d1d5db; vertical-align: middle;">${rowCount}</td>
                     
                     <td style="border: 1px solid #d1d5db; padding: 0;">
@@ -2596,213 +1899,194 @@
                         </button>
                     </td>
                 `;
+                }
+
+                table.appendChild(row);
             }
 
-            table.appendChild(row);
-        }
-
-        // Renumber program kerja rows
-        function renumberProgramKerja(btn) {
-            const table = btn.closest('table').querySelector('tbody');
-            const rows = table.querySelectorAll('tr');
-            rows.forEach((row, idx) => {
-                row.querySelector('td:first-child').textContent = idx + 1;
-            });
-        }
-
-        // ==================== Form Type Selection ====================
-
-        let selectedFormType = '';
-
-        // Show modal on page load
-        window.addEventListener('load', function () {
-            const modal = document.getElementById('formTypeModal');
-            modal.style.display = 'flex';
-        });
-
-        // Handle form type selection
-        function selectFormType(type) {
-            selectedFormType = type;
-
-            // Store in hidden input
-            document.getElementById('form_type').value = type;
-
-            // Update form title & hidden input
-            const formTitle = document.getElementById('formTitle');
-            const judulInput = document.getElementById('judul_dokumen');
-
-            if (type === 'SHE') {
-                const title = 'Identifikasi dan Penetapan Mitigasi Risiko K3, KO, Aspek Lingkungan';
-                formTitle.textContent = title;
-                if (judulInput) judulInput.value = title;
-            } else if (type === 'Security') {
-                const title = 'Identifikasi dan Penetapan Mitigasi Risiko Pengamanan';
-                formTitle.textContent = title;
-                if (judulInput) judulInput.value = title;
+            // Renumber program kerja rows
+            function renumberProgramKerja(btn) {
+                const table = btn.closest('table').querySelector('tbody');
+                const rows = table.querySelectorAll('tr');
+                rows.forEach((row, idx) => {
+                    row.querySelector('td:first-child').textContent = idx + 1;
+                });
             }
 
-            // Hide modal with animation
-            const modal = document.getElementById('formTypeModal');
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.style.display = 'none';
-                modal.style.opacity = '1';
+            // ==================== Form Type Selection ====================
 
-                // Add first item after modal is hidden
-                addItem();
-            }, 300);
-        }
+            let selectedFormType = '';
 
-        // Filter categories based on form type
-        function filterAllCategories() {
-            // Filter in template
-            updateCategoryOptionsInTemplate();
-
-            // Filter in existing items
-            document.querySelectorAll('.doc-item').forEach(item => {
-                const categorySelect = item.querySelector('.category-select');
-                if (categorySelect) {
-                    filterCategorySelect(categorySelect);
-                }
+            // Show modal on page load
+            window.addEventListener('load', function () {
+                const modal = document.getElementById('formTypeModal');
+                modal.style.display = 'flex';
             });
-        }
 
-        function filterCategorySelect(select) {
-            if (!selectedFormType) return;
+            // Handle form type selection
+            function selectFormType(type) {
+                selectedFormType = type;
 
-            const allOptions = [
-                { value: 'K3', text: 'K3 (Keselamatan Kerja)', type: 'SHE' },
-                { value: 'KO', text: 'KO (Kesehatan Operasional)', type: 'SHE' },
-                { value: 'Lingkungan', text: 'Lingkungan', type: 'SHE' },
-                { value: 'Keamanan', text: 'Keamanan', type: 'Security' }
-            ];
+                // Store in hidden input
+                document.getElementById('form_type').value = type;
 
-            // Clear current options except placeholder
-            select.innerHTML = '<option value="">-- Pilih Kategori --</option>';
+                // Update form title & hidden input
+                const formTitle = document.getElementById('formTitle');
+                const judulInput = document.getElementById('judul_dokumen');
 
-            // Add filtered options
-            allOptions.forEach(opt => {
-                if (opt.type === selectedFormType) {
-                    const option = document.createElement('option');
-                    option.value = opt.value;
-                    option.textContent = opt.text;
-                    select.appendChild(option);
+                if (type === 'SHE') {
+                    const title = 'Identifikasi dan Penetapan Mitigasi Risiko K3, KO, Aspek Lingkungan';
+                    formTitle.textContent = title;
+                    if (judulInput) judulInput.value = title;
+                } else if (type === 'Security') {
+                    const title = 'Identifikasi dan Penetapan Mitigasi Risiko Pengamanan';
+                    formTitle.textContent = title;
+                    if (judulInput) judulInput.value = title;
                 }
+
+                // Hide modal with animation
+                const modal = document.getElementById('formTypeModal');
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    modal.style.opacity = '1';
+
+                    // Add first item after modal is hidden
+                    addItem();
+                }, 300);
+            }
+
+            // Filter categories based on form type
+            function filterAllCategories() {
+                // Filter in template
+                updateCategoryOptionsInTemplate();
+
+                // Filter in existing items
+                document.querySelectorAll('.doc-item').forEach(item => {
+                    const categorySelect = item.querySelector('.category-select');
+                    if (categorySelect) {
+                        filterCategorySelect(categorySelect);
+                    }
+                });
+            }
+
+            function filterCategorySelect(select) {
+                if (!selectedFormType) return;
+
+                const allOptions = [
+                    { value: 'K3', text: 'K3 (Keselamatan Kerja)', type: 'SHE' },
+                    { value: 'KO', text: 'KO (Kesehatan Operasional)', type: 'SHE' },
+                    { value: 'Lingkungan', text: 'Lingkungan', type: 'SHE' },
+                    { value: 'Keamanan', text: 'Keamanan', type: 'Security' }
+                ];
+
+                // Clear current options except placeholder
+                select.innerHTML = '<option value="">-- Pilih Kategori --</option>';
+
+                // Add filtered options
+                allOptions.forEach(opt => {
+                    if (opt.type === selectedFormType) {
+                        const option = document.createElement('option');
+                        option.value = opt.value;
+                        option.textContent = opt.text;
+                        select.appendChild(option);
+                    }
+                });
+            }
+
+            function updateCategoryOptionsInTemplate() {
+                // This will be applied when new items are added
+                // We'll intercept in addItem function
+            }
+
+            // Init
+            document.addEventListener('DOMContentLoaded', () => {
+                // Don't add item yet - wait for form type selection
+                // addItem() will be called after form type is selected
             });
-        }
+        </script>
 
-        function updateCategoryOptionsInTemplate() {
-            // This will be applied when new items are added
-            // We'll intercept in addItem function
-        }
+        <style>
+            /* Action Bar - Static Style */
+            .action-bar {
+                margin-top: 20px;
+                background: #ffffff;
+                padding: 20px 30px;
+                border-radius: 12px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            }
 
-        // Init
-        document.addEventListener('DOMContentLoaded', () => {
-            // Don't add item yet - wait for form type selection
-            // addItem() will be called after form type is selected
-        });
-    </script>
+            .action-info {
+                font-size: 14px;
+                color: #475569;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
 
-    <style>
-        /* Action Bar - Static Style */
-        .action-bar {
-            margin-top: 20px;
-            background: #ffffff;
-            padding: 20px 30px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
+            .action-buttons {
+                display: flex;
+                gap: 15px;
+                /* Space between buttons */
+                flex-shrink: 0;
+                /* Prevent shrinking */
+            }
 
-        .action-info {
-            font-size: 14px;
-            color: #475569;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+            .btn:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
 
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            /* Space between buttons */
-            flex-shrink: 0;
-            /* Prevent shrinking */
-        }
+            /* Ensure content isn't hidden behind bar */
+            .content-area {
+                padding-bottom: 100px;
+            }
+        </style>
 
-        .btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
+        <script>
+            // ... (Existing functions: addItem, removeItem, etc - keeping logic) ...
 
-        /* Ensure content isn't hidden behind bar */
-        .content-area {
-            padding-bottom: 100px;
-        }
-    </style>
+            // Form Validation and Submission
+            function validateAndSubmit(actionType) {
+                // Set Action Input
+                const actionInput = document.getElementById('action_input');
+                if (actionInput) actionInput.value = actionType;
+                const isDraft = actionType === 'draft';
 
-    <script>
-        // ... (Existing functions: addItem, removeItem, etc - keeping logic) ...
+                try {
+                    let isValid = true;
+                    let errorMsg = '';
 
-        // Form Validation and Submission
-        function validateAndSubmit(actionType) {
-            // Set Action Input
-            const actionInput = document.getElementById('action_input');
-            if (actionInput) actionInput.value = actionType;
-            const isDraft = actionType === 'draft';
+                    // Check Document Title
+                    const titleInput = document.querySelector('input[name="judul_dokumen"]');
+                    if (!titleInput || !titleInput.value.trim()) {
+                        isValid = false;
+                        errorMsg = 'Judul Form wajib diisi.';
+                    }
 
-            try {
-                let isValid = true;
-                let errorMsg = '';
+                    // 1. Check if at least one item exists
+                    const items = document.querySelectorAll('.doc-item');
+                    if (isValid && items.length === 0) {
+                        isValid = false;
+                        errorMsg = 'Minimal harus ada 1 kegiatan.';
+                    }
 
-                // Check Document Title
-                const titleInput = document.querySelector('input[name="judul_dokumen"]');
-                if (!titleInput || !titleInput.value.trim()) {
-                    isValid = false;
-                    errorMsg = 'Judul Form wajib diisi.';
-                }
+                    // 2. Item Validation
+                    if (isValid) {
+                        items.forEach((item, idx) => {
+                            const kegiatanInput = item.querySelector('.item-kegiatan-input');
+                            const kegiatan = kegiatanInput?.value || 'Item #' + (idx + 1);
 
-                // 1. Check if at least one item exists
-                const items = document.querySelectorAll('.doc-item');
-                if (isValid && items.length === 0) {
-                    isValid = false;
-                    errorMsg = 'Minimal harus ada 1 kegiatan.';
-                }
-
-                // 2. Item Validation
-                if (isValid) {
-                    items.forEach((item, idx) => {
-                        const kegiatanInput = item.querySelector('.item-kegiatan-input');
-                        const kegiatan = kegiatanInput?.value || 'Item #' + (idx + 1);
-
-                        // Rule: Draft ONLY requires "Kegiatan". Submit requires "Kegiatan" too.
-                        if (isValid && (!kegiatanInput || !kegiatanInput.value.trim())) {
-                            isValid = false;
-                            errorMsg = `Kegiatan belum diisi pada Item #${idx + 1}`;
-                            const content = item.querySelector('.collapsible-content');
-                            if (content && content.style.display === 'none') {
-                                toggleCollapse(item.querySelector('.card-header'));
-                            }
-                            item.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-
-                        // STRICT Checks (Only if NOT Draft)
-                        if (isValid && !isDraft) {
-                            const scoreInput = item.querySelector('.input-score');
-                            const resScoreInput = item.querySelector('.input-res-score');
-                            const s = scoreInput ? scoreInput.value : 0;
-                            const residualS = resScoreInput ? resScoreInput.value : 0;
-                            const kondisi = item.querySelector('.condition-select')?.value;
-
-                            // Validate Conditions
-                            if (!kondisi) {
+                            // Rule: Draft ONLY requires "Kegiatan". Submit requires "Kegiatan" too.
+                            if (isValid && (!kegiatanInput || !kegiatanInput.value.trim())) {
                                 isValid = false;
-                                errorMsg = `Kondisi (Rutin/Non-Rutin/dll) belum dipilih untuk: ${kegiatan}`;
+                                errorMsg = `Kegiatan belum diisi pada Item #${idx + 1}`;
                                 const content = item.querySelector('.collapsible-content');
                                 if (content && content.style.display === 'none') {
                                     toggleCollapse(item.querySelector('.card-header'));
@@ -2810,234 +2094,253 @@
                                 item.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }
 
-                            // Validate Initial Risk
-                            if (isValid && (!s || s == 0)) {
-                                isValid = false;
-                                errorMsg = `Penilaian risiko awal belum lengkap untuk: ${kegiatan}`;
-                                const box = item.querySelector('.risk-result-box');
-                                if (box) {
-                                    box.style.border = '2px solid #ef4444';
-                                    setTimeout(() => box.style.border = '', 3000);
-                                }
-                            }
+                            // STRICT Checks (Only if NOT Draft)
+                            if (isValid && !isDraft) {
+                                const scoreInput = item.querySelector('.input-score');
+                                const resScoreInput = item.querySelector('.input-res-score');
+                                const s = scoreInput ? scoreInput.value : 0;
+                                const residualS = resScoreInput ? resScoreInput.value : 0;
+                                const kondisi = item.querySelector('.condition-select')?.value;
 
-                            // Validate Residual Risk - REMOVED
-
-                        }
-                    });
-
-                    // 3. Program Kerja Target Validation
-                    if (isValid) {
-                        const targetRows = document.querySelectorAll('.program-kerja-tbody tr');
-                        targetRows.forEach(row => {
-                            if (!isValid) return; // Stop if already found error
-
-                            const inputs = row.querySelectorAll('.target-input');
-                            if (inputs.length > 0) {
-                                let total = 0;
-                                inputs.forEach(el => total += parseInt(el.value) || 0);
-
-                                if (total > 100) {
+                                // Validate Conditions
+                                if (!kondisi) {
                                     isValid = false;
-                                    errorMsg = 'Total target (%) pada Program Kerja tidak boleh melebihi 100%. Silakan periksa kembali.';
-                                    row.classList.add('target-invalid');
-                                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    errorMsg = `Kondisi (Rutin/Non-Rutin/dll) belum dipilih untuk: ${kegiatan}`;
+                                    const content = item.querySelector('.collapsible-content');
+                                    if (content && content.style.display === 'none') {
+                                        toggleCollapse(item.querySelector('.card-header'));
+                                    }
+                                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                 }
+
+                                // Validate Initial Risk
+                                if (isValid && (!s || s == 0)) {
+                                    isValid = false;
+                                    errorMsg = `Penilaian risiko awal belum lengkap untuk: ${kegiatan}`;
+                                    const box = item.querySelector('.risk-result-box');
+                                    if (box) {
+                                        box.style.border = '2px solid #ef4444';
+                                        setTimeout(() => box.style.border = '', 3000);
+                                    }
+                                }
+
+                                // Validate Residual Risk - REMOVED
+
                             }
                         });
+
+                        // 3. Program Kerja Target Validation
+                        if (isValid) {
+                            const targetRows = document.querySelectorAll('.program-kerja-tbody tr');
+                            targetRows.forEach(row => {
+                                if (!isValid) return; // Stop if already found error
+
+                                const inputs = row.querySelectorAll('.target-input');
+                                if (inputs.length > 0) {
+                                    let total = 0;
+                                    inputs.forEach(el => total += parseInt(el.value) || 0);
+
+                                    if (total > 100) {
+                                        isValid = false;
+                                        errorMsg = 'Total target (%) pada Program Kerja tidak boleh melebihi 100%. Silakan periksa kembali.';
+                                        row.classList.add('target-invalid');
+                                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }
+                                }
+                            });
+                        }
+
                     }
 
-                }
+                    if (!isValid) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Validasi Gagal',
+                            text: errorMsg,
+                            confirmButtonColor: '#c41e3a'
+                        });
+                        return false;
+                    }
 
-                if (!isValid) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Validasi Gagal',
-                        text: errorMsg,
-                        confirmButtonColor: '#c41e3a'
-                    });
-                    return false;
-                }
+                    // Show Loading
+                    const btn = document.getElementById('btnSubmit');
+                    const originalText = btn ? btn.innerHTML : 'Submit';
+                    if (btn) {
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+                        btn.disabled = true;
+                    }
 
-                // Show Loading
-                const btn = document.getElementById('btnSubmit');
-                const originalText = btn ? btn.innerHTML : 'Submit';
-                if (btn) {
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
-                    btn.disabled = true;
-                }
-
-                // Submit
-                const form = document.getElementById('hiradcForm');
-                if (isDraft) {
-                    // Bypass HTML5 validation for draft
-                    form.noValidate = true;
-                    form.submit();
-                } else {
-                    form.noValidate = false;
-                    if (form.reportValidity()) {
+                    // Submit
+                    const form = document.getElementById('hiradcForm');
+                    if (isDraft) {
+                        // Bypass HTML5 validation for draft
+                        form.noValidate = true;
                         form.submit();
                     } else {
-                        if (btn) {
-                            btn.innerHTML = originalText;
-                            btn.disabled = false;
+                        form.noValidate = false;
+                        if (form.reportValidity()) {
+                            form.submit();
+                        } else {
+                            if (btn) {
+                                btn.innerHTML = originalText;
+                                btn.disabled = false;
+                            }
                         }
                     }
+
+                } catch (e) {
+                    console.error(e);
+                    Swal.fire('System Error', e.message, 'error');
+                    const btn = document.getElementById('btnSubmit');
+                    if (btn) btn.disabled = false;
+                }
+            }
+
+            // NEW: Toggle follow-up fields based on tolerance selection (columns 19-22)
+            function toggleFollowUpFields(select) {
+                const item = select.closest('.doc-item');
+                const followUpSection = item.querySelector('.follow-up-section');
+                const tolerance = select.value;
+
+                if (tolerance === 'Tidak') {
+                    // Show columns 19-22
+                    followUpSection.style.display = 'block';
+                    // Make follow-up fields required
+                    followUpSection.querySelectorAll('.follow-up-field').forEach(field => {
+                        if (field.tagName === 'TEXTAREA') {
+                            field.setAttribute('required', 'required');
+                        }
+                    });
+                } else {
+                    // Hide columns 19-22
+                    followUpSection.style.display = 'none';
+                    // Remove required from follow-up fields and clear values
+                    followUpSection.querySelectorAll('.follow-up-field').forEach(field => {
+                        field.removeAttribute('required');
+                        field.value = '';
+                    });
+                    // Clear hidden inputs
+                    item.querySelector('.input-followup-score').value = '';
+                    item.querySelector('.input-followup-level').value = '';
+                }
+            }
+
+            // NEW: Calculate Follow-up Risk (columns 20-22)
+            function calculateFollowUpRisk(el) {
+                const item = el.closest('.doc-item');
+                const likelihood = parseInt(item.querySelector('[name*="kolom20_kemungkinan_lanjut"]').value) || 0;
+                const severity = parseInt(item.querySelector('[name*="kolom21_konsekuensi_lanjut"]').value) || 0;
+
+                const score = likelihood * severity;
+                const scoreEl = item.querySelector('.followup-score');
+                const levelEl = item.querySelector('.followup-level');
+                const followupBox = item.querySelector('.followup-box');
+
+                scoreEl.textContent = score || '-';
+                item.querySelector('.input-followup-score').value = score;
+
+                let level = '-';
+                let bg = '#e2e8f0';
+                let textColor = '#64748b';
+
+                if (score > 0) {
+                    textColor = '#fff';
+                    if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
+                    else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; }
+                    else { level = 'Rendah'; bg = '#166534'; }
                 }
 
-            } catch (e) {
-                console.error(e);
-                Swal.fire('System Error', e.message, 'error');
-                const btn = document.getElementById('btnSubmit');
-                if (btn) btn.disabled = false;
+                levelEl.textContent = (score > 0) ? level : 'PENDING';
+                item.querySelector('.input-followup-level').value = level;
+                if (followupBox) {
+                    followupBox.style.background = bg;
+                    followupBox.style.color = textColor;
+                }
             }
-        }
 
-        // NEW: Toggle follow-up fields based on tolerance selection (columns 19-22)
-        function toggleFollowUpFields(select) {
-            const item = select.closest('.doc-item');
-            const followUpSection = item.querySelector('.follow-up-section');
-            const tolerance = select.value;
 
-            if (tolerance === 'Tidak') {
-                // Show columns 19-22
-                followUpSection.style.display = 'block';
-                // Make follow-up fields required
-                followUpSection.querySelectorAll('.follow-up-field').forEach(field => {
-                    if (field.tagName === 'TEXTAREA') {
-                        field.setAttribute('required', 'required');
+
+            // NEW: Update Kolom 11 when hierarchy checkboxes are chang           ed
+            /**
+             * Parse textarea content into hierarchy sections
+             * Returns array of {hierarchy: string, content: string}
+             */
+            function parseHierarchySections(text) {
+                const sections = [];
+                const hierarchies = ['Eliminasi', 'Substitusi', 'Rekayasa Teknik', 'Pengendalian Administratif', 'APD'];
+
+                hierarchies.forEach(hierarchy => {
+                    // Find pattern: "N. Hierarchy:" followed by content until next numbered item or end
+                    const escapedHierarchy = hierarchy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`\\d+\\.\\s*${escapedHierarchy}:\\s*\\n([\\s\\S]*?)(?=\\n\\d+\\.|$)`, 'i');
+                    const match = text.match(regex);
+
+                    if (match) {
+                        sections.push({
+                            hierarchy: hierarchy,
+                            content: match[1].trimEnd()
+                        });
                     }
                 });
-            } else {
-                // Hide columns 19-22
-                followUpSection.style.display = 'none';
-                // Remove required from follow-up fields and clear values
-                followUpSection.querySelectorAll('.follow-up-field').forEach(field => {
-                    field.removeAttribute('required');
-                    field.value = '';
+
+                return sections;
+            }
+
+            /**
+             * Update Kolom 11 with dynamic hierarchy sections
+             * Creates protected labels and editable textareas for each hierarchy
+             */
+            function updateKolom11(checkbox) {
+                const item = checkbox.closest('.doc-item');
+                const container = item.querySelector('.kolom11-dynamic-container');
+                const hiddenInput = item.querySelector('.kolom11-hidden-input');
+                const checkboxes = item.querySelectorAll('.hierarchy-checkboxes input[type="checkbox"]');
+
+                if (!container) return;
+
+                // Store existing content before clearing
+                const existingData = {};
+                container.querySelectorAll('.hierarchy-textarea').forEach(textarea => {
+                    const hierarchy = textarea.dataset.hierarchy;
+                    if (hierarchy && textarea.value.trim()) {
+                        existingData[hierarchy] = textarea.value.trim();
+                    }
                 });
-                // Clear hidden inputs
-                item.querySelector('.input-followup-score').value = '';
-                item.querySelector('.input-followup-level').value = '';
-            }
-        }
 
-        // NEW: Calculate Follow-up Risk (columns 20-22)
-        function calculateFollowUpRisk(el) {
-            const item = el.closest('.doc-item');
-            const likelihood = parseInt(item.querySelector('[name*="kolom20_kemungkinan_lanjut"]').value) || 0;
-            const severity = parseInt(item.querySelector('[name*="kolom21_konsekuensi_lanjut"]').value) || 0;
+                // Get currently checked values in order
+                const checkedValues = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
 
-            const score = likelihood * severity;
-            const scoreEl = item.querySelector('.followup-score');
-            const levelEl = item.querySelector('.followup-level');
-            const followupBox = item.querySelector('.followup-box');
+                // Clear container
+                container.innerHTML = '';
 
-            scoreEl.textContent = score || '-';
-            item.querySelector('.input-followup-score').value = score;
-
-            let level = '-';
-            let bg = '#e2e8f0';
-            let textColor = '#64748b';
-
-            if (score > 0) {
-                textColor = '#fff';
-                if (score >= 15) { level = 'Tinggi'; bg = '#dc2626'; }
-                else if (score >= 8) { level = 'Sedang'; bg = '#f59e0b'; }
-                else { level = 'Rendah'; bg = '#166534'; }
-            }
-
-            levelEl.textContent = (score > 0) ? level : 'PENDING';
-            item.querySelector('.input-followup-level').value = level;
-            if (followupBox) {
-                followupBox.style.background = bg;
-                followupBox.style.color = textColor;
-            }
-        }
-
-
-
-        // NEW: Update Kolom 11 when hierarchy checkboxes are chang           ed
-        /**
-         * Parse textarea content into hierarchy sections
-         * Returns array of {hierarchy: string, content: string}
-         */
-        function parseHierarchySections(text) {
-            const sections = [];
-            const hierarchies = ['Eliminasi', 'Substitusi', 'Rekayasa Teknik', 'Pengendalian Administratif', 'APD'];
-
-            hierarchies.forEach(hierarchy => {
-                // Find pattern: "N. Hierarchy:" followed by content until next numbered item or end
-                const escapedHierarchy = hierarchy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(`\\d+\\.\\s*${escapedHierarchy}:\\s*\\n([\\s\\S]*?)(?=\\n\\d+\\.|$)`, 'i');
-                const match = text.match(regex);
-
-                if (match) {
-                    sections.push({
-                        hierarchy: hierarchy,
-                        content: match[1].trimEnd()
-                    });
-                }
-            });
-
-            return sections;
-        }
-
-        /**
-         * Update Kolom 11 with dynamic hierarchy sections
-         * Creates protected labels and editable textareas for each hierarchy
-         */
-        function updateKolom11(checkbox) {
-            const item = checkbox.closest('.doc-item');
-            const container = item.querySelector('.kolom11-dynamic-container');
-            const hiddenInput = item.querySelector('.kolom11-hidden-input');
-            const checkboxes = item.querySelectorAll('.hierarchy-checkboxes input[type="checkbox"]');
-
-            if (!container) return;
-
-            // Store existing content before clearing
-            const existingData = {};
-            container.querySelectorAll('.hierarchy-textarea').forEach(textarea => {
-                const hierarchy = textarea.dataset.hierarchy;
-                if (hierarchy && textarea.value.trim()) {
-                    existingData[hierarchy] = textarea.value.trim();
-                }
-            });
-
-            // Get currently checked values in order
-            const checkedValues = Array.from(checkboxes)
-                .filter(cb => cb.checked)
-                .map(cb => cb.value);
-
-            // Clear container
-            container.innerHTML = '';
-
-            // If no checkboxes checked, show empty state
-            if (checkedValues.length === 0) {
-                container.innerHTML = `
+                // If no checkboxes checked, show empty state
+                if (checkedValues.length === 0) {
+                    container.innerHTML = `
                     <div class="empty-state" style="padding: 40px; text-align: center; color: #94a3b8;">
                         <i class="fas fa-hand-pointer" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
                         <p style="margin: 0;">Pilih hierarki pengendalian di atas untuk mulai mengisi</p>
                     </div>
                 `;
-                hiddenInput.value = '';
+                    hiddenInput.value = '';
 
-                // IMPORTANT: Trigger calc to update Tolerance (e.g. set to "Tidak" if Medium Risk)
-                // We must call this even (and especially) when unchecked.
-                calculateItemRisk(checkbox);
-                return;
-            }
+                    // IMPORTANT: Trigger calc to update Tolerance (e.g. set to "Tidak" if Medium Risk)
+                    // We must call this even (and especially) when unchecked.
+                    calculateItemRisk(checkbox);
+                    return;
+                }
 
-            // Create section for each checked hierarchy
-            checkedValues.forEach((value, index) => {
-                const section = document.createElement('div');
-                section.className = 'hierarchy-section';
-                section.style.marginBottom = index < checkedValues.length - 1 ? '20px' : '0';
+                // Create section for each checked hierarchy
+                checkedValues.forEach((value, index) => {
+                    const section = document.createElement('div');
+                    section.className = 'hierarchy-section';
+                    section.style.marginBottom = index < checkedValues.length - 1 ? '20px' : '0';
 
-                // Protected header (cannot be edited)
-                const header = document.createElement('div');
-                header.className = 'hierarchy-header';
-                header.style.cssText = `
+                    // Protected header (cannot be edited)
+                    const header = document.createElement('div');
+                    header.className = 'hierarchy-header';
+                    header.style.cssText = `
                     font-size: 14px;
                     font-weight: 600;
                     color: #1e293b;
@@ -3048,15 +2351,15 @@
                     border-radius: 6px;
                     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                 `;
-                header.innerHTML = `<i class="fas fa-shield-alt" style="color: #3b82f6; margin-right: 8px;"></i>${index + 1}. ${value}:`;
+                    header.innerHTML = `<i class="fas fa-shield-alt" style="color: #3b82f6; margin-right: 8px;"></i>${index + 1}. ${value}:`;
 
-                // Editable textarea
-                const textarea = document.createElement('textarea');
-                textarea.className = 'form-control hierarchy-textarea';
-                textarea.dataset.hierarchy = value;
-                textarea.rows = 3;
-                textarea.placeholder = `Tambahkan penjelasan detail untuk ${value}...`;
-                textarea.style.cssText = `
+                    // Editable textarea
+                    const textarea = document.createElement('textarea');
+                    textarea.className = 'form-control hierarchy-textarea';
+                    textarea.dataset.hierarchy = value;
+                    textarea.rows = 3;
+                    textarea.placeholder = `Tambahkan penjelasan detail untuk ${value}...`;
+                    textarea.style.cssText = `
                     border: 1px solid #e2e8f0;
                     border-radius: 6px;
                     padding: 12px;
@@ -3066,158 +2369,158 @@
                     transition: all 0.2s ease;
                 `;
 
-                // Restore existing content if available
-                if (existingData[value]) {
-                    textarea.value = existingData[value];
-                }
+                    // Restore existing content if available
+                    if (existingData[value]) {
+                        textarea.value = existingData[value];
+                    }
 
-                // Focus/blur effects
-                textarea.addEventListener('focus', function () {
-                    this.style.borderColor = '#3b82f6';
-                    this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                });
-                textarea.addEventListener('blur', function () {
-                    this.style.borderColor = '#e2e8f0';
-                    this.style.boxShadow = 'none';
-                });
-
-                // Update hidden input on change
-                textarea.addEventListener('input', function () {
-                    updateHiddenInput(item);
-                });
-
-                section.appendChild(header);
-                section.appendChild(textarea);
-                container.appendChild(section);
-            });
-
-            // Initial update of hidden input
-            updateHiddenInput(item);
-
-            // Trigger Risk Calculation to update Tolerance in Real-Time
-            calculateItemRisk(checkbox);
-        }
-
-        /**
-         * Update hidden input with combined data from all hierarchy textareas
-         */
-        function updateHiddenInput(item) {
-            const textareas = item.querySelectorAll('.hierarchy-textarea');
-            const hiddenInput = item.querySelector('.kolom11-hidden-input');
-
-            if (!hiddenInput) return;
-
-            let combinedText = '';
-            textareas.forEach((textarea, index) => {
-                const hierarchy = textarea.dataset.hierarchy;
-                const content = textarea.value.trim();
-
-                if (index > 0) combinedText += '\n\n';
-                combinedText += `${index + 1}. ${hierarchy}:`;
-
-                if (content) {
-                    combinedText += `\n   ${content}`;
-                }
-            });
-
-            hiddenInput.value = combinedText;
-        }
-
-        // CORRECTION: Override addProgramKerjaRow to ensure unique input names
-        // (Deleted duplicate functions)
-
-        // NEW: Validate Target Percentages
-        function validateTargetPercentages(input) {
-            const row = input.closest('tr');
-            const inputs = row.querySelectorAll('.target-input');
-            let total = 0;
-
-            inputs.forEach(el => {
-                total += parseInt(el.value) || 0;
-            });
-
-            if (total > 100) {
-                // Show Alert ONLY if it wasn't already invalid (prevents spamming on every keystroke)
-                if (!row.classList.contains('target-invalid')) {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.addEventListener('mouseenter', Swal.stopTimer)
-                            toast.addEventListener('mouseleave', Swal.resumeTimer)
-                        }
+                    // Focus/blur effects
+                    textarea.addEventListener('focus', function () {
+                        this.style.borderColor = '#3b82f6';
+                        this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    });
+                    textarea.addEventListener('blur', function () {
+                        this.style.borderColor = '#e2e8f0';
+                        this.style.boxShadow = 'none';
                     });
 
-                    Toast.fire({
-                        icon: 'warning',
-                        title: 'Melebihi 100%',
-                        text: 'Total target persentase tidak boleh lebih dari 100%.'
+                    // Update hidden input on change
+                    textarea.addEventListener('input', function () {
+                        updateHiddenInput(item);
                     });
-                }
 
-                // Visual Error
-                inputs.forEach(el => {
-                    el.style.color = '#ef4444'; // Red text
-                    el.style.backgroundColor = '#fee2e2'; // Light red background
+                    section.appendChild(header);
+                    section.appendChild(textarea);
+                    container.appendChild(section);
                 });
 
-                // Add invalid marker class
-                row.classList.add('target-invalid');
-            } else {
-                // Reset Visual
-                inputs.forEach(el => {
-                    el.style.color = '#3b82f6'; // Original Blue
-                    el.style.backgroundColor = 'transparent';
-                });
-                row.classList.remove('target-invalid');
+                // Initial update of hidden input
+                updateHiddenInput(item);
+
+                // Trigger Risk Calculation to update Tolerance in Real-Time
+                calculateItemRisk(checkbox);
             }
-        }
 
-        // UI REFINEMENT + PMK BUDGET COLUMN
-        function addProgramKerjaRow(btn) {
-            // Ensure headers are correct state before adding row
-            const item = btn.closest('.doc-item');
-            toggleProgramHeaders(item);
+            /**
+             * Update hidden input with combined data from all hierarchy textareas
+             */
+            function updateHiddenInput(item) {
+                const textareas = item.querySelectorAll('.hierarchy-textarea');
+                const hiddenInput = item.querySelector('.kolom11-hidden-input');
 
-            const table = btn.previousElementSibling.querySelector('.program-kerja-tbody');
-            const rowCount = table.querySelectorAll('tr').length + 1;
-            const itemIndex = item.getAttribute('data-index');
-            const isPMK = isPmkSelected(btn);
+                if (!hiddenInput) return;
 
-            // Get Users passed from controller
-            const pukKoordinatorUsers = @json($pukKoordinatorUsers ?? []); // Koordinator = Role 3
-            const pukPelaksanaUsers = @json($pukPelaksanaUsers ?? []); // Pelaksana = Role 4
-            const pmkPicUsers = @json($pmkPicUsers ?? []); // Managers (Role 3)
+                let combinedText = '';
+                textareas.forEach((textarea, index) => {
+                    const hierarchy = textarea.dataset.hierarchy;
+                    const content = textarea.value.trim();
 
-            // Generate Options for PUK Koordinator (Role 4)
-            let pukKoordinatorOptions = '<option value="" disabled selected>-- Pilih Koordinator --</option>';
-            pukKoordinatorUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
-            pukKoordinatorUsers.forEach(u => {
-                pukKoordinatorOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
-            });
+                    if (index > 0) combinedText += '\n\n';
+                    combinedText += `${index + 1}. ${hierarchy}:`;
 
-            // Generate Options for PUK Pelaksana (Role 3)
-            let pukPelaksanaOptions = '<option value="" disabled selected>-- Pilih Pelaksana --</option>';
-            pukPelaksanaUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
-            pukPelaksanaUsers.forEach(u => {
-                pukPelaksanaOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
-            });
+                    if (content) {
+                        combinedText += `\n   ${content}`;
+                    }
+                });
 
-            // Generate Options for PMK PIC (Manager)
-            let pmkPicOptions = '<option value="" disabled selected>-- Pilih PIC (Manager) --</option>';
-            pmkPicUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
-            pmkPicUsers.forEach(u => {
-                pmkPicOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
-            });
+                hiddenInput.value = combinedText;
+            }
 
-            const row = document.createElement('tr');
+            // CORRECTION: Override addProgramKerjaRow to ensure unique input names
+            // (Deleted duplicate functions)
 
-            if (isPMK) {
-                // PMK Table: No | Uraian | PIC | Target (12) | Anggaran
-                row.innerHTML = `
+            // NEW: Validate Target Percentages
+            function validateTargetPercentages(input) {
+                const row = input.closest('tr');
+                const inputs = row.querySelectorAll('.target-input');
+                let total = 0;
+
+                inputs.forEach(el => {
+                    total += parseInt(el.value) || 0;
+                });
+
+                if (total > 100) {
+                    // Show Alert ONLY if it wasn't already invalid (prevents spamming on every keystroke)
+                    if (!row.classList.contains('target-invalid')) {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.addEventListener('mouseenter', Swal.stopTimer)
+                                toast.addEventListener('mouseleave', Swal.resumeTimer)
+                            }
+                        });
+
+                        Toast.fire({
+                            icon: 'warning',
+                            title: 'Melebihi 100%',
+                            text: 'Total target persentase tidak boleh lebih dari 100%.'
+                        });
+                    }
+
+                    // Visual Error
+                    inputs.forEach(el => {
+                        el.style.color = '#ef4444'; // Red text
+                        el.style.backgroundColor = '#fee2e2'; // Light red background
+                    });
+
+                    // Add invalid marker class
+                    row.classList.add('target-invalid');
+                } else {
+                    // Reset Visual
+                    inputs.forEach(el => {
+                        el.style.color = '#3b82f6'; // Original Blue
+                        el.style.backgroundColor = 'transparent';
+                    });
+                    row.classList.remove('target-invalid');
+                }
+            }
+
+            // UI REFINEMENT + PMK BUDGET COLUMN
+            function addProgramKerjaRow(btn) {
+                // Ensure headers are correct state before adding row
+                const item = btn.closest('.doc-item');
+                toggleProgramHeaders(item);
+
+                const table = btn.previousElementSibling.querySelector('.program-kerja-tbody');
+                const rowCount = table.querySelectorAll('tr').length + 1;
+                const itemIndex = item.getAttribute('data-index');
+                const isPMK = isPmkSelected(btn);
+
+                // Get Users passed from controller
+                const pukKoordinatorUsers = @json($pukKoordinatorUsers ?? []); // Koordinator = Role 3
+                const pukPelaksanaUsers = @json($pukPelaksanaUsers ?? []); // Pelaksana = Role 4
+                const pmkPicUsers = @json($pmkPicUsers ?? []); // Managers (Role 3)
+
+                // Generate Options for PUK Koordinator (Role 4)
+                let pukKoordinatorOptions = '<option value="" disabled selected>-- Pilih Koordinator --</option>';
+                pukKoordinatorUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+                pukKoordinatorUsers.forEach(u => {
+                    pukKoordinatorOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+                });
+
+                // Generate Options for PUK Pelaksana (Role 3)
+                let pukPelaksanaOptions = '<option value="" disabled selected>-- Pilih Pelaksana --</option>';
+                pukPelaksanaUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+                pukPelaksanaUsers.forEach(u => {
+                    pukPelaksanaOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+                });
+
+                // Generate Options for PMK PIC (Manager)
+                let pmkPicOptions = '<option value="" disabled selected>-- Pilih PIC (Manager) --</option>';
+                pmkPicUsers.sort((a, b) => (a.nama_user || '').localeCompare(b.nama_user || ''));
+                pmkPicUsers.forEach(u => {
+                    pmkPicOptions += `<option value="${u.nama_user}">${u.nama_user}</option>`;
+                });
+
+                const row = document.createElement('tr');
+
+                if (isPMK) {
+                    // PMK Table: No | Uraian | PIC | Target (12) | Anggaran
+                    row.innerHTML = `
                     <td style="text-align: center; border: 1px solid #e2e8f0; vertical-align: middle; background-color: #f8fafc; font-weight: 500; color: #64748b; padding: 4px;">${rowCount}</td>
                     
                     <td style="border: 1px solid #e2e8f0; padding: 0;">
@@ -3257,9 +2560,9 @@
                         </button>
                     </td>
                 `;
-            } else {
-                // PUK Table: No | Uraian | Koordinator (Role 4) | Pelaksana (Role 3) | Target (12)
-                row.innerHTML = `
+                } else {
+                    // PUK Table: No | Uraian | Koordinator (Role 4) | Pelaksana (Role 3) | Target (12)
+                    row.innerHTML = `
                     <td style="text-align: center; border: 1px solid #e2e8f0; vertical-align: middle; background-color: #f8fafc; font-weight: 500; color: #64748b; padding: 4px;">${rowCount}</td>
                     
                     <td style="border: 1px solid #e2e8f0; padding: 0;">
@@ -3299,25 +2602,25 @@
                         </button>
                     </td>
                 `;
+                }
+
+                // Add hover effect via JS
+                const delBtn = row.querySelector('button');
+                delBtn.addEventListener('mouseenter', () => { delBtn.style.background = '#fee2e2'; delBtn.style.borderColor = '#ef4444'; });
+                delBtn.addEventListener('mouseleave', () => { delBtn.style.background = 'transparent'; delBtn.style.borderColor = '#e2e8f0'; });
+
+                table.appendChild(row);
             }
-
-            // Add hover effect via JS
-            const delBtn = row.querySelector('button');
-            delBtn.addEventListener('mouseenter', () => { delBtn.style.background = '#fee2e2'; delBtn.style.borderColor = '#ef4444'; });
-            delBtn.addEventListener('mouseleave', () => { delBtn.style.background = 'transparent'; delBtn.style.borderColor = '#e2e8f0'; });
-
-            table.appendChild(row);
-        }
-    </script>
+        </script>
 
 
 
-    </form>
-    </div> <!-- End Content-Area -->
-    </main>
-    </div> <!-- End Container -->
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        </form>
+        </div> <!-- End Content-Area -->
+        </main>
+        </div> <!-- End Container -->
+        <!-- SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

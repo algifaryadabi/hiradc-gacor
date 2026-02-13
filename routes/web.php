@@ -189,6 +189,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
     Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
     Route::post('/documents/{document}/submit', [DocumentController::class, 'submit'])->name('documents.submit');
+    Route::post('/documents/{document}/autosave', [DocumentController::class, 'autosaveDraft'])->name('documents.autosave');
     Route::post('/documents/{document}/submit-revision', [DocumentController::class, 'submitRevision'])->name('documents.submit_revision');
 
 

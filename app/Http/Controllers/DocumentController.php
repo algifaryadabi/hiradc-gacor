@@ -916,17 +916,23 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
 
-        // ALLOW: Author OR Approver (Role 3 + Same Unit)
+        // ALLOW: Author OR Same Unit Users (Collaborative Editing)
         $isAuthor = $document->id_user == $user->id_user;
+        $isSameUnit = $document->id_unit == $user->id_unit;
         $isApprover = ($user->role_jabatan == 3 && $document->id_unit == $user->id_unit);
 
-        if (!$isAuthor && !$isApprover) {
+        if (!$isAuthor && !$isSameUnit) {
             abort(403);
         }
 
-        // Only allow edit if draft or revision (For Author), but maybe Approver can edit in Pending?
-        // Let's assume Approver can edit anytime they can view it in "Review" state (pending_level1).
-        if ($isAuthor && !in_array($document->status, ['draft', 'revision'])) {
+        // Only allow edit if draft or revision (For Author)
+        // CHECK ALL STATUS COLUMNS: status, status_she, status_security
+        $isDraft = $document->status == 'draft';
+        $isRevision = $document->status == 'revision' ||
+            $document->status_she == 'revision' ||
+            $document->status_security == 'revision';
+
+        if (!$isDraft && !$isRevision) {
             return redirect()->route('documents.show', $document->id);
         }
 
@@ -934,6 +940,9 @@ class DocumentController extends Controller
         if ($isApprover && $document->status != 'pending_level1') {
             // Maybe allow restrictions? For now let's allow content correction.
         }
+
+        // Load PUK/PMK Programs for unified edit form
+        $document->load(['pukPrograms', 'pmkPrograms']);
 
         // Fetch Users for PUK/PMK Program Kerja (Same as Create)
         // Use Document's Unit ID to ensure consistency
@@ -963,7 +972,11 @@ class DocumentController extends Controller
             ->where('role_jabatan', 3)
             ->get();
 
-        return view('user.documents.edit', compact('document', 'band3Users', 'band4Users', 'pmkPicUsers', 'pukKoordinatorUsers', 'pukPelaksanaUsers'));
+        // Fetch Probis for Unit (Needed for Item Template)
+        $unitSeksiIds = \App\Models\Seksi::where('id_unit', $unitId)->pluck('id_probis')->unique();
+        $probis = \App\Models\BusinessProcess::whereIn('id', $unitSeksiIds)->get();
+
+        return view('user.documents.edit', compact('document', 'band3Users', 'band4Users', 'pmkPicUsers', 'pukKoordinatorUsers', 'pukPelaksanaUsers', 'probis'));
     }
 
     /**
@@ -972,10 +985,13 @@ class DocumentController extends Controller
     public function update(Request $request, Document $document)
     {
         $user = Auth::user();
+
+        // ALLOW: Author OR Same Unit Users
         $isAuthor = $document->id_user == $user->id_user;
+        $isSameUnit = $document->id_unit == $user->id_unit;
         $isApprover = ($user->role_jabatan == 3 && $document->id_unit == $user->id_unit);
 
-        if (!$isAuthor && !$isApprover) {
+        if (!$isAuthor && !$isSameUnit) {
             abort(403);
         }
 
@@ -1050,7 +1066,11 @@ class DocumentController extends Controller
                 // If action is 'draft', set to 'draft' and level 0.
                 // Otherwise (submit), set to 'pending_level1' and level 1.
                 'status' => $request->input('action') === 'draft' ? 'draft' : ($request->input('action') === 'save_only' ? $document->status : 'pending_level1'),
-                'current_level' => $request->input('action') === 'draft' ? 0 : ($request->input('action') === 'save_only' ? $document->current_level : 1)
+                'current_level' => $request->input('action') === 'draft' ? 0 : ($request->input('action') === 'save_only' ? $document->current_level : 1),
+
+                // Reset Unit Statuses on Resubmit
+                'status_she' => ($request->input('action') === 'submit' && $document->status_she == 'revision') ? 'pending_level1' : $document->status_she,
+                'status_security' => ($request->input('action') === 'submit' && $document->status_security == 'revision') ? 'pending_level1' : $document->status_security,
             ]);
 
             // 2. SYNC DETAILS
@@ -1247,6 +1267,156 @@ class DocumentController extends Controller
         return redirect()->route('documents.index')
             ->with('success', 'Revisi berhasil disubmit ulang.')
             ->with('open_tab', 'tab_pending');
+    }
+
+    /**
+     * Autosave draft data (AJAX endpoint)
+     * Saves HIRADC details and Program Kerja without changing document status
+     */
+    public function autosaveDraft(Request $request, Document $document)
+    {
+        $user = Auth::user();
+
+        // Authorization check: Must be document owner
+        if ($document->id_user != $user->id_user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        // Only allow autosave for draft or revision status
+        if (!in_array($document->status, ['draft', 'revision'])) {
+            return response()->json(['success' => false, 'message' => 'Cannot autosave non-draft documents'], 400);
+        }
+
+        try {
+            \DB::transaction(function () use ($request, $document) {
+                // 1. Update document details if provided
+                if ($request->has('items') && is_array($request->items)) {
+                    $items = $request->items;
+                    $existingIds = $document->details()->pluck('id')->toArray();
+                    $processedIds = [];
+
+                    foreach ($items as $item) {
+                        // Skip if missing required kegiatan field
+                        if (empty($item['kolom2_kegiatan'])) {
+                            continue;
+                        }
+
+                        // Prepare data
+                        $bahayaData = [
+                            'kategori' => $item['kategori'] ?? 'K3',
+                            'details' => $item['kolom6_bahaya'] ?? [],
+                            'manual' => $item['bahaya_manual'] ?? ''
+                        ];
+
+                        $controlsData = [
+                            'hierarchy' => $item['kolom10_pengendalian'] ?? [],
+                            'existing' => $item['kolom11_existing'] ?? '-',
+                        ];
+
+                        $riskScore = $item['kolom14_score'] ?? (($item['kolom12_kemungkinan'] ?? 1) * ($item['kolom13_konsekuensi'] ?? 1));
+
+                        $detailData = [
+                            'kategori' => $item['kategori'] ?? 'K3',
+                            'kolom2_proses' => $item['kolom2_proses'] ?? '-',
+                            'kolom2_kegiatan' => $item['kolom2_kegiatan'],
+                            'kolom3_lokasi' => $item['kolom3_lokasi'] ?? '-',
+                            'kolom5_kondisi' => $item['kolom5_kondisi'] ?? 'Rutin',
+                            'kolom6_bahaya' => $bahayaData,
+                            'kolom7_aspek_lingkungan' => [
+                                'details' => $item['kolom7_aspek_lingkungan'] ?? [],
+                                'manual' => $item['aspek_manual'] ?? '',
+                            ],
+                            'kolom8_ancaman' => [
+                                'details' => $item['kolom8_ancaman'] ?? [],
+                                'manual' => $item['ancaman_manual'] ?? '',
+                            ],
+                            'kolom9_risiko_k3ko' => $item['kolom9_risiko_k3ko'] ?? null,
+                            'kolom9_dampak_lingkungan' => $item['kolom9_dampak_lingkungan'] ?? null,
+                            'kolom9_celah_keamanan' => $item['kolom9_celah_keamanan'] ?? null,
+                            'kolom9_risiko' => $item['kolom9_risiko_k3ko'] ?? $item['kolom9_dampak_lingkungan'] ?? $item['kolom9_celah_keamanan'] ?? '-',
+                            'kolom10_pengendalian' => $controlsData,
+                            'kolom11_existing' => $item['kolom11_existing'] ?? '-',
+                            'kolom12_kemungkinan' => $item['kolom12_kemungkinan'] ?? 1,
+                            'kolom13_konsekuensi' => $item['kolom13_konsekuensi'] ?? 1,
+                            'kolom14_score' => $riskScore,
+                            'kolom14_level' => $item['kolom14_level'] ?? 'Rendah',
+                            'kolom15_regulasi' => $item['kolom15_regulasi'] ?? null,
+                            'kolom16_aspek' => $item['kolom16_aspek'] ?? null,
+                            'kolom17_risiko' => $item['kolom17_risiko'] ?? null,
+                            'kolom17_peluang' => $item['kolom17_peluang'] ?? null,
+                            'kolom18_toleransi' => $item['kolom18_toleransi'] ?? 'Ya',
+                            'kolom19_pengendalian_lanjut' => $item['kolom19_rencana'] ?? $item['kolom19_pengendalian_lanjut'] ?? null,
+                            'kolom20_kemungkinan_lanjut' => $item['kolom20_kemungkinan_lanjut'] ?? null,
+                            'kolom21_konsekuensi_lanjut' => $item['kolom21_konsekuensi_lanjut'] ?? null,
+                            'kolom22_tingkat_risiko_lanjut' => $item['kolom22_tingkat_risiko_lanjut'] ?? null,
+                            'kolom22_level_lanjut' => $item['kolom22_level_lanjut'] ?? null,
+                            'residual_kemungkinan' => $item['residual_kemungkinan'] ?? 1,
+                            'residual_konsekuensi' => $item['residual_konsekuensi'] ?? 1,
+                            'residual_score' => $item['residual_score'] ?? (($item['residual_kemungkinan'] ?? 1) * ($item['residual_konsekuensi'] ?? 1)),
+                            'residual_level' => $item['residual_level'] ?? 'Rendah',
+                            'kolom19_program_type' => $item['kolom19_program_type'] ?? null,
+                        ];
+
+                        // Update or create detail
+                        $currentDetail = null;
+                        if (isset($item['id']) && in_array($item['id'], $existingIds)) {
+                            $currentDetail = $document->details()->find($item['id']);
+                            if ($currentDetail) {
+                                $currentDetail->update($detailData);
+                                $processedIds[] = $item['id'];
+                            }
+                        }
+
+                        if (!$currentDetail) {
+                            $currentDetail = $document->details()->create($detailData);
+                            $processedIds[] = $currentDetail->id;
+                        }
+                    }
+                }
+
+                // 2. Update PUK/PMK programs if provided
+                if ($request->has('puk_programs')) {
+                    foreach ($request->puk_programs as $programId => $programData) {
+                        $program = \App\Models\PukProgram::find($programId);
+                        if ($program && $program->document_detail_id) {
+                            $detail = \App\Models\DocumentDetail::find($program->document_detail_id);
+                            if ($detail && $detail->document_id == $document->id) {
+                                $program->update([
+                                    'program_kerja' => isset($programData['program_kerja']) ? array_values($programData['program_kerja']) : []
+                                ]);
+                            }
+                        }
+                    }
+                }
+
+                if ($request->has('pmk_programs')) {
+                    foreach ($request->pmk_programs as $programId => $programData) {
+                        $program = \App\Models\PmkProgram::find($programId);
+                        if ($program && $program->document_detail_id) {
+                            $detail = \App\Models\DocumentDetail::find($program->document_detail_id);
+                            if ($detail && $detail->document_id == $document->id) {
+                                $program->update([
+                                    'program_kerja' => isset($programData['program_kerja']) ? array_values($programData['program_kerja']) : []
+                                ]);
+                            }
+                        }
+                    }
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Draft saved successfully',
+                'timestamp' => now()->toISOString()
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Autosave failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save draft: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 
@@ -2210,6 +2380,11 @@ class DocumentController extends Controller
                         'status_security' => 'published'
                     ]);
                 }
+
+                // Check Final Status
+                $document->refresh(); // Refresh to get latest status
+                $sheDone = !$document->hasSheContent() || $document->status_she == 'published';
+                $secDone = !$document->hasSecurityContent() || $document->status_security == 'published';
 
                 if ($sheDone && $secDone) {
                     $document->update([

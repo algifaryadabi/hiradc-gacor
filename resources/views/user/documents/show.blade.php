@@ -993,21 +993,13 @@
                         </form>
                     @endif
 
-                    {{-- Edit Form Button (Draft/Revision) --}}
+                    {{-- Edit Dokumen Button (Draft/Revision) - Unified Form --}}
                     @if(in_array($document->status, ['draft', 'revision']))
-                        <a href="{{ route('documents.edit', $document->id) }}" class="btn-edit-programs"
+                        <a href="{{ route('documents.edit', $document->id) }}"
                             style="background: linear-gradient(135deg, #c41e3a 0%, #9f1239 100%); color: white; border: none; box-shadow: 0 4px 6px -1px rgba(196, 30, 58, 0.3); padding:10px 20px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;"
-                            onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='';">
-                            <i class="fas fa-edit"></i> Edit Form HIRADC
-                        </a>
-                    @endif
-
-                    {{-- Edit Program Kerja Button --}}
-                    @if($document->status != 'revision' && ($document->status == 'draft' || ($document->pukProgram && $document->pukProgram->status == 'revision') || ($document->pmkProgram && $document->pmkProgram->status == 'revision')))
-                        <a href="{{ route('documents.edit_programs', $document->id) }}" class="btn-edit-programs"
-                            style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3); padding:10px 20px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;"
-                            onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='';">
-                            <i class="fas fa-tasks"></i> Edit Program Kerja
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 12px -2px rgba(196, 30, 58, 0.4)';"
+                            onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 6px -1px rgba(196, 30, 58, 0.3)';">
+                            <i class="fas fa-edit"></i> Edit Dokumen
                         </a>
                     @endif
                 </div>
