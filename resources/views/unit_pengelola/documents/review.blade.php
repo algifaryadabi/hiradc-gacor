@@ -1216,12 +1216,20 @@
 
         $status = $currentStatus;
 
-        // Reviewer Logic
-        $isReviewer = ($currentReviewerId == $user->id_user) || 
-                      (empty($currentReviewerId) && in_array($user->role_jabatan, [5, 6]));
+        // Reviewer Logic - PERBAIKAN: SEMUA staff reviewer harus bisa edit
+        // Tidak peduli apakah sudah ada currentReviewerId atau belum
+        // Cukup cek: apakah user ini adalah staff reviewer (is_reviewer = 1) dari unit yang sama?
+        $isReviewer = $user->is_reviewer == 1 || 
+                      ($currentReviewerId == $user->id_user) ||
+                      (in_array($user->role_jabatan, [4, 5, 6]) && in_array($user->id_unit, [55, 56]));
+
+        // Determine if we should show the Reviewer View (Priority over Head View)
+        // Allow if assigned_review OR pending_head (Self-Disposition)
+        $showAsReviewer = ($isReviewer && in_array($status, ['assigned_review', 'pending_head']));
 
         // Approver Logic (Relaxed for Unit Pengelola)
-        $isStaffApprover = ($user->role_jabatan == 4) && 
+        // UPDATED: Check is_verifier flag OR Role 4 (Manager)
+        $isStaffApprover = (($user->role_jabatan == 4) || $user->is_verifier) && 
                            in_array($user->id_unit, [55, 56]);
 
         $isApprover = ($currentApproverId == $user->id_user) || 
@@ -1242,22 +1250,59 @@
             $myTrackIsActive = !in_array($document->status_security, ['revision', 'approved', 'published', 'level3_approved', 'none']);
         }
 
-        // Edit Logic (UPDATED):
-        // - Kepala Unit Pengelola can edit if MY track is active EXCEPT when:
-        //   1. status is 'pending_head' (menunggu disposisi)
-        //   2. status is 'staff_verified' or 'returned_to_head' (siap keputusan akhir)
-        //   3. status is 'approved', 'published' (Final) -> READ ONLY
-        // - Staff reviewers and approvers can edit when assigned
+        // Edit Logic (UPDATED - LEBIH PERMISIF):
+        // - Kepala Unit Pengelola can edit if MY track is active EXCEPT when final/approved
+        // - Staff reviewers HARUS BISA EDIT jika:
+        //   1. Mereka adalah reviewer (is_reviewer = 1 atau role 4/5/6)
+        //   2. Track mereka aktif (myTrackIsActive = true)
+        //   3. Status BUKAN approved/published (sudah final)
         $isPendingDisposition = ($isHead && $status == 'pending_head');
         $isFinalDecision = ($isHead && in_array($status, ['staff_verified', 'returned_to_head']));
         $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
         
+        // FIX: Logic BARU untuk Staff Reviewer - LEBIH PERMISIF
+        // HAPUS pembatasan status 'assigned_review' - staff reviewer harus bisa edit kapan saja
+        // selama track mereka aktif dan belum approved/published
+        $staffReviewerCanEdit = $isReviewer && $myTrackIsActive && !$isApprovedOrPublished;
+        
         $canEdit = ($isHead && $myTrackIsActive && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished) ||
-            ($isReviewer && $status == 'assigned_review') ||
+            $staffReviewerCanEdit ||
             ($isApprover && $status == 'assigned_approval');
+
+        // NEW: Strict Filtering for Details based on Assigned Categories
+        $filteredDetails = $document->details;
+        if (!empty($user->assigned_categories)) {
+            $userCats = $user->assigned_categories;
+            // Decode if string (defensive)
+            if (is_string($userCats)) {
+                $userCats = json_decode($userCats, true);
+            }
+            if (is_array($userCats) && count($userCats) > 0) {
+                 // Filter details collection: items must match user categories
+                 $filteredDetails = $document->details->filter(function($detail) use ($userCats) {
+                     return in_array($detail->kategori, $userCats);
+                 });
+            }
+        }
     @endphp
 
     <div class="container">
+        <div class="alert alert-info">
+            DEBUG INFO:<br>
+            User ID: {{ $user->id_user }} <br>
+            Role: {{ $user->role_jabatan }} <br>
+            Is Reviewer Flag: {{ $user->is_reviewer }} <br>
+            Is Reviewer Calculated: {{ $isReviewer ? 'YES' : 'NO' }} <br>
+            Status: {{ $status }} <br>
+            My Track Is Active: {{ $myTrackIsActive ? 'YES' : 'NO' }} <br>
+            Is Approved/Published: {{ $isApprovedOrPublished ? 'YES' : 'NO' }} <br>
+            ShowAsReviewer: {{ $showAsReviewer ? 'YES' : 'NO' }} <br>
+            Staff Reviewer Can Edit: {{ isset($staffReviewerCanEdit) && $staffReviewerCanEdit ? 'YES' : 'NO' }} <br>
+            Can Edit: {{ $canEdit ? 'YES' : 'NO' }} <br>
+            Current Reviewer ID: {{ $currentReviewerId }} <br>
+            Status SHE: {{ $document->status_she ?? 'null' }} <br>
+            Status Security: {{ $document->status_security ?? 'null' }} <br>
+        </div>
         <!-- Sidebar Inclusion -->
         @include('partials.sidebar')
 
@@ -1319,10 +1364,20 @@
 
             <!-- TABLE (New Structure) -->
             @php
-                $puk = $document->pukProgram;
-                $pmk = $document->pmkProgram;
-                // Count only the existence of the program document, not the items
-                $programCount = ($puk ? 1 : 0) + ($pmk ? 1 : 0);
+                // Fetch Programs for Tabs (Loop Logic)
+                $hasPrograms = false;
+                $programCount = 0;
+                
+                foreach($filteredDetails ?? $document->details as $detail) {
+                    if($detail->pukProgram) {
+                        $hasPrograms = true;
+                        $programCount++;
+                    }
+                    if($detail->pmkProgram) {
+                        $hasPrograms = true;
+                        $programCount++;
+                    }
+                }
             @endphp
 
             <div class="page-tabs">
@@ -1567,9 +1622,24 @@
                 // compliance table should be hidden
                 $isPendingDisposition = ($isHead && $status == 'pending_head');
                 
-                $showChecklist = (($isHead && $document->current_level == 2 && !$isPendingDisposition) ||
-                                 ($isReviewer && $status == 'assigned_review') || 
-                                 ($isApprover && $status == 'assigned_approval'));
+                // STRICT UPDATE: Hide Checklist if pending_head, even if also reviewer/approver
+                // User requirement: "hilangkan tabel kesesuaian... form ini merupakan form yang diterima dari kepala unit pengelola"
+                
+                // Check if checklist is already filled (Stage 2)
+                $checklistFilled = false;
+                if ($isSheUnit && !empty($document->compliance_checklist_she)) {
+                    $checklistFilled = true;
+                } elseif ($isSecurityUnit && !empty($document->compliance_checklist_security)) {
+                    $checklistFilled = true;
+                }
+
+                // FINAL: Tabel kesesuaian HANYA untuk Staff Verifikator
+                // TIDAK untuk Staff Reviewer saat inbox review
+                $showChecklist = (
+                    // HANYA Staff Verificator (Approver) yang bisa lihat dan isi compliance checklist
+                    ($isApprover && $status == 'assigned_approval')
+                    // Staff Reviewer TIDAK bisa lihat tabel kesesuaian
+                );
             @endphp
 
             @if($showChecklist)
@@ -1678,338 +1748,338 @@
             </div> <!-- End Tab HIRADC -->
 
             <div id="tab-programs" class="tab-content">
+                @foreach($filteredDetails ?? $document->details as $detailIndex => $detail)
+                    @php
+                        $puk = $detail->pukProgram;
+                        $pmk = $detail->pmkProgram;
+                    @endphp
 
-            @if($puk)
-                <style>
-                    /* Hide Number Input Spinners */
-                    input[type=number]::-webkit-inner-spin-button, 
-                    input[type=number]::-webkit-outer-spin-button { 
-                        -webkit-appearance: none; 
-                        margin: 0; 
-                    }
-                    input[type=number] {
-                        -moz-appearance: textfield;
-                    }
-                </style>
-                <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #3b82f6;">
-                    <div class="card-header-slim" style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-tasks"></i>
-                            <h2>Review Program Unit Kerja (PUK)</h2>
-                        </div>
-                        <!-- Download Buttons for PUK -->
-                        <div style="display: flex; gap: 8px;">
-                            <a href="{{ route('documents.export.puk.pdf', $document->id) }}" 
-                               class="btn btn-sm" 
-                               style="background-color: #dc2626; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-                                <i class="fas fa-file-pdf"></i> Download PDF
-                            </a>
-                            <a href="{{ route('documents.export.puk.excel', $document->id) }}" 
-                               class="btn btn-sm" 
-                               style="background-color: #107c41; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-                                <i class="fas fa-file-excel"></i> Download Excel
-                            </a>
-                        </div>
-                    </div>
-                    <div style="padding: 24px;">
-                        <!-- Informasi Program -->
-                        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
-                            <div style="display: grid; grid-template-columns: 200px 1fr; gap: 12px; font-size: 14px;">
-                                <div style="font-weight: 600; color: #475569;">Judul Program</div>
-                                <div style="color: #0f172a;">: {{ $puk->judul }}</div>
-                                <div style="font-weight: 600; color: #475569;">Tujuan</div>
-                                <div style="color: #0f172a;">: {{ $puk->tujuan }}</div>
-                                <div style="font-weight: 600; color: #475569;">Sasaran</div>
-                                <div style="color: #0f172a;">: {{ $puk->sasaran }}</div>
-                                <div style="font-weight: 600; color: #475569;">Penanggung Jawab</div>
-                                <div style="color: #0f172a;">: {{ $puk->penanggung_jawab }}</div>
+                    @if($puk)
+                        <style>
+                            /* Hide Number Input Spinners */
+                            input[type=number]::-webkit-inner-spin-button, 
+                            input[type=number]::-webkit-outer-spin-button { 
+                                -webkit-appearance: none; 
+                                margin: 0; 
+                            }
+                            input[type=number] {
+                                -moz-appearance: textfield;
+                            }
+                        </style>
+                        <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #3b82f6;">
+                            <div class="card-header-slim" style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <i class="fas fa-tasks"></i>
+                                    <h2>Review Program Unit Kerja (PUK) #{{ $detailIndex + 1 }}</h2>
+                                </div>
+                                <!-- Download Buttons for PUK -->
+                                <div style="display: flex; gap: 8px;">
+                                    <a href="{{ route('documents.export.puk.pdf', $document->id) }}" 
+                                       class="btn btn-sm" 
+                                       style="background-color: #dc2626; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                                        <i class="fas fa-file-pdf"></i> Download PDF
+                                    </a>
+                                    <a href="{{ route('documents.export.puk.excel', $document->id) }}" 
+                                       class="btn btn-sm" 
+                                       style="background-color: #107c41; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                                        <i class="fas fa-file-excel"></i> Download Excel
+                                    </a>
+                                </div>
+                            </div>
+                            <div style="padding: 24px;">
+                                <!-- Informasi Program -->
+                                <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+                                    <div style="display: grid; grid-template-columns: 200px 1fr; gap: 12px; font-size: 14px;">
+                                        <div style="font-weight: 600; color: #475569;">Judul Program</div>
+                                        <div style="color: #0f172a;">: {{ $puk->judul }}</div>
+                                        <div style="font-weight: 600; color: #475569;">Tujuan</div>
+                                        <div style="color: #0f172a;">: {{ $puk->tujuan }}</div>
+                                        <div style="font-weight: 600; color: #475569;">Sasaran</div>
+                                        <div style="color: #0f172a;">: {{ $puk->sasaran }}</div>
+                                        <div style="font-weight: 600; color: #475569;">Penanggung Jawab</div>
+                                        <div style="color: #0f172a;">: {{ $puk->penanggung_jawab }}</div>
 
-                                @if($puk->uraian_revisi)
-                                <div style="font-weight: 600; color: #475569;">Uraian Revisi</div>
-                                <div style="color: #0f172a;">: {{ $puk->uraian_revisi }}</div>
-                                @endif
+                                        @if($puk->uraian_revisi)
+                                        <div style="font-weight: 600; color: #475569;">Uraian Revisi</div>
+                                        <div style="color: #0f172a;">: {{ $puk->uraian_revisi }}</div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <h4 style="font-size:15px; font-weight:700; color:#0f172a; margin: 0;">Detail Program Kerja:</h4>
+                                    @php
+                                        $canEditPuk = false;
+                                        if (in_array($user->id_unit, [55, 56])) { // SHE
+                                             $hasApproved = $document->approvals()->where('approver_id', $user->id)->where('level', 2)->whereIn('action', ['approved', 'verified', 'reviewed'])->exists();
+                                             if (in_array($user->role_jabatan, [4, 5, 6]) && !$hasApproved && $document->current_level == 2) {
+                                                $canEditPuk = true;
+                                             }
+                                        }
+                                    @endphp
+                                    @if($canEditPuk)
+                                    <button type="button" onclick="toggleEditModePuk({{ $detailIndex }})" id="btnEditPuk-{{ $detailIndex }}" class="btn btn-sm" style="background:#3b82f6; color:white; padding:6px 12px; border-radius:6px; font-size: 13px; border:none; cursor: pointer;">
+                                        <i class="fas fa-edit me-1"></i> Edit
+                                    </button>
+                                    @endif
+                                </div>
+
+                                <!-- Wrapper dengan scroll horizontal -->
+                                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                                    <form id="pukEditForm-{{ $detailIndex }}">
+                                    <!-- Min-width table -->
+                                    <table class="table table-bordered" style="width:100%; min-width: 1200px; font-size:13px; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background: #1e293b; color: white;">
+                                                <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center; width: 50px;">NO</th>
+                                                <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; min-width: 250px;">URAIAN KEGIATAN</th>
+                                                <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; min-width: 150px;">KOORD.</th>
+                                                <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; min-width: 150px;">PELAKSANA</th>
+                                                <th colspan="12" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center;">TARGET (%)</th>
+                                            </tr>
+                                            <tr style="background: #334155; color: white;">
+                                                @for($m=1; $m<=12; $m++)
+                                                    <!-- Perbesar lebar kolom target -->
+                                                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 50px; min-width: 50px;">{{ $m }}</th>
+                                                @endfor
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pukTableBody-{{ $detailIndex }}">
+                                            @foreach($puk->program_kerja as $index => $item)
+                                            <tr style="background: {{ $index % 2 == 0 ? '#ffffff' : '#f9fafb' }};">
+                                                <td style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-weight: 600;">{{ $index + 1 }}</td>
+                                                <td style="border: 1px solid #cbd5e1; padding: 10px;">
+                                                    <span class="view-mode">{{ $item['uraian'] ?? '-' }}</span>
+                                                    <textarea class="edit-mode form-control" style="display:none; width:100%; min-height:60px; padding:8px;" name="program_kerja[{{ $index }}][uraian]">{{ $item['uraian'] ?? '' }}</textarea>
+                                                </td>
+                                                <td style="border: 1px solid #cbd5e1; padding: 10px;">
+                                                    <span class="view-mode">{{ $item['koordinator'] ?? '-' }}</span>
+                                                    <select class="edit-mode form-control" style="display:none; width:100%; padding:6px;" name="program_kerja[{{ $index }}][koordinator]">
+                                                        <option value="">-- Pilih --</option>
+                                                        @foreach($band3Users as $u)
+                                                            <option value="{{ $u->nama_user }}" {{ ($item['koordinator'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{ $u->nama_user }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                                <td style="border: 1px solid #cbd5e1; padding: 10px;">
+                                                    <span class="view-mode">{{ $item['pelaksana'] ?? '-' }}</span>
+                                                    <select class="edit-mode form-control" style="display:none; width:100%; padding:6px;" name="program_kerja[{{ $index }}][pelaksana]">
+                                                        <option value="">-- Pilih --</option>
+                                                        @foreach($band4Users as $u)
+                                                            <option value="{{ $u->nama_user }}" {{ ($item['pelaksana'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{ $u->nama_user }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                                @php $targets = $item['target'] ?? []; @endphp
+                                                @for($m=0; $m<12; $m++)
+                                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 12px;">
+                                                        <span class="view-mode">{{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}</span>
+                                                        <input type="number" class="edit-mode form-control" style="display:none; width:100%; padding:4px; text-align:center;" name="program_kerja[{{ $index }}][target][]" value="{{ $targets[$m] ?? '' }}" min="0" max="100">
+                                                    </td>
+                                                @endfor
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                    <div id="pukEditActions-{{ $detailIndex }}" style="display:none; margin-top:15px; text-align:right;">
+                                        <button type="button" onclick="cancelEditPuk({{ $detailIndex }})" class="btn" style="background:#e2e8f0; margin-right:8px; padding:8px 16px; border:none; border-radius:6px;">Batal</button>
+                                        <button type="button" onclick="savePukChanges({{ $detailIndex }}, {{ $puk->id }})" class="btn" style="background:#10b981; color:white; padding:8px 16px; border:none; border-radius:6px;">Simpan PUK</button>
+                                    </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
+                    @endif
 
-                        @if($puk->program_kerja && is_array($puk->program_kerja) && count($puk->program_kerja) > 0)
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <h4 style="font-size:15px; font-weight:700; color:#0f172a; margin: 0;">Detail Program Kerja:</h4>
-                            @php
-                                $canEditPuk = false;
-                                if (in_array($user->id_unit, [55, 56])) { // SHE
-                                     $hasApproved = $document->approvals()->where('approver_id', $user->id)->where('level', 2)->whereIn('action', ['approved', 'verified', 'reviewed'])->exists();
-                                     if (in_array($user->role_jabatan, [4, 5, 6]) && !$hasApproved && $document->current_level == 2) {
-                                        $canEditPuk = true;
-                                     }
-                                }
-                            @endphp
-                            @if($canEditPuk)
-                            <button type="button" onclick="toggleEditModePuk()" id="btnEditPuk" class="btn btn-sm" style="background:#3b82f6; color:white; padding:6px 12px; border-radius:6px; font-size: 13px; border:none; cursor: pointer;">
-                                <i class="fas fa-edit me-1"></i> Edit
-                            </button>
-                            @endif
-                        </div>
-
-                        <!-- Wrapper dengan scroll horizontal -->
-                        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px;">
-                            <form id="pukEditForm">
-                            <!-- Min-width table -->
-                            <table class="table table-bordered" style="width:100%; min-width: 1200px; font-size:13px; border-collapse: collapse;">
-                                <thead>
-                                    <tr style="background: #1e293b; color: white;">
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center; width: 50px;">NO</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; min-width: 250px;">URAIAN KEGIATAN</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; min-width: 150px;">KOORD.</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; min-width: 150px;">PELAKSANA</th>
-                                        <th colspan="12" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center;">TARGET (%)</th>
-                                    </tr>
-                                    <tr style="background: #334155; color: white;">
-                                        @for($m=1; $m<=12; $m++)
-                                            <!-- Perbesar lebar kolom target -->
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 50px; min-width: 50px;">{{ $m }}</th>
-                                        @endfor
-                                    </tr>
-                                </thead>
-                                <tbody id="pukTableBody">
-                                    @foreach($puk->program_kerja as $index => $item)
-                                    <tr style="background: {{ $index % 2 == 0 ? '#ffffff' : '#f9fafb' }};">
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-weight: 600;">{{ $index + 1 }}</td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px;">
-                                            <span class="view-mode">{{ $item['uraian'] ?? '-' }}</span>
-                                            <textarea class="edit-mode form-control" style="display:none; width:100%; min-height:60px; padding:8px;" name="program_kerja[{{ $index }}][uraian]">{{ $item['uraian'] ?? '' }}</textarea>
-                                        </td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px;">
-                                            <span class="view-mode">{{ $item['koordinator'] ?? '-' }}</span>
-                                            <select class="edit-mode form-control" style="display:none; width:100%; padding:6px;" name="program_kerja[{{ $index }}][koordinator]">
-                                                <option value="">-- Pilih --</option>
-                                                @foreach($band3Users as $u)
-                                                    <option value="{{ $u->nama_user }}" {{ ($item['koordinator'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{ $u->nama_user }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px;">
-                                            <span class="view-mode">{{ $item['pelaksana'] ?? '-' }}</span>
-                                            <select class="edit-mode form-control" style="display:none; width:100%; padding:6px;" name="program_kerja[{{ $index }}][pelaksana]">
-                                                <option value="">-- Pilih --</option>
-                                                @foreach($band4Users as $u)
-                                                    <option value="{{ $u->nama_user }}" {{ ($item['pelaksana'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{ $u->nama_user }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        @php $targets = $item['target'] ?? []; @endphp
-                                        @for($m=0; $m<12; $m++)
-                                            <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 12px;">
-                                                <span class="view-mode">{{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}</span>
-                                                <input type="number" class="edit-mode form-control" style="display:none; width:100%; padding:4px; text-align:center;" name="program_kerja[{{ $index }}][target][]" value="{{ $targets[$m] ?? '' }}" min="0" max="100">
-                                            </td>
-                                        @endfor
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                            <div id="pukEditActions" style="display:none; margin-top:15px; text-align:right;">
-                                <button type="button" onclick="cancelEditPuk()" class="btn" style="background:#e2e8f0; margin-right:8px; padding:8px 16px; border:none; border-radius:6px;">Batal</button>
-                                <button type="button" onclick="savePukChanges()" class="btn" style="background:#10b981; color:white; padding:8px 16px; border:none; border-radius:6px;">Simpan PUK</button>
+                    @if($pmk)
+                        <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #c026d3;">
+                            <div class="card-header-slim" style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <i class="fas fa-project-diagram"></i>
+                                    <h2>Review Program Manajemen Korporat (PMK) #{{ $detailIndex + 1 }}</h2>
+                                </div>
+                                <!-- Download Buttons for PMK -->
+                                <div style="display: flex; gap: 8px;">
+                                    <a href="{{ route('documents.export.pmk.pdf', $document->id) }}" class="btn btn-sm"
+                                        style="background-color: #dc2626; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                                        <i class="fas fa-file-pdf"></i> Download PDF
+                                    </a>
+                                    <a href="{{ route('documents.export.pmk.excel', $document->id) }}" class="btn btn-sm"
+                                        style="background-color: #107c41; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                                        <i class="fas fa-file-excel"></i> Download Excel
+                                    </a>
+                                </div>
                             </div>
-                            </form>
-                        </div>
-                        <script>
-                        function toggleEditModePuk() {
-                            document.querySelectorAll('#pukTableBody .view-mode').forEach(el => el.style.display = 'none');
-                            document.querySelectorAll('#pukTableBody .edit-mode').forEach(el => el.style.display = 'block');
-                            document.getElementById('btnEditPuk').style.display = 'none';
-                            document.getElementById('pukEditActions').style.display = 'block';
-                        }
-                        function cancelEditPuk() {
-                            document.querySelectorAll('#pukTableBody .view-mode').forEach(el => el.style.display = 'inline');
-                            document.querySelectorAll('#pukTableBody .edit-mode').forEach(el => el.style.display = 'none');
-                            document.getElementById('btnEditPuk').style.display = 'inline-block';
-                            document.getElementById('pukEditActions').style.display = 'none';
-                            document.getElementById('pukEditForm').reset();
-                        }
-                        function savePukChanges() {
-                            const programKerja = [];
-                            const rows = document.querySelectorAll('#pukTableBody tr');
-                            rows.forEach((row, idx) => {
-                                const uraian = row.querySelector(`[name="program_kerja[${idx}][uraian]"]`).value;
-                                const koord = row.querySelector(`[name="program_kerja[${idx}][koordinator]"]`).value;
-                                const pelaksana = row.querySelector(`[name="program_kerja[${idx}][pelaksana]"]`).value;
-                                const targets = [];
-                                row.querySelectorAll(`[name="program_kerja[${idx}][target][]"]`).forEach(input => targets.push(input.value));
-                                programKerja.push({uraian, koordinator: koord, pelaksana, target: targets});
-                            });
-                            Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
-                            fetch('{{ route("unit_pengelola.puk.update_program", $puk->id) }}', {
-                                method: 'PUT',
-                                headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}'},
-                                body: JSON.stringify({ program_kerja: programKerja })
-                            }).then(res => res.json()).then(data => {
-                                if (data.success) Swal.fire('Berhasil!', data.message, 'success').then(() => location.reload());
-                                # Note: using location.reload() might show the error again if page was broken. But now it should be fine.
-                                else Swal.fire('Gagal!', data.message, 'error');
-                            }).catch(err => Swal.fire('Error', 'Terjadi kesalahan', 'error'));
-                        }
-                        </script>
-                        @endif
-                    </div>
-                </div>
-            @endif
+                            <div style="padding: 24px;">
+                                <div style="background: #faf5ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9d5ff;">
+                                    <div style="display: grid; grid-template-columns: 200px 1fr; gap: 12px; font-size: 14px;">
+                                        <div style="font-weight: 600; color: #475569;">Judul Program</div>
+                                        <div style="color: #0f172a;">: {{ $pmk->judul }}</div>
+                                        <div style="font-weight: 600; color: #475569;">Tujuan</div>
+                                        <div style="color: #0f172a;">: {{ $pmk->tujuan }}</div>
+                                        <div style="font-weight: 600; color: #475569;">Sasaran</div>
+                                        <div style="color: #0f172a;">: {{ $pmk->sasaran }}</div>
+                                        <div style="font-weight: 600; color: #475569;">Penanggung Jawab</div>
+                                        <div style="color: #0f172a;">: {{ $pmk->penanggung_jawab }}</div>
 
-            @if($pmk)
-                <div class="doc-card" style="margin-top: 32px; border-left: 5px solid #c026d3;">
-                    <div class="card-header-slim" style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-project-diagram"></i>
-                            <h2>Review Program Manajemen Korporat (PMK)</h2>
-                        </div>
-                        <!-- Download Buttons for PMK -->
-                        <div style="display: flex; gap: 8px;">
-                            <a href="{{ route('documents.export.pmk.pdf', $document->id) }}" class="btn btn-sm"
-                                style="background-color: #dc2626; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-                                <i class="fas fa-file-pdf"></i> Download PDF
-                            </a>
-                            <a href="{{ route('documents.export.pmk.excel', $document->id) }}" class="btn btn-sm"
-                                style="background-color: #107c41; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-                                <i class="fas fa-file-excel"></i> Download Excel
-                            </a>
-                        </div>
-                    </div>
-                    <div style="padding: 24px;">
-                        <div style="background: #faf5ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9d5ff;">
-                            <div style="display: grid; grid-template-columns: 200px 1fr; gap: 12px; font-size: 14px;">
-                                <div style="font-weight: 600; color: #475569;">Judul Program</div>
-                                <div style="color: #0f172a;">: {{ $pmk->judul }}</div>
-                                <div style="font-weight: 600; color: #475569;">Tujuan</div>
-                                <div style="color: #0f172a;">: {{ $pmk->tujuan }}</div>
-                                <div style="font-weight: 600; color: #475569;">Sasaran</div>
-                                <div style="color: #0f172a;">: {{ $pmk->sasaran }}</div>
-                                <div style="font-weight: 600; color: #475569;">Penanggung Jawab</div>
-                                <div style="color: #0f172a;">: {{ $pmk->penanggung_jawab }}</div>
+                                        @if($pmk->uraian_revisi)
+                                        <div style="font-weight: 600; color: #475569;">Uraian Revisi</div>
+                                        <div style="color: #0f172a;">: {{ $pmk->uraian_revisi }}</div>
+                                        @endif
+                                    </div>
+                                </div>
 
-                                @if($pmk->uraian_revisi)
-                                <div style="font-weight: 600; color: #475569;">Uraian Revisi</div>
-                                <div style="color: #0f172a;">: {{ $pmk->uraian_revisi }}</div>
-                                @endif
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <h4 style="font-size:15px; font-weight:700; color:#0f172a; margin: 0;">Detail Program Kerja:</h4>
+                                    @php
+                                        $canEditPmk = false;
+                                        if (in_array($user->id_unit, [55, 56])) {
+                                             $hasApproved = $document->approvals()->where('approver_id', $user->id)->where('level', 2)->whereIn('action', ['approved', 'verified', 'reviewed'])->exists();
+                                             if (in_array($user->role_jabatan, [4, 5, 6]) && !$hasApproved && $document->current_level == 2) {
+                                                $canEditPmk = true;
+                                             }
+                                        }
+                                    @endphp
+                                    @if($canEditPmk)
+                                    <button type="button" onclick="toggleEditModePmk({{ $detailIndex }})" id="btnEditPmk-{{ $detailIndex }}" class="btn btn-sm" style="background:#c026d3; color:white; padding:6px 12px; border-radius:6px; font-size: 13px; border:none; cursor: pointer;">
+                                        <i class="fas fa-edit me-1"></i> Edit
+                                    </button>
+                                    @endif
+                                </div>
+
+                                <!-- Wrapper dengan scroll horizontal -->
+                                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                                    <form id="pmkEditForm-{{ $detailIndex }}">
+                                    <!-- Min-width table -->
+                                    <table class="table table-bordered" style="width:100%; min-width: 1200px; font-size:13px; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background: #1e293b; color: white;">
+                                                <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center; width: 50px;">NO</th>
+                                                <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; min-width: 200px;">URAIAN KEGIATAN</th>
+                                                <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; width: 120px;">PIC</th>
+                                                <th colspan="12" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center;">TARGET (%)</th>
+                                                <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; width: 120px;">ANGGARAN</th>
+                                            </tr>
+                                            <tr style="background: #334155; color: white;">
+                                                @for($m=1; $m<=12; $m++)
+                                                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 50px; min-width: 50px;">{{ $m }}</th>
+                                                @endfor
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pmkTableBody-{{ $detailIndex }}">
+                                            @foreach($pmk->program_kerja as $index => $item)
+                                            <tr style="background: {{ $index % 2 == 0 ? '#ffffff' : '#faf9fb' }};">
+                                                <td style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-weight: 600;">{{ $index + 1 }}</td>
+                                                <td style="border: 1px solid #cbd5e1; padding: 10px;">
+                                                    <span class="view-mode">{{ $item['uraian'] ?? '-' }}</span>
+                                                    <textarea class="edit-mode form-control" style="display:none; width:100%; min-height:60px; padding:8px;" name="program_kerja[{{ $index }}][uraian]">{{ $item['uraian'] ?? '' }}</textarea>
+                                                </td>
+                                                <td style="border: 1px solid #cbd5e1; padding: 10px;">
+                                                    <span class="view-mode">{{ (!empty($item['koordinator']) && $item['koordinator'] !== '-') ? $item['koordinator'] : ($item['pelaksana'] ?? $item['pic'] ?? '-') }}</span>
+                                                    <select class="edit-mode form-control" style="display:none; width:100%; padding:6px;" name="program_kerja[{{ $index }}][koordinator]">
+                                                        <option value="">-- Pilih PIC --</option>
+                                                        @foreach($pmkPicUsers as $u)
+                                                            <option value="{{ $u->nama_user }}" {{ ($item['koordinator'] ?? $item['pic'] ?? $item['pelaksana'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{ $u->nama_user }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                                @php $targets = $item['target'] ?? []; @endphp
+                                                @for($m=0; $m<12; $m++)
+                                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 12px;">
+                                                        <span class="view-mode">{{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}</span>
+                                                        <input type="number" class="edit-mode form-control" style="display:none; width:100%; padding:4px; text-align:center;" name="program_kerja[{{ $index }}][target][]" value="{{ $targets[$m] ?? '' }}" min="0" max="100">
+                                                    </td>
+                                                @endfor
+                                                <td style="border: 1px solid #cbd5e1; padding: 10px;">
+                                                    <span class="view-mode">{{ isset($item['anggaran']) ? 'Rp ' . number_format($item['anggaran'], 0, ',', '.') : '-' }}</span>
+                                                    <input type="number" class="edit-mode form-control" style="display:none; width:100%; padding:6px;" name="program_kerja[{{ $index }}][anggaran]" value="{{ $item['anggaran'] ?? '' }}">
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                    <div id="pmkEditActions-{{ $detailIndex }}" style="display:none; margin-top:15px; text-align:right;">
+                                        <button type="button" onclick="cancelEditPmk({{ $detailIndex }})" class="btn" style="background:#e2e8f0; margin-right:8px; padding:8px 16px; border:none; border-radius:6px;">Batal</button>
+                                        <button type="button" onclick="savePmkChanges({{ $detailIndex }}, {{ $pmk->id }})" class="btn" style="background:#c026d3; color:white; padding:8px 16px; border:none; border-radius:6px;">Simpan PMK</button>
+                                    </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
+                    @endif
+                @endforeach
 
-                        @if($pmk->program_kerja && is_array($pmk->program_kerja) && count($pmk->program_kerja) > 0)
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <h4 style="font-size:15px; font-weight:700; color:#0f172a; margin: 0;">Detail Program Kerja:</h4>
-                            @php
-                                $canEditPmk = false;
-                                if (in_array($user->id_unit, [55, 56])) {
-                                     $hasApproved = $document->approvals()->where('approver_id', $user->id)->where('level', 2)->whereIn('action', ['approved', 'verified', 'reviewed'])->exists();
-                                     if (in_array($user->role_jabatan, [4, 5, 6]) && !$hasApproved && $document->current_level == 2) {
-                                        $canEditPmk = true;
-                                     }
-                                }
-                            @endphp
-                            @if($canEditPmk)
-                            <button type="button" onclick="toggleEditModePmk()" id="btnEditPmk" class="btn btn-sm" style="background:#c026d3; color:white; padding:6px 12px; border-radius:6px; font-size: 13px; border:none; cursor: pointer;">
-                                <i class="fas fa-edit me-1"></i> Edit
-                            </button>
-                            @endif
-                        </div>
+                <script>
+                function toggleEditModePuk(index) {
+                    document.querySelectorAll(`#pukTableBody-${index} .view-mode`).forEach(el => el.style.display = 'none');
+                    document.querySelectorAll(`#pukTableBody-${index} .edit-mode`).forEach(el => el.style.display = 'block');
+                    document.getElementById(`btnEditPuk-${index}`).style.display = 'none';
+                    document.getElementById(`pukEditActions-${index}`).style.display = 'block';
+                }
+                function cancelEditPuk(index) {
+                    document.querySelectorAll(`#pukTableBody-${index} .view-mode`).forEach(el => el.style.display = 'inline');
+                    document.querySelectorAll(`#pukTableBody-${index} .edit-mode`).forEach(el => el.style.display = 'none');
+                    document.getElementById(`btnEditPuk-${index}`).style.display = 'inline-block';
+                    document.getElementById(`pukEditActions-${index}`).style.display = 'none';
+                    document.getElementById(`pukEditForm-${index}`).reset();
+                }
+                function savePukChanges(index, pukId) {
+                    const programKerja = [];
+                    const rows = document.querySelectorAll(`#pukTableBody-${index} tr`);
+                    rows.forEach((row, idx) => {
+                        const uraian = row.querySelector(`[name="program_kerja[${idx}][uraian]"]`).value;
+                        const koord = row.querySelector(`[name="program_kerja[${idx}][koordinator]"]`).value;
+                        const pelaksana = row.querySelector(`[name="program_kerja[${idx}][pelaksana]"]`).value;
+                        const targets = [];
+                        row.querySelectorAll(`[name="program_kerja[${idx}][target][]"]`).forEach(input => targets.push(input.value));
+                        programKerja.push({uraian, koordinator: koord, pelaksana, target: targets});
+                    });
+                    Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
+                    fetch(`/unit-pengelola/puk/${pukId}/update-program-kerja`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                        body: JSON.stringify({ program_kerja: programKerja })
+                    }).then(res => res.json()).then(data => {
+                        if (data.success) Swal.fire('Berhasil!', data.message, 'success').then(() => location.reload());
+                        else Swal.fire('Gagal!', data.message, 'error');
+                    }).catch(err => Swal.fire('Error', 'Terjadi kesalahan', 'error'));
+                }
 
-                        <!-- Wrapper dengan scroll horizontal -->
-                        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px;">
-                            <form id="pmkEditForm">
-                            <!-- Min-width table -->
-                            <table class="table table-bordered" style="width:100%; min-width: 1200px; font-size:13px; border-collapse: collapse;">
-                                <thead>
-                                    <tr style="background: #1e293b; color: white;">
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center; width: 50px;">NO</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; min-width: 200px;">URAIAN KEGIATAN</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; width: 120px;">PIC</th>
-                                        <th colspan="12" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center;">TARGET (%)</th>
-                                        <th rowspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: left; width: 120px;">ANGGARAN</th>
-                                    </tr>
-                                    <tr style="background: #334155; color: white;">
-                                        @for($m=1; $m<=12; $m++)
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 50px; min-width: 50px;">{{ $m }}</th>
-                                        @endfor
-                                    </tr>
-                                </thead>                                <tbody id="pmkTableBody">
-                                    @foreach($pmk->program_kerja as $index => $item)
-                                    <tr style="background: {{ $index % 2 == 0 ? '#ffffff' : '#faf9fb' }};">
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-weight: 600;">{{ $index + 1 }}</td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px;">
-                                            <span class="view-mode">{{ $item['uraian'] ?? '-' }}</span>
-                                            <textarea class="edit-mode form-control" style="display:none; width:100%; min-height:60px; padding:8px;" name="program_kerja[{{ $index }}][uraian]">{{ $item['uraian'] ?? '' }}</textarea>
-                                        </td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px;">
-                                            <span class="view-mode">{{ (!empty($item['koordinator']) && $item['koordinator'] !== '-') ? $item['koordinator'] : ($item['pelaksana'] ?? $item['pic'] ?? '-') }}</span>
-                                            <select class="edit-mode form-control" style="display:none; width:100%; padding:6px;" name="program_kerja[{{ $index }}][koordinator]">
-                                                <option value="">-- Pilih PIC --</option>
-                                                @foreach($pmkPicUsers as $u)
-                                                    <option value="{{ $u->nama_user }}" {{ ($item['koordinator'] ?? $item['pic'] ?? $item['pelaksana'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{ $u->nama_user }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        @php $targets = $item['target'] ?? []; @endphp
-                                        @for($m=0; $m<12; $m++)
-                                            <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 12px;">
-                                                <span class="view-mode">{{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}</span>
-                                                <input type="number" class="edit-mode form-control" style="display:none; width:100%; padding:4px; text-align:center;" name="program_kerja[{{ $index }}][target][]" value="{{ $targets[$m] ?? '' }}" min="0" max="100">
-                                            </td>
-                                        @endfor
-                                        <td style="border: 1px solid #cbd5e1; padding: 10px;">
-                                            <span class="view-mode">{{ isset($item['anggaran']) ? 'Rp ' . number_format($item['anggaran'], 0, ',', '.') : '-' }}</span>
-                                            <input type="number" class="edit-mode form-control" style="display:none; width:100%; padding:6px;" name="program_kerja[{{ $index }}][anggaran]" value="{{ $item['anggaran'] ?? '' }}">
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                            <div id="pmkEditActions" style="display:none; margin-top:15px; text-align:right;">
-                                <button type="button" onclick="cancelEditPmk()" class="btn" style="background:#e2e8f0; margin-right:8px; padding:8px 16px; border:none; border-radius:6px;">Batal</button>
-                                <button type="button" onclick="savePmkChanges()" class="btn" style="background:#c026d3; color:white; padding:8px 16px; border:none; border-radius:6px;">Simpan PMK</button>
-                            </div>
-                            </form>
-                        </div>
-                        <script>
-                        function toggleEditModePmk() {
-                            document.querySelectorAll('#pmkTableBody .view-mode').forEach(el => el.style.display = 'none');
-                            document.querySelectorAll('#pmkTableBody .edit-mode').forEach(el => el.style.display = 'block');
-                            document.getElementById('btnEditPmk').style.display = 'none';
-                            document.getElementById('pmkEditActions').style.display = 'block';
-                        }
-                        function cancelEditPmk() {
-                            document.querySelectorAll('#pmkTableBody .view-mode').forEach(el => el.style.display = 'inline');
-                            document.querySelectorAll('#pmkTableBody .edit-mode').forEach(el => el.style.display = 'none');
-                            document.getElementById('btnEditPmk').style.display = 'inline-block';
-                            document.getElementById('pmkEditActions').style.display = 'none';
-                            document.getElementById('pmkEditForm').reset();
-                        }
-                        function savePmkChanges() {
-                            const programKerja = [];
-                            const rows = document.querySelectorAll('#pmkTableBody tr');
-                            rows.forEach((row, idx) => {
-                                const uraian = row.querySelector(`[name="program_kerja[${idx}][uraian]"]`).value;
-                                const koord = row.querySelector(`[name="program_kerja[${idx}][koordinator]"]`).value;
-                                const anggaran = row.querySelector(`[name="program_kerja[${idx}][anggaran]"]`).value;
-                                const targets = [];
-                                row.querySelectorAll(`[name="program_kerja[${idx}][target][]"]`).forEach(input => targets.push(input.value));
-                                programKerja.push({uraian, koordinator: koord, target: targets, anggaran: anggaran ? parseInt(anggaran) : null});
-                            });
-                            Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
-                            fetch('{{ route("unit_pengelola.pmk.update_program", $pmk->id) }}', {
-                                method: 'PUT',
-                                headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}'},
-                                body: JSON.stringify({ program_kerja: programKerja })
-                            }).then(res => res.json()).then(data => {
-                                if (data.success) Swal.fire('Berhasil!', data.message, 'success').then(() => location.reload());
-                                else Swal.fire('Gagal!', data.message, 'error');
-                            }).catch(err => Swal.fire('Error', 'Terjadi kesalahan', 'error'));
-                        }
-                        </script>
-                        @endif
-                    </div>
-                </div>
-            @endif
-
-
+                function toggleEditModePmk(index) {
+                    document.querySelectorAll(`#pmkTableBody-${index} .view-mode`).forEach(el => el.style.display = 'none');
+                    document.querySelectorAll(`#pmkTableBody-${index} .edit-mode`).forEach(el => el.style.display = 'block');
+                    document.getElementById(`btnEditPmk-${index}`).style.display = 'none';
+                    document.getElementById(`pmkEditActions-${index}`).style.display = 'block';
+                }
+                function cancelEditPmk(index) {
+                    document.querySelectorAll(`#pmkTableBody-${index} .view-mode`).forEach(el => el.style.display = 'inline');
+                    document.querySelectorAll(`#pmkTableBody-${index} .edit-mode`).forEach(el => el.style.display = 'none');
+                    document.getElementById(`btnEditPmk-${index}`).style.display = 'inline-block';
+                    document.getElementById(`pmkEditActions-${index}`).style.display = 'none';
+                    document.getElementById(`pmkEditForm-${index}`).reset();
+                }
+                function savePmkChanges(index, pmkId) {
+                    const programKerja = [];
+                    const rows = document.querySelectorAll(`#pmkTableBody-${index} tr`);
+                    rows.forEach((row, idx) => {
+                        const uraian = row.querySelector(`[name="program_kerja[${idx}][uraian]"]`).value;
+                        const koord = row.querySelector(`[name="program_kerja[${idx}][koordinator]"]`).value;
+                        const anggaran = row.querySelector(`[name="program_kerja[${idx}][anggaran]"]`).value;
+                        const targets = [];
+                        row.querySelectorAll(`[name="program_kerja[${idx}][target][]"]`).forEach(input => targets.push(input.value));
+                        programKerja.push({uraian, koordinator: koord, target: targets, anggaran: anggaran ? parseInt(anggaran) : null});
+                    });
+                    Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
+                    fetch(`/unit-pengelola/pmk/${pmkId}/update-program-kerja`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                        body: JSON.stringify({ program_kerja: programKerja })
+                    }).then(res => res.json()).then(data => {
+                        if (data.success) Swal.fire('Berhasil!', data.message, 'success').then(() => location.reload());
+                        else Swal.fire('Gagal!', data.message, 'error');
+                    }).catch(err => Swal.fire('Error', 'Terjadi kesalahan', 'error'));
+                }
+                </script>
             </div> <!-- End Tab Programs -->
 
             <!-- TIMELINE -->
@@ -2133,7 +2203,9 @@
             {{-- @php dd('Status:', $status, 'Unit:', $user->id_unit, 'SHE Status:', $document->status_she, 'Sec Status:', $document->status_security); @endphp --}}
             
             {{-- 1. KEPALA UNIT PENGELOLA --}}
-            @if($isHead && $document->current_level == 2)
+            {{-- 1. KEPALA UNIT PENGELOLA --}}
+            {{-- Exception: If Manager is acting as Reviewer, skip Head view --}}
+            @if($isHead && $document->current_level == 2 && !$showAsReviewer)
                 {{-- STRICT: Only show Action Buttons if "Ready for Final Decision" --}}
                 @if(in_array($status, ['returned_to_head', 'staff_verified']))
                     <!-- Final Approval by Head -->
@@ -2158,18 +2230,29 @@
                     </div>
                 @endif
 
+                </form>
+
                 {{-- 2. STAFF REVIEWER --}}
-            @elseif($isReviewer && $status == 'assigned_review')
+            @elseif($isReviewer && in_array($status, ['assigned_review', 'pending_head']))
                 <form id="staffActionForm" method="POST" action="{{ route('unit_pengelola.submit_review', $document->id) }}"
                     style="width:100%; display:flex; gap:15px;">
                     @csrf
                     <!-- Compliance Data Injected via JS -->
                     <input type="hidden" name="compliance_checklist" id="compliance_checklist_input">
+                    
+                     {{-- STAGE LOGIC: Check if Checklist is filled (Stage 2) --}}
+                     @php
+                         $stageLabel = $checklistFilled ? "Kirim ke Kepala Unit" : "Kirim ke Staff Verifikator";
+                         $btnColor = $checklistFilled ? "btn-approve" : "btn-primary"; // Use different color?
+                     @endphp
+
                     <div class="notes-area">
                         <textarea name="catatan" class="notes-input" placeholder="Catatan Review..."></textarea>
                     </div>
                     <div class="action-btns">
-                        <button type="button" class="btn btn-approve" onclick="submitStaffAction()">Selesai Review</button>
+                        <button type="button" class="btn {{ $btnColor }}" onclick="submitStaffAction('{{ $checklistFilled ? 'head' : 'verifier' }}')">
+                            {{ $stageLabel }}
+                        </button>
                     </div>
                 </form>
 
@@ -2184,7 +2267,8 @@
                         <textarea name="catatan" class="notes-input" placeholder="Catatan Verifikasi..."></textarea>
                     </div>
                     <div class="action-btns">
-                        <button type="button" class="btn btn-approve" onclick="submitStaffAction()">Verifikasi</button>
+                        {{-- Verificator always sends back to Reviewer --}}
+                        <button type="button" class="btn btn-approve" onclick="submitStaffAction('reviewer')">Verifikasi & Kirim</button>
                     </div>
                 </form>
             @else
@@ -2394,31 +2478,40 @@
             return JSON.stringify(checklist);
         }
 
-        function submitStaffAction() {
+        function submitStaffAction(target = 'default') {
             // Validation: Ensure all Compliance Checklist items are filled
-            const selects = document.querySelectorAll('select[name^="compliance_checklist"]');
-            let allFilled = true;
+            // ONLY if target is 'head' or 'reviewer' (meaning Verification is done)
+            // If target is 'verifier', Reviewer might not fill it? 
+            // WAIT: Reviewer DOES NOT fill checklist. Verifier fills it.
+            // So Validation only needed for Verifier (target='reviewer') 
+            // OR Reviewer (Stage 2 -> target='head') if they edit it?
             
-            selects.forEach(select => {
-                if (select.value === "") {
-                    allFilled = false;
-                    select.classList.add('border-red-500'); // Visual cue if using Tailwind, or just rely on alert
-                    select.style.border = "1px solid red";
-                } else {
-                    select.style.border = ""; // Reset if fixed
-                }
-            });
-
-            if (!allFilled) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Checklist Belum Lengkap',
-                    text: 'Mohon lengkapi semua poin pada Tabel Kesesuaian (Compliance Checklist) sebelum menyelesaikan review/verifikasi.',
-                    confirmButtonColor: '#f59e0b'
-                });
-                // Scroll to checklist
-                document.querySelector('.doc-card').scrollIntoView({ behavior: 'smooth' });
-                return;
+            // Actually, Verifier fills it. So validation needed when Verifier submits.
+            // When Reviewer submits to Verifier (Stage 1), checklist is empty/disabled.
+            
+            if (target === 'reviewer' || target === 'head') {
+                 const selects = document.querySelectorAll('select[name^="compliance_checklist"]');
+                 let allFilled = true;
+                 
+                 selects.forEach(select => {
+                     if (select.value === "") {
+                         allFilled = false;
+                         select.style.border = "1px solid red";
+                     } else {
+                         select.style.border = ""; 
+                     }
+                 });
+    
+                 if (!allFilled) {
+                     Swal.fire({
+                         icon: 'warning',
+                         title: 'Checklist Belum Lengkap',
+                         text: 'Mohon lengkapi semua poin pada Tabel Kesesuaian (Compliance Checklist) sebelum melanjutkan.',
+                         confirmButtonColor: '#f59e0b'
+                     });
+                     document.querySelector('.doc-card').scrollIntoView({ behavior: 'smooth' });
+                     return;
+                 }
             }
 
             // Inject Compliance Data
@@ -2426,12 +2519,28 @@
             document.getElementById('compliance_checklist_input').value = checklistJson;
 
             const form = document.getElementById('staffActionForm');
+            
+            let title = 'Submit?';
+            let text = 'Pastikan data sudah benar.';
+            
+            if (target === 'verifier') {
+                title = 'Kirim ke Verifikator?';
+                text = 'Dokumen akan diteruskan ke Staff Verifikator untuk pengecekan checklist.';
+            } else if (target === 'reviewer') {
+                title = 'Kirim ke Reviewer?';
+                text = 'Berhasil dikirim ke Staff Reviewer.'; // Using phrasing from user request
+            } else if (target === 'head') {
+                title = 'Kirim ke Kepala Unit?';
+                text = 'Review selesai. Dokumen akan diteruskan ke Kepala Unit untuk keputusan akhir.';
+            }
+
             Swal.fire({
-                title: 'Submit?',
-                text: 'Pastikan data sudah benar.',
+                title: title,
+                text: text,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Ya, Submit'
+                confirmButtonText: 'Ya, Kirim',
+                cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
                     form.submit();
@@ -2840,6 +2949,37 @@
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.className += " active";
         }
+        // Initialize SweetAlert for Session Messages
+        document.addEventListener('DOMContentLoaded', function() {
+            @if ($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    html: `{!! implode('<br>', $errors->all()) !!}`,
+                    confirmButtonColor: '#dc2626'
+                });
+            @endif
+
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: "{{ session('success') }}",
+                    confirmButtonColor: '#16a34a',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            @endif
+
+            @if (session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Terjadi Kesalahan',
+                    text: "{{ session('error') }}",
+                    confirmButtonColor: '#dc2626'
+                });
+            @endif
+        });
     </script>
 </body>
 

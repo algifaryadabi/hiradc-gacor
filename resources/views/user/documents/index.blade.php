@@ -982,8 +982,11 @@
                     </select>
                 </div>
 
-                <!-- Grid View -->
-                <div class="doc-grid" id="gridView">
+                <!-- Activity Banner -->
+        <div id="activity-banner-container"></div>
+
+        <!-- Grid View -->
+        <div class="doc-grid" id="gridView">
                     @foreach($documents as $doc)
                         @php
                             // Determine Contexts (Normal or Split Revision)
@@ -1328,7 +1331,53 @@
                 }
             });
         }
-    </script>
+
+    // --- Concurrent Activity Checker ---
+    function checkUnitActivity() {
+        fetch('{{ route("activity.check") }}')
+            .then(res => res.json())
+            .then(users => {
+                const bannerContainer = document.getElementById('activity-banner-container');
+                if (!bannerContainer) return;
+
+                if (users.length === 0) {
+                    bannerContainer.innerHTML = ''; // Clear if no activity
+                    return;
+                }
+
+                // Build Message
+                let messages = users.map(u => {
+                    if (u.action === 'create') return `<b>${u.name}</b> sedang membuat form baru.`;
+                    if (u.action === 'edit') {
+                         const statusLabel = u.doc_status ? `(${u.doc_status})` : '';
+                         return `<b>${u.name}</b> sedang mengedit form "${u.doc_title || '...'}" ${statusLabel}.`;
+                    }
+                    return '';
+                }).filter(m => m).join('<br>');
+
+                if(messages) {
+                    bannerContainer.innerHTML = `
+                        <div style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 12px;">
+                            <i class="fas fa-info-circle" style="font-size: 18px; margin-top: 2px;"></i>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">Aktivitas Rekan Unit:</div>
+                                <div style="font-size: 14px;">${messages}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                     bannerContainer.innerHTML = '';
+                }
+            })
+            .catch(e => console.error('Activity check failed', e));
+    }
+
+    // Poll every 10s
+    setInterval(checkUnitActivity, 10000);
+    // Initial check
+    document.addEventListener('DOMContentLoaded', checkUnitActivity);
+
+</script>
 </body>
 
 </html>

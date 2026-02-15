@@ -257,29 +257,52 @@
                             <h3>Akses Pembuatan Form (PIC)</h3>
                         </div>
                         
-                        <div style="margin-bottom: 24px; padding: 16px; background: var(--primary-50); border-radius: var(--radius-lg); border: 1px solid var(--primary-200); display: flex; align-items: center; gap: 12px;">
+                        <div style="margin-bottom: 24px; padding: 16px; background: var(--primary-50); border-radius: var(--radius-lg); border: 1px solid var(--primary-200); display: flex; flex-direction: column; gap: 8px;">
                             <div style="font-weight: 600; color: var(--primary-dark);">PIC Saat Ini:</div>
                             <span id="currentPICName" style="font-size: 1.125rem; font-weight: 800; color: var(--primary);">
-                                {{ $currentPIC ? $currentPIC->nama_user : 'Belum ada PIC yang ditugaskan' }}
+                                {{ $currentPIC && $currentPIC->count() > 0 ? $currentPIC->pluck('nama_user')->implode(', ') : 'Belum ada PIC yang ditugaskan' }}
                             </span>
                         </div>
                         
-                        <div style="display: flex; gap: 15px; align-items: flex-end; max-width: 600px;">
-                            <div style="flex: 1;">
+                        <div style="display: flex; gap: 15px; align-items: flex-start; max-width: 800px; flex-wrap: wrap;">
+                            @php
+                                $currentIds = $currentPIC ? $currentPIC->pluck('id_user')->toArray() : [];
+                                $pic1 = $currentIds[0] ?? null;
+                                $pic2 = $currentIds[1] ?? null;
+                            @endphp
+
+                            <!-- PIC 1 -->
+                            <div style="flex: 1; min-width: 250px;">
                                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">
-                                    Pilih Staff Baru
+                                    PIC Utama
                                 </label>
-                                <select id="picDropdown" class="form-control">
+                                <select id="pic1" class="form-control">
                                     <option value="">-- Pilih Staff --</option>
                                     @foreach($staffList as $staff)
-                                        <option value="{{ $staff->id_user }}" {{ $currentPIC && $currentPIC->id_user == $staff->id_user ? 'selected' : '' }}>
+                                        <option value="{{ $staff->id_user }}" {{ $pic1 == $staff->id_user ? 'selected' : '' }}>
                                             {{ $staff->nama_user }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
-                            <button onclick="updatePIC(event)" class="btn-primary">
-                                <i class="fas fa-save" style="margin-right: 6px;"></i> Update PIC
+
+                            <!-- PIC 2 -->
+                            <div style="flex: 1; min-width: 250px;">
+                                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">
+                                    PIC Kedua (Opsional)
+                                </label>
+                                <select id="pic2" class="form-control">
+                                    <option value="">-- Tidak Ada --</option>
+                                    @foreach($staffList as $staff)
+                                        <option value="{{ $staff->id_user }}" {{ $pic2 == $staff->id_user ? 'selected' : '' }}>
+                                            {{ $staff->nama_user }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <button onclick="updatePIC(event)" class="btn-primary" style="height: fit-content; margin-top: 29px;">
+                                <i class="fas fa-arrow-up" style="margin-right: 6px;"></i> Upgrade PIC
                             </button>
                         </div>
                     </div>
@@ -560,14 +583,26 @@
         }
 
         function updatePIC(e) {
-            const staffId = document.getElementById('picDropdown').value;
+            const pic1 = document.getElementById('pic1').value;
+            const pic2 = document.getElementById('pic2').value;
             
-            if (!staffId) {
-                Swal.fire({ icon:'warning', title:'Perhatian', text:'Silakan pilih staff terlebih dahulu', confirmButtonColor: '#c41e3a' });
+            // Combine and remove duplicates/empty
+            let selectedOptions = [pic1, pic2].filter(id => id);
+            selectedOptions = [...new Set(selectedOptions)];
+
+            if (selectedOptions.length === 0) {
+                Swal.fire({ icon:'warning', title:'Perhatian', text:'Silakan pilih minimal satu PIC', confirmButtonColor: '#c41e3a' });
                 return;
             }
 
-            if(e && e.target) { e.target.disabled = true; e.target.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...'; }
+            if(e && e.target) {
+                const originalContent = e.target.innerHTML;
+                e.target.disabled = true; 
+                e.target.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...'; 
+                
+                // Save reference for restoration
+                e.target.dataset.original = originalContent;
+            }
 
             fetch('{{ route("approver.update_pic") }}', {
                 method: 'POST',
@@ -575,21 +610,29 @@
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({ staff_id: staffId })
+                body: JSON.stringify({ staff_ids: selectedOptions })
             })
             .then(response => response.json())
             .then(data => {
-                if(e && e.target) { e.target.disabled = false; e.target.innerHTML = '<i class="fas fa-save" style="margin-right: 6px;"></i> Update PIC'; }
+                const btn = e && e.target;
+                if(btn) { 
+                    btn.disabled = false; 
+                    btn.innerHTML = btn.dataset.original || '<i class="fas fa-arrow-up" style="margin-right: 6px;"></i> Upgrade PIC'; 
+                }
                 
                 if (data.success) {
                     document.getElementById('currentPICName').textContent = data.staff_name;
-                    Swal.fire({ icon: 'success', title: 'PIC Updated', text: `${data.staff_name} sekarang memiliki akses pembuatan form.`, confirmButtonColor: '#c41e3a' });
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: `PIC berhasil diperbarui: ${data.staff_name}`, confirmButtonColor: '#c41e3a' });
                 } else {
                     Swal.fire({ icon: 'error', title: 'Gagal', text: data.message, confirmButtonColor: '#c41e3a' });
                 }
             })
             .catch(error => {
-                if(e && e.target) { e.target.disabled = false; e.target.innerHTML = '<i class="fas fa-save" style="margin-right: 6px;"></i> Update PIC'; }
+                const btn = e && e.target;
+                if(btn) { 
+                    btn.disabled = false; 
+                    btn.innerHTML = btn.dataset.original || '<i class="fas fa-arrow-up" style="margin-right: 6px;"></i> Upgrade PIC'; 
+                }
                 console.error('Error:', error);
                 Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan sistem.', confirmButtonColor: '#c41e3a' });
             });

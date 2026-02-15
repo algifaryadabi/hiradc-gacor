@@ -31,12 +31,14 @@ class User extends Authenticatable
         'can_create_documents',
         'is_reviewer',
         'is_verifier',
+        'assigned_categories',
     ];
 
     protected $casts = [
         'can_create_documents' => 'boolean',
         'is_reviewer' => 'boolean',
         'is_verifier' => 'boolean',
+        'assigned_categories' => 'array',
     ];
 
     protected $hidden = [

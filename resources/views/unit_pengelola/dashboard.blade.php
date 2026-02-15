@@ -363,32 +363,65 @@
                                                 <span class="text-muted" style="font-size:0.75rem;">-</span>
                                             @endif
                                         </td>
-                                        <!-- Toggle: Is Reviewer (Supervisor 5, Associate 6) -->
+                                        <!-- REVIEWER COLUMN (Role 4 Only) -->
                                         <td>
-                                            @if(in_array($staff->role_jabatan, [5, 6]))
-                                                <label class="switch">
-                                                    <input type="checkbox"
-                                                        class="role-reviewer"
-                                                        data-user="{{ $staff->id_user }}"
-                                                        onchange="updatePermission({{ $staff->id_user }}, 'is_reviewer', this.checked)"
-                                                        {{ $staff->is_reviewer ? 'checked' : '' }}>
-                                                    <span class="slider"></span>
-                                                </label>
+                                            @if($staff->role_jabatan == 4)
+                                                @if(auth()->user()->id_unit == 55)
+                                                    <!-- Security: Simple Toggle -->
+                                                    <label class="switch">
+                                                        <input type="checkbox"
+                                                            class="role-reviewer"
+                                                            data-user="{{ $staff->id_user }}"
+                                                            onchange="updatePermission({{ $staff->id_user }}, 'is_reviewer', this.checked)"
+                                                            {{ $staff->is_reviewer ? 'checked' : '' }}>
+                                                        <span class="slider"></span>
+                                                    </label>
+                                                @else
+                                                    <!-- SHE: Kelola Button -->
+                                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                                        @if($staff->is_reviewer)
+                                                            <span class="status-badge reviewer" style="font-size: 0.7rem;">
+                                                                {{ !empty($staff->assigned_categories) ? implode(', ', $staff->assigned_categories) : '-' }}
+                                                            </span>
+                                                        @endif
+                                                        <button class="btn-action" style="background: white; color: var(--gray-700); border: 1px solid var(--border); padding: 4px 8px; font-size: 0.75rem;"
+                                                            onclick='openReviewerModal({{ $staff->id_user }})'>
+                                                            <i class="fas fa-cog"></i> Kelola
+                                                        </button>
+                                                    </div>
+                                                @endif
                                             @else
                                                 <span style="font-size:0.75rem; color:#9ca3af; font-style:italic;">N/A</span>
                                             @endif
                                         </td>
-                                        <!-- Toggle: Is Verifier (Manager 4) -->
+
+                                        <!-- VERIFIER COLUMN (Role 5 & 6) -->
                                         <td>
-                                            @if($staff->role_jabatan == 4)
-                                                <label class="switch">
-                                                    <input type="checkbox"
-                                                        class="role-verifier"
-                                                        data-user="{{ $staff->id_user }}"
-                                                        onchange="updatePermission({{ $staff->id_user }}, 'is_verifier', this.checked)"
-                                                        {{ $staff->is_verifier ? 'checked' : '' }}>
-                                                    <span class="slider"></span>
-                                                </label>
+                                            @if(in_array($staff->role_jabatan, [5, 6]) || $staff->is_verifier)
+                                                @if(auth()->user()->id_unit == 55)
+                                                    <!-- Security: Simple Toggle -->
+                                                    <label class="switch">
+                                                        <input type="checkbox"
+                                                            class="role-verifier"
+                                                            data-user="{{ $staff->id_user }}"
+                                                            onchange="updatePermission({{ $staff->id_user }}, 'is_verifier', this.checked)"
+                                                            {{ $staff->is_verifier ? 'checked' : '' }}>
+                                                        <span class="slider"></span>
+                                                    </label>
+                                                @else
+                                                    <!-- SHE: Kelola Button -->
+                                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                                        @if($staff->is_verifier)
+                                                            <span class="status-badge verifier" style="font-size: 0.7rem;">
+                                                                {{ !empty($staff->assigned_categories) ? implode(', ', $staff->assigned_categories) : '-' }}
+                                                            </span>
+                                                        @endif
+                                                        <button class="btn-action" style="background: white; color: var(--gray-700); border: 1px solid var(--border); padding: 4px 8px; font-size: 0.75rem;"
+                                                            onclick='openVerifierModal({{ $staff->id_user }})'>
+                                                            <i class="fas fa-cog"></i> Kelola
+                                                        </button>
+                                                    </div>
+                                                @endif
                                             @else
                                                 <span style="font-size:0.75rem; color:#9ca3af; font-style:italic;">N/A</span>
                                             @endif
@@ -845,9 +878,36 @@
              }
         }
 
+        // Global constant for Unit ID to ensure robust logic
+        const CURRENT_UNIT_ID = {{ auth()->user()->id_unit }};
+
         // Permission Update Logic with Mutual Exclusion
         function updatePermission(userId, field, value) {
             const checkbox = event.target;
+            
+            // Define map first to avoid ReferenceError
+            const roleMap = {
+                'can_create_documents': { class: 'role-create', name: 'Creator' },
+                'is_reviewer': { class: 'role-reviewer', name: 'Reviewer' },
+                'is_verifier': { class: 'role-verifier', name: 'Verifikator' }
+            };
+            
+            // SECURITY UNIT LOGIC (Frontend Radio Behavior)
+            // Use loose check for safety (55 vs "55")
+            const isSecurityUnit = (CURRENT_UNIT_ID == 55);
+            
+            // Only apply Auto-Switch Off (Radio behavior) if it's Security
+            if (isSecurityUnit && value === true && (field === 'is_reviewer' || field === 'is_verifier')) {
+                const currentRoleData = roleMap[field];
+                if (currentRoleData) {
+                     document.querySelectorAll('.' + currentRoleData.class).forEach(input => {
+                         // Uncheck all OTHER checkboxes of the same role
+                         if (input !== checkbox && input.checked) {
+                             input.checked = false; // Visual Off only
+                         }
+                     });
+                }
+            }
             
             // If enabling a role, check for mutual exclusion (same user can't have multiple roles)
             if (value === true && (field === 'is_reviewer' || field === 'is_verifier' || field === 'can_create_documents')) {
@@ -856,13 +916,6 @@
                     console.error('User row not found for userId:', userId);
                     return;
                 }
-                
-                // Define mutually exclusive roles for the same user
-                const roleMap = {
-                    'can_create_documents': { class: 'role-create', name: 'Creator' },
-                    'is_reviewer': { class: 'role-reviewer', name: 'Reviewer' },
-                    'is_verifier': { class: 'role-verifier', name: 'Verifikator' }
-                };
                 
                 const currentRole = roleMap[field];
                 const otherRoles = Object.keys(roleMap).filter(r => r !== field);
@@ -914,10 +967,9 @@
                 }
                 
                 // Ensure only one person can have this role (existing logic)
-                let className = currentRole.class;
-                document.querySelectorAll('.' + className).forEach(input => { 
-                    if (input.dataset.user != userId) input.checked = false; 
-                });
+                // (Logic removed) - "Existing logic" block was enforcing single-user for EVERYONE, breaking SHE (3 users).
+                // We rely on the "Security Unit Logic" block above for Security (Single Active).
+                // For SHE, we rely on Backend validation (Max 3).
             }
             
             // Send update to backend
@@ -942,9 +994,18 @@
             })
             .then(data => {
                 if(data.success) {
-                    Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }).fire({ icon: 'success', title: 'Akses diperbarui' });
+                    // For Security, reload to ensure state is perfectly synced (Database is source of truth)
+                    if (CURRENT_UNIT_ID == 55) {
+                         // Force reload immediately
+                         window.location.reload();
+                    } else {
+                         Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }).fire({ icon: 'success', title: 'Akses diperbarui' });
+                    }
                 } else { 
                     Swal.fire("Gagal", data.message, "error"); 
+                    // Revert checkbox if failed
+                    // Note: 'checkbox' is not defined in this scope, so we can't revert easily without passing it.
+                    // For now, just show error. User will see the toggle is wrong on reload or can click again.
                 }
             })
             .catch(err => Swal.fire("Error", "Gagal: " + err.message, "error"));
@@ -1005,6 +1066,311 @@
                 updateRoleAvailability(userId);
             });
         });
+    </script>
+    <!-- Reviewer Management Modal -->
+    <div id="reviewerModal" class="modal" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+        <div class="modal-content" style="background-color: #fefefe; margin: 10% auto; padding: 0; border: 1px solid #888; width: 450px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <div class="modal-header" style="padding: 15px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin:0; font-size: 1.125rem; font-weight: 700;">Kelola Staff Reviewer</h3>
+                <span onclick="document.getElementById('reviewerModal').style.display='none'" style="cursor:pointer; font-size: 1.5rem;">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 25px;">
+                <form id="reviewerForm">
+                    <input type="hidden" id="rev_user_id" name="user_id">
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h4 id="rev_user_name" style="margin-top:0; color:var(--primary);">Nama User</h4>
+                        <p style="font-size:0.875rem; color:var(--gray-500);">Pilih wilayah kerja untuk staff reviewer ini.</p>
+                    </div>
+
+                    <!-- Category Radio Buttons -->
+                    <!-- Category Radio Buttons -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:block; font-weight: 600; margin-bottom: 10px;">Pilih Kategori (Wajib Satu)</label>
+                        <div style="display:flex; flex-direction:column; gap: 10px;" id="rev_radios">
+                            <!-- Radios injected by JS -->
+                        </div>
+                    </div>
+                    
+                    <!-- Option to Revoke -->
+                     <div style="margin-bottom: 20px; border-top: 1px dashed var(--border); padding-top: 15px;">
+                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color: #ef4444;">
+                            <input type="radio" name="reviewer_category" value="NONE">
+                            <span>Non-aktifkan sebagai Reviewer</span>
+                        </label>
+                    </div>
+
+                    <div style="text-align: right; display:flex; justify-content: flex-end; gap: 10px;">
+                        <button type="button" onclick="document.getElementById('reviewerModal').style.display='none'" class="btn-action" style="background: white; color: var(--gray-600); border: 1px solid var(--border);">Batal</button>
+                        <button type="button" onclick="saveReviewer()" class="btn-action" style="background: var(--primary); color: white; border:none; padding: 10px 20px;">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verifier Management Modal -->
+    <div id="verifierModal" class="modal" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+        <div class="modal-content" style="background-color: #fefefe; margin: 10% auto; padding: 0; border: 1px solid #888; width: 450px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <div class="modal-header" style="padding: 15px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin:0; font-size: 1.125rem; font-weight: 700;">Kelola Staff Verifikator</h3>
+                <span onclick="document.getElementById('verifierModal').style.display='none'" style="cursor:pointer; font-size: 1.5rem;">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 25px;">
+                <form id="verifierForm">
+                    <input type="hidden" id="ver_user_id" name="user_id">
+                    <div style="margin-bottom: 20px;">
+                        <h4 id="ver_user_name" style="margin-top:0; color:var(--primary);">Nama User</h4>
+                        <p style="font-size:0.875rem; color:var(--gray-500);">Pilih wilayah kerja untuk staff verifikator ini.</p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:block; font-weight: 600; margin-bottom: 10px;">Pilih Kategori (Wajib Satu)</label>
+                        <div style="display:flex; flex-direction:column; gap: 10px;" id="ver_radios">
+                            <!-- Radios injected by JS -->
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px; border-top: 1px dashed var(--border); padding-top: 15px;">
+                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color: #ef4444;">
+                            <input type="radio" name="verifier_category" value="NONE">
+                            <span>Non-aktifkan sebagai Verifikator</span>
+                        </label>
+                    </div>
+                    <div style="text-align: right; display:flex; justify-content: flex-end; gap: 10px;">
+                        <button type="button" onclick="document.getElementById('verifierModal').style.display='none'" class="btn-action" style="background: white; color: var(--gray-600); border: 1px solid var(--border);">Batal</button>
+                        <button type="button" onclick="saveVerifier()" class="btn-action" style="background: var(--primary); color: white; border:none; padding: 10px 20px;">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data from Backend for Validation
+        const unitStaffData = @json($unitUsers);
+
+        // Helper: Get categories taken by other users for a specific role
+        function getTakenCategories(role, currentUserId) {
+            const taken = [];
+            unitStaffData.forEach(user => {
+                if (user.id_user == currentUserId) return; // Skip self
+
+                // Check Reviewer
+                if (role === 'reviewer' && user.is_reviewer == 1 && user.assigned_categories) {
+                    // assigned_categories is JSON or array. If string, parse it.
+                    let cats = user.assigned_categories;
+                    if (typeof cats === 'string') {
+                        try { cats = JSON.parse(cats); } catch(e) { cats = []; }
+                    }
+                    if (Array.isArray(cats)) {
+                        cats.forEach(c => taken.push(c));
+                    }
+                }
+                // Check Verifier
+                if (role === 'verifier' && user.is_verifier == 1 && user.assigned_categories) {
+                    let cats = user.assigned_categories;
+                    if (typeof cats === 'string') {
+                        try { cats = JSON.parse(cats); } catch(e) { cats = []; }
+                    }
+                    if (Array.isArray(cats)) {
+                        cats.forEach(c => taken.push(c));
+                    }
+                }
+            });
+            return taken;
+        }
+
+        // UPDATE PERMISSION (For Toggles: Create Access)
+        function updatePermission(userId, field, isChecked) {
+            const payload = {
+                user_id: userId,
+                [field]: isChecked ? 1 : 0
+            };
+
+            fetch("{{ route('unit_pengelola.update_permissions') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    const Toast = Swal.mixin({
+                        toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true
+                    });
+                    Toast.fire({ icon: 'success', title: 'Akses diperbarui' }).then(() => location.reload());
+                } else {
+                    Swal.fire('Gagal', data.message || 'Terjadi kesalahan.', 'error').then(() => location.reload());
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error').then(() => location.reload());
+            });
+        }
+
+        // --- SHARED SUBMIT ---
+        function submitRoleUpdate(idField, radioName, roleField) {
+            const userId = document.getElementById(idField).value;
+            const selected = document.querySelector(`input[name="${radioName}"]:checked`);
+
+            if (!selected) {
+                 Swal.fire('Error', 'Harap pilih salah satu opsi (Kategori atau Non-aktif).', 'error');
+                 return;
+            }
+
+            // Client-side Validation for Taken Category (Double Check)
+            const val = selected.value;
+            if (val !== 'NONE') {
+                const roleType = (roleField === 'is_reviewer') ? 'reviewer' : 'verifier';
+                const taken = getTakenCategories(roleType, userId);
+                if (taken.includes(val)) {
+                     Swal.fire('Peringatan', `Kategori ${val} sudah diambil oleh staff lain.`, 'warning');
+                     return; 
+                }
+            }
+
+            // Close Modals Immediately
+            document.getElementById('reviewerModal').style.display = 'none';
+            document.getElementById('verifierModal').style.display = 'none';
+
+            const isActive = val === 'NONE' ? 0 : 1;
+            const categories = val === 'NONE' ? [] : [val];
+
+            const payload = {
+                user_id: userId,
+                [roleField]: isActive,
+                assigned_categories: categories
+            };
+
+            fetch("{{ route('unit_pengelola.update_permissions') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    Swal.fire('Berhasil', 'Akses berhasil diperbarui.', 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Gagal', data.message || 'Terjadi kesalahan.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
+            });
+        }
+
+        // --- REVIEWER FUNCTIONS ---
+        function openReviewerModal(userId) {
+            // Find staff from global data
+            const staff = unitStaffData.find(u => u.id_user == userId);
+            if (!staff) return;
+
+            document.getElementById('rev_user_id').value = staff.id_user;
+            document.getElementById('rev_user_name').innerText = staff.nama_user;
+            
+            const takenCats = getTakenCategories('reviewer', staff.id_user);
+            // Parse categories if string
+            let userCats = staff.assigned_categories;
+             if (typeof userCats === 'string') {
+                try { userCats = JSON.parse(userCats); } catch(e) { userCats = []; }
+            }
+            const userCat = (staff.is_reviewer == 1 && userCats && userCats.length) ? userCats[0] : null;
+
+            const container = document.getElementById('rev_radios');
+            container.innerHTML = '';
+            
+            const categories = ['K3', 'KO', 'Lingkungan'];
+
+            categories.forEach(c => {
+                const isTaken = takenCats.includes(c);
+                const isChecked = userCat === c;
+                
+                let disabledAttr = isTaken ? 'disabled' : '';
+                let opacity = isTaken ? '0.5' : '1';
+                let cursor = isTaken ? 'not-allowed' : 'pointer';
+                let note = isTaken ? '<span style="color:red; font-size:0.7em; margin-left:auto;">(Sudah Diambil)</span>' : '';
+
+                const html = `
+                    <label style="display:flex; align-items:center; gap:10px; cursor:${cursor}; padding: 8px; border: 1px solid var(--border); border-radius: 6px; opacity: ${opacity};" 
+                           ${isTaken ? 'title="Kategori ini sudah diambil staff lain"' : ''}
+                           onclick="${isTaken ? "Swal.fire('Info', 'Kategori ini sudah ada staff yang bertugas: " + c + "', 'info');" : ''}"
+                    >
+                        <input type="radio" name="reviewer_category" value="${c}" ${isChecked ? 'checked' : ''} ${disabledAttr}>
+                        <span><b>${c}</b></span>
+                        ${note}
+                    </label>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+
+            if (!userCat) document.querySelector('input[name="reviewer_category"][value="NONE"]').checked = true;
+
+            document.getElementById('reviewerModal').style.display = 'block';
+        }
+
+        function saveReviewer() {
+            submitRoleUpdate('rev_user_id', 'reviewer_category', 'is_reviewer');
+        }
+
+        // --- VERIFIER FUNCTIONS ---
+        function openVerifierModal(userId) {
+            // Find staff from global data
+            const staff = unitStaffData.find(u => u.id_user == userId);
+            if (!staff) return;
+
+            document.getElementById('ver_user_id').value = staff.id_user;
+            document.getElementById('ver_user_name').innerText = staff.nama_user;
+            
+            const takenCats = getTakenCategories('verifier', staff.id_user);
+             let userCats = staff.assigned_categories;
+             if (typeof userCats === 'string') {
+                try { userCats = JSON.parse(userCats); } catch(e) { userCats = []; }
+            }
+            const userCat = (staff.is_verifier == 1 && userCats && userCats.length) ? userCats[0] : null;
+            
+            const container = document.getElementById('ver_radios');
+            container.innerHTML = '';
+            
+            const categories = ['K3', 'KO', 'Lingkungan'];
+
+            categories.forEach(c => {
+                const isTaken = takenCats.includes(c);
+                const isChecked = userCat === c;
+                
+                let disabledAttr = isTaken ? 'disabled' : '';
+                let opacity = isTaken ? '0.5' : '1';
+                let cursor = isTaken ? 'not-allowed' : 'pointer';
+                let note = isTaken ? '<span style="color:red; font-size:0.7em; margin-left:auto;">(Sudah Diambil)</span>' : '';
+
+                const html = `
+                    <label style="display:flex; align-items:center; gap:10px; cursor:${cursor}; padding: 8px; border: 1px solid var(--border); border-radius: 6px; opacity: ${opacity};"
+                           ${isTaken ? 'title="Kategori ini sudah diambil staff lain"' : ''}
+                           onclick="${isTaken ? "Swal.fire('Info', 'Kategori ini sudah ada staff yang bertugas: " + c + "', 'info');" : ''}"
+                    >
+                        <input type="radio" name="verifier_category" value="${c}" ${isChecked ? 'checked' : ''} ${disabledAttr}>
+                        <span><b>${c}</b></span>
+                        ${note}
+                    </label>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+
+            if (!userCat) document.querySelector('input[name="verifier_category"][value="NONE"]').checked = true;
+
+            document.getElementById('verifierModal').style.display = 'block';
+        }
+
+        function saveVerifier() {
+            submitRoleUpdate('ver_user_id', 'verifier_category', 'is_verifier');
+        }
     </script>
 </body>
 

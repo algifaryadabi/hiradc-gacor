@@ -503,232 +503,69 @@
                 </p>
             </div>
 
-            @php
-                // Categorize documents
-                $allDocs = $documents;
-                $user = Auth::user();
-
-                // Filter based on unit-specific status
-                if ($user->id_unit == 55) {
-                    // Security staff
-                    $reviewDocs = $documents->filter(fn($d) => $d->status_security == 'assigned_review');
-                    $keputusanAkhirDocs = $documents->filter(fn($d) => $d->status_security == 'assigned_approval');
-                    $approveDocs = $documents->filter(fn($d) => in_array($d->status_security, ['approved', 'published']) || $d->current_level > 2);
-                } elseif ($user->id_unit == 56) {
-                    // SHE staff
-                    $reviewDocs = $documents->filter(fn($d) => $d->status_she == 'assigned_review');
-                    $keputusanAkhirDocs = $documents->filter(fn($d) => $d->status_she == 'assigned_approval');
-                    $approveDocs = $documents->filter(fn($d) => in_array($d->status_she, ['approved', 'published']) || $d->current_level > 2);
-                } else {
-                    // Fallback to generic level2_status
-                    $reviewDocs = $documents->filter(fn($d) => $d->level2_status == 'assigned_review');
-                    $keputusanAkhirDocs = $documents->filter(fn($d) => $d->level2_status == 'assigned_approval');
-                    $approveDocs = $documents->filter(fn($d) => $d->level2_status == 'approved' || ($d->current_level > 2 && $d->status != 'pending_level2'));
-                }
-
-                // Get ALL documents where this staff is assigned as reviewer OR verificator
-                // This includes both pending and completed reviews/verifications
-                if ($user->id_unit == 55) {
-                    // Security staff
-                    if ($user->role_jabatan == 4) { // Verifikator
-                        $completedReviews = \App\Models\Document::where('security_verificator_id', $user->id_user)
-                            ->where('current_level', '>=', 2)
-                            ->orderBy('updated_at', 'desc')
-                            ->get();
-                    } else { // Reviewer
-                        $completedReviews = \App\Models\Document::where('security_reviewer_id', $user->id_user)
-                            ->where('current_level', '>=', 2)
-                            ->orderBy('updated_at', 'desc')
-                            ->get();
-                    }
-
-                } elseif ($user->id_unit == 56) {
-                    // SHE staff
-                    if ($user->role_jabatan == 4) { // Verifikator
-                        $completedReviews = \App\Models\Document::where('she_verificator_id', $user->id_user)
-                            ->where('current_level', '>=', 2)
-                            ->orderBy('updated_at', 'desc')
-                            ->get();
-                    } else { // Reviewer
-                        $completedReviews = \App\Models\Document::where('she_reviewer_id', $user->id_user)
-                            ->where('current_level', '>=', 2)
-                            ->orderBy('updated_at', 'desc')
-                            ->get();
-                    }
-                } else {
-                    $completedReviews = collect(); // Empty collection for other roles
-                }
-
-                // Separate into completed (not pending) for history display
-                $historyReviews = $completedReviews->filter(function ($d) use ($user) {
-                    if ($user->id_unit == 55) {
-                        // For Verifikator: Check if approved/returned (not assigned_approval)
-                        // For Reviewer: Check if passed review (not assigned_review)
-                        if ($user->role_jabatan == 4) {
-                            return $d->status_security != 'assigned_approval' && !empty($d->status_security) && $d->status_security != 'assigned_review';
-                            // Logic: If status is 'assigned_review', it's active for reviewer, effectively 'past' for verificator? No.
-                            // Verificator acts AFTER reviewer.
-                            // If status is 'assigned_approval', it's PENDING for verificator.
-                            // If status is 'staff_verified', 'returned_to_head', 'approved' -> COMPLETED by verificator.
-                        } else {
-                            return $d->status_security != 'assigned_review' && !empty($d->status_security);
-                        }
-                    } elseif ($user->id_unit == 56) {
-                        if ($user->role_jabatan == 4) {
-                            // Verifikator Logic
-                            return $d->status_she != 'assigned_approval' && !empty($d->status_she) && $d->status_she != 'assigned_review';
-                        } else {
-                            return $d->status_she != 'assigned_review' && !empty($d->status_she);
-                        }
-                    }
-                    return false;
-                });
-            @endphp
-
             <!-- Category Filter Cards -->
-            <div class="category-filters">
-                @if(in_array(Auth::user()->role_jabatan, [5, 6]))
-                    <!-- Review category only for Staff Reviewer (Band IV/V) -->
-                    <div class="category-card card-blue active" onclick="showMainDocList(); selectCategory('review', this)">
-                        <div>
-                            <h3><i class="fas fa-edit"></i> Perlu Review</h3>
-                            <div class="count">{{ $reviewDocs->count() }}</div>
-                        </div>
-                        <i class="fas fa-chevron-right" style="color:#bfdbfe; font-size:24px;"></i>
+            <div class="category-filters" style="grid-template-columns: repeat(3, 1fr);">
+                <!-- Card 1: Inbox (Dari Kepala Unit) -->
+                <a href="{{ route('unit_pengelola.staff.index', ['filter' => 'inbox']) }}" 
+                   class="category-card card-blue {{ $filter == 'inbox' ? 'active' : '' }}" 
+                   style="text-decoration: none;">
+                    <div>
+                        <h3><i class="fas fa-inbox"></i> Inbox Review <br><small style="font-size:11px; color:#64748b;">(Dari Kepala Unit)</small></h3>
+                        <div class="count">{{ $countInbox }}</div>
                     </div>
+                    <i class="fas fa-chevron-right" style="color:#bfdbfe; font-size:24px;"></i>
+                </a>
 
-                    <!-- History Review Card -->
-                    <div class="category-card card-green" onclick="toggleHistoryCard()">
-                        <div>
-                            <h3><i class="fas fa-history"></i> History Review</h3>
-                            <div class="count">{{ $historyReviews->count() }}</div>
-                        </div>
-                        <i class="fas fa-chevron-right" style="color:#bbf7d0; font-size:24px;"></i>
+                <!-- Card 2: Outbox (Di Verifikator) -->
+                <a href="{{ route('unit_pengelola.staff.index', ['filter' => 'verification']) }}" 
+                   class="category-card card-blue {{ $filter == 'verification' ? 'active' : '' }}"
+                   style="text-decoration: none;">
+                    <div>
+                        <h3><i class="fas fa-paper-plane"></i> Menunggu Verifikasi <br><small style="font-size:11px; color:#64748b;">(Sedang di Verifikator)</small></h3>
+                        <div class="count">{{ $countVerif }}</div>
                     </div>
-                @endif
+                    <i class="fas fa-chevron-right" style="color:#bfdbfe; font-size:24px;"></i>
+                </a>
 
-                @if(Auth::user()->role_jabatan == 4)
-                    <!-- Keputusan Akhir category only for Staff Verifikator (Band III) -->
-                    <div class="category-card card-blue active" onclick="selectCategory('keputusan_akhir', this)">
-                        <div>
-                            <h3><i class="fas fa-gavel"></i> Keputusan Akhir</h3>
-                            <div class="count">{{ $keputusanAkhirDocs->count() }}</div>
-                        </div>
-                        <i class="fas fa-chevron-right" style="color:#bfdbfe; font-size:24px;"></i>
+                <!-- Card 3: History -->
+                <a href="{{ route('unit_pengelola.staff.index', ['filter' => 'history']) }}" 
+                   class="category-card card-green {{ $filter == 'history' ? 'active' : '' }}"
+                   style="text-decoration: none;">
+                    <div>
+                        <h3><i class="fas fa-history"></i> History Review <br><small style="font-size:11px; color:#64748b;">(Selesai Direview)</small></h3>
+                        <div class="count">{{ $countHistory }}</div>
                     </div>
-
-                    <!-- History Review Card for Verifikator -->
-                    <div class="category-card card-green" onclick="toggleHistoryCard()">
-                        <div>
-                            <h3><i class="fas fa-history"></i> History Verifikator</h3>
-                            <div class="count">{{ $historyReviews->count() }}</div>
-                        </div>
-                        <i class="fas fa-chevron-right" style="color:#bbf7d0; font-size:24px;"></i>
-                    </div>
-                @endif
+                    <i class="fas fa-chevron-right" style="color:#bbf7d0; font-size:24px;"></i>
+                </a>
             </div>
 
-            <!-- History Review Expandable Section -->
-            <div id="historyReviewSection" style="display:none; margin-bottom:30px;">
-                <div style="background:white; border-radius:12px; padding:25px; border:2px solid #10b981;">
-                    <div style="margin-bottom:20px;">
-                        <h2 style="font-size:18px; font-weight:700; color:#10b981; margin:0;">
-                            <i class="fas fa-history"></i>
-                            @if(Auth::user()->role_jabatan == 4)
-                                Riwayat Verifikasi
-                            @else
-                                Riwayat Review Dokumen
-                            @endif
-                        </h2>
-                    </div>
 
-
-                    @if($historyReviews->count() > 0)
-                        <div style="display:flex; flex-direction:column; gap:12px;">
-                            @foreach($historyReviews as $doc)
-                                <div
-                                    style="background:#f8f9fa; padding:15px; border-radius:8px; display:grid; grid-template-columns:60px 1fr auto; gap:15px; align-items:center;">
-                                    <!-- Date -->
-                                    <div style="text-align:center; padding:8px; background:white; border-radius:6px;">
-                                        <div style="font-size:18px; font-weight:700; color:#10b981; line-height:1;">
-                                            {{ $doc->updated_at->format('d') }}
-                                        </div>
-                                        <div style="font-size:10px; color:#666; text-transform:uppercase;">
-                                            {{ $doc->updated_at->format('M Y') }}
-                                        </div>
-                                    </div>
-
-                                    <!-- Info -->
-                                    <div>
-                                        <h4 style="font-size:14px; font-weight:600; color:#333; margin-bottom:5px;">
-                                            {{ $doc->judul_dokumen ?? $doc->kolom2_kegiatan }}
-                                        </h4>
-                                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                                            <span
-                                                style="font-size:11px; color:#666; background:#e5e7eb; padding:3px 8px; border-radius:12px;">
-                                                <i class="fas fa-building"></i> {{ $doc->unit->nama_unit ?? '-' }}
-                                            </span>
-                                            <span
-                                                style="font-size:11px; color:#059669; background:#d1fae5; padding:3px 8px; border-radius:12px; font-weight:600;">
-                                                <i class="fas fa-check-circle"></i>
-                                                @if(Auth::user()->role_jabatan == 4)
-                                                    Selesai Diverifikasi
-                                                @else
-                                                    Selesai Direview
-                                                @endif
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Action -->
-                                    <a href="{{ route('unit_pengelola.review', $doc->id) }}"
-                                        style="padding:8px 16px; background:#10b981; color:white; border-radius:6px; font-weight:600; font-size:12px; text-decoration:none; display:flex; align-items:center; gap:6px;">
-                                        <i class="fas fa-eye"></i> Lihat
-                                    </a>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div style="text-align:center; padding:40px; color:#999;">
-                            <i class="fas fa-inbox" style="font-size:40px; margin-bottom:10px; display:block;"></i>
-                            <p>Belum ada riwayat review.</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
 
             <!-- Document List -->
             <div class="doc-list">
                 @forelse($documents as $doc)
                     @php
-                        // Determine category based on unit-specific status
-                        $docCategory = 'semua';
+                        // Simple Status Label based on Filter using Controller data
                         $statusLabel = 'Menunggu Review';
+                        $statusClass = 'badge-status'; // default blue
+                        $isActionable = false;
 
-                        // Get unit-specific status
-                        $currentStatus = $doc->level2_status; // Default
-                        if ($user->id_unit == 55) {
-                            $currentStatus = $doc->status_security;
-                        } elseif ($user->id_unit == 56) {
-                            $currentStatus = $doc->status_she;
-                        }
-
-                        if ($currentStatus == 'assigned_review') {
-                            $docCategory = 'review';
+                        if($filter == 'inbox') {
                             $statusLabel = 'Menunggu Review';
-                        } elseif ($currentStatus == 'assigned_approval') {
-                            $docCategory = 'keputusan_akhir';
-                            $statusLabel = 'Sedang Diverifikasi';
-                        } elseif ($currentStatus == 'returned_to_head' || $currentStatus == 'staff_verified') {
-                            $docCategory = 'keputusan_akhir';
-                            $statusLabel = 'Keputusan Akhir';
-                        } elseif ($currentStatus == 'approved' || $currentStatus == 'published' || $doc->current_level > 2) {
-                            $docCategory = 'approve';
-                            $statusLabel = 'Approved';
+                            $statusClass = 'badge-status'; 
+                            $isActionable = true;
+                        } elseif($filter == 'verification') {
+                            $statusLabel = 'Menunggu Verifikasi';
+                            $statusClass = 'badge-status';
+                            // Optional: add yellow color
+                        } elseif($filter == 'history') {
+                             $statusLabel = 'Selesai Direview';
+                             $statusClass = 'badge-status'; 
+                             // Optional: green color
                         }
                     @endphp
 
-                    <div class="doc-item" data-category="{{ $docCategory }}">
+                <div class="doc-item">
                         <!-- Date -->
                         <div class="doc-date-box">
                             <span class="doc-day">{{ $doc->created_at->format('d') }}</span>
@@ -751,9 +588,8 @@
                             </span>
                         </div>
 
-                        <!-- Action -->
-                        <div>
-                            @if($docCategory == 'review')
+
+                            @if($filter == 'inbox')
                                 <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-review">
                                     <span>Review</span>
                                     <i class="fas fa-edit" style="font-size:11px;"></i>
@@ -765,6 +601,7 @@
                                     <i class="fas fa-eye" style="font-size:11px;"></i>
                                 </a>
                             @endif
+                        </div>
                         </div>
                     </div>
                 @empty

@@ -56,6 +56,10 @@ Route::middleware('auth')->group(function () {
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+    // Activity / Concurrent Edit
+    Route::post('/activity/heartbeat', [App\Http\Controllers\ActivityController::class, 'heartbeat'])->name('activity.heartbeat');
+    Route::get('/activity/check', [App\Http\Controllers\ActivityController::class, 'getUnitActivity'])->name('activity.check');
+
     // Dashboard (redirect based on role)
     Route::get('/dashboard', function () {
         return redirect()->route(Auth::user()->getDashboardRoute());

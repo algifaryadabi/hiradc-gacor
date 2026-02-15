@@ -1073,6 +1073,16 @@ class DocumentController extends Controller
                 'status_security' => ($request->input('action') === 'submit' && $document->status_security == 'revision') ? 'pending_level1' : $document->status_security,
             ]);
 
+            // Save Revision Comment if Resubmitting
+            if($request->input('action') === 'submit' && $request->has('revision_comment') && !empty($request->revision_comment)) {
+                 $document->approvals()->create([
+                    'level' => 1, // Reset to level 1 flow
+                    'approver_id' => Auth::id(),
+                    'action' => 'resubmitted', // New action type
+                    'catatan' => $request->revision_comment,
+                ]);
+            }
+
             // 2. SYNC DETAILS
             $existingIds = $document->details()->pluck('id')->toArray();
             $processedIds = [];
@@ -1626,7 +1636,7 @@ class DocumentController extends Controller
         if ($user->role_jabatan == 3) { // Kepala Unit
             $currentPIC = \App\Models\User::where('id_unit', $user->id_unit)
                 ->where('can_create_documents', 1)
-                ->first();
+                ->get();
 
             $staffList = \App\Models\User::where('id_unit', $user->id_unit)
                 ->whereIn('role_jabatan', [4, 5, 6])
@@ -2284,6 +2294,40 @@ class DocumentController extends Controller
                 // Handle SHE Path
                 if ($isShe && $document->status_she != 'none') {
                     if ($document->status_she == 'pending_head') {
+                        // VALIDATION: Check Staff Availability before Assignment
+                        // 1. Get Unique Categories from Document Details
+                        $docCategories = $document->details->pluck('kategori')->unique(); // e.g., ['K3', 'Lingkungan']
+                        $unitCategories = $docCategories->intersect(['K3', 'KO', 'Lingkungan']);
+
+                        if ($unitCategories->isNotEmpty()) {
+                            $missingReviewer = [];
+                            $missingVerifier = [];
+
+                            foreach ($unitCategories as $cat) {
+                                // Check for Reviewer
+                                $hasReviewer = \App\Models\User::where('id_unit', 56)
+                                    ->where('is_reviewer', true)
+                                    ->whereJsonContains('assigned_categories', $cat)
+                                    ->exists();
+                                if (!$hasReviewer) $missingReviewer[] = $cat;
+
+                                // Check for Verifier
+                                $hasVerifier = \App\Models\User::where('id_unit', 56)
+                                    ->where('is_verifier', true)
+                                    ->whereJsonContains('assigned_categories', $cat)
+                                    ->exists();
+                                if (!$hasVerifier) $missingVerifier[] = $cat;
+                            }
+
+                            if (!empty($missingReviewer) || !empty($missingVerifier)) {
+                                $errorMsg = "Gagal Disposisi! ";
+                                if (!empty($missingReviewer)) $errorMsg .= "Belum ada Staff Reviewer untuk kategori: " . implode(', ', $missingReviewer) . ". ";
+                                if (!empty($missingVerifier)) $errorMsg .= "Belum ada Staff Verifikator untuk kategori: " . implode(', ', $missingVerifier) . ".";
+                                
+                                throw \Illuminate\Validation\ValidationException::withMessages(['disposition' => $errorMsg]);
+                            }
+                        }
+
                         // Alternate path if Head approves directly without disposition (Optional)
                         // For now, let's keep it as is or redirect to disposition?
                         // Assuming Head wants to "Approve" means "Move to next" or "Final Approve"?
@@ -2291,9 +2335,19 @@ class DocumentController extends Controller
                         // Let's assume this block is rarely hit via 'approve' route if UI filters.
                         $document->update(['status_she' => 'assigned_review']);
                     } elseif ($document->status_she == 'assigned_review') {
-                        $document->update(['status_she' => 'assigned_approval']);
+                        // STAGE 1 vs STAGE 2 Logic
+                        // If Checklist is empty -> Stage 1 -> Send to Verificator
+                        // If Checklist is filled -> Stage 2 -> Send to Head (staff_verified)
+                        
+                        // We check the specific checklist column
+                        if (!empty($document->compliance_checklist_she)) {
+                             $document->update(['status_she' => 'staff_verified']);
+                        } else {
+                             $document->update(['status_she' => 'assigned_approval']);
+                        }
                     } elseif ($document->status_she == 'assigned_approval') {
-                        $document->update(['status_she' => 'staff_verified']);
+                        // Verificator sends back to Reviewer for Final Check
+                        $document->update(['status_she' => 'assigned_review']);
                     } elseif ($document->status_she == 'staff_verified') {
                         $document->update([
                             'status_she' => 'approved',
@@ -2304,11 +2358,51 @@ class DocumentController extends Controller
                 // Handle Security Path
                 elseif ($isSecurity && $document->status_security != 'none') {
                     if ($document->status_security == 'pending_head') {
+                        // VALIDATION: Check Staff Availability before Assignment
+                        // 1. Get Unique Categories from Document Details
+                        $docCategories = $document->details->pluck('kategori')->unique();
+                        $unitCategories = $docCategories->intersect(['Keamanan']);
+
+                        if ($unitCategories->isNotEmpty()) {
+                            $missingReviewer = [];
+                            $missingVerifier = [];
+
+                            foreach ($unitCategories as $cat) {
+                                // Check for Reviewer
+                                $hasReviewer = \App\Models\User::where('id_unit', 55)
+                                    ->where('is_reviewer', true)
+                                    ->whereJsonContains('assigned_categories', $cat)
+                                    ->exists();
+                                if (!$hasReviewer) $missingReviewer[] = $cat;
+
+                                // Check for Verifier
+                                $hasVerifier = \App\Models\User::where('id_unit', 55)
+                                    ->where('is_verifier', true)
+                                    ->whereJsonContains('assigned_categories', $cat)
+                                    ->exists();
+                                if (!$hasVerifier) $missingVerifier[] = $cat;
+                            }
+
+                            if (!empty($missingReviewer) || !empty($missingVerifier)) {
+                                $errorMsg = "Gagal Disposisi! ";
+                                if (!empty($missingReviewer)) $errorMsg .= "Belum ada Staff Reviewer untuk kategori: " . implode(', ', $missingReviewer) . ". ";
+                                if (!empty($missingVerifier)) $errorMsg .= "Belum ada Staff Verifikator untuk kategori: " . implode(', ', $missingVerifier) . ".";
+                                
+                                throw \Illuminate\Validation\ValidationException::withMessages(['disposition' => $errorMsg]);
+                            }
+                        }
+
                         $document->update(['status_security' => 'assigned_review']);
                     } elseif ($document->status_security == 'assigned_review') {
-                        $document->update(['status_security' => 'assigned_approval']);
+                         // STAGE 1 vs STAGE 2 Logic (Security)
+                        if (!empty($document->compliance_checklist_security)) {
+                             $document->update(['status_security' => 'staff_verified']);
+                        } else {
+                             $document->update(['status_security' => 'assigned_approval']);
+                        }
                     } elseif ($document->status_security == 'assigned_approval') {
-                        $document->update(['status_security' => 'staff_verified']);
+                         // Verificator sends back to Reviewer
+                        $document->update(['status_security' => 'assigned_review']);
                     } elseif ($document->status_security == 'staff_verified') {
                         $document->update([
                             'status_security' => 'approved',
@@ -2953,16 +3047,46 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized disposition.');
         }
 
-        // Auto-Assign Logic: If IDs are null, try to find the designated staff from Dashboard permissions
+        // Auto-Assign Logic: Intelligent Routing based on Category
         $reviewerId = $request->reviewer_id;
         $approverId = $request->approver_id;
 
+        // Determine Document Categories
+        $docDetails = $document->details; // Relationship must exist
+        $docCats = $docDetails ? $docDetails->pluck('kategori')->filter()->unique()->values()->toArray() : [];
+        // Fallback to document level category if details empty
+        if (empty($docCats) && $document->kategori) {
+             $docCats[] = $document->kategori;
+        }
+
         if (!$reviewerId) {
-            $activeReviewers = \App\Models\User::where('id_unit', $user->id_unit)
+            $candidates = \App\Models\User::where('id_unit', $user->id_unit)
                 ->where('is_reviewer', true)
                 ->get();
-            if ($activeReviewers->count() === 1) {
-                $reviewerId = $activeReviewers->first()->id_user;
+            
+            // Try Strict Match First
+            $matched = $candidates->filter(function($u) use ($docCats) {
+                $uCats = $u->assigned_categories ?? [];
+                // If user has NO categories, treat as fallback? Or strict? 
+                // User requirement: "menerima form dengan kategori k3 saja" implies strict filtering.
+                if (empty($uCats)) return false; 
+                return !empty(array_intersect($uCats, $docCats));
+            });
+
+            if ($matched->count() > 0) {
+                // Pick the first matched reviewer
+                $reviewerId = $matched->first()->id_user;
+            } elseif ($candidates->count() > 0) {
+                // Fallback: If no strict match, check if there's a "Generalist" (no cat assigned)?
+                // or if there is only 1 candidate total, just assign them?
+                $generalists = $candidates->filter(fn($u) => empty($u->assigned_categories));
+                if ($generalists->count() > 0) {
+                     $reviewerId = $generalists->first()->id_user;
+                } elseif ($candidates->count() === 1) {
+                     // Last resort: Only 1 reviewer exists, assign regardless of category mismatch?
+                     // Maybe dangerous if strict, but better than blocking.
+                     $reviewerId = $candidates->first()->id_user;
+                }
             }
         }
 
@@ -2970,7 +3094,8 @@ class DocumentController extends Controller
             $activeApprovers = \App\Models\User::where('id_unit', $user->id_unit)
                 ->where('is_verifier', true)
                 ->get();
-            if ($activeApprovers->count() === 1) {
+            if ($activeApprovers->count() > 0) {
+                // Assign first available verifier since manual selection is removed
                 $approverId = $activeApprovers->first()->id_user;
             }
         }
@@ -3074,12 +3199,48 @@ class DocumentController extends Controller
         $isAssigned = false;
 
         if ($user->id_unit == 55) { // Security
-            // Allow if explicitly assigned OR has reviewer permission and doc is in review status
+            // PERBAIKAN: Staff reviewer bisa submit jika:
+            // 1. Mereka adalah reviewer yang ditunjuk (security_reviewer_id)
+            // 2. Mereka punya flag is_reviewer = 1, ATAU
+            // 3. Mereka punya assigned_categories yang include 'Keamanan'
+            // DAN track Security masih aktif (belum approved/published)
+            $hasAssignedCategory = false;
+            if (!empty($user->assigned_categories)) {
+                $cats = is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories;
+                $hasAssignedCategory = is_array($cats) && in_array('Keamanan', $cats);
+            }
+            
+            $trackActive = !in_array($document->status_security, ['approved', 'published', 'level3_approved', 'none', null]);
+            
             $isAssigned = ($user->id_user == $document->security_reviewer_id) ||
-                ($user->is_reviewer && $document->status_security == 'assigned_review');
+                ($user->is_reviewer == 1 && $trackActive) ||
+                ($hasAssignedCategory && $trackActive);
+            
+            // Auto-assign self if not yet assigned
+            if ($isAssigned && empty($document->security_reviewer_id)) {
+                $document->update(['security_reviewer_id' => $user->id_user]);
+            }
+
         } elseif ($user->id_unit == 56) { // SHE
+            // PERBAIKAN: Sama seperti Security, tapi untuk kategori K3, KO, Lingkungan
+            $hasAssignedCategory = false;
+            if (!empty($user->assigned_categories)) {
+                $cats = is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories;
+                $hasAssignedCategory = is_array($cats) && (
+                    in_array('K3', $cats) || in_array('KO', $cats) || in_array('Lingkungan', $cats)
+                );
+            }
+            
+            $trackActive = !in_array($document->status_she, ['approved', 'published', 'level3_approved', 'none', null]);
+            
             $isAssigned = ($user->id_user == $document->she_reviewer_id) ||
-                ($user->is_reviewer && $document->status_she == 'assigned_review');
+                ($user->is_reviewer == 1 && $trackActive) ||
+                ($hasAssignedCategory && $trackActive);
+
+            // Auto-assign self if not yet assigned
+            if ($isAssigned && empty($document->she_reviewer_id)) {
+                $document->update(['she_reviewer_id' => $user->id_user]);
+            }
         } else {
             // Fallback
             $isAssigned = ($user->id_user == $document->level2_reviewer_id) ||
@@ -3137,12 +3298,33 @@ class DocumentController extends Controller
         $isAssigned = false;
 
         if ($user->id_unit == 55) { // Security
-            // Allow if explicitly assigned OR has verifier permission and doc is in approval status
+            // PERBAIKAN: Staff verifikator bisa verify jika:
+            // 1. Mereka adalah verifikator yang ditunjuk (security_verificator_id)
+            // 2. Mereka punya flag is_verifier = 1, ATAU
+            // 3. Mereka punya assigned_categories yang include 'Keamanan'
+            $hasAssignedCategory = false;
+            if (!empty($user->assigned_categories)) {
+                $cats = is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories;
+                $hasAssignedCategory = is_array($cats) && in_array('Keamanan', $cats);
+            }
+            
             $isAssigned = ($user->id_user == $document->security_verificator_id) ||
-                ($user->is_verifier && $document->status_security == 'assigned_approval');
+                ($user->is_verifier == 1 && $document->status_security == 'assigned_approval') ||
+                ($hasAssignedCategory && $document->status_security == 'assigned_approval');
+                
         } elseif ($user->id_unit == 56) { // SHE
+            // PERBAIKAN: Sama seperti Security, tapi untuk kategori K3, KO, Lingkungan
+            $hasAssignedCategory = false;
+            if (!empty($user->assigned_categories)) {
+                $cats = is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories;
+                $hasAssignedCategory = is_array($cats) && (
+                    in_array('K3', $cats) || in_array('KO', $cats) || in_array('Lingkungan', $cats)
+                );
+            }
+            
             $isAssigned = ($user->id_user == $document->she_verificator_id) ||
-                ($user->is_verifier && $document->status_she == 'assigned_approval');
+                ($user->is_verifier == 1 && $document->status_she == 'assigned_approval') ||
+                ($hasAssignedCategory && $document->status_she == 'assigned_approval');
         } else {
             $isAssigned = ($user->id_user == $document->level2_approver_id) ||
                 ($user->is_verifier && $document->level2_status == 'assigned_approval');
@@ -3275,7 +3457,8 @@ class DocumentController extends Controller
     {
         try {
             $request->validate([
-                'staff_id' => 'required|exists:users,id_user'
+                'staff_ids' => 'required|array',
+                'staff_ids.*' => 'exists:users,id_user'
             ]);
 
             $user = Auth::user();
@@ -3285,30 +3468,26 @@ class DocumentController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
-            $staffId = $request->staff_id;
-
-            // Verify staff is from same unit
-            $staff = \App\Models\User::where('id_user', $staffId)
-                ->where('id_unit', $user->id_unit)
-                ->whereIn('role_jabatan', [4, 5, 6])
-                ->first();
-
-            if (!$staff) {
-                return response()->json(['success' => false, 'message' => 'Staff not found'], 404);
-            }
+            $staffIds = $request->staff_ids;
 
             // Update: Set all staff in unit to can_create_documents = 0
             \App\Models\User::where('id_unit', $user->id_unit)
                 ->update(['can_create_documents' => 0]);
 
             // Set selected staff to can_create_documents = 1
-            $staff->can_create_documents = 1;
-            $staff->save();
+            if (!empty($staffIds)) {
+                \App\Models\User::whereIn('id_user', $staffIds)
+                    ->where('id_unit', $user->id_unit) // Ensure they are in the same unit
+                    ->update(['can_create_documents' => 1]);
+            }
+
+            // Get names
+            $newPICs = \App\Models\User::whereIn('id_user', $staffIds)->pluck('nama_user')->implode(', ');
 
             return response()->json([
                 'success' => true,
                 'message' => 'PIC berhasil diupdate',
-                'staff_name' => $staff->nama_user
+                'staff_name' => $newPICs
             ]);
         } catch (\Exception $e) {
             \Log::error('Error updating PIC: ' . $e->getMessage());
@@ -3676,7 +3855,9 @@ class DocumentController extends Controller
             // Access Control: Block Staff if document is still pending_head (Not Dispositioned)
             // Staff roles: 4 (Verifikator), 5 (Reviewer), 6 (Reviewer)
             if (in_array($user->role_jabatan, [4, 5, 6])) {
-                if ($document->status_security === 'pending_head' || $document->status_security === 'none' || empty($document->status_security)) {
+                // Allow if Reviewer (Self-Pickup)
+                $canPickup = ($user->is_reviewer || in_array($user->role_jabatan, [3, 4]));
+                if (!$canPickup && ($document->status_security === 'pending_head' || $document->status_security === 'none' || empty($document->status_security))) {
                     abort(403, 'Dokumen belum didisposisikan oleh Kepala Unit.');
                 }
             }
@@ -3687,7 +3868,9 @@ class DocumentController extends Controller
         } elseif ($user->id_unit == 56) { // SHE
             // Access Control: Block Staff if document is pending_head
             if (in_array($user->role_jabatan, [4, 5, 6])) {
-                if ($document->status_she === 'pending_head' || $document->status_she === 'none' || empty($document->status_she)) {
+                // Allow if Reviewer (Self-Pickup)
+                $canPickup = ($user->is_reviewer || in_array($user->role_jabatan, [3, 4]));
+                if (!$canPickup && ($document->status_she === 'pending_head' || $document->status_she === 'none' || empty($document->status_she))) {
                     abort(403, 'Dokumen belum didisposisikan oleh Kepala Unit.');
                 }
             }
@@ -3699,7 +3882,7 @@ class DocumentController extends Controller
 
         // Fetch Staff for Disposition Forms
         $staffReviewers = \App\Models\User::where('id_unit', $user->id_unit)
-            ->whereIn('role_jabatan', [5, 6]) // Band IV, V
+            ->whereIn('role_jabatan', [3, 4, 5, 6]) // Band III, IV, V (Managers included)
             ->get();
 
         $staffApprovers = \App\Models\User::where('id_unit', $user->id_unit)
@@ -3847,7 +4030,7 @@ class DocumentController extends Controller
         ));
     }
 
-    public function staffIndex()
+    public function staffIndex(Request $request)
     {
         $user = Auth::user();
 
@@ -3869,78 +4052,113 @@ class DocumentController extends Controller
             $allowedCategories = ['K3', 'KO', 'Lingkungan'];
         }
 
-        // Load documents assigned to this staff OR unassigned (Pool)
-        // Fix (Parallel): Check specific SHE/Security columns depending on Unit
-
-        $query = Document::where('current_level', 2);
-
-        if ($user->id_unit == 55) { // Security
-            // Simplified permission-based filtering
-            if ($user->role_jabatan == 4) { // Verifikator
-                if ($user->is_verifier) {
-                    // Show all documents in approval status if user has verifier permission
-                    $query->where('status_security', 'assigned_approval');
-                } else {
-                    // Only show explicitly assigned documents
-                    $query->where('status_security', 'assigned_approval')
-                        ->where('security_verificator_id', $user->id_user);
+        // --- QUERY BUILDER HELPER ---
+        $buildQuery = function($statusColumn, $statusValue, $checkAssignment = true) use ($user) {
+             return Document::where(function($q) use ($user, $statusColumn, $statusValue, $checkAssignment) {
+                if ($checkAssignment) {
+                     // specific for Reviewer Inbox
+                     // check assignment columns based on unit
+                     if ($user->id_unit == 56) { // SHE
+                         $q->where('she_reviewer_id', $user->id_user)
+                           ->orWhere(function($sub) use ($user) {
+                               // Pool fallback if permitted
+                               if ($user->is_reviewer) $sub->whereNull('she_reviewer_id');
+                           });
+                     } elseif ($user->id_unit == 55) { // Security
+                         $q->where('security_reviewer_id', $user->id_user)
+                           ->orWhere(function($sub) use ($user) {
+                               if ($user->is_reviewer) $sub->whereNull('security_reviewer_id');
+                           });
+                     }
                 }
-            } else { // Reviewer (role_jabatan 5 or 6)
-                if ($user->is_reviewer) {
-                    // Show all documents in review status if user has reviewer permission
-                    $query->where('status_security', 'assigned_review');
-                } else {
-                    // Only show explicitly assigned documents
-                    $query->where('status_security', 'assigned_review')
-                        ->where('security_reviewer_id', $user->id_user);
-                }
-            }
+                
+                $q->where($statusColumn, $statusValue);
+             });
+        };
+        
+        // Base Status Column
+        $statusCol = ($user->id_unit == 55) ? 'status_security' : 'status_she';
 
-        } elseif ($user->id_unit == 56) { // SHE
-            // Simplified permission-based filtering
-            if ($user->role_jabatan == 4) { // Verifikator
-                if ($user->is_verifier) {
-                    // Show all documents in approval status if user has verifier permission
-                    $query->where('status_she', 'assigned_approval');
-                } else {
-                    // Only show explicitly assigned documents
-                    $query->where('status_she', 'assigned_approval')
-                        ->where('she_verificator_id', $user->id_user);
-                }
-            } else { // Reviewer (role_jabatan 5 or 6)
-                if ($user->is_reviewer) {
-                    // Show all documents in review status if user has reviewer permission
-                    $query->where('status_she', 'assigned_review');
-                } else {
-                    // Only show explicitly assigned documents
-                    $query->where('status_she', 'assigned_review')
-                        ->where('she_reviewer_id', $user->id_user);
-                }
-            }
-
+        // --- 1. Card: Incoming from Head (Pending Review) ---
+        // Status: assigned_review. Assigned to this user (or pool).
+        // Reuse logic from original query but strictly for 'assigned_review' 
+        $queryInbox = Document::query();
+        if ($user->id_unit == 55) {
+             $queryInbox->where(function($q) use ($user) {
+                $q->where('security_reviewer_id', $user->id_user)
+                  ->orWhere(function($sub) use ($user) {
+                      if($user->is_reviewer) $sub->where('status_security', 'assigned_review');
+                  });
+             })->where('status_security', 'assigned_review');
         } else {
-            // Fallback (Original Logic)
-            $query->where(function ($q) use ($user) {
-                $q->where('level2_reviewer_id', $user->id_user)
-                    ->orWhere('level2_approver_id', $user->id_user)
-                    ->orWhereNull('level2_reviewer_id');
-            });
-            if ($user->role_jabatan == 4) {
-                $query->whereIn('level2_status', ['assigned_approval']);
+             $queryInbox->where(function($q) use ($user) {
+                $q->where('she_reviewer_id', $user->id_user)
+                  ->orWhere(function($sub) use ($user) {
+                      if($user->is_reviewer) $sub->where('status_she', 'assigned_review');
+                  });
+             })->where('status_she', 'assigned_review');
+        }
+        $countInbox = $queryInbox->count();
+
+        // --- 2. Card: Received by Verificator (Pending Verification) ---
+        // Status: assigned_approval.
+        // We show ALL in verification pool for this unit, or just those processed by me?
+        // Usually staff likes to see what's in the next pipe. Let's show all 'assigned_approval' in Unit.
+        $queryVerif = Document::where($statusCol, 'assigned_approval');
+        $countVerif = $queryVerif->count();
+
+        // --- 3. Card: History Review ---
+        // Documents I have reviewed.
+        // Use Approvals table. Use IDs to fetch Docs.
+        $historyIds = \App\Models\DocumentApproval::where('approver_id', $user->id_user)
+            ->where('action', 'reviewed')
+            ->pluck('document_id');
+        $countHistory = $historyIds->count();
+
+
+        // --- MAIN LIST QUERY ---
+        // Filter based on selected 'tab' or default to Inbox
+        $filter = $request->get('filter', 'inbox'); // inbox, verification, history
+        
+        $mainQuery = Document::query();
+
+        if ($filter === 'history') {
+             $mainQuery->whereIn('id', $historyIds);
+        } elseif ($filter === 'verification') {
+             $mainQuery->where($statusCol, 'assigned_approval');
+        } else {
+             // Default: Inbox (Pending Review)
+             // Same logic as $queryInbox above
+             if ($user->id_unit == 55) {
+                 $mainQuery->where(function($q) use ($user) {
+                    $q->where('security_reviewer_id', $user->id_user)
+                      ->orWhere(function($sub) use ($user) {
+                          if($user->is_reviewer) $sub->where('status_security', 'assigned_review');
+                      });
+                 })->where('status_security', 'assigned_review');
             } else {
-                $query->where(function ($q) {
-                    $q->where('level2_status', 'assigned_review')
-                        ->orWhereNull('level2_status')
-                        ->orWhere('status', 'pending_level2');
-                });
+                 $mainQuery->where(function($q) use ($user) {
+                    $q->where('she_reviewer_id', $user->id_user)
+                      ->orWhere(function($sub) use ($user) {
+                          if($user->is_reviewer) $sub->where('status_she', 'assigned_review');
+                      });
+                 })->where('status_she', 'assigned_review');
             }
         }
 
-        $documents = $query->with(['user', 'unit', 'approvals.approver'])
-            ->orderBy('created_at', 'desc')
+        // Category Filter (if assigned_categories exists)
+        if (!empty($user->assigned_categories)) {
+            $userCategories = $user->assigned_categories;
+            $mainQuery->whereHas('details', function ($q) use ($userCategories) {
+                $q->whereIn('kategori', $userCategories);
+            });
+        }
+
+        $documents = $mainQuery->with(['user', 'unit', 'approvals.approver'])
+            ->orderBy('updated_at', 'desc')
             ->get();
 
-        return view('unit_pengelola.documents.staff_index', compact('documents'));
+        return view('unit_pengelola.documents.staff_index', compact('documents', 'countInbox', 'countVerif', 'countHistory', 'filter'));
     }
 
 
@@ -4222,6 +4440,7 @@ class DocumentController extends Controller
                 'is_reviewer' => 'sometimes|boolean',
                 'is_verifier' => 'sometimes|boolean',
                 'can_create_documents' => 'sometimes|boolean',
+                'assigned_categories' => 'nullable|array',
             ]);
 
             $currentUser = Auth::user();
@@ -4232,28 +4451,56 @@ class DocumentController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized: You must be the Head of this Unit.'], 403);
             }
 
+            // 1. Handle Reviewer Assignment
             if ($request->has('is_reviewer')) {
-                // Enforce Single Reviewer: If setting to true, unset others
-                if ($request->is_reviewer) {
-                    \App\Models\User::where('id_unit', $currentUser->id_unit)
-                        ->where('id_user', '!=', $targetUser->id_user)
-                        ->update(['is_reviewer' => 0]);
+                // VALIDATION: Only Role 4 (Manager/Reviewer) unless unassigning
+                if ($request->is_reviewer && $targetUser->role_jabatan != 4 && $targetUser->id_role_jabatan != 4) {
+                     return response()->json(['success' => false, 'message' => 'Hanya Staff dengan jabatan Reviewer (Role 4) yang dapat menjadi Reviewer.'], 422);
+                }
 
-                    // MUTUAL EXCLUSION: Unset other roles for this user
+                if ($request->is_reviewer) {
+                    // Security Unit (55): Auto-Switch Off Others (Strict Enforcement)
+                    if ($currentUser->id_unit == 55) {
+                        \App\Models\User::where('id_unit', $currentUser->id_unit)
+                            ->where('is_reviewer', 1)
+                            ->update(['is_reviewer' => 0, 'assigned_categories' => null]);
+                            
+                        // Auto-Assign Category
+                        $targetUser->assigned_categories = ['Keamanan'];
+                    } 
+                    // SHE Unit (56): No strict limit (multiple categories need flexibility)
+                    // Each category (K3, KO, Lingkungan) can have multiple reviewers
+                    // No need to check total count
+
+                    // Mutual Exclusion
                     $targetUser->is_verifier = 0;
                     $targetUser->can_create_documents = 0;
                 }
                 $targetUser->is_reviewer = $request->is_reviewer;
             }
 
+            // 2. Handle Verifier Assignment
             if ($request->has('is_verifier')) {
-                // Enforce Single Verifier: If setting to true, unset others
-                if ($request->is_verifier) {
-                    \App\Models\User::where('id_unit', $currentUser->id_unit)
-                        ->where('id_user', '!=', $targetUser->id_user)
-                        ->update(['is_verifier' => 0]);
+                // VALIDATION: Only Role 5 & 6 (Superintendent/Verifier) unless unassigning
+                if ($request->is_verifier && !in_array($targetUser->role_jabatan, [5, 6]) && !in_array($targetUser->id_role_jabatan, [5, 6])) {
+                     return response()->json(['success' => false, 'message' => 'Hanya Staff dengan jabatan Verifikator (Role 5/6) yang dapat menjadi Verifikator.'], 422);
+                }
 
-                    // MUTUAL EXCLUSION: Unset other roles for this user
+                if ($request->is_verifier) {
+                    // Security Unit (55): Auto-Switch Off Others (Strict Enforcement)
+                    if ($currentUser->id_unit == 55) {
+                        \App\Models\User::where('id_unit', $currentUser->id_unit)
+                            ->where('is_verifier', 1)
+                            ->update(['is_verifier' => 0, 'assigned_categories' => null]);
+
+                        // Auto-Assign Category
+                        $targetUser->assigned_categories = ['Keamanan'];
+                    } 
+                    // SHE Unit (56): No strict limit (multiple categories need flexibility)
+                    // Each category (K3, KO, Lingkungan) can have multiple verificators
+                    // No need to check total count
+
+                    // Mutual Exclusion
                     $targetUser->is_reviewer = 0;
                     $targetUser->can_create_documents = 0;
                 }
@@ -4272,6 +4519,36 @@ class DocumentController extends Controller
                     $targetUser->is_verifier = 0;
                 }
                 $targetUser->can_create_documents = $request->can_create_documents;
+            }
+
+            // 4. Handle Category Assignment (Unique Constraint)
+            if ($request->has('assigned_categories')) {
+                $newCategories = $request->assigned_categories;
+                
+                // Determine current role to check uniqueness against
+                $roleToCheck = null;
+                if ($targetUser->is_reviewer) $roleToCheck = 'is_reviewer';
+                elseif ($targetUser->is_verifier) $roleToCheck = 'is_verifier';
+
+                if ($roleToCheck && !empty($newCategories)) {
+                    foreach ($newCategories as $cat) {
+                        // Check if ANY other user in this unit with the SAME role has this category
+                        $conflict = \App\Models\User::where('id_unit', $currentUser->id_unit)
+                            ->where($roleToCheck, 1)
+                            ->where('id_user', '!=', $targetUser->id_user)
+                            ->whereJsonContains('assigned_categories', $cat)
+                            ->exists();
+
+                        if ($conflict) {
+                            $roleLabel = ($roleToCheck == 'is_reviewer') ? 'Reviewer' : 'Verifikator';
+                            return response()->json([
+                                'success' => false, 
+                                'message' => "Kategori '$cat' sudah diambil oleh Staff $roleLabel lain."
+                            ], 422);
+                        }
+                    }
+                }
+                $targetUser->assigned_categories = $newCategories;
             }
 
             $targetUser->save();

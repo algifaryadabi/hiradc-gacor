@@ -986,7 +986,7 @@
 
     <!-- ITEM TEMPLATE (Hidden) -->
     <template id="item-template">
-        @include('user.documents.partials.item-form-template')
+        @include('user.documents.partials.item-form-template', ['index' => '{index}'])
     </template>
 
         <!-- PUK/PMK Form Template -->
@@ -2621,6 +2621,28 @@
         </div> <!-- End Container -->
         <!-- SweetAlert2 -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Activity Heartbeat -->
+    <script>
+        function sendHeartbeat() {
+            fetch('{{ route("activity.heartbeat") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    action: 'create',
+                    doc_id: null
+                })
+            }).catch(e => console.error('Heartbeat failed', e));
+        }
+
+        // Send immediately on load, then every 15s
+        document.addEventListener('DOMContentLoaded', () => {
+            sendHeartbeat();
+            setInterval(sendHeartbeat, 15000);
+        });
+    </script>
 </body>
 
 </html>

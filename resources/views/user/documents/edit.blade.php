@@ -1110,6 +1110,17 @@
                             @endif
                         </div>
 
+                        {{-- Revision Comment Field (Only visible if status is revision) --}}
+                        @if($document->status == 'revision' || $document->status_she == 'revision' || $document->status_security == 'revision')
+                        <div style="flex: 1; margin-right: 15px;">
+                            <textarea name="revision_comment" 
+                                      class="form-control" 
+                                      placeholder="Tuliskan catatan perbaikan disini (Wajib diisi untuk submit revisi)..." 
+                                      rows="2"
+                                      style="border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; resize: none;"></textarea>
+                        </div>
+                        @endif
+
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <input type="hidden" name="action" id="action_input" value="save_only">
                             
@@ -1136,9 +1147,9 @@
             console.log('isDraft:', isDraft); // DEBUG
 
             // Revision Comment Logic (Specific to Edit)
-            const isRevision = @json(($document->status_she == 'revision' || $document->status_security == 'revision'));
+            const isRevision = @json(($document->status == 'revision' || $document->status_she == 'revision' || $document->status_security == 'revision'));
             
-            // If submitting a Revision, allow strict comment check OR rely on backend?
+            // If submitting a Revision, enforce comment check
             // "save_only" skips this check.
             
             const commentField = document.querySelector('textarea[name="revision_comment"]');
@@ -1147,7 +1158,7 @@
                      Swal.fire({
                         icon: 'warning',
                         title: 'Catatan Wajib Diisi',
-                        text: 'Mohon isi catatan perbaikan pada kolom di samping tombol submit.',
+                        text: 'Mohon isi catatan perbaikan pada kolom di samping tombol submit sebelum mengirim revisi.',
                         confirmButtonColor: '#c41e3a'
                      });
                      commentField.focus();
@@ -1270,7 +1281,7 @@
 
     <!-- ITEM TEMPLATE (Hidden) -->
     <template id="item-template">
-        @include('user.documents.partials.item-form-template')
+        @include('user.documents.partials.item-form-template', ['index' => '{index}'])
     </template>
 
     <!-- PUK/PMK Form Template -->
@@ -2447,6 +2458,55 @@
              });
         });
 
+    </script>
+    <!-- Activity Heartbeat & Lock Check -->
+    <script>
+        function sendHeartbeat() {
+            fetch('{{ route("activity.heartbeat") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    action: 'edit',
+                    doc_id: {{ $document->id }}
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.lock && data.lock.locked) {
+                     // Locked by someone else! Show sticky warning
+                     showLockWarning(data.lock.by);
+                }
+            })
+            .catch(e => console.error('Heartbeat failed', e));
+        }
+
+        function showLockWarning(userName) {
+            // Check if warning already exists
+            if(document.getElementById('lock-warning-banner')) return;
+
+            const banner = document.createElement('div');
+            banner.id = 'lock-warning-banner';
+            banner.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;
+                background-color: #fef2f2; border-bottom: 2px solid #ef4444; color: #991b1b;
+                padding: 12px 20px; text-align: center; font-weight: 600;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; gap: 10px;
+            `;
+            banner.innerHTML = `
+                <i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 20px;"></i>
+                <span>PERHATIAN: User <u>${userName}</u> juga sedang mengedit dokumen ini saat ini!</span>
+                <button onclick="this.parentElement.remove()" style="margin-left: auto; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+            `;
+            document.body.prepend(banner);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            sendHeartbeat();
+            setInterval(sendHeartbeat, 15000);
+        });
     </script>
 </body>
 </html>

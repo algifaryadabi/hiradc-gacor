@@ -53,16 +53,32 @@ class Document extends Model
         // Workflow Splitting Columns
         'status_she',
         'status_security',
+        // Category-Level Workflow (Paralel per kategori)
+        'status_k3',
+        'status_ko',
+        'status_lingkungan',
         'she_current_approver_id',
         'she_reviewer_id',
         'she_verificator_id',
+        'k3_reviewer_id',
+        'ko_reviewer_id',
+        'lingkungan_reviewer_id',
         'security_current_approver_id',
         'security_reviewer_id',
         'security_verificator_id',
+        'k3_verificator_id',
+        'ko_verificator_id',
+        'lingkungan_verificator_id',
         'she_approved_at',
         'security_approved_at',
+        'k3_approved_at',
+        'ko_approved_at',
+        'lingkungan_approved_at',
         'compliance_checklist_she',
         'compliance_checklist_security',
+        'compliance_checklist_k3',
+        'compliance_checklist_ko',
+        'compliance_checklist_lingkungan',
         'revision_number',
         'revision_reason',
         'last_review_date',
@@ -77,6 +93,9 @@ class Document extends Model
         'compliance_checklist' => 'array',
         'compliance_checklist_she' => 'array',
         'compliance_checklist_security' => 'array',
+        'compliance_checklist_k3' => 'array',
+        'compliance_checklist_ko' => 'array',
+        'compliance_checklist_lingkungan' => 'array',
     ];
 
     // ==================== RELATIONSHIPS ====================
@@ -450,5 +469,125 @@ class Document extends Model
             'snapshot_data' => $snapshot,
             'archived_at' => now(),
         ]);
+    }
+
+    // ==================== CATEGORY-LEVEL WORKFLOW HELPERS ====================
+
+    /**
+     * Get status for specific category
+     */
+    public function getCategoryStatus(string $category): ?string
+    {
+        return match($category) {
+            'K3' => $this->status_k3,
+            'KO' => $this->status_ko,
+            'Lingkungan' => $this->status_lingkungan,
+            'Keamanan' => $this->status_security,
+            default => null
+        };
+    }
+
+    /**
+     * Set status for specific category
+     */
+    public function setCategoryStatus(string $category, string $status): void
+    {
+        match($category) {
+            'K3' => $this->status_k3 = $status,
+            'KO' => $this->status_ko = $status,
+            'Lingkungan' => $this->status_lingkungan = $status,
+            'Keamanan' => $this->status_security = $status,
+            default => null
+        };
+        $this->save();
+    }
+
+    /**
+     * Get reviewer ID for specific category
+     */
+    public function getCategoryReviewerId(string $category): ?int
+    {
+        return match($category) {
+            'K3' => $this->k3_reviewer_id,
+            'KO' => $this->ko_reviewer_id,
+            'Lingkungan' => $this->lingkungan_reviewer_id,
+            'Keamanan' => $this->security_reviewer_id,
+            default => null
+        };
+    }
+
+    /**
+     * Set reviewer ID for specific category
+     */
+    public function setCategoryReviewerId(string $category, ?int $reviewerId): void
+    {
+        match($category) {
+            'K3' => $this->k3_reviewer_id = $reviewerId,
+            'KO' => $this->ko_reviewer_id = $reviewerId,
+            'Lingkungan' => $this->lingkungan_reviewer_id = $reviewerId,
+            'Keamanan' => $this->security_reviewer_id = $reviewerId,
+            default => null
+        };
+        $this->save();
+    }
+
+    /**
+     * Get verificator ID for specific category
+     */
+    public function getCategoryVerificatorId(string $category): ?int
+    {
+        return match($category) {
+            'K3' => $this->k3_verificator_id,
+            'KO' => $this->ko_verificator_id,
+            'Lingkungan' => $this->lingkungan_verificator_id,
+            'Keamanan' => $this->security_verificator_id,
+            default => null
+        };
+    }
+
+    /**
+     * Set verificator ID for specific category
+     */
+    public function setCategoryVerificatorId(string $category, ?int $verificatorId): void
+    {
+        match($category) {
+            'K3' => $this->k3_verificator_id = $verificatorId,
+            'KO' => $this->ko_verificator_id = $verificatorId,
+            'Lingkungan' => $this->lingkungan_verificator_id = $verificatorId,
+            'Keamanan' => $this->security_verificator_id = $verificatorId,
+            default => null
+        };
+        $this->save();
+    }
+
+    /**
+     * Get compliance checklist for specific category
+     */
+    public function getCategoryComplianceChecklist(string $category): ?array
+    {
+        return match($category) {
+            'K3' => $this->compliance_checklist_k3,
+            'KO' => $this->compliance_checklist_ko,
+            'Lingkungan' => $this->compliance_checklist_lingkungan,
+            'Keamanan' => $this->compliance_checklist_security,
+            default => null
+        };
+    }
+
+    /**
+     * Check if all categories in document are approved
+     */
+    public function allCategoriesApproved(): bool
+    {
+        $categories = $this->details->pluck('kategori')->unique();
+        
+        foreach ($categories as $category) {
+            $status = $this->getCategoryStatus($category);
+            if (!in_array($status, ['approved', 'published'])) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 }
