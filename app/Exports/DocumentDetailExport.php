@@ -33,10 +33,14 @@ class DocumentDetailExport implements FromView, WithTitle, WithStyles, WithColum
         }
 
         // Fetch revision histories for export
-        $histories = $this->document->histories()
-            ->with(['archivedBy'])
-            ->orderBy('revision_number', 'desc')
-            ->get();
+        try {
+            $histories = $this->document->histories()
+                ->with(['archivedBy'])
+                ->orderBy('revision_number', 'desc')
+                ->get();
+        } catch (\Exception $e) {
+            $histories = collect([]);
+        }
 
         return view('documents.export_detail_excel', [
             'document' => $this->document,
@@ -54,32 +58,27 @@ class DocumentDetailExport implements FromView, WithTitle, WithStyles, WithColum
     {
         return [
             'A' => 5,   // No
-            'B' => 20,  // Proses/Kegiatan (Kol 2)
-            'C' => 20,  // Lokasi (Kol 3)
-            'D' => 12,  // Kategori (Kol 4)
-            'E' => 12,  // Kondisi (Kol 5)
-            'F' => 25,  // Potensi Bahaya (Kol 6)
-            'G' => 25,  // Aspek Lingkungan (Kol 7)
-            'H' => 25,  // Ancaman Keamanan (Kol 8)
-            'I' => 20,  // Risiko K3 (Kol 9)
-            'J' => 20,  // Dampak Lingkungan (Kol 9)
-            'K' => 20,  // Celah Keamanan (Kol 9)
-            'L' => 30,  // Hirarki Pengendalian (Kol 10)
-            'M' => 30,  // Pengendalian Existing (Kol 11)
-            'N' => 5,   // L (Kol 12)
-            'O' => 5,   // S (Kol 13)
-            'P' => 10,  // Level (Kol 14)
-            'Q' => 25,  // Regulasi (Kol 15)
-            'R' => 15,  // Aspek Penting (Kol 16)
-            'S' => 25,  // Peluang & Risiko (Kol 17)
-            'T' => 10,  // Toleransi (Kol 18)
-            'U' => 30,  // Pengendalian Lanjut (Kol 19)
-            'V' => 5,   // L Lanjut (Kol 20)
-            'W' => 5,   // S Lanjut (Kol 21)
-            'X' => 10,  // Level Lanjut (Kol 22)
-            'Y' => 5,   // Res L
-            'Z' => 5,   // Res S
-            'AA' => 10, // Res Level
+            'B' => 40,  // Proses/Kegiatan (Merged)
+            'C' => 20,  // Lokasi
+            'D' => 12,  // Kategori
+            'E' => 12,  // Kondisi
+            'F' => 25,  // Potensi Bahaya
+            'G' => 25,  // Aspek Lingkungan
+            'H' => 25,  // Ancaman Keamanan
+            'I' => 20,  // Risiko/Dampak/Celah
+            'J' => 30,  // Hirarki Pengendalian
+            'K' => 30,  // Pengendalian Existing
+            'L' => 5,   // L
+            'M' => 5,   // S
+            'N' => 10,  // Level
+            'O' => 25,  // Regulasi
+            'P' => 15,  // Aspek Penting
+            'Q' => 25,  // Peluang & Risiko
+            'R' => 10,  // Toleransi
+            'S' => 30,  // Pengendalian Lanjut
+            'T' => 5,   // L Lanjut
+            'U' => 5,   // S Lanjut
+            'V' => 10,  // Level Lanjut
         ];
     }
 
@@ -102,7 +101,7 @@ class DocumentDetailExport implements FromView, WithTitle, WithStyles, WithColum
                 $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
                 $lastRow = $sheet->getHighestRow();
-                $lastColumn = 'AA'; // Updated last column to AA (27 cols)
+                $lastColumn = 'V'; // Updated last column to V (22 cols)
                 $range = "A1:{$lastColumn}{$lastRow}";
 
                 // 2. Alignment: Vertical Top, Horizontal Left (Wrap text enabled)
@@ -110,11 +109,6 @@ class DocumentDetailExport implements FromView, WithTitle, WithStyles, WithColum
                 $sheet->getStyle($range)->getAlignment()->setWrapText(true);
 
                 // 3. Header Styling (Rows 9 and 10 contain the table headers now)
-                // Row 1-3: Titles
-                // Row 4-7: Metadata (inc. Mines Business)
-                // Row 8: Spacer
-                // Row 9-10: Table Headers
-    
                 $headerRange = "A9:{$lastColumn}10";
                 $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
@@ -122,23 +116,20 @@ class DocumentDetailExport implements FromView, WithTitle, WithStyles, WithColum
                 $sheet->getStyle($headerRange)->getFill()
                     ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                     ->getStartColor()->setARGB('E0E0E0E0'); // Light Gray
-    
+
                 // 4. Center align specific small columns (Risk matrix values, Levels, No, etc.)
                 $centerColumns = [
                     'A', // No
                     'D', // Kategori
                     'E', // Kondisi
-                    'N',
-                    'O',
-                    'P', // Risk Initial (L, S, Level)
-                    'R', // Aspek Penting - wait, actually Aspek Penting might be text? Let's check typical content. Blade says text. Keep 'T' (Toleransi) instead.
-                    'T', // Toleransi
-                    'V',
-                    'W',
-                    'X', // Risk Lanjut
-                    'Y',
-                    'Z',
-                    'AA' // Residual
+                    'L', // L
+                    'M', // S
+                    'N', // Level
+                    'P', // Aspek Penting (P/TP)
+                    'R', // Toleransi
+                    'T', // L Lanjut
+                    'U', // S Lanjut
+                    'V'  // Level Lanjut
                 ];
 
                 foreach ($centerColumns as $col) {

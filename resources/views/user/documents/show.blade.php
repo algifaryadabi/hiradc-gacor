@@ -1113,7 +1113,7 @@
                             <!-- Header Row 2: Column Details -->
                             <tr>
                                 <!-- BAGIAN 1 (Kolom 2-5) -->
-                                <th style="width: 180px;">Proses/Kegiatan<br><small>(Kol 2)</small></th>
+                                <th style="width: 300px;">PROSES BISNIS /<br>KEGIATAN / ASET<br><small>(Kol 2)</small></th>
                                 <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
                                 <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
                                 <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol 5)</small>
@@ -1203,9 +1203,12 @@
                                         {{ $index + 1 }}
                                     </td>
                                     <!-- BAGIAN 1: Identifikasi Aktivitas -->
-                                    <!-- Kolom 2: Kegiatan -->
+                                    <!-- Kolom 2: Proses Bisnis / Kegiatan -->
                                     <td>
-                                        <div class="cell-text">{{ $item->kolom2_kegiatan }}</div>
+                                        <div class="cell-text"><strong>{{ $item->kolom2_proses }}</strong></div>
+                                        @if($item->kolom2_kegiatan)
+                                            <div class="cell-text" style="margin-top:4px; color:#64748b;">kegiatan/aset : {{ $item->kolom2_kegiatan }}</div>
+                                        @endif
                                     </td>
                                     <!-- Kolom 3: Lokasi -->
                                     <td>

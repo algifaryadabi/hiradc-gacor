@@ -132,71 +132,74 @@
     </div>
 
     <!-- MAIN TABLE (27 Columns) -->
-    <table class="main-table">
-        <thead>
-            <tr>
-                <th rowspan="2" width="2%">No</th>
-                <!-- BAGIAN 1: Identifikasi Aktivitas -->
-                <th colspan="4">BAGIAN 1: Identifikasi Aktivitas</th>
-                <!-- BAGIAN 2: Identifikasi -->
-                <th colspan="6">BAGIAN 2: Identifikasi</th>
-                <!-- BAGIAN 3: Pengendalian & Penilaian Awal -->
-                <th colspan="5">BAGIAN 3: Pengendalian &amp; Penilaian Awal</th>
-                <!-- BAGIAN 4: Legalitas & Signifikansi -->
-                <th colspan="3">BAGIAN 4: Legalitas &amp; Signifikansi</th>
-                <!-- BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa -->
-                <th colspan="8">BAGIAN 5: Mitigasi Lanjutan &amp; Risiko Sisa</th>
-            </tr>
-            <tr>
-                <!-- BAGIAN 1 -->
-                <th width="5%">Proses/Kegiatan<br>(Kol 2)</th>
-                <th width="5%">Lokasi<br>(Kol 3)</th>
-                <th width="4%">Kategori<br>(Kol 4)</th>
-                <th width="4%">Kondisi<br>(Kol 5)</th>
-                
-                <!-- BAGIAN 2 -->
-                <th width="8%">Potensi Bahaya<br>(Kol 6)</th>
-                <th width="5%">Aspek Lingkungan<br>(Kol 7)</th>
-                <th width="5%">Ancaman Keamanan<br>(Kol 8)</th>
-                <th width="4%">RISIKO (K3/KO)<br>(Kol 9)</th>
-                <th width="4%">DAMPAK (Lingk)<br>(Kol 9)</th>
-                <th width="4%">CELAH (Keamanan)<br>(Kol 9)</th>
+    <div class="hiradc-wrapper">
+                    <table class="main-table">
+                        <thead>
+                            <!-- Header Row 1: Main Sections -->
+                            <tr>
+                                <th rowspan="2" width="3%">No</th>
+                                <th colspan="4" class="section-border-right">BAGIAN 1: Identifikasi Aktivitas</th>
+                                <th colspan="3" class="section-border-right">BAGIAN 2: Identifikasi</th>
+                                <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal</th>
+                                <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
+                                <th colspan="5">BAGIAN 5: Mitigasi Lanjutan</th>
+                            </tr>
+                            <!-- Header Row 2: Columns -->
+                            <tr>
+                                <!-- BAGIAN 1 (Kol 2-5) -->
+                                <th width="15%">PROSES BISNIS / KEGIATAN / ASET<br>(2)</th>
+                                <th width="8%">LOKASI<br>(3)</th>
+                                <th width="6%">KATEGORI<br>(4)</th>
+                                <th width="6%" class="section-border-right">KONDISI<br>(R/NR/N/TM/E)<br>(5)</th>
+                                
+                                <!-- BAGIAN 2: IDENTIFIKASI (Kol 6-8) -->
+                                <th width="8%">POTENSI BAHAYA<br>(6)</th>
+                                <th width="8%">ASPEK LINGKUNGAN<br>(7)</th>
+                                <th width="8%" class="section-border-right">ANCAMAN KEAMANAN<br>(8)</th>
+                                
+                                <!-- BAGIAN 3 (Kol 9-14) -->
+                                <th width="8%">RISIKO (K3/KO)<br>/DAMPAK LINGKUNGAN<br>/CELAH TIDAK AMAN<br>(9)</th>
+                                <th width="12%">HIRARKI PENGENDALIAN<br>(10)</th>
+                                <th width="12%">PENGENDALIAN EXISTING<br>(11)</th>
+                                <th width="3%">L<br>(12)</th>
+                                <th width="3%">S<br>(13)</th>
+                                <th width="4%" class="section-border-right">LEVEL<br>(14)</th>
 
-                <!-- BAGIAN 3 -->
-                <th width="6%">Hirarki Pengendalian<br>(Kol 10)</th>
-                <th width="6%">Pengendalian Existing<br>(Kol 11)</th>
-                <th width="2%">L<br>(Kol 12)</th>
-                <th width="2%">S<br>(Kol 13)</th>
-                <th width="3%">Level<br>(Kol 14)</th>
+                                <!-- BAGIAN 4 (Kol 15-17) -->
+                                <th width="10%">PERATURAN<br>(15)</th>
+                                <th width="4%">ASPEK (P/TP)<br>(16)</th>
+                                <th width="10%" class="section-border-right">PELUANG & RISIKO<br>(17)</th>
 
-                <!-- BAGIAN 4 -->
-                <th width="5%">Regulasi<br>(Kol 15)</th>
-                <th width="4%">Aspek Penting<br>(Kol 16)</th>
-                <th width="4%">Peluang &amp; Risiko<br>(Kol 17)</th>
+                                <!-- BAGIAN 5 (Kol 18-22) -->
+                                <th width="4%">TOLERANSI<br>(18)</th>
+                                <th width="10%">PENGENDALIAN LANJUT<br>(19)</th>
+                                <th width="3%">L<br>(20)</th>
+                                <th width="3%">S<br>(21)</th>
+                                <th width="4%">LEVEL<br>(22)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($document->details as $index => $item)
+                                <tr>
+                                    <td style="text-align: center; vertical-align: top;">{{ $index + 1 }}</td>
+                                    
+                                    <!-- Kolom 2: PROSES BISNIS / KEGIATAN -->
+                                    <td style="vertical-align: top;">
+                                        <div><strong>{{ $item->kolom2_proses }}</strong></div>
+                                        @if($item->kolom2_kegiatan)
+                                            <div style="margin-top: 4px;">kegiatan/aset : {{ $item->kolom2_kegiatan }}</div>
+                                        @endif</td>
 
-                <!-- BAGIAN 5 -->
-                <th width="3%">Toleransi<br>(Kol 18)</th>
-                <th width="6%">Pengendalian Lanjut<br>(Kol 19)</th>
-                <th width="2%">L<br>(Kol 20)</th>
-                <th width="2%">S<br>(Kol 21)</th>
-                <th width="3%">Level<br>(Kol 22)</th>
-                <th width="2%">Res L</th>
-                <th width="2%">Res S</th>
-                <th width="3%">Res Level</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($document->details as $item)
-            <tr>
-                <td align="center">{{ $loop->iteration }}</td>
-                
-                <!-- BAGIAN 1 -->
-                <td>{{ $item->kolom2_kegiatan }}</td> 
-                <td>{{ $item->kolom3_lokasi }}</td>
-                <td align="center">{{ $item->kategori }}</td>
-                <td align="center">{{ $item->kolom5_kondisi }}</td>
+                                    <!-- Kolom 3: LOKASI -->
+                                    <td style="vertical-align: top;">{{ $item->kolom3_lokasi }}</td>
 
-                <!-- BAGIAN 2 -->
+                                    <!-- Kolom 4: KATEGORI -->
+                                    <td style="text-align: center; vertical-align: top;">{{ $item->kategori }}</td>
+
+                                    <!-- Kolom 5: KODNISI -->
+                                    <td class="section-border-right" style="text-align: center; vertical-align: top;">{{ $item->kolom5_kondisi }}</td>
+
+                <!-- (6) POTENSI BAHAYA -->
                 <td>
                     @if(in_array($item->kategori, ['K3', 'KO']))
                         @php 
@@ -209,6 +212,8 @@
                         @endif
                     @else - @endif
                 </td>
+
+                <!-- (7) ASPEK LINGKUNGAN -->
                 <td>
                     @if($item->kategori == 'Lingkungan')
                         @php $aspek = $item->kolom7_aspek_lingkungan['details'] ?? []; @endphp
@@ -218,6 +223,8 @@
                         @endif
                     @else - @endif
                 </td>
+
+                <!-- (8) ANCAMAN KEAMANAN -->
                 <td>
                     @if($item->kategori == 'Keamanan')
                         @php $ancaman = $item->kolom8_ancaman['details'] ?? []; @endphp
@@ -228,20 +235,25 @@
                     @else - @endif
                 </td>
 
-                <!-- Kol 9 -->
-                <td>{{ in_array($item->kategori, ['K3', 'KO']) ? ($item->kolom9_risiko_k3ko ?? $item->kolom9_risiko) : '-' }}</td>
-                <td>{{ ($item->kategori == 'Lingkungan') ? ($item->kolom9_dampak_lingkungan ?? $item->kolom9_risiko) : '-' }}</td>
-                <td>{{ ($item->kategori == 'Keamanan') ? ($item->kolom9_celah_keamanan ?? $item->kolom9_risiko) : '-' }}</td>
+                <!-- (9) RISIKO / DAMPAK / CELAH -->
+                <td>{{ $item->kolom9_risiko ?? $item->kolom9_risiko_k3ko ?? $item->kolom9_dampak_lingkungan ?? $item->kolom9_celah_keamanan ?? '-' }}</td>
 
-                <!-- BAGIAN 3 -->
+                <!-- (10) PENGENDALIAN RISIKO -->
                 <td>
                     @php $hs = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
                     {{ implode(', ', $hs) }}
                 </td>
+
+                <!-- (11) PENGENDALIAN EXISTING -->
                 <td>{{ $item->kolom11_existing }}</td>
+
+                <!-- (12) NILAI KEMUNGKINAN -->
                 <td align="center">{{ $item->kolom12_kemungkinan }}</td>
+                
+                <!-- (13) NILAI KONSEKUENSI -->
                 <td align="center">{{ $item->kolom13_konsekuensi }}</td>
                 
+                <!-- (14) TINGKAT RISIKO -->
                 @php
                     $score = $item->kolom14_score;
                     $class = 'level-low';
@@ -253,31 +265,47 @@
                     {{ $lvl }} ({{ $score }})
                 </td>
 
-                <!-- BAGIAN 4 -->
+                <!-- (15) REGULASI -->
                 <td>{{ $item->kolom15_regulasi }}</td>
+
+                <!-- (16) ASPEK PENTING -->
                 <td align="center">{{ ($item->kategori == 'Lingkungan') ? ($item->kolom16_aspek ?? '-') : '-' }}</td>
+
+                <!-- (17) PELUANG & RISIKO -->
                 <td>
                     @if($item->kolom17_risiko) <div>R: {{ $item->kolom17_risiko }}</div> @endif
                     @if($item->kolom17_peluang) <div>P: {{ $item->kolom17_peluang }}</div> @endif
                 </td>
 
-                <!-- BAGIAN 5 -->
+                <!-- (18) TOLERANSI -->
                 <td align="center">{{ $item->kolom18_toleransi == 'Ya' ? 'Ya' : 'Tidak' }}</td>
 
+                <!-- (19) PENGENDALIAN LANJUT -->
                 @if($item->kolom18_toleransi == 'Tidak')
-                    <td>{{ $item->kolom19_pengendalian_lanjut }}</td>
+                    <td>{{ $item->kolom19_rencana ?? $item->kolom19_pengendalian_lanjut ?? '-' }}</td>
+                    
+                    <!-- (20) NILAI KEMUNGKINAN -->
                     <td align="center">{{ $item->kolom20_kemungkinan_lanjut }}</td>
+                    
+                    <!-- (21) NILAI KONSEKUENSI -->
                     <td align="center">{{ $item->kolom21_konsekuensi_lanjut }}</td>
                     
+                    <!-- (22) TINGKAT RISIKO -->
                     @php
-                        $scoreL = $item->kolom22_tingkat_risiko_lanjut;
-                        $classL = 'level-low';
-                        $lvlL = 'RENDAH';
-                        if ($scoreL >= 15) { $classL = 'level-high'; $lvlL = 'TINGGI'; }
-                        elseif ($scoreL >= 8) { $classL = 'level-medium'; $lvlL = 'SEDANG'; }
+                        $scoreL = $item->kolom22_tingkat_risiko_lanjut; // Or checking logic
+                        // Fallback logic if variable differs
+                         if (!$scoreL && $item->kolom22_level_lanjut) {
+                            $scoreL = '-'; 
+                            $lvlL = $item->kolom22_level_lanjut;
+                         } else {
+                            $classL = 'level-low';
+                            $lvlL = 'RENDAH';
+                            if ($scoreL >= 15) { $classL = 'level-high'; $lvlL = 'TINGGI'; }
+                            elseif ($scoreL >= 8) { $classL = 'level-medium'; $lvlL = 'SEDANG'; }
+                         }
                     @endphp
-                    <td align="center" class="{{ $classL }}">
-                        {{ $lvlL }} ({{ $scoreL }})
+                    <td align="center" class="{{ $classL ?? '' }}">
+                       {{ $lvlL }} @if(is_numeric($scoreL))({{ $scoreL }})@endif
                     </td>
                 @else
                     <td align="center">-</td>
@@ -285,20 +313,6 @@
                     <td align="center">-</td>
                     <td align="center">-</td>
                 @endif
-
-                <!-- Residual -->
-                <td align="center">{{ $item->residual_kemungkinan }}</td>
-                <td align="center">{{ $item->residual_konsekuensi }}</td>
-                @php
-                    $scoreRes = $item->residual_score;
-                    $classRes = 'level-low';
-                    $lvlRes = 'RENDAH';
-                    if ($scoreRes >= 15) { $classRes = 'level-high'; $lvlRes = 'TINGGI'; }
-                    elseif ($scoreRes >= 8) { $classRes = 'level-medium'; $lvlRes = 'SEDANG'; }
-                @endphp
-                <td align="center" class="{{ $classRes }}">
-                    {{ $lvlRes }} ({{ $scoreRes }})
-                </td>
             </tr>
             @endforeach
         </tbody>

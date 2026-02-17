@@ -59,7 +59,7 @@
                         @endif
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Kegiatan <span class="required">*</span></label>
+                        <label class="form-label">Lainnya / Kegiatan / Aset</label>
                         <input type="text" class="form-control item-kegiatan-input"
                             name="items[{index}][kolom2_kegiatan]" required placeholder="Contoh: Pengelasan Pipa..."
                             oninput="updateSummary(this)"

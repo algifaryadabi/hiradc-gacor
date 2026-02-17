@@ -171,10 +171,14 @@ class DocumentController extends Controller
         }
 
         // Fetch revision histories for export
-        $histories = $document->histories()
-            ->with(['archivedBy'])
-            ->orderBy('revision_number', 'desc')
-            ->get();
+        try {
+            $histories = $document->histories()
+                ->with(['archivedBy'])
+                ->orderBy('revision_number', 'desc')
+                ->get();
+        } catch (\Exception $e) {
+            $histories = collect([]);
+        }
 
         $pdf = Pdf::loadView('documents.export_detail_pdf', compact('document', 'latestRevision', 'histories'));
         $pdf->setPaper('a4', 'landscape');
@@ -645,7 +649,7 @@ class DocumentController extends Controller
             ->get();
 
         $pukPelaksanaUsers = \App\Models\User::where('id_unit', $user->id_unit)
-            ->where('role_jabatan', 4)
+            ->whereIn('role_jabatan', [1, 2, 3, 4, 5, 6])
             ->get();
 
         // New Requirement: PIC for PMK is Manager (Role 3)
@@ -964,7 +968,7 @@ class DocumentController extends Controller
             ->get();
 
         $pukPelaksanaUsers = \App\Models\User::where('id_unit', $unitId)
-            ->where('role_jabatan', 4)
+            ->whereIn('role_jabatan', [1, 2, 3, 4, 5, 6])
             ->get();
 
         // PMK PIC = Role 3 (Manager)
@@ -2348,7 +2352,36 @@ class DocumentController extends Controller
                     } elseif ($document->status_she == 'assigned_approval') {
                         // Verificator sends back to Reviewer for Final Check
                         $document->update(['status_she' => 'assigned_review']);
-                    } elseif ($document->status_she == 'staff_verified') {
+                    } elseif ($document->status_she == 'staff_verified' || $document->status_she == 'process_approval') {
+                        // CONSOLIDATED APPROVAL CHECK
+                        // 1. Identify active categories in this document
+                        $docCategories = $document->details->pluck('kategori')->unique()->toArray();
+                        
+                        $requiredCats = array_intersect($docCategories, ['K3', 'KO', 'Lingkungan']);
+                        $allVerified = true;
+                        $pendingCats = [];
+
+                        foreach ($requiredCats as $cat) {
+                            if ($cat == 'K3' && $document->status_k3 != 'verified') {
+                                $allVerified = false;
+                                $pendingCats[] = 'K3';
+                            }
+                            if ($cat == 'KO' && $document->status_ko != 'verified') {
+                                $allVerified = false;
+                                $pendingCats[] = 'Keamanan Operasional';
+                            }
+                            if ($cat == 'Lingkungan' && $document->status_lingkungan != 'verified') {
+                                $allVerified = false;
+                                $pendingCats[] = 'Lingkungan';
+                            }
+                        }
+
+                        if (!$allVerified) {
+                             throw \Illuminate\Validation\ValidationException::withMessages([
+                                'approval' => "Gagal Approve! Kategori berikut belum diverifikasi oleh staff: " . implode(', ', $pendingCats)
+                            ]);
+                        }
+
                         $document->update([
                             'status_she' => 'approved',
                             'she_approved_at' => now()
@@ -2787,10 +2820,20 @@ class DocumentController extends Controller
             ];
 
             // Partial Revision Logic
+            // Partial Revision Logic
             if ($isShe) {
-                // SHE Unit revising -> Only SHE categories need revision
+                // SHE Unit revising -> Force Return to Submitter (Level 1)
                 $updateData['status_she'] = 'revision';
+                $updateData['current_level'] = 1; 
+                $updateData['status'] = 'revision'; // Main status revision
+                
+                // Reset Granular Statuses to Revision so Staff know they need to re-verify after resubmission
+                $updateData['status_k3'] = 'revision';
+                $updateData['status_ko'] = 'revision';
+                $updateData['status_lingkungan'] = 'revision';
+                
                 // Keep status_security as is (might be 'approved', 'pending_head', etc.)
+                // But since we go back to Level 1, the document is effectively locked for everyone until resubmitted.
             } elseif ($isSecurity) {
                 // Security Unit revising -> Only Security category needs revision
                 $updateData['status_security'] = 'revision';
@@ -3277,15 +3320,129 @@ class DocumentController extends Controller
         // Check Unit
         $user = Auth::user();
         if ($user->id_unit == 55) { // Security
-            $document->update(['status_security' => 'assigned_approval']);
+            // PING-PONG LOGIC:
+            // IF status is 'assigned_review' (Stage 1) -> Send to Verifier ('assigned_approval')
+            // IF status is 'staff_verified' (Stage 2 - returned from Verifier) -> Send to Head ('process_approval') - Wait, we need a distinct status?
+            // Actually, if Verifier sends back, status becomes 'staff_verified' for Reviewer to see.
+            // When Reviewer submits AGAIN, it should go to Head.
+            
+            if ($document->status_security == 'assigned_review') {
+                 // Stage 1: Reviewer -> Verifier
+                 $document->update(['status_security' => 'assigned_approval']);
+                 return redirect()->route('unit_pengelola.staff.index')->with('success', 'Review Tahap 1 selesai. Dokumen diteruskan ke Staff Verifikator.');
+            } elseif ($document->status_security == 'staff_verified') {
+                 // Stage 2: Reviewer -> Head
+                 $document->update(['status_security' => 'approved']); // OR 'pending_head_approval'? 
+                 // Context: Controller 'approve' expects 'approved' status from SHE/Security to proceed to Level 3.
+                 // BUT Head needs to approve first. 
+                 // So we set it to 'process_approval' (Head sees it).
+                 $document->update(['status_security' => 'process_approval']); // Ready for Head
+                 return redirect()->route('unit_pengelola.staff.index')->with('success', 'Final Review selesai. Dokumen diteruskan ke Kepala Unit.');
+            } else {
+                 // Fallback/Safety
+                 $document->update(['status_security' => 'assigned_approval']);
+                 return redirect()->route('unit_pengelola.staff.index')->with('success', 'Review selesai.');
+            }
+
         } elseif ($user->id_unit == 56) { // SHE
-            $document->update(['status_she' => 'assigned_approval']);
+            // Determine which specific category status to update based on user's assignment
+            $cats = !empty($user->assigned_categories)
+                ? (is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories)
+                : ['K3', 'KO', 'Lingkungan']; // Default for SHE: All Categories if not specified
+
+            // Helper to determine next step based on CURRENT status of the category
+            // We need to fetch fresh status for each category
+            // However, we can't easily do per-category ping-pong if they are out of sync.
+            // Assumption: User filters by category in View, and submits for that category.
+            // But here we update ALL assigned categories.
+            
+            // LOGIC:
+            // 1. If Category Status is 'assigned_review' -> Update to 'assigned_approval' (To Verifier)
+            // 2. If Category Status is 'verified' (Returned from Verifier) -> Update to 'process_approval' (To Head)
+            
+            $movedToVerifier = false;
+            $movedToHead = false;
+
+            if(in_array('K3', $cats) || $user->id_user == $document->k3_reviewer_id) {
+                if ($document->status_k3 == 'assigned_review' || $document->status_k3 == 'pending' || $document->status_k3 == null) {
+                    $document->update(['status_k3' => 'assigned_approval']);
+                    $movedToVerifier = true;
+                } elseif ($document->status_k3 == 'awaiting_final_review') {
+                    // Stage 2: Reviewer -> Head.
+                    // We mark it as 'verified' (Final Status for Staff) so Head can see it's done.
+                    $document->update(['status_k3' => 'verified']); 
+                    $movedToHead = true;
+                }
+            }
+            if(in_array('KO', $cats) || $user->id_user == $document->ko_reviewer_id) {
+                 if ($document->status_ko == 'assigned_review' || $document->status_ko == 'pending' || $document->status_ko == null) {
+                    $document->update(['status_ko' => 'assigned_approval']);
+                    $movedToVerifier = true;
+                } elseif ($document->status_ko == 'awaiting_final_review') {
+                    $document->update(['status_ko' => 'verified']);
+                    $movedToHead = true;
+                }
+            }
+            if(in_array('Lingkungan', $cats) || $user->id_user == $document->lingkungan_reviewer_id) {
+                 if ($document->status_lingkungan == 'assigned_review' || $document->status_lingkungan == 'pending' || $document->status_lingkungan == null) {
+                    $document->update(['status_lingkungan' => 'assigned_approval']);
+                    $movedToVerifier = true;
+                } elseif ($document->status_lingkungan == 'awaiting_final_review') {
+                    $document->update(['status_lingkungan' => 'verified']);
+                    $movedToHead = true;
+                }
+            }
+
+            // Update Global SHE Status based on movement
+            // LOGIC: 
+            // - If ANY category is still 'assigned_review', global stays 'assigned_review' (Reviewer Stage 1) - actually mixed.
+            // - If ANY category is 'assigned_approval', global becomes 'process_verification' (Verifier)
+            // - If ALL categories are 'verified', global becomes 'process_approval' (Head)
+            
+            // Check status of ALL categories present in this document
+            $docCats = $document->details ? $document->details->pluck('kategori')->filter()->unique()->values()->toArray() : [];
+            if (empty($docCats) && $document->kategori) $docCats[] = $document->kategori;
+            
+            $allVerified = true;
+            $anyVerifier = false;
+            
+            // Fetch fresh status
+            $freshDoc = $document->fresh();
+            
+            if (in_array('K3', $docCats)) {
+                if ($freshDoc->status_k3 != 'verified') $allVerified = false;
+                if ($freshDoc->status_k3 == 'assigned_approval') $anyVerifier = true;
+            }
+            if (in_array('KO', $docCats)) {
+                if ($freshDoc->status_ko != 'verified') $allVerified = false;
+                if ($freshDoc->status_ko == 'assigned_approval') $anyVerifier = true;
+            }
+            if (in_array('Lingkungan', $docCats)) {
+                if ($freshDoc->status_lingkungan != 'verified') $allVerified = false;
+                if ($freshDoc->status_lingkungan == 'assigned_approval') $anyVerifier = true;
+            }
+
+            if ($allVerified) {
+                 $document->update(['status_she' => 'process_approval']);
+                 $msg = 'Final Review selesai. Semua kategori telah terverifikasi. Dokumen siap untuk Approval Kepala Unit.';
+            } elseif ($anyVerifier) {
+                 $document->update(['status_she' => 'process_verification']);
+                 $msg = 'Review selesai. Beberapa kategori diteruskan ke Staff Verifikator.';
+            } else {
+                 // Remain 'assigned_review' or mixed.
+                 // If we came from Verifier, status might be 'assigned_review' (global).
+                 // Ensure we don't accidentally hide it? 
+                 // If movedToVerifier is true, we already set process_verification above? No, we set via $anyVerifier.
+                 $msg = 'Status diperbarui per kategori.';
+            }
+            
+            return redirect()->route('unit_pengelola.staff.index')->with('success', $msg);
+
         } else {
             // Fallback
             $document->update(['level2_status' => 'assigned_approval']);
+            return redirect()->route('unit_pengelola.staff.index')->with('success', 'Review selesai.');
         }
-
-        return redirect()->route('unit_pengelola.staff.index')->with('success', 'Review selesai. Dokumen diteruskan ke Verifikator.');
     }
 
     /**
@@ -3323,8 +3480,8 @@ class DocumentController extends Controller
             }
             
             $isAssigned = ($user->id_user == $document->she_verificator_id) ||
-                ($user->is_verifier == 1 && $document->status_she == 'assigned_approval') ||
-                ($hasAssignedCategory && $document->status_she == 'assigned_approval');
+                ($user->is_verifier == 1 && in_array($document->status_she, ['assigned_approval', 'process_verification'])) ||
+                ($hasAssignedCategory && in_array($document->status_she, ['assigned_approval', 'process_verification']));
         } else {
             $isAssigned = ($user->id_user == $document->level2_approver_id) ||
                 ($user->is_verifier && $document->level2_status == 'assigned_approval');
@@ -3347,22 +3504,42 @@ class DocumentController extends Controller
 
         // Update Status based on Unit
         if ($user->id_unit == 55) { // Security
+            // PING-PONG: Verifier sends back to Reviewer
+            // Status: 'staff_verified' tells Reviewer it's back
             $document->update([
-                'status_security' => 'staff_verified',
-                // Don't update global status yet, as other unit might be pending
+                'status_security' => 'staff_verified', 
             ]);
+            return redirect()->route('unit_pengelola.staff.index')->with('success', 'Verifikasi selesai. Dokumen dikembalikan ke Staff Reviewer untuk Final Review.');
+
         } elseif ($user->id_unit == 56) { // SHE
-            $document->update([
-                'status_she' => 'staff_verified',
-            ]);
+            // Granular Verification
+            $cats = !empty($user->assigned_categories)
+                ? (is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories)
+                : [];
+            
+            // PING-PONG: Use intermediate status 'awaiting_final_review'
+            if(in_array('K3', $cats) || $user->id_user == $document->k3_verificator_id) {
+                $document->update(['status_k3' => 'awaiting_final_review']);
+            }
+            if(in_array('KO', $cats) || $user->id_user == $document->ko_verificator_id) {
+                $document->update(['status_ko' => 'awaiting_final_review']);
+            }
+            if(in_array('Lingkungan', $cats) || $user->id_user == $document->lingkungan_verificator_id) {
+                $document->update(['status_lingkungan' => 'awaiting_final_review']);
+            }
+
+            // Update main status to indicate sent back to Reviewer
+            $document->update(['status_she' => 'assigned_review']); 
+            
+            return redirect()->route('unit_pengelola.staff.index')->with('success', 'Verifikasi selesai. Dokumen dikembalikan ke Staff Reviewer untuk Final Review.');
+
         } else {
             $document->update([
                 'level2_status' => 'staff_verified',
                 'status' => 'staff_verified',
             ]);
+            return redirect()->route('unit_pengelola.staff.index')->with('success', 'Verifikasi selesai.');
         }
-
-        return redirect()->route('unit_pengelola.staff.index')->with('success', 'Verifikasi selesai. Dokumen dikembalikan ke Kepala Unit.');
     }
 
     /**
@@ -4101,17 +4278,23 @@ class DocumentController extends Controller
         $countInbox = $queryInbox->count();
 
         // --- 2. Card: Received by Verificator (Pending Verification) ---
-        // Status: assigned_approval.
-        // We show ALL in verification pool for this unit, or just those processed by me?
-        // Usually staff likes to see what's in the next pipe. Let's show all 'assigned_approval' in Unit.
-        $queryVerif = Document::where($statusCol, 'assigned_approval');
+        
+        if ($user->id_unit == 55) { // Security
+            $queryVerif = Document::where('status_security', 'assigned_approval');
+        } else { // SHE
+            // Check if ANY granular status is 'assigned_approval'
+            $queryVerif = Document::where(function($q) {
+                $q->where('status_k3', 'assigned_approval')
+                  ->orWhere('status_ko', 'assigned_approval')
+                  ->orWhere('status_lingkungan', 'assigned_approval');
+            });
+        }
         $countVerif = $queryVerif->count();
 
         // --- 3. Card: History Review ---
-        // Documents I have reviewed.
-        // Use Approvals table. Use IDs to fetch Docs.
+        // Documents I have reviewed OR verified.
         $historyIds = \App\Models\DocumentApproval::where('approver_id', $user->id_user)
-            ->where('action', 'reviewed')
+            ->whereIn('action', ['reviewed', 'verified'])
             ->pluck('document_id');
         $countHistory = $historyIds->count();
 
@@ -4125,7 +4308,15 @@ class DocumentController extends Controller
         if ($filter === 'history') {
              $mainQuery->whereIn('id', $historyIds);
         } elseif ($filter === 'verification') {
-             $mainQuery->where($statusCol, 'assigned_approval');
+             if ($user->id_unit == 55) {
+                 $mainQuery->where('status_security', 'assigned_approval');
+             } else {
+                 $mainQuery->where(function($q) {
+                    $q->where('status_k3', 'assigned_approval')
+                      ->orWhere('status_ko', 'assigned_approval')
+                      ->orWhere('status_lingkungan', 'assigned_approval');
+                 });
+             }
         } else {
              // Default: Inbox (Pending Review)
              // Same logic as $queryInbox above
@@ -4136,13 +4327,26 @@ class DocumentController extends Controller
                           if($user->is_reviewer) $sub->where('status_security', 'assigned_review');
                       });
                  })->where('status_security', 'assigned_review');
-            } else {
+            } else { // SHE Unit
                  $mainQuery->where(function($q) use ($user) {
                     $q->where('she_reviewer_id', $user->id_user)
                       ->orWhere(function($sub) use ($user) {
-                          if($user->is_reviewer) $sub->where('status_she', 'assigned_review');
+                          if($user->is_reviewer) {
+                                // Check Global OR Granular Statuses for assigned categories
+                                $sub->where('status_she', 'assigned_review'); // Legacy/Global check
+                                
+                                $cats = !empty($user->assigned_categories)
+                                    ? (is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories)
+                                    : ['K3', 'KO', 'Lingkungan'];
+
+                                // Allow viewing if MY category is pending review (Stage 1) or returned (Stage 2)
+                                if (in_array('K3', $cats)) $sub->orWhere('status_k3', 'assigned_review')->orWhere('status_k3', 'staff_verified');
+                                if (in_array('KO', $cats)) $sub->orWhere('status_ko', 'assigned_review')->orWhere('status_ko', 'staff_verified');
+                                if (in_array('Lingkungan', $cats)) $sub->orWhere('status_lingkungan', 'assigned_review')->orWhere('status_lingkungan', 'staff_verified');
+                          }
                       });
-                 })->where('status_she', 'assigned_review');
+                 });
+                 // REMOVED stricter ->where('status_she', 'assigned_review') to allow mixed states
             }
         }
 
@@ -4204,7 +4408,8 @@ class DocumentController extends Controller
 
         $pendingDocuments = $docsAtLevel2->filter(function ($d) use ($stField) {
             $st = $d->$stField;
-            return $d->current_level == 2 && ($st == 'pending_head' || empty($st));
+            // Include 'staff_verified' so Head can see documents returned by staff
+            return $d->current_level == 2 && ($st == 'pending_head' || $st == 'staff_verified' || empty($st));
         });
 
         $pendingCount = $pendingDocuments->count();
@@ -5046,10 +5251,14 @@ class DocumentController extends Controller
      */
     public function getRevisionHistory(Document $document)
     {
-        $histories = $document->histories()
-            ->with('archivedBy')
-            ->orderBy('revision_number', 'desc')
-            ->get();
+        try {
+            $histories = $document->histories()
+                ->with('archivedBy')
+                ->orderBy('revision_number', 'desc')
+                ->get();
+        } catch (\Exception $e) {
+            $histories = collect([]);
+        }
 
         return response()->json($histories);
     }

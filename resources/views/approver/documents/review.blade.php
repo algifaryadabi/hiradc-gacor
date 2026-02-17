@@ -1385,12 +1385,12 @@
                                     <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal
                                     </th>
                                     <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
-                                    <th colspan="8">BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa</th>
+                                    <th colspan="5">BAGIAN 5: Mitigasi Lanjutan</th>
                                 </tr>
                                 <!-- Header Row 2: Column Details -->
                                 <tr>
                                     <!-- BAGIAN 1 (Kolom 2-5) -->
-                                    <th style="width: 180px;">Proses/Kegiatan<br><small>(Kol 2)</small></th>
+                                    <th style="width: 300px;">PROSES BISNIS /<br>KEGIATAN / ASET<br><small>(Kol 2)</small></th>
                                     <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
                                     <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
                                     <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol
@@ -1430,9 +1430,7 @@
                                     <th style="width: 50px;">L<br><small>(Kol 20)</small></th>
                                     <th style="width: 50px;">S<br><small>(Kol 21)</small></th>
                                     <th style="width: 80px;">Level<br><small>(Kol 22)</small></th>
-                                    <th style="width: 50px;">Residual L</th>
-                                    <th style="width: 50px;">Residual S</th>
-                                    <th style="width: 80px;">Residual Level</th>
+
                                 </tr>
                             </thead>
                             <tbody>
@@ -1494,9 +1492,12 @@
                                             @endif
                                         </td>
                                         <!-- BAGIAN 1: Identifikasi Aktivitas -->
-                                        <!-- Kolom 2: Kegiatan -->
+                                        <!-- Kolom 2: Proses Bisnis / Kegiatan -->
                                         <td>
-                                            <div class="cell-text">{{ $item->kolom2_kegiatan }}</div>
+                                            <div class="cell-text"><strong>{{ $item->kolom2_proses }}</strong></div>
+                                            @if($item->kolom2_kegiatan)
+                                                <div class="cell-text" style="margin-top:4px; color:#64748b;">kegiatan/aset : {{ $item->kolom2_kegiatan }}</div>
+                                            @endif
                                         </td>
                                         <!-- Kolom 3: Lokasi -->
                                         <td>
@@ -1774,30 +1775,11 @@
                                             </td>
                                         @endif
 
-                                        <!-- Residual Risk (Always displayed) -->
-                                        <td class="risk-col" style="vertical-align:middle; text-align:center;">
-                                            <div style="font-weight:800; font-size:16px;">{{ $item->residual_kemungkinan }}
-                                            </div>
-                                        </td>
-                                        <td class="risk-col" style="vertical-align:middle; text-align:center;">
-                                            <div style="font-weight:800; font-size:16px;">{{ $item->residual_konsekuensi }}
-                                            </div>
-                                        </td>
-                                        <td class="risk-col" style="vertical-align:middle;">
-                                            <div class="risk-score-box">
-                                                <div class="risk-val">{{ $item->residual_score ?? '-' }}</div>
-                                                @if($item->residual_score)
-                                                    <div
-                                                        class="risk-badge {{ $item->residual_score >= 15 ? 'bg-high' : ($item->residual_score >= 8 ? 'bg-med' : 'bg-low') }}">
-                                                        {{ $item->residual_score >= 15 ? 'HIGH' : ($item->residual_score >= 8 ? 'MED' : 'LOW') }}
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </td>
+
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="22" style="text-align: center; padding: 20px;">Belum ada data detail.
+                                        <td colspan="24" style="text-align: center; padding: 20px;">Belum ada data detail.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -2239,7 +2221,7 @@
                             didOpen: () => Swal.showLoading()
                         });
 
-                        fetch(`/approver/documents/puk/${pukId}/update-program`, {
+                        fetch(`/approver/puk/${pukId}/update-program-kerja`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -2305,7 +2287,7 @@
                             didOpen: () => Swal.showLoading()
                         });
 
-                        fetch(`/approver/documents/pmk/${pmkId}/update-program`, {
+                        fetch(`/approver/pmk/${pmkId}/update-program-kerja`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json',

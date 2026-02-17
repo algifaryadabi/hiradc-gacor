@@ -1221,7 +1221,7 @@
         // Cukup cek: apakah user ini adalah staff reviewer (is_reviewer = 1) dari unit yang sama?
         $isReviewer = $user->is_reviewer == 1 || 
                       ($currentReviewerId == $user->id_user) ||
-                      (in_array($user->role_jabatan, [4, 5, 6]) && in_array($user->id_unit, [55, 56]));
+                      (in_array($user->role_jabatan, [5, 6]) && in_array($user->id_unit, [55, 56]));
 
         // Determine if we should show the Reviewer View (Priority over Head View)
         // Allow if assigned_review OR pending_head (Self-Disposition)
@@ -1233,7 +1233,14 @@
                            in_array($user->id_unit, [55, 56]);
 
         $isApprover = ($currentApproverId == $user->id_user) || 
-                      ($isStaffApprover && $status == 'assigned_approval');
+                      ($isStaffApprover && ($status == 'assigned_approval' || $status == 'process_verification'));
+        
+        // --- KEY FIX: ROBUST HEAD DETECTION ---
+        // Force isHead = true if the user is explicitly the Level 2 Approver for this document.
+        // This handles cases where Role 4 (Manager) is not caught by isUnitPengelola() (which might expect Role 3).
+        if (!$isHead && $document->current_level == 2 && $document->level2_approver_id == $user->id_user) {
+            $isHead = true;
+        }
 
         // Determine if this Unit Pengelola's track is active
         $isSheUnit = ($user->id_unit == 56);
@@ -1391,6 +1398,45 @@
             </div>
 
             <div id="tab-hiradc" class="tab-content active">
+                @if(Auth::user()->id_unit == 56 && isset($isHead) && $isHead)
+                    <!-- Sub-tabs for SHE Unit -->
+                    <!-- Calculate Counts for Visibility -->
+                    @php
+                        $countK3 = $document->details->where('kategori', 'K3')->count();
+                        $countKO = $document->details->where('kategori', 'KO')->count();
+                        $countLing = $document->details->where('kategori', 'Lingkungan')->count();
+                    @endphp
+
+                    <div class="sub-tabs" style="display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                        <button type="button" class="sub-tab-btn active" onclick="filterSheCategory('all', this)" style="padding:8px 16px; border-radius:8px; border:none; background:#e2e8f0; cursor:pointer; font-weight:600;">
+                            All Categories
+                        </button>
+                        
+                        @if($countK3 > 0)
+                        <button type="button" class="sub-tab-btn" onclick="filterSheCategory('K3', this)" style="padding:8px 16px; border-radius:8px; border:none; background:white; cursor:pointer; border:1px solid #e2e8f0;">
+                            K3 
+                            @if($document->status_k3 == 'verified') <i class="fas fa-check-circle" style="color:green;"></i> 
+                            @elseif($document->status_k3 == 'revision') <i class="fas fa-exclamation-circle" style="color:red;"></i> @endif
+                        </button>
+                        @endif
+
+                        @if($countKO > 0)
+                        <button type="button" class="sub-tab-btn" onclick="filterSheCategory('KO', this)" style="padding:8px 16px; border-radius:8px; border:none; background:white; cursor:pointer; border:1px solid #e2e8f0;">
+                            KO 
+                            @if($document->status_ko == 'verified') <i class="fas fa-check-circle" style="color:green;"></i> 
+                            @elseif($document->status_ko == 'revision') <i class="fas fa-exclamation-circle" style="color:red;"></i> @endif
+                        </button>
+                        @endif
+
+                        @if($countLing > 0)
+                        <button type="button" class="sub-tab-btn" onclick="filterSheCategory('Lingkungan', this)" style="padding:8px 16px; border-radius:8px; border:none; background:white; cursor:pointer; border:1px solid #e2e8f0;">
+                            Lingkungan 
+                            @if($document->status_lingkungan == 'verified') <i class="fas fa-check-circle" style="color:green;"></i> 
+                            @elseif($document->status_lingkungan == 'revision') <i class="fas fa-exclamation-circle" style="color:red;"></i> @endif
+                        </button>
+                        @endif
+                    </div>
+                @endif
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:15px;">
                     <a href="{{ route('documents.export.detail.pdf', $document->id) }}" class="btn" style="background-color:#dc2626; color:white; padding: 8px 16px; border-radius: 8px; text-decoration: none;">
                         <i class="fas fa-file-pdf"></i> Export PDF
@@ -1401,249 +1447,450 @@
                 </div>
                 <div class="hiradc-wrapper">
                 <table class="excel-table">
-                    <thead>
-                        <tr>
-                            <th rowspan="2" style="width: 40px;">No</th>
-                            <th colspan="4" class="section-border-right">BAGIAN 1: Identifikasi Aktivitas</th>
-                            <th colspan="6" class="section-border-right">BAGIAN 2: Identifikasi</th>
-                            <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal</th>
-                            <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
-                            <th colspan="8">BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa</th>
-                        </tr>
-                        <tr>
-                            <th style="width: 180px;">Proses/Kegiatan<br><small>(Kol 2)</small></th>
-                            <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
-                            <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
-                            <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol 5)</small></th>
-                            <th style="width: 150px;">Potensi Bahaya<br><small>(Kol 6)</small></th>
-                            <th style="width: 150px;">Aspek Lingkungan<br><small>(Kol 7)</small></th>
-                            <th style="width: 150px;">Ancaman Keamanan<br><small>(Kol 8)</small></th>
-                            <th style="width: 150px;">RISIKO (K3/KO)<br><small>(Kol 9)</small></th>
-                            <th style="width: 150px;">DAMPAK (Lingk)<br><small>(Kol 9)</small></th>
-                            <th style="width: 150px;" class="section-border-right">CELAH (Keamanan)<br><small>(Kol
-                                    9)</small></th>
-                            <th style="width: 250px;">Hirarki Pengendalian<br><small>(Kol 10)</small></th>
-                            <th style="width: 250px;">Pengendalian Existing<br><small>(Kol 11)</small></th>
-                            <th style="width: 50px;">L<br><small>(Kol 12)</small></th>
-                            <th style="width: 50px;">S<br><small>(Kol 13)</small></th>
-                            <th style="width: 80px;" class="section-border-right">Level<br><small>(Kol 14)</small></th>
-                            <th style="width: 200px;">Regulasi<br><small>(Kol 15)</small></th>
-                            <th style="width: 80px;">Aspek Penting<br><small>(Kol 16)</small></th>
-                            <th style="width: 200px;" class="section-border-right">Peluang & Risiko<br><small>(Kol
-                                    17)</small></th>
-                            <th style="width: 100px;">Toleransi<br><small>(Kol 18)</small></th>
-                            <th style="width: 200px;">Pengendalian Lanjut<br><small>(Kol 19)</small></th>
-                            <th style="width: 50px;">L<br><small>(Kol 20)</small></th>
-                            <th style="width: 50px;">S<br><small>(Kol 21)</small></th>
-                            <th style="width: 80px;">Level<br><small>(Kol 22)</small></th>
-                            <th style="width: 50px;">Residual L</th>
-                            <th style="width: 50px;">Residual S</th>
-                            <th style="width: 80px;">Residual Level</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($filteredDetails ?? $document->details as $index => $item)
+                        <thead>
+                            <!-- Header Row 1: Main Sections (BAGIAN 1-5) -->
                             <tr>
-                                <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
-                                    {{ $index + 1 }}
-                                    @if($canEdit)
-                                        <div style="margin-top:5px;">
-                                            <button type="button" class="action-btn-icon" 
-                                                style="background:none; border:none; color:#f59e0b; cursor:pointer;"
-                                                onclick="editItem({{ $item->id }})" title="Edit Item">
-                                                <i class="fas fa-pencil-alt"></i>
-                                            </button>
-                                        </div>
-                                    @endif
-                                </td>
-                                <!-- Kolom 2-5 -->
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom2_kegiatan }}</div>
-                                </td>
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom3_lokasi }}</div>
-                                </td>
-                                <td>
-                                    <div class="cell-text">{{ $item->kategori }}</div>
-                                </td>
-                                <td class="section-border-right">
-                                    <div class="cell-text">{{ $item->kolom5_kondisi }}</div>
-                                </td>
-
-                                <!-- Kolom 6 (Bahaya - K3/KO) -->
-                                <td>
-                                    @if(in_array($item->kategori, ['K3', 'KO']))
-                                        @php $bahaya = $item->kolom6_bahaya['details'] ?? [];
-                                        $manualB = $item->kolom6_bahaya['manual'] ?? ''; @endphp
-                                        <div class="cell-checkbox-group">
-                                            @foreach($bahaya as $b) <div class="cell-checkbox-item"><i
-                                            class="fas fa-exclamation-triangle"></i> {{ $b }}</div> @endforeach
-                                            @if($manualB)
-                                            <div style="font-size:12px; color:#991b1b;">Lainnya: {{ $manualB }}</div> @endif
-                                        </div>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-
-                                <!-- Kolom 7 (Aspek - Lingkungan) -->
-                                <td>
-                                    @if($item->kategori == 'Lingkungan')
-                                        @php $aspek = $item->kolom7_aspek_lingkungan['details'] ?? [];
-                                        $manualA = $item->kolom7_aspek_lingkungan['manual'] ?? ''; @endphp
-                                        <div class="cell-checkbox-group">
-                                            @foreach($aspek as $a) <div class="cell-checkbox-item"><i class="fas fa-leaf"></i>
-                                            {{ $a }}</div> @endforeach
-                                            @if($manualA)
-                                            <div style="font-size:12px; color:#166534;">Lainnya: {{ $manualA }}</div> @endif
-                                        </div>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-
-                                <!-- Kolom 8 (Ancaman - Keamanan) -->
-                                <td>
-                                    @if($item->kategori == 'Keamanan')
-                                        @php $ancaman = $item->kolom8_ancaman['details'] ?? [];
-                                        $manualAn = $item->kolom8_ancaman['manual'] ?? ''; @endphp
-                                        <div class="cell-checkbox-group">
-                                            @foreach($ancaman as $an) <div class="cell-checkbox-item"><i
-                                            class="fas fa-shield-alt"></i> {{ $an }}</div> @endforeach
-                                            @if($manualAn)
-                                            <div style="font-size:12px; color:#991b1b;">Lainnya: {{ $manualAn }}</div> @endif
-                                        </div>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-
-                                <!-- Kolom 9 (Risiko - K3/KO) -->
-                                <td>
-                                    @if(in_array($item->kategori, ['K3', 'KO']))
-                                        {{ $item->kolom9_risiko }}
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-
-                                <!-- Kolom 9 (Dampak - Lingkungan) -->
-                                <td>
-                                    @if($item->kategori == 'Lingkungan')
-                                        {{ $item->kolom9_dampak_lingkungan ?? '-' }}
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-
-                                <!-- Kolom 9 (Celah - Keamanan) -->
-                                <td class="section-border-right">
-                                    @if($item->kategori == 'Keamanan')
-                                        {{ $item->kolom9_celah_keamanan ?? '-' }}
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-
-                                <!-- Kolom 10-14 -->
-                                <td>
-                                    @php $hierarchy = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
-                                    <div class="cell-checkbox-group">
-                                        @foreach($hierarchy as $h) <div>- {{ $h }}</div> @endforeach
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom11_existing }}</div>
-                                </td>
-                                <td class="risk-col">
-                                    <div style="font-weight:800;">{{ $item->kolom12_kemungkinan }}</div>
-                                </td>
-                                <td class="risk-col">
-                                    <div style="font-weight:800;">{{ $item->kolom13_konsekuensi }}</div>
-                                </td>
-                                <td class="risk-col section-border-right">
-                                    <span
-                                        class="risk-badge {{ $item->kolom14_score >= 15 ? 'bg-high' : ($item->kolom14_score >= 8 ? 'bg-med' : 'bg-low') }}">
-                                        {{ $item->kolom14_score }}
-                                    </span>
-                                </td>
-
-                                <!-- Kolom 15-17 -->
-                                <td>
-                                    <div class="cell-text">{{ $item->kolom15_regulasi }}</div>
-                                </td>
-                                <td style="text-align:center;">{{ $item->kolom16_aspek ?? '-' }}</td>
-                                <td class="section-border-right">
-                                    @if($item->kolom17_risiko)
-                                    <div>(-) {{ $item->kolom17_risiko }}</div> @endif
-                                    @if($item->kolom17_peluang)
-                                    <div>(+) {{ $item->kolom17_peluang }}</div> @endif
-                                </td>
-
-                                <!-- Kolom 18-22 -->
-                                <td style="text-align:center;">
-                                    <span class="doc-meta-badge"
-                                        style="{{ $item->kolom18_toleransi == 'Ya' ? 'background:#dcfce7;color:#166534;' : 'background:#fee2e2;color:#991b1b;' }}">
-                                        {{ $item->kolom18_toleransi }}
-                                    </span>
-                                </td>
-                                <td>{{ $item->kolom19_pengendalian_lanjut }}</td>
-                                <td class="risk-col">{{ $item->kolom20_kemungkinan_lanjut }}</td>
-                                <td class="risk-col">{{ $item->kolom21_konsekuensi_lanjut }}</td>
-                                <td class="risk-col">
-                                    <span
-                                        class="risk-badge {{ $item->kolom22_tingkat_risiko_lanjut >= 15 ? 'bg-high' : ($item->kolom22_tingkat_risiko_lanjut >= 8 ? 'bg-med' : 'bg-low') }}">
-                                        {{ $item->kolom22_tingkat_risiko_lanjut ?? '-' }}
-                                    </span>
-                                </td>
-                                <td class="risk-col">{{ $item->residual_kemungkinan }}</td>
-                                <td class="risk-col">{{ $item->residual_konsekuensi }}</td>
-                                <td class="risk-col">
-                                    <span
-                                        class="risk-badge {{ $item->residual_score >= 15 ? 'bg-high' : ($item->residual_score >= 8 ? 'bg-med' : 'bg-low') }}">
-                                        {{ $item->residual_score ?? '-' }}
-                                    </span>
-                                </td>
+                                <th rowspan="2" style="width: 40px;">No</th>
+                                <th colspan="4" class="section-border-right">BAGIAN 1: Identifikasi Aktivitas</th>
+                                <th colspan="6" class="section-border-right">BAGIAN 2: Identifikasi</th>
+                                <th colspan="5" class="section-border-right">BAGIAN 3: Pengendalian & Penilaian Awal
+                                </th>
+                                <th colspan="3" class="section-border-right">BAGIAN 4: Legalitas & Signifikansi</th>
+                                <th colspan="5">BAGIAN 5: Mitigasi Lanjutan</th>
                             </tr>
-                        @empty
+                            <!-- Header Row 2: Column Details -->
                             <tr>
-                                <td colspan="26" style="text-align:center; padding:20px;">Tidak ada data detail.</td>
+                                <!-- BAGIAN 1 (Kolom 2-5) -->
+                                <th style="width: 300px;">PROSES BISNIS /<br>KEGIATAN / ASET<br><small>(Kol 2)</small></th>
+                                <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
+                                <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
+                                <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol 5)</small>
+                                </th>
+
+                                <!-- BAGIAN 2 (Kolom 6-9) -->
+                                <th style="width: 150px;">Potensi Bahaya<br><small>(Kol 6)</small></th>
+                                <th style="width: 150px;">Aspek Lingkungan<br><small>(Kol 7)</small></th>
+                                <th style="width: 150px;">Ancaman Keamanan<br><small>(Kol 8)</small></th>
+
+                                <th style="width: 150px;">RISIKO (K3/KO)<br><small>(Kol 9)</small></th>
+                                <th style="width: 150px;">DAMPAK (Lingk)<br><small>(Kol 9)</small></th>
+                                <th style="width: 150px;" class="section-border-right">CELAH (Keamanan)<br><small>(Kol
+                                        9)</small></th>
+
+                                <!-- BAGIAN 3 (Kolom 10-14) -->
+                                <th style="width: 250px;">Hirarki Pengendalian<br><small>(Kol 10)</small></th>
+                                <th style="width: 250px;">Pengendalian Existing<br><small>(Kol 11)</small></th>
+                                <th style="width: 50px;">L<br><small>(Kol 12)</small></th>
+                                <th style="width: 50px;">S<br><small>(Kol 13)</small></th>
+                                <th style="width: 80px;" class="section-border-right">Level<br><small>(Kol 14)</small>
+                                </th>
+
+                                <!-- BAGIAN 4 (Kolom 15-17) -->
+                                <th style="width: 200px;">Regulasi<br><small>(Kol 15)</small></th>
+                                <th style="width: 80px;">Aspek Penting<br><small>(Kol 16)</small></th>
+                                <th style="width: 200px;" class="section-border-right">Peluang & Risiko<br><small>(Kol
+                                        17)</small></th>
+
+                                <!-- BAGIAN 5 (Kolom 18-22) -->
+                                <th style="width: 100px;">Toleransi<br><small>(Kol 18)</small></th>
+                                <th style="width: 200px;">Pengendalian Lanjut<br><small>(Kol 19)</small></th>
+                                <th style="width: 50px;">L<br><small>(Kol 20)</small></th>
+                                <th style="width: 50px;">S<br><small>(Kol 21)</small></th>
+                                <th style="width: 80px;">Level<br><small>(Kol 22)</small></th>
+
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @forelse($filteredDetails ?? $document->details as $index => $item)
+                                @php
+                                    $skip = false;
+
+                                    // ONLY apply filtering logic if document is in revision mode
+                                    // For normal viewing (draft, pending, approved, published), show ALL details
+                                    if ($document->status == 'revision') {
+                                        // Check which categories are locked (approved/published)
+                                        $isSheLocked = ($document->status_she == 'approved' || $document->status_she == 'published');
+                                        $isSecLocked = ($document->status_security == 'approved' || $document->status_security == 'published');
+
+                                        // Check which categories are in revision
+                                        $isSheRevision = ($document->status_she == 'revision');
+                                        $isSecRevision = ($document->status_security == 'revision');
+
+                                        // Priority 1: If a specific track is in revision, ONLY show that track
+                                        if ($isSheRevision && !$isSecRevision) {
+                                            // SHE is revising, Security is NOT revising
+                                            // Show ONLY SHE categories (K3, KO, Lingkungan)
+                                            if (!in_array($item->kategori, ['K3', 'KO', 'Lingkungan'])) {
+                                                $skip = true;
+                                            }
+                                        } elseif ($isSecRevision && !$isSheRevision) {
+                                            // Security is revising, SHE is NOT revising
+                                            // Show ONLY Security category (Keamanan)
+                                            if ($item->kategori != 'Keamanan') {
+                                                $skip = true;
+                                            }
+                                        } elseif ($isSheRevision && $isSecRevision) {
+                                            // Both are revising - show all items
+                                            // No filtering needed
+                                        } else {
+                                            // Neither is revising - check for locked status
+                                            if ($item->kategori == 'Keamanan' && $isSecLocked) {
+                                                $skip = true;
+                                            }
+                                            if (in_array($item->kategori, ['K3', 'KO', 'Lingkungan']) && $isSheLocked) {
+                                                $skip = true;
+                                            }
+                                        }
+                                    }
+                                    // If not in revision mode, show everything ($skip remains false)
+                                @endphp
+                                @if($skip) @continue @endif
+
+                                <tr data-category="{{ $item->kategori }}">
+                                    <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
+                                        {{ $index + 1 }}
+                                        @if($canEdit)
+                                            <div style="margin-top:5px;">
+                                                <button type="button" class="action-btn-icon" 
+                                                    style="background:none; border:none; color:#f59e0b; cursor:pointer;"
+                                                    onclick="editItem({{ $item->id }})" title="Edit Item">
+                                                    <i class="fas fa-pencil-alt"></i>
+                                                </button>
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <!-- BAGIAN 1: Identifikasi Aktivitas -->
+                                    <!-- Kolom 2: Proses Bisnis / Kegiatan -->
+                                    <td>
+                                        <div class="cell-text"><strong>{{ $item->kolom2_proses }}</strong></div>
+                                        @if($item->kolom2_kegiatan)
+                                            <div class="cell-text" style="margin-top:4px; color:#64748b;">kegiatan/aset : {{ $item->kolom2_kegiatan }}</div>
+                                        @endif
+                                    </td>
+                                    <!-- Kolom 3: Lokasi -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom3_lokasi }}</div>
+                                    </td>
+                                    <!-- Kolom 4: Kategori -->
+                                    <td>
+                                        <div class="cell-input"
+                                            style="display:flex; align-items:center; justify-content:center;">
+                                            <span class="doc-meta-badge" style="background:#e0e7ff; color:#3730a3;">
+                                                {{ $item->kategori }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <!-- Kolom 5: Kondisi -->
+                                    <td class="section-border-right">
+                                        <div class="cell-input"
+                                            style="display:flex; align-items:center; justify-content:center;">
+                                            <span class="doc-meta-badge" style="background:#f1f5f9; color:#475569;">
+                                                {{ $item->kolom5_kondisi }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <!-- BAGIAN 2: Identifikasi -->
+
+                                    <!-- Kolom 6: Potensi Bahaya (K3/KO Only) -->
+                                    <td>
+                                        @if($item->kategori == 'K3' || $item->kategori == 'KO')
+                                            <div class="cell-checkbox-group">
+                                                @php $bahayaDetails = $item->kolom6_bahaya['details'] ?? []; @endphp
+                                                @foreach($bahayaDetails as $detail)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-exclamation-triangle"
+                                                            style="color:#ef4444; font-size:10px; margin-top:3px;"></i>
+                                                        <span>{{ $detail }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($item->kolom6_bahaya['manual']))
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                        <strong>Lainnya:</strong> {{ $item->kolom6_bahaya['manual'] }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- Kolom 7: Aspek Lingkungan (Lingkungan Only) -->
+                                    <td>
+                                        @if($item->kategori == 'Lingkungan')
+                                            <div class="cell-checkbox-group">
+                                                @php
+                                                    $col7 = $item->kolom7_aspek_lingkungan ?? [];
+                                                    $details7 = $col7['details'] ?? ((is_array($col7) && !array_key_exists('details', $col7)) ? $col7 : []);
+                                                    $manual7 = $col7['manual'] ?? '';
+                                                @endphp
+                                                @foreach($details7 as $aspek)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-leaf"
+                                                            style="color:#22c55e; font-size:10px; margin-top:3px;"></i>
+                                                        <span>{{ $aspek }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($manual7))
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#f0fdf4; border:1px dashed #22c55e; border-radius:4px; color:#15803d;">
+                                                        <strong>Lainnya:</strong> {{ $manual7 }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- Kolom 8: Ancaman Keamanan (Keamanan Only) -->
+                                    <td>
+                                        @if($item->kategori == 'Keamanan')
+                                            <div class="cell-checkbox-group">
+                                                @php
+                                                    $col8 = $item->kolom8_ancaman ?? [];
+                                                    $details8 = $col8['details'] ?? ((is_array($col8) && !array_key_exists('details', $col8)) ? $col8 : []);
+                                                    $manual8 = $col8['manual'] ?? '';
+                                                @endphp
+                                                @foreach($details8 as $threat)
+                                                    <div class="cell-checkbox-item">
+                                                        <i class="fas fa-shield-alt"
+                                                            style="color:#dc2626; font-size:10px; margin-top:3px;"></i>
+                                                        <span>{{ $threat }}</span>
+                                                    </div>
+                                                @endforeach
+                                                @if(!empty($manual8))
+                                                    <div
+                                                        style="font-size:13px; margin-top:8px; padding:6px; background:#fef2f2; border:1px dashed #f87171; border-radius:4px; color:#991b1b;">
+                                                        <strong>Lainnya:</strong> {{ $manual8 }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- Kolom 9a: RISIKO (K3/KO) -->
+                                    <td>
+                                        @if($item->kategori == 'K3' || $item->kategori == 'KO')
+                                            <div class="cell-text">{{ $item->kolom9_risiko_k3ko ?? $item->kolom9_risiko }}</div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- Kolom 9b: DAMPAK (Lingkungan) -->
+                                    <td>
+                                        @if($item->kategori == 'Lingkungan')
+                                            <div class="cell-text">{{ $item->kolom9_dampak_lingkungan ?? $item->kolom9_risiko }}
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- Kolom 9c: CELAH (Keamanan) -->
+                                    <td class="section-border-right">
+                                        @if($item->kategori == 'Keamanan')
+                                            <div class="cell-text">{{ $item->kolom9_celah_keamanan ?? $item->kolom9_risiko }}
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        @endif
+                                    </td>
+
+                                    <!-- BAGIAN 3: Pengendalian & Penilaian -->
+                                    <!-- Kolom 10: Hirarki Pengendalian -->
+                                    <td>
+                                        <div class="cell-checkbox-group">
+                                            @php $hs = $item->kolom10_pengendalian['hierarchy'] ?? []; @endphp
+                                            @foreach($hs as $h)
+                                                <div class="cell-checkbox-item">
+                                                    <i class="fas fa-check-square" style="color:#10b981;"></i>
+                                                    <span style="font-weight:600;">{{ $h }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </td>
+                                    <!-- Kolom 11: Pengendalian Existing -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom11_existing }}</div>
+                                    </td>
+                                    <!-- Kolom 12-14: Penilaian Risiko Awal -->
+                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom12_kemungkinan }}</div>
+                                    </td>
+                                    <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                        <div style="font-weight:800; font-size:16px;">{{ $item->kolom13_konsekuensi }}</div>
+                                    </td>
+                                    <td class="risk-col section-border-right" style="vertical-align:middle;">
+                                        <div class="risk-score-box">
+                                            <div class="risk-val">{{ $item->kolom14_score }}</div>
+                                            <div
+                                                class="risk-badge {{ $item->kolom14_score >= 15 ? 'bg-high' : ($item->kolom14_score >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                {{ $item->kolom14_score >= 15 ? 'TINGGI' : ($item->kolom14_score >= 8 ? 'SEDANG' : 'RENDAH') }}
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- BAGIAN 4: Legalitas & Signifikansi -->
+                                    <!-- Kolom 15: Regulasi -->
+                                    <td>
+                                        <div class="cell-text">{{ $item->kolom15_regulasi }}</div>
+                                    </td>
+                                    <!-- Kolom 16: Aspek Lingkungan Penting (Only for Lingkungan) -->
+                                    <td style="text-align:center; vertical-align:middle;">
+                                        @if($item->kategori == 'Lingkungan' && $item->kolom16_aspek)
+                                            <div class="doc-meta-badge"
+                                                style="{{ $item->kolom16_aspek == 'P' ? 'background:#dbeafe; color:#1e40af;' : 'background:#f1f5f9; color:#64748b;' }}">
+                                                {{ $item->kolom16_aspek }}
+                                            </div>
+                                        @else
+                                            <div style="color:#94a3b8;">-</div>
+                                        @endif
+                                    </td>
+                                    <!-- Kolom 17: Peluang & Risiko -->
+                                    <td class="section-border-right">
+                                        <div class="risk-section">
+                                            @if($item->kolom17_risiko)
+                                                <div class="risk-label">RISIKO (-):</div>
+                                                <div class="risk-text">{{ $item->kolom17_risiko }}</div>
+                                            @endif
+                                            @if($item->kolom17_peluang)
+                                                <div class="risk-label"
+                                                    style="border-top:1px solid #e2e8f0; margin-top:6px; padding-top:6px;">
+                                                    PELUANG (+):</div>
+                                                <div class="risk-text">{{ $item->kolom17_peluang }}</div>
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    <!-- BAGIAN 5: Mitigasi Lanjutan & Risiko Sisa -->
+                                    <!-- Kolom 18: Toleransi -->
+                                    <td style="text-align:center; vertical-align:middle;">
+                                        <div class="doc-meta-badge"
+                                            style="{{ $item->kolom18_toleransi == 'Ya' ? 'background:#dcfce7; color:#166534;' : 'background:#fee2e2; color:#991b1b;' }}">
+                                            {{ $item->kolom18_toleransi == 'Ya' ? 'Ya' : 'Tidak' }}
+                                        </div>
+                                    </td>
+                                    <!-- Kolom 19-22: Follow-up Risk (Only if Tolerance = Tidak) -->
+                                    @if($item->kolom18_toleransi == 'Tidak')
+                                        <!-- Kolom 19: Pengendalian Lanjut -->
+                                        <td>
+                                            <div class="cell-text">{{ $item->kolom19_pengendalian_lanjut }}</div>
+                                        </td>
+                                        <!-- Kolom 20-22: Penilaian Risiko Lanjut -->
+                                        <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                            <div style="font-weight:800; font-size:16px;">
+                                                {{ $item->kolom20_kemungkinan_lanjut }}
+                                            </div>
+                                        </td>
+                                        <td class="risk-col" style="vertical-align:middle; text-align:center;">
+                                            <div style="font-weight:800; font-size:16px;">
+                                                {{ $item->kolom21_konsekuensi_lanjut }}
+                                            </div>
+                                        </td>
+                                        <td class="risk-col" style="vertical-align:middle;">
+                                            <div class="risk-score-box">
+                                                <div class="risk-val">{{ $item->kolom22_tingkat_risiko_lanjut }}</div>
+                                                @if($item->kolom22_tingkat_risiko_lanjut)
+                                                    <div
+                                                        class="risk-badge {{ $item->kolom22_tingkat_risiko_lanjut >= 15 ? 'bg-high' : ($item->kolom22_tingkat_risiko_lanjut >= 8 ? 'bg-med' : 'bg-low') }}">
+                                                        {{ $item->kolom22_level_lanjut }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    @else
+                                        <!-- Empty cells when tolerance = Ya -->
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                        <td>
+                                            <div style="color:#94a3b8; text-align:center;">-</div>
+                                        </td>
+                                    @endif
+
+
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="22" style="text-align:center; padding:20px;">Tidak ada data detail.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
             </div>
 
             <!-- COMPLIANCE CHECKLIST -->
             <!-- Logic: Show if Head (Level 2) OR Reviewer/Approver active -->
             @php
-                // Show compliance checklist ONLY if NOT in pending_head status
-                // When Kepala Unit Pengelola first receives document (pending_head/menunggu disposisi),
-                // compliance table should be hidden
-                $isPendingDisposition = ($isHead && $status == 'pending_head');
+                // Show compliance checklist
+                $user = Auth::user();
+                $isSheUnit = ($user->id_unit == 56);
+                $isSecurityUnit = ($user->id_unit == 55);
                 
-                // STRICT UPDATE: Hide Checklist if pending_head, even if also reviewer/approver
-                // User requirement: "hilangkan tabel kesesuaian... form ini merupakan form yang diterima dari kepala unit pengelola"
-                
-                // Check if checklist is already filled (Stage 2)
-                $checklistFilled = false;
-                if ($isSheUnit && !empty($document->compliance_checklist_she)) {
-                    $checklistFilled = true;
-                } elseif ($isSecurityUnit && !empty($document->compliance_checklist_security)) {
-                    $checklistFilled = true;
-                }
+                // PERBAIKAN LOGIC:
+                // 1. Staff Reviewer (Stage 1): Checklist TIDAK MUNCUL.
+                // 2. Staff Reviewer (Stage 2 - dari Verifikator): Checklist MUNCUL.
+                // 3. Kepala Unit (Disposition): Checklist TIDAK MUNCUL.
+                // 4. Kepala Unit (Final Approval): Checklist MUNCUL.
+                // 5. Staff Verifikator: Checklist SELALU MUNCUL.
 
-                // FINAL: Tabel kesesuaian HANYA untuk Staff Verifikator
-                // TIDAK untuk Staff Reviewer saat inbox review
-                $showChecklist = (
-                    // HANYA Staff Verificator (Approver) yang bisa lihat dan isi compliance checklist
-                    ($isApprover && $status == 'assigned_approval')
-                    // Staff Reviewer TIDAK bisa lihat tabel kesesuaian
-                );
+                $showChecklist = false;
+
+                if ($isSheUnit || $isSecurityUnit) {
+                    if ($isApprover && in_array($status, ['assigned_approval', 'process_verification'])) {
+                        // Verifikator selalu melihat/mengisi checklist (Hanya saat status benar)
+                        $showChecklist = true;
+                    } elseif ($isReviewer) {
+                        // Reviewer hanya melihat jika Dokumen sudah kembali dari Verifikator (Stage 2)
+                        // Cek status:
+                        // Security: 'staff_verified'
+                        // SHE: 'awaiting_final_review' pada salah satu kategori (K3/KO/Lingkungan)
+                        
+                        if ($isSecurityUnit && $document->status_security == 'staff_verified') {
+                            $showChecklist = true;
+                        } elseif ($isSheUnit) {
+                            // Cek jika ada yang 'awaiting_final_review' ATAU sudah 'verified' (artinya sudah lewat verifikator)
+                            // Jika murni 'assigned_review' (dari Head), maka Stage 1 -> Hide
+                            
+                            $k3Ready = in_array($document->status_k3, ['awaiting_final_review', 'verified']);
+                            $koReady = in_array($document->status_ko, ['awaiting_final_review', 'verified']);
+                            $lingkunganReady = in_array($document->status_lingkungan, ['awaiting_final_review', 'verified']);
+                            
+                            if ($k3Ready || $koReady || $lingkunganReady) {
+                                $showChecklist = true;
+                            }
+                        }
+                    } elseif ($isHead) {
+                        // Kepala Unit: Hide jika status 'pending_head' (belum didisposisi)
+                        // Show jika sedang proses approval ('process_approval', 'staff_verified', etc.)
+                        
+                        // FIX: Logic BARU berdasarkan Permintaan User:
+                        // "tabel kesesuaian akan muncul setelah menerima dokumen review terakhir dari Reviewer"
+                        // Artinya saat status sudah 'process_approval' (siap setujui) atau sudah 'approved'.
+                        // Saat status 'assigned_approval' (Verifikator) atau 'staff_verified' (Reviewer Stage 2), Head TIDAK MELIHAT checklist.
+                        
+                        $visibleToHead = ['process_approval', 'approved', 'published', 'level3_approved', 'pending_level3_ready'];
+
+                        if (in_array($status, $visibleToHead)) {
+                             $showChecklist = true;
+                        }
+                    }
+                }
             @endphp
 
             @if($showChecklist)
-                <div class="doc-card" style="margin-top: 30px;">
+                <div id="compliance-checklist-container" class="doc-card" style="margin-top: 30px; display: none;"> <!-- Hidden by default, shown by JS -->
                     <div class="card-header-slim" style="display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; align-items:center; gap:12px;">
                             <i class="fas fa-clipboard-check"></i>
@@ -1698,14 +1945,41 @@
                                             
                                             // Logic: 
                                             // 1. Head of Unit Pengelola: Can edit except when pending/final.
-                                            // 2. Staff (Reviewer/Approver): Can edit when assigned (and NOW directly editable).
+                                            // 2. Staff (Reviewer/Approver): Can edit when assigned.
+                                            // PING-PONG: Reviewer (Stage 1 & 2) and Verifier can both edit checklist?
+                                            // User said:
+                                            // - Reviewer Task 1: Review Konten (Checklist Read-only?) -> User said "review teknis (isi checklist...) di staff verifikator". So Reviewer 1 maybe no checklist?
+                                            // - Verifier: "isi checklist & edit konten".
+                                            // - Reviewer Task 2: "memverifikasi hasil review... edit tabel hiradc dan tabel checklist".
+                                            
+                                            // So: 
+                                            // Reviewer Stage 1: Checklist Read-Only (or Editable)? Let's allow Editable to be safe, or Read-Only if strictly following "Verifier fills it".
+                                            // Verifier: Editable.
+                                            // Reviewer Stage 2: Editable.
                                             
                                             $isPendingDisposition = ($isHead && $status == 'pending_head');
                                             $isFinalDecision = ($isHead && in_array($status, ['staff_verified', 'returned_to_head']));
                                             $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
                                             
                                             $headCanEdit = ($isHead && $myTrackIsActive && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished);
-                                            $staffCanEdit = ($isApprover && $status == 'assigned_approval') || ($isReviewer && $status == 'assigned_review');
+                                            
+                                            // Staff Logic
+                                            // Reviewer can edit if 'assigned_review' (Stage 1 or 2)
+                                            // Verifier can edit if 'assigned_approval'
+                                            // PING-PONG FIX:
+                                            // Reviewer Stage 2 (dapat balikan Verifikator):
+                                            // - Security: status 'staff_verified'
+                                            // - SHE: status 'assigned_review' TAPI salah satu kategori 'awaiting_final_review'
+                                            
+                                            $isSheStage2 = false;
+                                            if ($isSheUnit && $isReviewer) {
+                                                $isSheStage2 = in_array($document->status_k3, ['awaiting_final_review', 'verified']) ||
+                                                               in_array($document->status_ko, ['awaiting_final_review', 'verified']) ||
+                                                               in_array($document->status_lingkungan, ['awaiting_final_review', 'verified']);
+                                            }
+
+                                            $staffCanEdit = ($isApprover && in_array($status, ['assigned_approval', 'process_verification'])) || 
+                                                            ($isReviewer && ($status == 'staff_verified' || $isSheStage2));
 
                                             if ($headCanEdit || $staffCanEdit) {
                                                 $disabled = '';
@@ -1809,13 +2083,9 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                     <h4 style="font-size:15px; font-weight:700; color:#0f172a; margin: 0;">Detail Program Kerja:</h4>
                                     @php
-                                        $canEditPuk = false;
-                                        if (in_array($user->id_unit, [55, 56])) { // SHE
-                                             $hasApproved = $document->approvals()->where('approver_id', $user->id)->where('level', 2)->whereIn('action', ['approved', 'verified', 'reviewed'])->exists();
-                                             if (in_array($user->role_jabatan, [4, 5, 6]) && !$hasApproved && $document->current_level == 2) {
-                                                $canEditPuk = true;
-                                             }
-                                        }
+                                        // PERBAIKAN: Program Kerja HANYA bisa diedit oleh Submitter (Level 1).
+                                        // Di tahap Unit Pengelola (Level 2), sifatnya View Only.
+                                        $canEditPuk = false; 
                                     @endphp
                                     @if($canEditPuk)
                                     <button type="button" onclick="toggleEditModePuk({{ $detailIndex }})" id="btnEditPuk-{{ $detailIndex }}" class="btn btn-sm" style="background:#3b82f6; color:white; padding:6px 12px; border-radius:6px; font-size: 13px; border:none; cursor: pointer;">
@@ -1932,13 +2202,9 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                     <h4 style="font-size:15px; font-weight:700; color:#0f172a; margin: 0;">Detail Program Kerja:</h4>
                                     @php
-                                        $canEditPmk = false;
-                                        if (in_array($user->id_unit, [55, 56])) {
-                                             $hasApproved = $document->approvals()->where('approver_id', $user->id)->where('level', 2)->whereIn('action', ['approved', 'verified', 'reviewed'])->exists();
-                                             if (in_array($user->role_jabatan, [4, 5, 6]) && !$hasApproved && $document->current_level == 2) {
-                                                $canEditPmk = true;
-                                             }
-                                        }
+                                        // PERBAIKAN: Program Kerja HANYA bisa diedit oleh Submitter (Level 1).
+                                        // Di tahap Unit Pengelola (Level 2), sifatnya View Only.
+                                        $canEditPmk = false; 
                                     @endphp
                                     @if($canEditPmk)
                                     <button type="button" onclick="toggleEditModePmk({{ $detailIndex }})" id="btnEditPmk-{{ $detailIndex }}" class="btn btn-sm" style="background:#c026d3; color:white; padding:6px 12px; border-radius:6px; font-size: 13px; border:none; cursor: pointer;">
@@ -2207,7 +2473,7 @@
             {{-- Exception: If Manager is acting as Reviewer, skip Head view --}}
             @if($isHead && $document->current_level == 2 && !$showAsReviewer)
                 {{-- STRICT: Only show Action Buttons if "Ready for Final Decision" --}}
-                @if(in_array($status, ['returned_to_head', 'staff_verified']))
+                @if(in_array($status, ['returned_to_head', 'staff_verified', 'process_approval']))
                     <!-- Final Approval by Head -->
                     <form id="headApproveForm" method="POST" action="{{ route('unit_pengelola.approve', $document->id) }}"
                         style="width:100%; display:flex; flex-direction:column; gap:15px;">
@@ -2233,31 +2499,72 @@
                 </form>
 
                 {{-- 2. STAFF REVIEWER --}}
-            @elseif($isReviewer && in_array($status, ['assigned_review', 'pending_head']))
+            @elseif($isReviewer && in_array($status, ['assigned_review', 'pending_head', 'staff_verified']))
+                {{-- PING-PONG LOGIC:
+                     Stage 1: 'assigned_review' (Init by Head) -> Send to Verifier
+                     Stage 2: 'staff_verified' (Returned by Verifier) -> Send to Head
+                     Note: 'process_verification' might be seen if partial categories done? No, Reviewer actions based on specific status.
+                --}}
+                
                 <form id="staffActionForm" method="POST" action="{{ route('unit_pengelola.submit_review', $document->id) }}"
                     style="width:100%; display:flex; gap:15px;">
                     @csrf
                     <!-- Compliance Data Injected via JS -->
                     <input type="hidden" name="compliance_checklist" id="compliance_checklist_input">
                     
-                     {{-- STAGE LOGIC: Check if Checklist is filled (Stage 2) --}}
+                     {{-- STAGE LOGIC: Check Status --}}
                      @php
-                         $stageLabel = $checklistFilled ? "Kirim ke Kepala Unit" : "Kirim ke Staff Verifikator";
-                         $btnColor = $checklistFilled ? "btn-approve" : "btn-primary"; // Use different color?
+                         // Default to Stage 1
+                         $btnLabel = "Kirim ke Staff Verifikator";
+                         $btnColor = "btn-primary";
+                         $placeholder = "Catatan Review Tahap 1...";
+                         
+                         // If Returned from Verifier (Stage 2)
+                         // Check specific categories if using SHE unit
+                         $isStage2 = false;
+                         if ($isSheUnit) {
+                             // If ANY category is 'verified' or 'awaiting_final_review', we treat as Stage 2 potential?
+                             // Actually, Controller `verifyUnit` sets 'awaiting_final_review' (or 'verified' in previous attempt, let's check controller).
+                             // I used 'awaiting_final_review' in verifyUnit.
+                             // So if status is 'awaiting_final_review', it's Stage 2.
+                             
+                             // However, $status variable here is $status_she which is 'assigned_review' after verifyUnit.
+                             // So we need to check sub-statuses.
+                             $hasReturn = ($document->status_k3 == 'awaiting_final_review' || 
+                                           $document->status_ko == 'awaiting_final_review' || 
+                                           $document->status_lingkungan == 'awaiting_final_review');
+                                           
+                             if ($hasReturn) {
+                                  $isStage2 = true;
+                             }
+                         } elseif ($isSecurityUnit) {
+                             if ($document->status_security == 'staff_verified') {
+                                  $isStage2 = true;
+                             }
+                         } else {
+                             // Fallback
+                             if ($status == 'staff_verified') $isStage2 = true;
+                         }
+
+                         if ($isStage2) {
+                             $btnLabel = "Final Review & Kirim ke Kepala Unit";
+                             $btnColor = "btn-approve"; // Green/Dark
+                             $placeholder = "Catatan Final Review...";
+                         }
                      @endphp
 
                     <div class="notes-area">
-                        <textarea name="catatan" class="notes-input" placeholder="Catatan Review..."></textarea>
+                        <textarea name="catatan" class="notes-input" placeholder="{{ $placeholder }}"></textarea>
                     </div>
                     <div class="action-btns">
-                        <button type="button" class="btn {{ $btnColor }}" onclick="submitStaffAction('{{ $checklistFilled ? 'head' : 'verifier' }}')">
-                            {{ $stageLabel }}
+                        <button type="button" class="btn {{ $btnColor }}" onclick="submitStaffAction('{{ $isStage2 ? 'head' : 'verifier' }}')">
+                            {{ $btnLabel }}
                         </button>
                     </div>
                 </form>
 
                 {{-- 3. STAFF VERIFIKATOR --}}
-            @elseif($isApprover && $status == 'assigned_approval')
+            @elseif($isApprover && in_array($status, ['assigned_approval', 'process_verification']))
                 <form id="staffActionForm" method="POST" action="{{ route('unit_pengelola.verify', $document->id) }}"
                     style="width:100%; display:flex; gap:15px;">
                     @csrf
@@ -2268,7 +2575,9 @@
                     </div>
                     <div class="action-btns">
                         {{-- Verificator always sends back to Reviewer --}}
-                        <button type="button" class="btn btn-approve" onclick="submitStaffAction('reviewer')">Verifikasi & Kirim</button>
+                        <button type="button" class="btn btn-warning" onclick="submitStaffAction('reviewer')">
+                            <i class="fas fa-undo"></i> Kirim ke Staff Reviewer
+                        </button>
                     </div>
                 </form>
             @else
@@ -2397,9 +2706,44 @@
             }
             input.value = checklistJson;
 
-            // Get Note Value
             const noteInput = form.querySelector('textarea[name="catatan"]');
             const noteValue = noteInput ? noteInput.value.trim() : '';
+
+            // Inject SHE Statuses for Validation
+            const sheStatuses = {
+                'K3': '{{ $document->status_k3 }}',
+                'KO': '{{ $document->status_ko }}',
+                'Lingkungan': '{{ $document->status_lingkungan }}',
+                'isSHE': {{ Auth::user()->id_unit == 56 ? 'true' : 'false' }}
+            };
+            
+            // Get Active Categories from DOM
+            const params = new URLSearchParams();
+            // We need to know which categories are actually present in the document.
+            // We can infer this from the rendered table rows data-category
+            const rows = document.querySelectorAll('tr[data-category]');
+            const presentCats = new Set();
+            rows.forEach(r => presentCats.add(r.getAttribute('data-category')));
+
+            if (type === 'approve') {
+                if (sheStatuses.isSHE) {
+                    // Consolidated Validation
+                    const pending = [];
+                    if (presentCats.has('K3') && sheStatuses.K3 !== 'verified') pending.push('K3');
+                    if (presentCats.has('KO') && sheStatuses.KO !== 'verified') pending.push('Keamanan Operasional');
+                    if (presentCats.has('Lingkungan') && sheStatuses.Lingkungan !== 'verified') pending.push('Lingkungan');
+                    
+                    if (pending.length > 0) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Belum Siap Approve',
+                            html: `Kategori berikut belum diverifikasi oleh staff:<br><b>${pending.join(', ')}</b><br><br>Silakan tunggu verifikasi selesai.`,
+                            confirmButtonColor: '#dc2626'
+                        });
+                        return;
+                    }
+                }
+            }
 
             if (type === 'revise') {
                 if (noteValue.length < 5) {
@@ -2455,28 +2799,7 @@
             }
         }
 
-        function collectComplianceData() {
-            const checklist = {};
-            document.querySelectorAll('select[name^="compliance_checklist"]').forEach(select => {
-                const name = select.getAttribute('name');
-                const match = name.match(/\[(.*?)\]\[status\]/);
-                if (match) {
-                    const key = match[1];
-                    if (!checklist[key]) checklist[key] = {};
-                    checklist[key]['status'] = select.value;
-                }
-            });
-            document.querySelectorAll('input[name^="compliance_checklist"]').forEach(input => {
-                const name = input.getAttribute('name');
-                const match = name.match(/\[(.*?)\]\[note\]/);
-                if (match) {
-                    const key = match[1];
-                    if (!checklist[key]) checklist[key] = {};
-                    checklist[key]['note'] = input.value;
-                }
-            });
-            return JSON.stringify(checklist);
-        }
+        // collectComplianceData moved to bottom with new logic
 
         function submitStaffAction(target = 'default') {
             // Validation: Ensure all Compliance Checklist items are filled
@@ -2643,7 +2966,17 @@
             $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
             
             $headCanEditCompliance = ($isHead && $myTrackIsActive && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished);
-            $staffCanEditCompliance = ($isApprover && $status == 'assigned_approval') || ($isReviewer && $status == 'assigned_review');
+            // PING-PONG FIX FOR JS LOGIC AS WELL
+            $isSheStage2JS = false;
+            // PHP context available here
+            if ($isSheUnit && $isReviewer) {
+                 $isSheStage2JS = in_array($document->status_k3, ['awaiting_final_review', 'verified']) ||
+                                  in_array($document->status_ko, ['awaiting_final_review', 'verified']) ||
+                                  in_array($document->status_lingkungan, ['awaiting_final_review', 'verified']);
+            }
+
+            $staffCanEditCompliance = ($isApprover && in_array($status, ['assigned_approval', 'process_verification'])) || 
+                                      ($isReviewer && ($status == 'staff_verified' || $isSheStage2JS));
             
             $globalComplianceEdit = ($headCanEditCompliance || $staffCanEditCompliance);
         @endphp
@@ -2980,6 +3313,182 @@
                 });
             @endif
         });
+
+        // --- COMPLIANCE CHECKLIST LOGIC ---
+        
+        // Initialize Data from Server
+        let checklistData = { K3: {}, KO: {}, Lingkungan: {}, Keamanan: {} };
+        const serverData = @json($document->compliance_checklist_she ?? []);
+        
+        // Category Statuses for Visibility Check
+        const categoryStatuses = {
+            'K3': '{{ $document->status_k3 }}',
+            'KO': '{{ $document->status_ko }}',
+            'Lingkungan': '{{ $document->status_lingkungan }}',
+            'Keamanan': '{{ $document->status_security }}'
+        };
+        const userRole = {
+            isHead: {{ isset($isHead) && $isHead ? 'true' : 'false' }},
+            isReviewer: {{ isset($isReviewer) && $isReviewer ? 'true' : 'false' }},
+            isVerifier: {{ isset($isApprover) && $isApprover ? 'true' : 'false' }}
+        };
+
+        // Migration: If server data matches the new structure (has keys K3/KO...), use it.
+        // If it's flat (legacy), map it to all active categories to preserve data.
+        if (serverData && (serverData.K3 || serverData.KO || serverData.Lingkungan || serverData.Keamanan)) {
+            checklistData = { ...checklistData, ...serverData };
+        } else if (serverData && Object.keys(serverData).length > 0) {
+            // Legacy Flat Data - Distribute to Categories that exist in this document
+            // We can infer categories from DOM or just assign to all
+            checklistData.K3 = JSON.parse(JSON.stringify(serverData));
+            checklistData.KO = JSON.parse(JSON.stringify(serverData));
+            checklistData.Lingkungan = JSON.parse(JSON.stringify(serverData));
+            checklistData.Keamanan = JSON.parse(JSON.stringify(serverData));
+        }
+
+        let currentActiveCategory = 'all';
+
+        function filterSheCategory(cat, btn) {
+            // 1. Save current form state to memory before switching
+            if (currentActiveCategory !== 'all') {
+                saveChecklistToMemory(currentActiveCategory);
+            }
+
+            // 2. Update Tab Buttons
+            document.querySelectorAll('.sub-tab-btn').forEach(b => {
+                b.style.background = 'white';
+                b.style.fontWeight = 'normal';
+                b.classList.remove('active');
+            });
+            if(btn) {
+                btn.style.background = '#e2e8f0';
+                btn.style.fontWeight = '600';
+                btn.classList.add('active');
+            }
+
+            // 3. Filter Table Rows
+            const rows = document.querySelectorAll('tr[data-category]');
+            rows.forEach(row => {
+                if (cat === 'all') {
+                    row.style.display = 'table-row';
+                } else {
+                    const rowCat = row.getAttribute('data-category');
+                    if (rowCat === cat) {
+                        row.style.display = 'table-row';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+
+            // 4. Handle Compliance Checklist Visibility & Data
+            const checklistContainer = document.getElementById('compliance-checklist-container');
+            if (checklistContainer) {
+                if (cat === 'all') {
+                     checklistContainer.style.display = 'none';
+                } else {
+                     // Check Visibility based on Role and Status
+                     let shouldShow = false;
+                     const status = categoryStatuses[cat];
+
+                     if (userRole.isHead) {
+                         // Head: Only show if Verified (Staff Done)
+                         // OR if it's already approved/published
+                         if (status === 'verified' || status === 'process_approval' || status === 'approved' || status === 'published') {
+                             shouldShow = true;
+                         }
+                     } else if (userRole.isVerifier) {
+                         // Verifier: Show if active (assigned/process)
+                         if (status === 'assigned_approval' || status === 'process_verification') {
+                             shouldShow = true;
+                         }
+                     } else if (userRole.isReviewer) {
+                         // Reviewer: Show if Stage 2 (returned)
+                         if (status === 'awaiting_final_review' || status === 'verified') {
+                             shouldShow = true;
+                         }
+                     }
+
+                     if (shouldShow) {
+                         checklistContainer.style.display = 'block';
+                         populateChecklistForm(cat);
+                     } else {
+                         checklistContainer.style.display = 'none';
+                     }
+                }
+            }
+            
+            currentActiveCategory = cat;
+        }
+        
+        function populateChecklistForm(cat) {
+            // Clear or Set values based on checklistData[cat]
+            const data = checklistData[cat] || {};
+            
+            // Iterate all checklist rows (assumes specific IDs or predictable names)
+            // The select names are compliance_checklist[KEY][status]
+            // We need to iterate the DOM elements
+            document.querySelectorAll('select[name^="compliance_checklist"]').forEach(select => {
+                // Extract Key
+                const name = select.getAttribute('name');
+                const match = name.match(/\[(.*?)\]\[status\]/);
+                if (match) {
+                    const key = match[1];
+                    const val = (data[key] && data[key].status) ? data[key].status : '';
+                    select.value = val;
+                    
+                    // Trigger change to update UI (colors, notes enablement)
+                    toggleNoteField(key); 
+                }
+            });
+
+            document.querySelectorAll('input[name^="compliance_checklist"]').forEach(input => {
+                const name = input.getAttribute('name');
+                const match = name.match(/\[(.*?)\]\[note\]/);
+                if (match) {
+                    const key = match[1];
+                    const val = (data[key] && data[key].note) ? data[key].note : '';
+                    input.value = val;
+                }
+            });
+        }
+
+        function saveChecklistToMemory(cat) {
+            if (!checklistData[cat]) checklistData[cat] = {};
+            
+            document.querySelectorAll('select[name^="compliance_checklist"]').forEach(select => {
+                const name = select.getAttribute('name');
+                const match = name.match(/\[(.*?)\]\[status\]/);
+                if (match) {
+                    const key = match[1];
+                    if (!checklistData[cat][key]) checklistData[cat][key] = {};
+                    checklistData[cat][key]['status'] = select.value;
+                }
+            });
+
+            document.querySelectorAll('input[name^="compliance_checklist"]').forEach(input => {
+                const name = input.getAttribute('name');
+                const match = name.match(/\[(.*?)\]\[note\]/);
+                if (match) {
+                    const key = match[1];
+                    if (!checklistData[cat][key]) checklistData[cat][key] = {};
+                    checklistData[cat][key]['note'] = input.value;
+                }
+            });
+        }
+        
+        // Override collectComplianceData to return the FULL structure
+        function collectComplianceData() {
+            // Ensure current active tab is saved
+            if (currentActiveCategory !== 'all') {
+                saveChecklistToMemory(currentActiveCategory);
+            }
+            return JSON.stringify(checklistData);
+        }
+
+        // Initialize: If we start on 'all', hide checklist. 
+        // If we start on specific cat (not implemented yet), show it.
+        // Default is 'all', so checklist is hidden by default (style="display:none" added in PHP).
     </script>
 </body>
 

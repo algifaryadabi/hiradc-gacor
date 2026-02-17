@@ -639,7 +639,7 @@
                             <!-- Header Row 2: Column Details -->
                             <tr>
                                 <!-- BAGIAN 1 (Kolom 2-5) -->
-                                <th style="width: 180px;">Proses/Kegiatan<br><small>(Kol 2)</small></th>
+                                <th style="width: 300px;">PROSES BISNIS /<br>KEGIATAN / ASET<br><small>(Kol 2)</small></th>
                                 <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
                                 <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
                                 <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol 5)</small>
@@ -682,7 +682,12 @@
                                     <td style="text-align:center;">{{ $loop->iteration }}</td>
 
                                     <!-- BAGIAN 1: Identifikasi Aktivitas -->
-                                    <td>{{ $item->kolom2_kegiatan }}</td>
+                                    <td>
+                                        <div class="cell-text"><strong>{{ $item->kolom2_proses }}</strong></div>
+                                        @if($item->kolom2_kegiatan)
+                                            <div class="cell-text" style="margin-top:4px; color:#64748b;">kegiatan/aset : {{ $item->kolom2_kegiatan }}</div>
+                                        @endif
+                                    </td>
                                     <td>{{ $item->kolom3_lokasi }}</td>
                                     <td style="text-align:center;">
                                         <span
