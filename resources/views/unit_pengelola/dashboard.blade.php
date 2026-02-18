@@ -290,11 +290,11 @@
             <div class="content-area">
                 <!-- Navigation Tabs -->
                 <div class="nav-tabs">
-                    <div class="nav-link active" onclick="switchTab('dashboard')">
+                    <div class="nav-link active" onclick="switchTab('dashboard', this)">
                         <i class="fas fa-chart-pie" style="margin-right: 8px;"></i>Dashboard Utama
                     </div>
                     @if(Auth::user()->role_jabatan == 3)
-                        <div class="nav-link" onclick="switchTab('users')">
+                        <div class="nav-link" onclick="switchTab('users', this)">
                             <i class="fas fa-users-cog" style="margin-right: 8px;"></i>Manajemen Staff
                         </div>
                     @endif
@@ -555,14 +555,37 @@
         });
 
         // Tab Switching Logic
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabName).classList.add('active');
-            const buttons = document.querySelectorAll('.nav-link');
-            if (tabName === 'dashboard') buttons[0].classList.add('active');
-            if (tabName === 'users') buttons[1].classList.add('active');
+        function switchTab(tabName, el) {
+            // Save tabName to localStorage
+            localStorage.setItem('activeUnitPengelolaTab', tabName);
+
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-link').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            const contentEl = document.getElementById('tab-' + tabName);
+            if (contentEl) {
+                contentEl.classList.add('active');
+            }
+
+            if (el) {
+                el.classList.add('active');
+            }
         }
+
+        // Initialize from localStorage or default
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTab = localStorage.getItem('activeUnitPengelolaTab');
+            if (savedTab && savedTab !== 'dashboard') {
+                const tabBtn = document.querySelector(`.nav-link[onclick*="'${savedTab}'"]`);
+                if (tabBtn) {
+                    tabBtn.click();
+                }
+            }
+        });
 
         // --- View: Departments (Home) ---
         function renderDepartments() {

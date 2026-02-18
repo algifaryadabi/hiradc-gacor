@@ -573,7 +573,7 @@
 
                     $keputusanAkhirDocs = $documents->filter(function ($d) use ($userUnit) {
                         $st = ($userUnit == 55) ? $d->status_security : (($userUnit == 56) ? $d->status_she : $d->level2_status);
-                        return $st == 'returned_to_head' || $st == 'staff_verified';
+                        return $st == 'returned_to_head' || $st == 'staff_verified' || $st == 'process_approval';
                     });
 
                     $approveDocs = $documents->filter(function ($d) use ($userUnit) {
@@ -593,6 +593,38 @@
                         ->where('role_jabatan', 4)
                         ->where('id_unit', Auth::user()->id_unit)
                         ->distinct()->get();
+
+                    // VALIDATION LOGIC FOR SHE (3 Reviewers & 3 Verifiers)
+                    $totalSheReviewers = 0;
+                    $totalSheVerifiers = 0;
+                    if (Auth::user()->id_unit == 56) {
+                        $sheStaff = \App\Models\User::where('id_unit', 56)
+                            ->where(function ($q) {
+                                $q->where('is_reviewer', 1)->orWhere('is_verifier', 1);
+                            })->get();
+
+                        $assignedReviewers = [];
+                        $assignedVerifiers = [];
+
+                        foreach ($sheStaff as $s) {
+                            $cats = is_string($s->assigned_categories) ? json_decode($s->assigned_categories, true) : $s->assigned_categories;
+                            if (!is_array($cats))
+                                $cats = [];
+
+                            if ($s->is_reviewer) {
+                                foreach ($cats as $c)
+                                    if (in_array($c, ['K3', 'KO', 'Lingkungan']))
+                                        $assignedReviewers[$c] = true;
+                            }
+                            if ($s->is_verifier) {
+                                foreach ($cats as $c)
+                                    if (in_array($c, ['K3', 'KO', 'Lingkungan']))
+                                        $assignedVerifiers[$c] = true;
+                            }
+                        }
+                        $totalSheReviewers = count($assignedReviewers);
+                        $totalSheVerifiers = count($assignedVerifiers);
+                    }
                 @endphp
 
                 <!-- Internal Unit Stats (Newly Added) -->
@@ -706,7 +738,7 @@
                                 $cat = 'review';
                                 $statusText = 'Proses Staff';
                                 $statusColor = '#3b82f6'; // blue
-                            } elseif ($currentStatus == 'returned_to_head' || $currentStatus == 'staff_verified') {
+                            } elseif ($currentStatus == 'returned_to_head' || $currentStatus == 'staff_verified' || $currentStatus == 'process_approval') {
                                 $cat = 'final';
                                 $statusText = 'Verifikasi Selesai';
                                 $statusColor = '#f59e0b'; // orange
@@ -789,6 +821,28 @@
         }
 
         function applyDisposition(docId) {
+            // STAFF VALIDATION FOR SHE
+            const unitId = {{ Auth::user()->id_unit }};
+            const revCount = {{ $totalSheReviewers }};
+            const verCount = {{ $totalSheVerifiers }};
+
+            if (unitId == 56) {
+                if (revCount < 3 || verCount < 3) {
+                    Swal.fire({
+                        title: 'Peringatan!',
+                        html: `Anda harus memiliki minimal <b>3 Staff Reviewer</b> dan <b>3 Staff Verifikator</b> yang aktif (satu untuk setiap kategori: K3, KO, Lingkungan) sebelum melakukan disposisi.<br><br>Saat ini:<br>- Reviewer: ${revCount}/3<br>- Verifikator: ${verCount}/3`,
+                        icon: 'warning',
+                        confirmButtonColor: '#c41e3a',
+                        confirmButtonText: 'Kelola Staff'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "{{ route('unit_pengelola.dashboard') }}";
+                        }
+                    });
+                    return;
+                }
+            }
+
             // New Logic: Auto-Correction (No Manual Selection)
             Swal.fire({
                 title: 'Disposisi Dokumen?',

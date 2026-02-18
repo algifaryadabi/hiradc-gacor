@@ -1216,28 +1216,8 @@
 
         $status = $currentStatus;
 
-        // Reviewer Logic - PERBAIKAN: SEMUA staff reviewer harus bisa edit
-        // Tidak peduli apakah sudah ada currentReviewerId atau belum
-        // Cukup cek: apakah user ini adalah staff reviewer (is_reviewer = 1) dari unit yang sama?
-        $isReviewer = $user->is_reviewer == 1 || 
-                      ($currentReviewerId == $user->id_user) ||
-                      (in_array($user->role_jabatan, [5, 6]) && in_array($user->id_unit, [55, 56]));
-
-        // Determine if we should show the Reviewer View (Priority over Head View)
-        // Allow if assigned_review OR pending_head (Self-Disposition)
-        $showAsReviewer = ($isReviewer && in_array($status, ['assigned_review', 'pending_head']));
-
-        // Approver Logic (Relaxed for Unit Pengelola)
-        // UPDATED: Check is_verifier flag OR Role 4 (Manager)
-        $isStaffApprover = (($user->role_jabatan == 4) || $user->is_verifier) && 
-                           in_array($user->id_unit, [55, 56]);
-
-        $isApprover = ($currentApproverId == $user->id_user) || 
-                      ($isStaffApprover && ($status == 'assigned_approval' || $status == 'process_verification'));
-        
         // --- KEY FIX: ROBUST HEAD DETECTION ---
         // Force isHead = true if the user is explicitly the Level 2 Approver for this document.
-        // This handles cases where Role 4 (Manager) is not caught by isUnitPengelola() (which might expect Role 3).
         if (!$isHead && $document->current_level == 2 && $document->level2_approver_id == $user->id_user) {
             $isHead = true;
         }
@@ -1246,35 +1226,72 @@
         $isSheUnit = ($user->id_unit == 56);
         $isSecurityUnit = ($user->id_unit == 55);
 
-        // Check if MY track is in a state that allows editing
+        // Check if MY track is in a state that allows any action
         $myTrackIsActive = false;
-
         if ($isSheUnit) {
-            // SHE track is active if status_she is NOT revision/approved/published
             $myTrackIsActive = !in_array($document->status_she, ['revision', 'approved', 'published', 'level3_approved', 'none']);
         } elseif ($isSecurityUnit) {
-            // Security track is active if status_security is NOT revision/approved/published
             $myTrackIsActive = !in_array($document->status_security, ['revision', 'approved', 'published', 'level3_approved', 'none']);
         }
 
-        // Edit Logic (UPDATED - LEBIH PERMISIF):
-        // - Kepala Unit Pengelola can edit if MY track is active EXCEPT when final/approved
-        // - Staff reviewers HARUS BISA EDIT jika:
-        //   1. Mereka adalah reviewer (is_reviewer = 1 atau role 4/5/6)
-        //   2. Track mereka aktif (myTrackIsActive = true)
-        //   3. Status BUKAN approved/published (sudah final)
+        // Status groupings for permissions
+        $reviewerStatuses = ['assigned_review', 'staff_verified', 'awaiting_final_review', 'pending_head'];
+        $verificatorStatuses = ['assigned_approval', 'process_verification'];
+        $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
         $isPendingDisposition = ($isHead && $status == 'pending_head');
         $isFinalDecision = ($isHead && in_array($status, ['staff_verified', 'returned_to_head']));
-        $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
+
+        // Reviewer Logic
+        // Staff reviewers can edit if they are the assigned reviewer OR if they have the role and no reviewer is assigned yet (pool).
+        // UPDATED for Parallel Workflow: Check specific category assignments
+        $isReviewerK3 = ($document->k3_reviewer_id == $user->id_user);
+        $isReviewerKO = ($document->ko_reviewer_id == $user->id_user);
+        $isReviewerLingkungan = ($document->lingkungan_reviewer_id == $user->id_user);
+        $isReviewerGeneric = ($currentReviewerId == $user->id_user);
         
-        // FIX: Logic BARU untuk Staff Reviewer - LEBIH PERMISIF
-        // HAPUS pembatasan status 'assigned_review' - staff reviewer harus bisa edit kapan saja
-        // selama track mereka aktif dan belum approved/published
+        $isReviewer = ($isReviewerK3 || $isReviewerKO || $isReviewerLingkungan || $isReviewerGeneric) ||
+                      (empty($currentReviewerId) && in_array($user->role_jabatan, [5, 6]) && in_array($user->id_unit, [55, 56]));
+
+        // NEW: Check if Reviewer has any active category to submit
+        // UPDATED: Relaxed to allow submission whenever track is active
+        $reviewerCanSubmit = $isReviewer && $myTrackIsActive && !$isApprovedOrPublished;
+
+        // Determine if we should show the Reviewer View (Priority over Head View)
+        // Only show Reviewer View if it's currently at the Review stage.
+        $showAsReviewer = ($isReviewer && in_array($status, ['assigned_review', 'staff_verified', 'awaiting_final_review', 'pending_head']));
+
+        // Approver Logic (Relaxed for Unit Pengelola)
+        // UPDATED: If currentApproverId is set, ONLY that user is the Approver.
+        // If empty, then a Manager (Role 4) or anyone with is_verifier can see it as an Approver (Self-Pickup).
+        $isStaffApproverFlag = (($user->role_jabatan == 4) || $user->is_verifier) && 
+                           in_array($user->id_unit, [55, 56]);
+
+        // UPDATED for Parallel Workflow: Check specific category assignments for Verificator
+        $isApproverK3 = ($document->k3_verificator_id == $user->id_user);
+        $isApproverKO = ($document->ko_verificator_id == $user->id_user);
+        $isApproverLingkungan = ($document->lingkungan_verificator_id == $user->id_user);
+        $isApproverGeneric = ($currentApproverId == $user->id_user);
+
+        $isApprover = ($isApproverK3 || $isApproverKO || $isApproverLingkungan || $isApproverGeneric) || 
+                      (empty($currentApproverId) && $isStaffApproverFlag && in_array($status, ['assigned_approval', 'process_verification']));
+
+        // NEW: Check if Verificator has any active category to submit
+        // UPDATED: Relaxed to allow submission whenever track is active
+        $verificatorCanSubmit = $isApprover && $myTrackIsActive && !$isApprovedOrPublished;
+        
+        // Edit Logic:
+        // 1. Reviewer can edit as long as they are assigned and track is active
         $staffReviewerCanEdit = $isReviewer && $myTrackIsActive && !$isApprovedOrPublished;
         
-        $canEdit = ($isHead && $myTrackIsActive && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished) ||
-            $staffReviewerCanEdit ||
-            ($isApprover && $status == 'assigned_approval');
+        // 2. Verificator can edit as long as they are assigned and track is active
+        $staffVerificatorCanEdit = $isApprover && $myTrackIsActive && !$isApprovedOrPublished;
+
+        // 3. Head can edit during intermediate states (after reviewer/verificator but before final) - usually they don't edit HIRADC directly but we allow it if active.
+        // 3. Head can edit during intermediate states AND final decision states
+        // UPDATED: Also allow edit during pending_head (disposition) stage
+        $headCanEdit = ($isHead && $myTrackIsActive && !$isApprovedOrPublished);
+
+        $canEdit = $headCanEdit || $staffReviewerCanEdit || $staffVerificatorCanEdit;
 
         // NEW: Strict Filtering for Details based on Assigned Categories
         $filteredDetails = $document->details;
@@ -1291,6 +1308,58 @@
                  });
             }
         }
+
+
+        // NEW: Row-level editing permission closure
+        // UPDATED: Enforce strict ownership (K3 reviewer only edits K3)
+        // NEW: Row-level editing permission closure
+        // UPDATED: Enforce strict ownership (K3 reviewer only edits K3)
+        $canEditRow = function($category) use ($user, $document, $isReviewer, $isApprover, $isHead, $myTrackIsActive, $isApprovedOrPublished, $isReviewerK3, $isReviewerKO, $isReviewerLingkungan, $isReviewerGeneric, $isApproverK3, $isApproverKO, $isApproverLingkungan, $isApproverGeneric) {
+            if ($isApprovedOrPublished || !$myTrackIsActive) return false;
+
+            // 1. Get Category Status
+            $catKey = strtolower($category);
+            $statusField = 'status_' . $catKey; // status_k3, status_ko
+            if ($category == 'Keamanan') $statusField = 'status_security';
+            
+            $status = $document->$statusField ?? null;
+            if (empty($status)) $status = 'assigned_review'; // Treat empty as initial review
+
+            // 2. Logic for Reviewer
+            if ($isReviewer) {
+                 // STRICT CHECK: Does User own this category?
+                 $hasAccess = false;
+                 if ($isReviewerGeneric) $hasAccess = true; // Security / General Reviewer
+                 if ($category == 'K3' && $isReviewerK3) $hasAccess = true;
+                 if ($category == 'KO' && $isReviewerKO) $hasAccess = true;
+                 if ($category == 'Lingkungan' && $isReviewerLingkungan) $hasAccess = true;
+                 
+                 // UPDATED: If assigned, allow edit regardless of current turn status (Stage 1/2 both fine)
+                 if ($hasAccess || $isReviewerGeneric) return true;
+            }
+
+            // 3. Logic for Verifier
+            if ($isApprover) {
+                 // STRICT CHECK: Does User own this category?
+                 $hasAccess = false;
+                 if ($isApproverGeneric) $hasAccess = true;
+                 if ($category == 'K3' && $isApproverK3) $hasAccess = true;
+                 if ($category == 'KO' && $isApproverKO) $hasAccess = true;
+                 if ($category == 'Lingkungan' && $isApproverLingkungan) $hasAccess = true;
+
+                 // UPDATED: If assigned, allow edit regardless of current turn status
+                 if ($hasAccess || $isApproverGeneric) return true;
+                 
+                 return false;
+            }
+            
+            // 4. Head
+            if ($isHead) {
+                return true; 
+            }
+
+            return false;
+        };
     @endphp
 
     <div class="container">
@@ -1398,19 +1467,29 @@
             </div>
 
             <div id="tab-hiradc" class="tab-content active">
-                @if(Auth::user()->id_unit == 56 && isset($isHead) && $isHead)
+                @if(Auth::user()->id_unit == 56 && (isset($isHead) && $isHead || isset($isReviewer) && $isReviewer || isset($isApprover) && $isApprover))
                     <!-- Sub-tabs for SHE Unit -->
                     <!-- Calculate Counts for Visibility -->
                     @php
-                        $countK3 = $document->details->where('kategori', 'K3')->count();
-                        $countKO = $document->details->where('kategori', 'KO')->count();
-                        $countLing = $document->details->where('kategori', 'Lingkungan')->count();
+                        // Use filteredDetails for counts to honor assigned_categories
+                        $countK3 = $filteredDetails->where('kategori', 'K3')->count();
+                        $countKO = $filteredDetails->where('kategori', 'KO')->count();
+                        $countLing = $filteredDetails->where('kategori', 'Lingkungan')->count();
+                        
+                        // Decide if we should show "All Categories"
+                        // Hide it for Staff with specific assignments
+                        $showAllTab = true;
+                        if ($isSheUnit && !empty($user->assigned_categories) && ($isReviewer || $isApprover)) {
+                            $showAllTab = false;
+                        }
                     @endphp
 
                     <div class="sub-tabs" style="display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                        @if($showAllTab)
                         <button type="button" class="sub-tab-btn active" onclick="filterSheCategory('all', this)" style="padding:8px 16px; border-radius:8px; border:none; background:#e2e8f0; cursor:pointer; font-weight:600;">
                             All Categories
                         </button>
+                        @endif
                         
                         @if($countK3 > 0)
                         <button type="button" class="sub-tab-btn" onclick="filterSheCategory('K3', this)" style="padding:8px 16px; border-radius:8px; border:none; background:white; cursor:pointer; border:1px solid #e2e8f0;">
@@ -1501,7 +1580,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($filteredDetails ?? $document->details as $index => $item)
+                            @php 
+                                $loopItems = $filteredDetails ?? $document->details; 
+                            @endphp
+                            @if(count($loopItems) > 0)
+                            @foreach($loopItems as $index => $item)
                                 @php
                                     $skip = false;
 
@@ -1545,11 +1628,11 @@
                                     // If not in revision mode, show everything ($skip remains false)
                                 @endphp
                                 @if($skip) @continue @endif
-
+    
                                 <tr data-category="{{ $item->kategori }}">
                                     <td style="text-align:center; padding-top:20px; font-size:14px; color:#1e293b;">
                                         {{ $index + 1 }}
-                                        @if($canEdit)
+                                        @if($canEditRow($item->kategori))
                                             <div style="margin-top:5px;">
                                                 <button type="button" class="action-btn-icon" 
                                                     style="background:none; border:none; color:#f59e0b; cursor:pointer;"
@@ -1821,11 +1904,12 @@
 
 
                                 </tr>
-                            @empty
+                            @endforeach
+                            @else
                                 <tr>
                                     <td colspan="22" style="text-align:center; padding:20px;">Tidak ada data detail.</td>
                                 </tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
             </div>
@@ -1848,39 +1932,54 @@
                 $showChecklist = false;
 
                 if ($isSheUnit || $isSecurityUnit) {
-                    if ($isApprover && in_array($status, ['assigned_approval', 'process_verification'])) {
-                        // Verifikator selalu melihat/mengisi checklist (Hanya saat status benar)
-                        $showChecklist = true;
+                    if ($isApprover) {
+                        // Verifikator selalu melihat/mengisi checklist
+                        // SHE: Cek status kategori individu
+                        if ($isSheUnit) {
+                            $anyAtVerif = (in_array($document->status_k3, ['assigned_approval', 'process_verification']) || 
+                                           in_array($document->status_ko, ['assigned_approval', 'process_verification']) || 
+                                           in_array($document->status_lingkungan, ['assigned_approval', 'process_verification']) ||
+                                           $document->status_she == 'assigned_approval');
+                            if ($anyAtVerif) $showChecklist = true;
+                        } else {
+                            // Security
+                            if (in_array($status, ['assigned_approval', 'process_verification'])) $showChecklist = true;
+                        }
                     } elseif ($isReviewer) {
                         // Reviewer hanya melihat jika Dokumen sudah kembali dari Verifikator (Stage 2)
                         // Cek status:
                         // Security: 'staff_verified'
                         // SHE: 'awaiting_final_review' pada salah satu kategori (K3/KO/Lingkungan)
                         
-                        if ($isSecurityUnit && $document->status_security == 'staff_verified') {
-                            $showChecklist = true;
+                         if ($isSecurityUnit) {
+                            if (in_array($document->status_security, ['assigned_review', 'staff_verified', 'revision'])) $showChecklist = true;
                         } elseif ($isSheUnit) {
-                            // Cek jika ada yang 'awaiting_final_review' ATAU sudah 'verified' (artinya sudah lewat verifikator)
-                            // Jika murni 'assigned_review' (dari Head), maka Stage 1 -> Hide
+                            // Stage 1 or Stage 2: Always show my categories' checklists
+                            // Using a more inclusive check so Stage 1 Reviewers can also see/prepare it.
+                            $hasMyTrack = false;
                             
-                            $k3Ready = in_array($document->status_k3, ['awaiting_final_review', 'verified']);
-                            $koReady = in_array($document->status_ko, ['awaiting_final_review', 'verified']);
-                            $lingkunganReady = in_array($document->status_lingkungan, ['awaiting_final_review', 'verified']);
+                            $isK3Turn = in_array($document->status_k3, ['assigned_review', 'awaiting_final_review', 'revision']);
+                            $isKOTurn = in_array($document->status_ko, ['assigned_review', 'awaiting_final_review', 'revision']);
+                            $isLingTurn = in_array($document->status_lingkungan, ['assigned_review', 'awaiting_final_review', 'revision']);
                             
-                            if ($k3Ready || $koReady || $lingkunganReady) {
-                                $showChecklist = true;
-                            }
+                            if ($isReviewerK3 && $isK3Turn) $hasMyTrack = true;
+                            if ($isReviewerKO && $isKOTurn) $hasMyTrack = true;
+                            if ($isReviewerLingkungan && $isLingTurn) $hasMyTrack = true;
+                            
+                            // Historical/Generic fallback
+                            if (in_array($document->status_she, ['assigned_review', 'awaiting_final_review'])) $hasMyTrack = true;
+
+                            // Also show if already verified (Stage 2)
+                            if (in_array($document->status_k3, ['verified'])) $hasMyTrack = true;
+                            if (in_array($document->status_ko, ['verified'])) $hasMyTrack = true;
+                            if (in_array($document->status_lingkungan, ['verified'])) $hasMyTrack = true;
+                            
+                            if ($hasMyTrack) $showChecklist = true;
                         }
                     } elseif ($isHead) {
-                        // Kepala Unit: Hide jika status 'pending_head' (belum didisposisi)
-                        // Show jika sedang proses approval ('process_approval', 'staff_verified', etc.)
+                        // Kepala Unit: Show during disposition (pending_head) and approval phases
                         
-                        // FIX: Logic BARU berdasarkan Permintaan User:
-                        // "tabel kesesuaian akan muncul setelah menerima dokumen review terakhir dari Reviewer"
-                        // Artinya saat status sudah 'process_approval' (siap setujui) atau sudah 'approved'.
-                        // Saat status 'assigned_approval' (Verifikator) atau 'staff_verified' (Reviewer Stage 2), Head TIDAK MELIHAT checklist.
-                        
-                        $visibleToHead = ['process_approval', 'approved', 'published', 'level3_approved', 'pending_level3_ready'];
+                        $visibleToHead = ['pending_head', 'process_approval', 'staff_verified', 'returned_to_head', 'approved', 'published', 'level3_approved', 'pending_level3_ready'];
 
                         if (in_array($status, $visibleToHead)) {
                              $showChecklist = true;
@@ -1889,132 +1988,166 @@
                 }
             @endphp
 
+            @php
+                // Configuration for Category-Specific Checklists
+                $sheCategories = ['K3', 'KO', 'Lingkungan'];
+                $isSheUnit = (Auth::user()->id_unit == 56);
+            @endphp
+
             @if($showChecklist)
-                <div id="compliance-checklist-container" class="doc-card" style="margin-top: 30px; display: none;"> <!-- Hidden by default, shown by JS -->
-                    <div class="card-header-slim" style="display:flex; justify-content:space-between; align-items:center;">
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <i class="fas fa-clipboard-check"></i>
-                            <h2>Tabel Kesesuaian (Compliance Checklist)</h2>
+                <div id="compliance-checklist-wrapper" style="{{ ($isSheUnit || $isSecurityUnit) ? '' : 'display: none;' }}"> <!-- Wrapper for potential multi-table -->
+                @php
+                    $activeCategories = $isSheUnit ? $sheCategories : ['General'];
+                    if (!$isSheUnit && Auth::user()->id_unit == 55) $activeCategories = ['Keamanan'];
+                @endphp
+
+                @foreach($activeCategories as $cat)
+                    @php
+                        // Field Mapping: "Keamanan" category maps to "security" fields
+                        $fieldPrefix = strtolower($cat);
+                        if ($cat === 'Keamanan') $fieldPrefix = 'security';
+
+                        // Check if this category exists in the document details
+                         if ($isSheUnit) {
+                             // STRICT: Only show categories assigned to me
+                             $isAssigned = false;
+                             
+                             // If user has specific assigned_categories, prioritize that
+                             if (!empty($user->assigned_categories)) {
+                                 $assignedCats = is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories;
+                                 if (in_array($cat, $assignedCats)) {
+                                     $isAssigned = true;
+                                 }
+                             } else {
+                                 // Generic Fallback
+                                 if ($isReviewerGeneric || $isApproverGeneric || $isHead) $isAssigned = true;
+                                 if ($cat == 'K3' && ($isReviewerK3 || $isApproverK3)) $isAssigned = true;
+                                 if ($cat == 'KO' && ($isReviewerKO || $isApproverKO)) $isAssigned = true;
+                                 if ($cat == 'Lingkungan' && ($isReviewerLingkungan || $isApproverLingkungan)) $isAssigned = true;
+                             }
+
+                             if (!$isAssigned) continue;
+
+                            $hasCatDetail = $document->details->where('kategori', $cat)->count() > 0;
+                            if (!$hasCatDetail) continue;
+
+
+                            $statusField = 'status_' . $fieldPrefix;
+                            $catStatus = $document->$statusField;
+                            $verificatorField = $fieldPrefix . '_verificator_id';
+                            $verificatorId = $document->$verificatorField;
+                            
+                            // Determine if this specific category's checklist should be shown/editable
+                            $shouldShowThisCat = false;
+                            $canEditThisCat = false;
+
+                            $reviewerField = $fieldPrefix . '_reviewer_id';
+                            $reviewerId = $document->$reviewerField;
+                            
+                            $isMyCat = ($reviewerId == $user->id_user) || ($verificatorId == $user->id_user) || 
+                                       (!$verificatorId && in_array($cat, !empty($user->assigned_categories) ? (is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories) : []));
+
+                             if ($isHead) {
+                                 // Head: Show if verified or global final
+                                 if (in_array($catStatus, ['verified', 'process_approval']) || in_array($status, ['staff_verified', 'returned_to_head', 'process_approval', 'approved', 'published'])) {
+                                     $shouldShowThisCat = true;
+                                     // Allow Head to edit if track is active and not yet fully approved
+                                     if ($myTrackIsActive && !$isApprovedOrPublished) {
+                                         $canEditThisCat = true;
+                                     }
+                                 }
+                             } elseif ($isApprover) {
+                                 // Verifier: Show ONLY my category
+                                 // UPDATED: Allow edit as long as it's Level 2 and not finished.
+                                 if ($isMyCat) {
+                                     $shouldShowThisCat = true;
+                                     $canEditThisCat = true;
+                                 }
+                             } elseif ($isReviewer) {
+                                 // Reviewer: Show if category relevant to form.
+                                 // Stage 1 or Stage 2: Always show my categories' checklists
+                                 if ($isMyCat) {
+                                     $shouldShowThisCat = true;
+                                     $canEditThisCat = true;
+                                 }
+                             }
+
+                             if (!$shouldShowThisCat) continue;
+
+                             $existingHeader = 'compliance_checklist_' . strtolower($cat);
+                             $existing = $document->$existingHeader ?? [];
+                        } else {
+                            // Non-SHE logic
+                            $existing = ($user->id_unit == 55) ? ($document->compliance_checklist_security ?? []) : ($document->compliance_checklist ?? []);
+                            $canEditThisCat = $canEdit; // Fallback to existing logic
+                        }
+
+                        $criteriaList = [
+                            ['key' => 'format', 'label' => 'Standar Format'],
+                            ['key' => 'numbering', 'label' => 'Penomoran Dokumen'],
+                            ['key' => 'revision', 'label' => 'Kemutakhiran Nomor Revisi'],
+                            ['key' => 'approval', 'label' => 'Approval Dokumen'],
+                            ['key' => 'identification_coverage', 'label' => 'Ident. mencakup semua proses'],
+                            ['key' => 'condition_coverage', 'label' => 'Ident. mencakup semua kondisi (R/NR/E)'],
+                            ['key' => 'mitigation', 'label' => 'Kesesuaian Program Mitigasi']
+                        ];
+                    @endphp
+
+                    <div id="compliance-checklist-{{ $fieldPrefix }}" class="doc-card" style="margin-top: 30px;">
+                        <div class="card-header-slim" style="display:flex; justify-content:space-between; align-items:center; background: {{ $cat == 'K3' ? '#fee2e2' : ($cat == 'KO' ? '#ffedd5' : ($cat == 'Lingkungan' ? '#dcfce7' : '#f1f5f9')) }};">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <i class="fas fa-clipboard-check"></i>
+                                <h2>Tabel Kesesuaian (Compliance Checklist) - Category: <strong>{{ $cat }}</strong></h2>
+                            </div>
                         </div>
-                        {{-- Compliance checklist should always be disabled for Kepala Unit Pengelola --}}
-                        {{-- Only staff can edit via toggle button --}}
-
-                    </div>
-                    <div class="doc-body">
-                        <div style="overflow-x: auto;">
-                            <!-- Simple Table Structure, Logic Handled by JS below -->
-                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                                <thead style="background: #1e293b; color: white;">
-                                    <tr>
-                                        <th style="padding:12px;">No</th>
-                                        <th style="padding:12px;">Kriteria</th>
-                                        <th style="padding:12px;">Kesesuaian</th>
-                                        <th style="padding:12px;">Keterangan</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                        $criteriaList = [
-                                            ['key' => 'format', 'label' => 'Standar Format'],
-                                            ['key' => 'numbering', 'label' => 'Penomoran Dokumen'],
-                                            ['key' => 'revision', 'label' => 'Kemutakhiran Nomor Revisi'],
-                                            ['key' => 'approval', 'label' => 'Approval Dokumen'],
-                                            ['key' => 'identification_coverage', 'label' => 'Ident. mencakup semua proses'],
-                                            ['key' => 'condition_coverage', 'label' => 'Ident. mencakup semua kondisi (R/NR/E)'],
-                                            ['key' => 'mitigation', 'label' => 'Kesesuaian Program Mitigasi']
-                                        ];
-                                        $existing = [];
-                                        if ($user->id_unit == 56) { // SHE
-                                            $existing = $document->compliance_checklist_she ?? [];
-                                        } elseif ($user->id_unit == 55) { // Security
-                                            $existing = $document->compliance_checklist_security ?? [];
-                                        } else {
-                                            $existing = $document->compliance_checklist_she ?? $document->compliance_checklist_security ?? $document->compliance_checklist ?? [];
-                                        }
-                                    @endphp
-                                    @foreach($criteriaList as $idx => $c)
-                                        @php
-                                            $s = $existing[$c['key']]['status'] ?? '';
-                                            $n = $existing[$c['key']]['note'] ?? '';
-                                            
-                                            // Default: ALWAYS DISABLED initially
-                                            // Staff will enable it via JS Toggle Button
-                                            $disabled = 'disabled';  
-                                            $noteDisabled = 'disabled';
-                                            $noteStyle = 'background:#f1f5f9;cursor:not-allowed;'; 
-                                            
-                                            // Logic: 
-                                            // 1. Head of Unit Pengelola: Can edit except when pending/final.
-                                            // 2. Staff (Reviewer/Approver): Can edit when assigned.
-                                            // PING-PONG: Reviewer (Stage 1 & 2) and Verifier can both edit checklist?
-                                            // User said:
-                                            // - Reviewer Task 1: Review Konten (Checklist Read-only?) -> User said "review teknis (isi checklist...) di staff verifikator". So Reviewer 1 maybe no checklist?
-                                            // - Verifier: "isi checklist & edit konten".
-                                            // - Reviewer Task 2: "memverifikasi hasil review... edit tabel hiradc dan tabel checklist".
-                                            
-                                            // So: 
-                                            // Reviewer Stage 1: Checklist Read-Only (or Editable)? Let's allow Editable to be safe, or Read-Only if strictly following "Verifier fills it".
-                                            // Verifier: Editable.
-                                            // Reviewer Stage 2: Editable.
-                                            
-                                            $isPendingDisposition = ($isHead && $status == 'pending_head');
-                                            $isFinalDecision = ($isHead && in_array($status, ['staff_verified', 'returned_to_head']));
-                                            $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
-                                            
-                                            $headCanEdit = ($isHead && $myTrackIsActive && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished);
-                                            
-                                            // Staff Logic
-                                            // Reviewer can edit if 'assigned_review' (Stage 1 or 2)
-                                            // Verifier can edit if 'assigned_approval'
-                                            // PING-PONG FIX:
-                                            // Reviewer Stage 2 (dapat balikan Verifikator):
-                                            // - Security: status 'staff_verified'
-                                            // - SHE: status 'assigned_review' TAPI salah satu kategori 'awaiting_final_review'
-                                            
-                                            $isSheStage2 = false;
-                                            if ($isSheUnit && $isReviewer) {
-                                                $isSheStage2 = in_array($document->status_k3, ['awaiting_final_review', 'verified']) ||
-                                                               in_array($document->status_ko, ['awaiting_final_review', 'verified']) ||
-                                                               in_array($document->status_lingkungan, ['awaiting_final_review', 'verified']);
-                                            }
-
-                                            $staffCanEdit = ($isApprover && in_array($status, ['assigned_approval', 'process_verification'])) || 
-                                                            ($isReviewer && ($status == 'staff_verified' || $isSheStage2));
-
-                                            if ($headCanEdit || $staffCanEdit) {
-                                                $disabled = '';
-                                                // If already filled NOK/Tdk Penting, enable note
-                                                if ($s == 'NOK' || $s == 'Tdk Penting') {
-                                                    $noteDisabled = '';
-                                                    $noteStyle = 'background:white;cursor:text;';
-                                                }
-                                            }
-                                        @endphp
-                                        <tr style="border-bottom:1px solid #e2e8f0;">
-                                            <td style="padding:12px; text-align:center;">{{ $idx + 1 }}</td>
-                                            <td style="padding:12px;">{{ $c['label'] }}</td>
-                                            <td style="padding:12px;">
-                                                <select name="compliance_checklist[{{ $c['key'] }}][status]"
-                                                    id="status_{{ $c['key'] }}" class="compliance-status form-control" {{ $disabled }}
-                                                    onchange="toggleNoteField('{{ $c['key'] }}')">
-                                                    <option value="">-- Pilih --</option>
-                                                    <option value="OK" {{ $s == 'OK' ? 'selected' : '' }}>OK</option>
-                                                    <option value="NOK" {{ $s == 'NOK' ? 'selected' : '' }}>NOK</option>
-                                                    <option value="Tdk Penting" {{ $s == 'Tdk Penting' ? 'selected' : '' }}>Tdk
-                                                        Penting</option>
-                                                </select>
-                                            </td>
-                                            <td style="padding:12px;">
-                                                <input type="text" name="compliance_checklist[{{ $c['key'] }}][note]"
-                                                    id="note_{{ $c['key'] }}" value="{{ $n }}"
-                                                    class="compliance-note form-control" {{ $noteDisabled }} style="{{ $noteStyle }}">
-                                            </td>
+                        <div class="doc-body">
+                            <div style="overflow-x: auto;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                    <thead style="background: #1e293b; color: white;">
+                                        <tr>
+                                            <th style="padding:12px; width: 50px;">No</th>
+                                            <th style="padding:12px;">Kriteria</th>
+                                            <th style="padding:12px; width: 150px;">Kesesuaian</th>
+                                            <th style="padding:12px;">Keterangan</th>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($criteriaList as $idx => $c)
+                                            @php
+                                                $s = $existing[$c['key']]['status'] ?? '';
+                                                $n = $existing[$c['key']]['note'] ?? '';
+                                                
+                                                $disabled = $canEditThisCat ? '' : 'disabled';
+                                                $noteDisabled = ($canEditThisCat && ($s == 'NOK' || $s == 'Tdk Penting')) ? '' : 'disabled';
+                                                $noteStyle = $noteDisabled ? 'background:#f1f5f9;cursor:not-allowed;' : 'background:white;cursor:text;';
+                                            @endphp
+                                            <tr style="border-bottom:1px solid #e2e8f0;">
+                                                <td style="padding:12px; text-align:center;">{{ $idx + 1 }}</td>
+                                                <td style="padding:12px;">{{ $c['label'] }}</td>
+                                                <td style="padding:12px;">
+                                                    <select name="compliance_checklist_{{ $fieldPrefix }}[{{ $c['key'] }}][status]"
+                                                        id="status_{{ $fieldPrefix }}_{{ $c['key'] }}" 
+                                                        class="compliance-status form-control" {{ $disabled }}
+                                                        onchange="toggleNoteField('{{ $c['key'] }}', '{{ $fieldPrefix }}')">
+                                                        <option value="">-- Pilih --</option>
+                                                        <option value="OK" {{ $s == 'OK' ? 'selected' : '' }}>OK</option>
+                                                        <option value="NOK" {{ $s == 'NOK' ? 'selected' : '' }}>NOK</option>
+                                                        <option value="Tdk Penting" {{ $s == 'Tdk Penting' ? 'selected' : '' }}>Tdk Penting</option>
+                                                    </select>
+                                                </td>
+                                                <td style="padding:12px;">
+                                                    <input type="text" name="compliance_checklist_{{ $fieldPrefix }}[{{ $c['key'] }}][note]"
+                                                        id="note_{{ $fieldPrefix }}_{{ $c['key'] }}" value="{{ $n }}"
+                                                        class="compliance-note form-control" {{ $noteDisabled }} style="{{ $noteStyle }}">
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
+                @endforeach
                 </div>
             @endif
 
@@ -2420,7 +2553,14 @@
                                 <span class="tm-badge">{{ $hist->level }}</span>
                                 <span class="tm-date">{{ $hist->created_at->format('d M Y, H:i') }} WIB</span>
                             </div>
-                            <div class="tm-status">{{ $label }}</div>
+                            <div class="tm-status">
+                                {{ $label }}
+                                @if(isset($hist->kategori) && $hist->kategori)
+                                    <span style="font-size: 10px; background: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 99px; font-weight: 600; text-transform: uppercase; margin-left: 8px;">
+                                        [{{ $hist->kategori }}]
+                                    </span>
+                                @endif
+                            </div>
                             @if($hist->catatan)
                                 <div class="tm-comment">
                                     <i class="fas fa-quote-left"></i> {{ $hist->catatan }}
@@ -2495,91 +2635,144 @@
                         <i class="fas fa-clock"></i> Menunggu pemeriksaan oleh Reviewer/Verifikator Staff.
                     </div>
                 @endif
-
-                </form>
+                {{-- Orphaned form tag removed --}}
 
                 {{-- 2. STAFF REVIEWER --}}
-            @elseif($isReviewer && in_array($status, ['assigned_review', 'pending_head', 'staff_verified']))
+                {{-- 2. STAFF REVIEWER --}}
+            @elseif($reviewerCanSubmit)
                 {{-- PING-PONG LOGIC:
                      Stage 1: 'assigned_review' (Init by Head) -> Send to Verifier
                      Stage 2: 'staff_verified' (Returned by Verifier) -> Send to Head
                      Note: 'process_verification' might be seen if partial categories done? No, Reviewer actions based on specific status.
                 --}}
                 
-                <form id="staffActionForm" method="POST" action="{{ route('unit_pengelola.submit_review', $document->id) }}"
-                    style="width:100%; display:flex; gap:15px;">
+                <form id="reviewerActionForm" method="POST" action="{{ route('unit_pengelola.submit_review', $document->id) }}"
+                    style="width:100%; display:flex; flex-direction: column; gap:15px;">
                     @csrf
                     <!-- Compliance Data Injected via JS -->
-                    <input type="hidden" name="compliance_checklist" id="compliance_checklist_input">
+                    <input type="hidden" name="compliance_checklist" id="compliance_checklist_reviewer_input">
                     
-                     {{-- STAGE LOGIC: Check Status --}}
-                     @php
-                         // Default to Stage 1
-                         $btnLabel = "Kirim ke Staff Verifikator";
-                         $btnColor = "btn-primary";
-                         $placeholder = "Catatan Review Tahap 1...";
-                         
-                         // If Returned from Verifier (Stage 2)
-                         // Check specific categories if using SHE unit
-                         $isStage2 = false;
-                         if ($isSheUnit) {
-                             // If ANY category is 'verified' or 'awaiting_final_review', we treat as Stage 2 potential?
-                             // Actually, Controller `verifyUnit` sets 'awaiting_final_review' (or 'verified' in previous attempt, let's check controller).
-                             // I used 'awaiting_final_review' in verifyUnit.
-                             // So if status is 'awaiting_final_review', it's Stage 2.
-                             
-                             // However, $status variable here is $status_she which is 'assigned_review' after verifyUnit.
-                             // So we need to check sub-statuses.
-                             $hasReturn = ($document->status_k3 == 'awaiting_final_review' || 
-                                           $document->status_ko == 'awaiting_final_review' || 
-                                           $document->status_lingkungan == 'awaiting_final_review');
-                                           
-                             if ($hasReturn) {
-                                  $isStage2 = true;
-                             }
-                         } elseif ($isSecurityUnit) {
-                             if ($document->status_security == 'staff_verified') {
-                                  $isStage2 = true;
-                             }
-                         } else {
-                             // Fallback
-                             if ($status == 'staff_verified') $isStage2 = true;
-                         }
+                    @if($isSheUnit)
+                    {{-- Category Selection Hidden - Automatically processing all assigned categories --}}
+                    <div style="display: none;">
+                        @php
+                            $submittableK3 = ($isReviewerK3 || $isReviewerGeneric) && in_array($document->status_k3, ['assigned_review', 'awaiting_final_review', 'revision']);
+                            $submittableKO = ($isReviewerKO || $isReviewerGeneric) && in_array($document->status_ko, ['assigned_review', 'awaiting_final_review', 'revision']);
+                            $submittableLing = ($isReviewerLingkungan || $isReviewerGeneric) && in_array($document->status_lingkungan, ['assigned_review', 'awaiting_final_review', 'revision']);
+                        @endphp
 
-                         if ($isStage2) {
-                             $btnLabel = "Final Review & Kirim ke Kepala Unit";
-                             $btnColor = "btn-approve"; // Green/Dark
-                             $placeholder = "Catatan Final Review...";
-                         }
-                     @endphp
+                        @if($submittableK3)
+                        <input type="checkbox" name="selected_categories[]" value="K3" id="review_cat_k3" checked>
+                        @endif
 
-                    <div class="notes-area">
-                        <textarea name="catatan" class="notes-input" placeholder="{{ $placeholder }}"></textarea>
+                        @if($submittableKO)
+                        <input type="checkbox" name="selected_categories[]" value="KO" id="review_cat_ko" checked>
+                        @endif
+
+                        @if($submittableLing)
+                        <input type="checkbox" name="selected_categories[]" value="Lingkungan" id="review_cat_lingkungan" checked>
+                        @endif
                     </div>
-                    <div class="action-btns">
-                        <button type="button" class="btn {{ $btnColor }}" onclick="submitStaffAction('{{ $isStage2 ? 'head' : 'verifier' }}')">
-                            {{ $btnLabel }}
-                        </button>
+                    @endif
+
+                    <div style="display: flex; gap: 15px; width: 100%;">
+                        {{-- STAGE LOGIC: Check Status --}}
+                        @php
+                            // Default to Stage 1
+                            $btnLabel = "Kirim ke Staff Verifikator";
+                            $btnColor = "btn-primary";
+                            $placeholder = "Catatan Review Tahap 1...";
+                            
+                            // If Returned from Verifier (Stage 2)
+                            // Check specific categories if using SHE unit
+                            $isStage2 = false;
+                            if ($isSheUnit) {
+                                // Only consider Stage 2 if *MY* category is in Stage 2
+                                $hasReturn = false;
+                                if ($isReviewerK3 && $document->status_k3 == 'awaiting_final_review') $hasReturn = true;
+                                if ($isReviewerKO && $document->status_ko == 'awaiting_final_review') $hasReturn = true;
+                                if ($isReviewerLingkungan && $document->status_lingkungan == 'awaiting_final_review') $hasReturn = true;
+                                
+                                // Generic fallback
+                                if ($isReviewerGeneric && ($document->status_k3 == 'awaiting_final_review' || $document->status_ko == 'awaiting_final_review' || $document->status_lingkungan == 'awaiting_final_review')) {
+                                    $hasReturn = true;
+                                }
+                                              
+                                if ($hasReturn) {
+                                     $isStage2 = true;
+                                }
+                            } elseif ($isSecurityUnit) {
+                                if ($document->status_security == 'staff_verified') {
+                                     $isStage2 = true;
+                                }
+                            } else {
+                                // Fallback
+                                if ($status == 'staff_verified') $isStage2 = true;
+                            }
+
+                            if ($isStage2) {
+                                $btnLabel = "Final Review & Kirim ke Kepala Unit";
+                                $btnColor = "btn-approve"; // Green/Dark
+                                $placeholder = "Catatan Final Review...";
+                            }
+                        @endphp
+
+                        <div class="notes-area">
+                            <textarea name="catatan" class="notes-input" placeholder="{{ $placeholder }}"></textarea>
+                        </div>
+                        <div class="action-btns">
+                            <button type="button" class="btn {{ $btnColor }}" onclick="submitStaffAction('{{ $isStage2 ? 'head' : 'verifier' }}')">
+                                {{ $btnLabel }}
+                            </button>
+                        </div>
                     </div>
                 </form>
+
 
                 {{-- 3. STAFF VERIFIKATOR --}}
-            @elseif($isApprover && in_array($status, ['assigned_approval', 'process_verification']))
-                <form id="staffActionForm" method="POST" action="{{ route('unit_pengelola.verify', $document->id) }}"
-                    style="width:100%; display:flex; gap:15px;">
+            @elseif($isApprover && ($verificatorCanSubmit || in_array($status, ['assigned_approval', 'process_verification'])))
+                <form id="verifierActionForm" method="POST" action="{{ route('unit_pengelola.verify', $document->id) }}"
+                    style="width:100%; display:flex; flex-direction: column; gap:15px;">
                     @csrf
-                    <!-- Inject Compliance Data (Required for submitStaffAction) -->
-                    <input type="hidden" name="compliance_checklist" id="compliance_checklist_input">
-                    <div class="notes-area">
-                        <textarea name="catatan" class="notes-input" placeholder="Catatan Verifikasi..."></textarea>
+                    <!-- Inject Compliance Data -->
+                    <input type="hidden" name="compliance_checklist" id="compliance_checklist_verifier_input">
+                    
+                    @if($isSheUnit)
+                    {{-- Category Selection Hidden - Automatically processing all assigned categories --}}
+                    <div style="display: none;">
+                        @php
+                            $verifiableK3 = ($isApproverK3 || $isApproverGeneric) && in_array($document->status_k3, ['assigned_approval', 'process_verification']);
+                            $verifiableKO = ($isApproverKO || $isApproverGeneric) && in_array($document->status_ko, ['assigned_approval', 'process_verification']);
+                            $verifiableLing = ($isApproverLingkungan || $isApproverGeneric) && in_array($document->status_lingkungan, ['assigned_approval', 'process_verification']);
+                        @endphp
+
+                        @if($verifiableK3)
+                        <input type="checkbox" name="selected_categories[]" value="K3" id="verify_cat_k3" checked>
+                        @endif
+
+                        @if($verifiableKO)
+                        <input type="checkbox" name="selected_categories[]" value="KO" id="verify_cat_ko" checked>
+                        @endif
+
+                        @if($verifiableLing)
+                        <input type="checkbox" name="selected_categories[]" value="Lingkungan" id="verify_cat_lingkungan" checked>
+                        @endif
                     </div>
-                    <div class="action-btns">
-                        {{-- Verificator always sends back to Reviewer --}}
-                        <button type="button" class="btn btn-warning" onclick="submitStaffAction('reviewer')">
-                            <i class="fas fa-undo"></i> Kirim ke Staff Reviewer
-                        </button>
+                    @endif
+
+                    <div style="display: flex; gap: 15px; width: 100%;">
+                        <div class="notes-area">
+                            <textarea name="catatan" class="notes-input" placeholder="Catatan Verifikasi..."></textarea>
+                        </div>
+                        <div class="action-btns">
+                            {{-- Verificator always sends back to Reviewer --}}
+                            <button type="button" class="btn btn-warning" onclick="submitStaffAction('reviewer')">
+                                <i class="fas fa-undo"></i> Kirim ke Staff Reviewer
+                            </button>
+                        </div>
                     </div>
                 </form>
+
             @else
                 <div class="view-only-message">
                     <div class="view-only-icon">
@@ -2756,21 +2949,10 @@
                     return;
                 }
 
+                // Directly submit revision to back to submitter
+                // No popup as requested by user
                 form.action = "{{ route('unit_pengelola.revise', $document->id) }}";
-                
-                Swal.fire({
-                    title: 'Kirim Revisi?',
-                    text: 'Dokumen akan dikembalikan ke staff.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ya, Revisi',
-                    cancelButtonText: 'Batal',
-                    confirmButtonColor: '#dc2626'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
-                    }
-                });
+                form.submit();
             } else {
                 // Approve - REQUIRE COMMENT
                 if (noteValue.length < 5) {
@@ -2812,36 +2994,78 @@
             // Actually, Verifier fills it. So validation needed when Verifier submits.
             // When Reviewer submits to Verifier (Stage 1), checklist is empty/disabled.
             
-            if (target === 'reviewer' || target === 'head') {
-                 const selects = document.querySelectorAll('select[name^="compliance_checklist"]');
-                 let allFilled = true;
-                 
-                 selects.forEach(select => {
-                     if (select.value === "") {
-                         allFilled = false;
-                         select.style.border = "1px solid red";
-                     } else {
-                         select.style.border = ""; 
-                     }
-                 });
-    
-                 if (!allFilled) {
-                     Swal.fire({
-                         icon: 'warning',
-                         title: 'Checklist Belum Lengkap',
-                         text: 'Mohon lengkapi semua poin pada Tabel Kesesuaian (Compliance Checklist) sebelum melanjutkan.',
-                         confirmButtonColor: '#f59e0b'
-                     });
-                     document.querySelector('.doc-card').scrollIntoView({ behavior: 'smooth' });
-                     return;
-                 }
-            }
+             if (target === 'reviewer' || target === 'head' || target === 'verifier') {
+                  // NEW: Validation depends on SELECTED CATEGORIES
+                  const form = document.getElementById('verifierActionForm') || document.getElementById('reviewerActionForm');
+                  const selected = Array.from(form.querySelectorAll('input[name="selected_categories[]"]:checked')).map(cb => cb.value);
+                  const isSecurity = {{ Auth::user()->id_unit == 55 ? 'true' : 'false' }};
+                  
+                  // If Security, they don't have categories checkboxes (only one Keamanan)
+                  // If SHE, they must select at least one
+                  // Validation changed for hidden selection: only error if no categories available at all
+                  if (!isSecurity && selected.length === 0) {
+                      Swal.fire('No categories to process', 'Tidak ada kategori yang aktif untuk diproses saat ini.', 'warning');
+                      return;
+                  }
+
+                  // ONLY validate selects for SELECTED CATEGORIES that are NOT disabled
+                  let allFilled = true;
+                  
+                  if (isSecurity) {
+                      const selects = document.querySelectorAll('select[name^="compliance_checklist_security"]:not([disabled])');
+                      selects.forEach(select => {
+                          if (select.value === "") {
+                              allFilled = false;
+                              select.style.border = "1px solid red";
+                          } else {
+                              select.style.border = ""; 
+                          }
+                      });
+                  } else {
+                      selected.forEach(cat => {
+                          const catKey = cat.toLowerCase();
+                          const selects = document.querySelectorAll(`select[name^="compliance_checklist_${catKey}"]:not([disabled])`);
+                          selects.forEach(select => {
+                              if (select.value === "") {
+                                  allFilled = false;
+                                  select.style.border = "1px solid red";
+                              } else {
+                                  select.style.border = ""; 
+                              }
+                          });
+                      });
+                  }
+     
+                  if (!allFilled) {
+                      Swal.fire({
+                          icon: 'warning',
+                          title: 'Checklist Belum Lengkap',
+                          text: 'Mohon lengkapi semua poin pada Tabel Kesesuaian (Compliance Checklist) untuk kategori yang dipilih sebelum melanjutkan.',
+                          confirmButtonColor: '#f59e0b'
+                      });
+                      // Scroll to first error
+                      const firstError = document.querySelector('select[style*="border: 1px solid red"]');
+                      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      return;
+                  }
+             }
+
 
             // Inject Compliance Data
             const checklistJson = collectComplianceData();
-            document.getElementById('compliance_checklist_input').value = checklistJson;
+            
+            // Set data to the correct input based on which form is active
+            const revInput = document.getElementById('compliance_checklist_reviewer_input');
+            const verInput = document.getElementById('compliance_checklist_verifier_input');
+            if (revInput) revInput.value = checklistJson;
+            if (verInput) verInput.value = checklistJson;
 
-            const form = document.getElementById('staffActionForm');
+            // Find the active form (since only one rendered at a time, or prioritize)
+            const form = document.getElementById('verifierActionForm') || document.getElementById('reviewerActionForm');
+            if (!form) {
+                console.error('Action form not found!');
+                return;
+            }
             
             let title = 'Submit?';
             let text = 'Pastikan data sudah benar.';
@@ -2965,7 +3189,7 @@
             $isFinalDecision = ($isHead && in_array($status, ['staff_verified', 'returned_to_head']));
             $isApprovedOrPublished = in_array($status, ['approved', 'published', 'level3_approved']);
             
-            $headCanEditCompliance = ($isHead && $myTrackIsActive && !$isPendingDisposition && !$isFinalDecision && !$isApprovedOrPublished);
+            $headCanEditCompliance = ($isHead && $myTrackIsActive && !$isApprovedOrPublished);
             // PING-PONG FIX FOR JS LOGIC AS WELL
             $isSheStage2JS = false;
             // PHP context available here
@@ -2975,8 +3199,7 @@
                                   in_array($document->status_lingkungan, ['awaiting_final_review', 'verified']);
             }
 
-            $staffCanEditCompliance = ($isApprover && in_array($status, ['assigned_approval', 'process_verification'])) || 
-                                      ($isReviewer && ($status == 'staff_verified' || $isSheStage2JS));
+            $staffCanEditCompliance = ($isApprover || $isReviewer) && $myTrackIsActive && !$isApprovedOrPublished;
             
             $globalComplianceEdit = ($headCanEditCompliance || $staffCanEditCompliance);
         @endphp
@@ -3010,9 +3233,9 @@
             });
         }
 
-        function toggleNoteField(key) {
-            const statusSelect = document.getElementById('status_' + key);
-            const noteInput = document.getElementById('note_' + key);
+        function toggleNoteField(key, cat) {
+            const statusSelect = document.getElementById(`status_${cat}_${key}`);
+            const noteInput = document.getElementById(`note_${cat}_${key}`);
             
             if (!statusSelect || !noteInput) return;
 
@@ -3314,47 +3537,40 @@
             @endif
         });
 
-        // --- COMPLIANCE CHECKLIST LOGIC ---
+        // --- COMPLIANCE CHECKLIST LOGIC (Refactored for Category-Specific Tables) ---
         
         // Initialize Data from Server
         let checklistData = { K3: {}, KO: {}, Lingkungan: {}, Keamanan: {} };
-        const serverData = @json($document->compliance_checklist_she ?? []);
+        const serverDataK3 = @json($document->compliance_checklist_k3 ?? []);
+        const serverDataKO = @json($document->compliance_checklist_ko ?? []);
+        const serverDataLingkungan = @json($document->compliance_checklist_lingkungan ?? []);
+        const serverDataSeq = @json($document->compliance_checklist_security ?? []);
+        const serverDataShe = @json($document->compliance_checklist_she ?? []);
         
-        // Category Statuses for Visibility Check
+        // Merge data
+        checklistData.K3 = serverDataK3 || (serverDataShe.K3 || {});
+        checklistData.KO = serverDataKO || (serverDataShe.KO || {});
+        checklistData.Lingkungan = serverDataLingkungan || (serverDataShe.Lingkungan || {});
+        checklistData.Keamanan = serverDataSeq || {};
+
+        // Category Statuses for Visibility Check (Keep for HIRADC filtering)
         const categoryStatuses = {
             'K3': '{{ $document->status_k3 }}',
             'KO': '{{ $document->status_ko }}',
             'Lingkungan': '{{ $document->status_lingkungan }}',
             'Keamanan': '{{ $document->status_security }}'
         };
+
         const userRole = {
             isHead: {{ isset($isHead) && $isHead ? 'true' : 'false' }},
             isReviewer: {{ isset($isReviewer) && $isReviewer ? 'true' : 'false' }},
             isVerifier: {{ isset($isApprover) && $isApprover ? 'true' : 'false' }}
         };
 
-        // Migration: If server data matches the new structure (has keys K3/KO...), use it.
-        // If it's flat (legacy), map it to all active categories to preserve data.
-        if (serverData && (serverData.K3 || serverData.KO || serverData.Lingkungan || serverData.Keamanan)) {
-            checklistData = { ...checklistData, ...serverData };
-        } else if (serverData && Object.keys(serverData).length > 0) {
-            // Legacy Flat Data - Distribute to Categories that exist in this document
-            // We can infer categories from DOM or just assign to all
-            checklistData.K3 = JSON.parse(JSON.stringify(serverData));
-            checklistData.KO = JSON.parse(JSON.stringify(serverData));
-            checklistData.Lingkungan = JSON.parse(JSON.stringify(serverData));
-            checklistData.Keamanan = JSON.parse(JSON.stringify(serverData));
-        }
-
         let currentActiveCategory = 'all';
 
         function filterSheCategory(cat, btn) {
-            // 1. Save current form state to memory before switching
-            if (currentActiveCategory !== 'all') {
-                saveChecklistToMemory(currentActiveCategory);
-            }
-
-            // 2. Update Tab Buttons
+            // 1. Update Tab Buttons
             document.querySelectorAll('.sub-tab-btn').forEach(b => {
                 b.style.background = 'white';
                 b.style.fontWeight = 'normal';
@@ -3366,7 +3582,7 @@
                 btn.classList.add('active');
             }
 
-            // 3. Filter Table Rows
+            // 2. Filter Table Rows
             const rows = document.querySelectorAll('tr[data-category]');
             rows.forEach(row => {
                 if (cat === 'all') {
@@ -3381,114 +3597,142 @@
                 }
             });
 
-            // 4. Handle Compliance Checklist Visibility & Data
-            const checklistContainer = document.getElementById('compliance-checklist-container');
-            if (checklistContainer) {
-                if (cat === 'all') {
-                     checklistContainer.style.display = 'none';
-                } else {
-                     // Check Visibility based on Role and Status
-                     let shouldShow = false;
-                     const status = categoryStatuses[cat];
-
-                     if (userRole.isHead) {
-                         // Head: Only show if Verified (Staff Done)
-                         // OR if it's already approved/published
-                         if (status === 'verified' || status === 'process_approval' || status === 'approved' || status === 'published') {
-                             shouldShow = true;
-                         }
-                     } else if (userRole.isVerifier) {
-                         // Verifier: Show if active (assigned/process)
-                         if (status === 'assigned_approval' || status === 'process_verification') {
-                             shouldShow = true;
-                         }
-                     } else if (userRole.isReviewer) {
-                         // Reviewer: Show if Stage 2 (returned)
-                         if (status === 'awaiting_final_review' || status === 'verified') {
-                             shouldShow = true;
-                         }
-                     }
-
-                     if (shouldShow) {
-                         checklistContainer.style.display = 'block';
-                         populateChecklistForm(cat);
-                     } else {
-                         checklistContainer.style.display = 'none';
-                     }
+            // 3. Handle Compliance Checklist Visibility
+            // Now we have multiple containers: compliance-checklist-k3, ko, lingkungan
+            const sheCats = ['k3', 'ko', 'lingkungan'];
+            sheCats.forEach(sc => {
+                const el = document.getElementById('compliance-checklist-' + sc);
+                if (el) {
+                    if (cat === 'all' || cat.toLowerCase() === sc) {
+                        // Inherit Blade's initial visibility logic (it will show if relevant)
+                        // Actually, if 'all', maybe show all? Or hide all?
+                        // The user said "3 tables", so maybe show all active ones or filtered one.
+                        el.style.display = 'block'; 
+                    } else {
+                        el.style.display = 'none';
+                    }
                 }
-            }
+            });
             
             currentActiveCategory = cat;
         }
         
-        function populateChecklistForm(cat) {
-            // Clear or Set values based on checklistData[cat]
-            const data = checklistData[cat] || {};
+        function toggleNoteField(key, cat) {
+            const selectId = cat ? `status_${cat}_${key}` : `status_${key}`;
+            const noteId = cat ? `note_${cat}_${key}` : `note_${key}`;
+            const select = document.getElementById(selectId);
+            const noteInput = document.getElementById(noteId);
             
-            // Iterate all checklist rows (assumes specific IDs or predictable names)
-            // The select names are compliance_checklist[KEY][status]
-            // We need to iterate the DOM elements
-            document.querySelectorAll('select[name^="compliance_checklist"]').forEach(select => {
-                // Extract Key
-                const name = select.getAttribute('name');
-                const match = name.match(/\[(.*?)\]\[status\]/);
-                if (match) {
-                    const key = match[1];
-                    const val = (data[key] && data[key].status) ? data[key].status : '';
-                    select.value = val;
-                    
-                    // Trigger change to update UI (colors, notes enablement)
-                    toggleNoteField(key); 
-                }
-            });
+            if (!select || !noteInput) return;
 
-            document.querySelectorAll('input[name^="compliance_checklist"]').forEach(input => {
-                const name = input.getAttribute('name');
-                const match = name.match(/\[(.*?)\]\[note\]/);
-                if (match) {
-                    const key = match[1];
-                    const val = (data[key] && data[key].note) ? data[key].note : '';
-                    input.value = val;
-                }
-            });
-        }
-
-        function saveChecklistToMemory(cat) {
-            if (!checklistData[cat]) checklistData[cat] = {};
-            
-            document.querySelectorAll('select[name^="compliance_checklist"]').forEach(select => {
-                const name = select.getAttribute('name');
-                const match = name.match(/\[(.*?)\]\[status\]/);
-                if (match) {
-                    const key = match[1];
-                    if (!checklistData[cat][key]) checklistData[cat][key] = {};
-                    checklistData[cat][key]['status'] = select.value;
-                }
-            });
-
-            document.querySelectorAll('input[name^="compliance_checklist"]').forEach(input => {
-                const name = input.getAttribute('name');
-                const match = name.match(/\[(.*?)\]\[note\]/);
-                if (match) {
-                    const key = match[1];
-                    if (!checklistData[cat][key]) checklistData[cat][key] = {};
-                    checklistData[cat][key]['note'] = input.value;
-                }
-            });
-        }
-        
-        // Override collectComplianceData to return the FULL structure
-        function collectComplianceData() {
-            // Ensure current active tab is saved
-            if (currentActiveCategory !== 'all') {
-                saveChecklistToMemory(currentActiveCategory);
+            // 1. If Global Edit Mode is OFF -> ALWAYS DISABLE
+            if (typeof isComplianceEditing !== 'undefined' && !isComplianceEditing) {
+                noteInput.disabled = true;
+                noteInput.style.background = '#f1f5f9';
+                noteInput.style.cursor = 'not-allowed';
+                return;
             }
-            return JSON.stringify(checklistData);
+
+            // 2. If Global Edit Mode is ON -> Check Dropdown Value
+            if (select.value === 'NOK' || select.value === 'Tdk Penting') {
+                noteInput.disabled = false;
+                noteInput.style.background = 'white';
+                noteInput.style.cursor = 'text';
+            } else {
+                noteInput.disabled = true;
+                noteInput.style.background = '#f1f5f9';
+                noteInput.style.cursor = 'not-allowed';
+                noteInput.value = ''; // Auto clear when OK/Empty
+            }
         }
 
-        // Initialize: If we start on 'all', hide checklist. 
-        // If we start on specific cat (not implemented yet), show it.
-        // Default is 'all', so checklist is hidden by default (style="display:none" added in PHP).
+        function collectComplianceData() {
+            const fullData = { K3: {}, KO: {}, Lingkungan: {}, Keamanan: {} };
+            
+            // Collect from fixed category-specific inputs
+            ['k3', 'ko', 'lingkungan'].forEach(cat => {
+                const catElement = document.getElementById(`compliance-checklist-${cat}`);
+                if (catElement && catElement.style.display !== 'none') { // Only collect from visible tables
+                    const prefix = `compliance_checklist_${cat}`;
+                    // Use predictable Case naming that matches Controller (K3, KO, Lingkungan)
+                    const catKey = (cat === 'k3') ? 'K3' : (cat === 'ko' ? 'KO' : 'Lingkungan');
+                    
+                    document.querySelectorAll(`#compliance-checklist-${cat} select[name^="${prefix}"]`).forEach(select => {
+                        const name = select.getAttribute('name');
+                        const match = name.match(/\[(.*?)\]\[status\]/);
+                        if (match) {
+                            const key = match[1];
+                            if (!fullData[catKey][key]) fullData[catKey][key] = {};
+                            fullData[catKey][key]['status'] = select.value;
+                        }
+                    });
+
+                    document.querySelectorAll(`#compliance-checklist-${cat} input[name^="${prefix}"]`).forEach(input => {
+                        const name = input.getAttribute('name');
+                        const match = name.match(/\[(.*?)\]\[note\]/);
+                        if (match) {
+                            const key = match[1];
+                            if (!fullData[catKey][key]) fullData[catKey][key] = {};
+                            fullData[catKey][key]['note'] = input.value;
+                        }
+                    });
+                }
+            });
+
+            // Handle Security/Keamanan (Legacy or separate if needed)
+            // Assuming Security is handled similarly if it has its own checklist div
+            const securityElement = document.getElementById('compliance-checklist-security');
+            if (securityElement && securityElement.style.display !== 'none') {
+                const prefix = `compliance_checklist_security`;
+                document.querySelectorAll(`#compliance-checklist-security select[name^="${prefix}"]`).forEach(select => {
+                    const name = select.getAttribute('name');
+                    const match = name.match(/\[(.*?)\]\[status\]/);
+                    if (match) {
+                        const key = match[1];
+                        if (!fullData.Keamanan[key]) fullData.Keamanan[key] = {};
+                        fullData.Keamanan[key]['status'] = select.value;
+                    }
+                });
+                document.querySelectorAll(`#compliance-checklist-security input[name^="${prefix}"]`).forEach(input => {
+                    const name = input.getAttribute('name');
+                    const match = name.match(/\[(.*?)\]\[note\]/);
+                    if (match) {
+                        const key = match[1];
+                        if (!fullData.Keamanan[key]) fullData.Keamanan[key] = {};
+                        fullData.Keamanan[key]['note'] = input.value;
+                    }
+                });
+            }
+
+            return JSON.stringify(fullData);
+        }
+
+         // Initialize: If on SHE unit, maybe trigger filter 'all' or specific cat
+         window.addEventListener('load', () => {
+             const isShe = {{ $isSheUnit ? 'true' : 'false' }};
+             const assignedCats = @json(!empty($user->assigned_categories) ? (is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories) : []);
+             
+             if (isShe) {
+                 if (assignedCats.length === 1) {
+                     // Auto-filter to that specific category
+                     const cat = assignedCats[0];
+                     // Find the button and click it to trigger visual update too
+                     const btns = document.querySelectorAll('.sub-tab-btn');
+                     btns.forEach(btn => {
+                         if (btn.innerText.includes(cat)) {
+                             filterSheCategory(cat, btn);
+                         }
+                     });
+                 } else {
+                     // Default to all if multiple or none specified (legacy/head)
+                     // But if Head, we might want 'all'
+                     const isHead = {{ $isHead ? 'true' : 'false' }};
+                     if (isHead) {
+                         filterSheCategory('all', document.querySelector('.sub-tab-btn'));
+                     }
+                 }
+             }
+         });
     </script>
 </body>
 

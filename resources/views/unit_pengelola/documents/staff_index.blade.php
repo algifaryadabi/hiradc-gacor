@@ -504,38 +504,75 @@
             </div>
 
             <!-- Category Filter Cards -->
-            <div class="category-filters" style="grid-template-columns: repeat(3, 1fr);">
+            @php
+                $user = Auth::user();
+                // Determine roles based on user attributes or unit
+                $isVerifierRole = ($user->is_verifier == 1);
+                $isReviewerRole = ($user->is_reviewer == 1);
+
+                // If role flags are not set, fallback to Unit logic?
+                // Unit 55 (Security): Role 4 can be Reviewer ot Verify.
+                // Unit 56 (SHE): Role 4 can be Reviewer or Verify.
+                
+                // FORCE HIDE INBOX REVIEW if user is NOT a Reviewer
+                // OR if user IS a Verifier and NOT a Reviewer
+                $showInboxCard = true;
+                
+                if ($isVerifierRole && !$isReviewerRole) {
+                    $showInboxCard = false;
+                }
+                
+                // Special case: If user has NO role flags but is in Unit 55/56 with Role 4?
+                // Assume they are Reviewer by default?
+                // Let's stick to the explicit flags for now.
+                // If the user says "staf verifikator yang telah di tunjuk", they likely updated the user's role.
+            @endphp
+
+            <div class="category-filters" style="grid-template-columns: repeat({{ $showInboxCard ? 4 : 3 }}, 1fr);">
                 <!-- Card 1: Inbox (Dari Kepala Unit) -->
+                @if($showInboxCard)
                 <a href="{{ route('unit_pengelola.staff.index', ['filter' => 'inbox']) }}" 
                    class="category-card card-blue {{ $filter == 'inbox' ? 'active' : '' }}" 
                    style="text-decoration: none;">
                     <div>
-                        <h3><i class="fas fa-inbox"></i> Inbox Review <br><small style="font-size:11px; color:#64748b;">(Dari Kepala Unit)</small></h3>
+                        <h3><i class="fas fa-inbox"></i> Inbox Review <br><small style="font-size:10px; color:#64748b;">(Disposisi Baru)</small></h3>
                         <div class="count">{{ $countInbox }}</div>
                     </div>
-                    <i class="fas fa-chevron-right" style="color:#bfdbfe; font-size:24px;"></i>
+                    <i class="fas fa-chevron-right" style="color:#bfdbfe; font-size:20px;"></i>
                 </a>
+                @endif
 
-                <!-- Card 2: Outbox (Di Verifikator) -->
-                <a href="{{ route('unit_pengelola.staff.index', ['filter' => 'verification']) }}" 
-                   class="category-card card-blue {{ $filter == 'verification' ? 'active' : '' }}"
+                <!-- Card 2: Hasil Verifikasi (Diterima Balik) -->
+                <a href="{{ route('unit_pengelola.staff.index', ['filter' => 'returned']) }}" 
+                   class="category-card card-blue {{ $filter == 'returned' ? 'active' : '' }}"
                    style="text-decoration: none;">
                     <div>
-                        <h3><i class="fas fa-paper-plane"></i> Menunggu Verifikasi <br><small style="font-size:11px; color:#64748b;">(Sedang di Verifikator)</small></h3>
-                        <div class="count">{{ $countVerif }}</div>
+                        <h3><i class="fas fa-undo"></i> Hasil Verifikasi <br><small style="font-size:10px; color:#64748b;">(Diterima Balik)</small></h3>
+                        <div class="count">{{ $countReturned }}</div>
                     </div>
-                    <i class="fas fa-chevron-right" style="color:#bfdbfe; font-size:24px;"></i>
+                    <i class="fas fa-chevron-right" style="color:#bfdbfe; font-size:20px;"></i>
                 </a>
 
-                <!-- Card 3: History -->
+                <!-- Card 3: Sedang Diverifikasi (Di Staff Verif) -->
+                <a href="{{ route('unit_pengelola.staff.index', ['filter' => 'processing']) }}" 
+                   class="category-card card-blue {{ $filter == 'processing' ? 'active' : '' }}"
+                   style="text-decoration: none;">
+                    <div>
+                        <h3><i class="fas fa-paper-plane"></i> {{ $showInboxCard ? 'Sedang Di-Verif' : 'Inbox Verifikasi' }} <br><small style="font-size:10px; color:#64748b;">{{ $showInboxCard ? '(Di Staff Verif)' : '(Tugas Anda)' }}</small></h3>
+                        <div class="count">{{ $countProcessing }}</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:#bfdbfe; font-size:20px;"></i>
+                </a>
+
+                <!-- Card 4: History -->
                 <a href="{{ route('unit_pengelola.staff.index', ['filter' => 'history']) }}" 
                    class="category-card card-green {{ $filter == 'history' ? 'active' : '' }}"
                    style="text-decoration: none;">
                     <div>
-                        <h3><i class="fas fa-history"></i> History Review <br><small style="font-size:11px; color:#64748b;">(Selesai Direview)</small></h3>
+                        <h3><i class="fas fa-history"></i> History Review <br><small style="font-size:10px; color:#64748b;">(Selesai)</small></h3>
                         <div class="count">{{ $countHistory }}</div>
                     </div>
-                    <i class="fas fa-chevron-right" style="color:#bbf7d0; font-size:24px;"></i>
+                    <i class="fas fa-chevron-right" style="color:#bbf7d0; font-size:20px;"></i>
                 </a>
             </div>
 
@@ -554,14 +591,39 @@
                             $statusLabel = 'Menunggu Review';
                             $statusClass = 'badge-status'; 
                             $isActionable = true;
-                        } elseif($filter == 'verification') {
-                            $statusLabel = 'Menunggu Verifikasi';
+                        } elseif($filter == 'returned') {
+                            $statusLabel = 'Hasil Verifikasi (Selesai)';
                             $statusClass = 'badge-status';
-                            // Optional: add yellow color
+                            $isActionable = true;
+                        } elseif($filter == 'processing') {
+                            $statusLabel = 'Sedang Diverifikasi';
+                            $statusClass = 'badge-status';
+                            
+                            // ACTIONABLE IF VERIFICATOR
+                            // If I am a verificator and this doc is 'assigned_approval', I should act.
+                            $user = Auth::user();
+                            if (!$showInboxCard) { // Proxy for Verificator-only
+                                // Check if any category is 'assigned_approval'
+                                $cats = !empty($user->assigned_categories) ? (is_string($user->assigned_categories) ? json_decode($user->assigned_categories) : $user->assigned_categories) : [];
+                                
+                                $isMyTurn = false;
+                                if ($user->id_unit == 55 && $doc->status_security == 'assigned_approval') $isMyTurn = true;
+                                if ($user->id_unit == 56) {
+                                    if (in_array($doc->status_k3, ['assigned_approval']) && (in_array('K3', $cats) || $user->id_user == $doc->k3_verificator_id)) $isMyTurn = true;
+                                    if (in_array($doc->status_ko, ['assigned_approval']) && (in_array('KO', $cats) || $user->id_user == $doc->ko_verificator_id)) $isMyTurn = true;
+                                    if (in_array($doc->status_lingkungan, ['assigned_approval']) && (in_array('Lingkungan', $cats) || $user->id_user == $doc->lingkungan_verificator_id)) $isMyTurn = true;
+                                }
+
+                                if($isMyTurn) {
+                                    $isActionable = true;
+                                    $statusLabel = 'Perlu Verifikasi';
+                                }
+                            }
+
                         } elseif($filter == 'history') {
                              $statusLabel = 'Selesai Direview';
                              $statusClass = 'badge-status'; 
-                             // Optional: green color
+                             $isActionable = false;
                         }
                     @endphp
 
@@ -589,9 +651,9 @@
                         </div>
 
 
-                            @if($filter == 'inbox')
+                            @if($isActionable)
                                 <a href="{{ route('unit_pengelola.review', $doc->id) }}" class="btn-review">
-                                    <span>Review</span>
+                                    <span>{{ $showInboxCard ? 'Review' : 'Verifikasi' }}</span>
                                     <i class="fas fa-edit" style="font-size:11px;"></i>
                                 </a>
                             @else
