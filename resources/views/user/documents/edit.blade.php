@@ -1054,7 +1054,7 @@
                                                                                                             <input type="number" class="form-control target-input" 
                                                                                                                    name="items[{{$index}}][program_kerja][{{$pkKey}}][target][{{$t}}]" 
                                                                                                                    value="{{ $pk['target'][$t] ?? '' }}"
-                                                                                                                   min="0" max="100" oninput="validateTargetPercentages(this)" placeholder="-"
+                                                                                                                   min="0" placeholder="-"
                                                                                                                    style="border:none; width:100%; text-align:center; padding:4px; font-size:11px;">
                                                                                                         </td>
                                                                                                     @endfor
@@ -2225,7 +2225,7 @@
                 targetsHtml += `
                     <td style="border: 1px solid #d1d5db; padding: 0; min-width: 35px;">
                         <input type="number" class="form-control target-input" name="items[${itemIndex}][program_kerja][${uniqueId}][target][${i}]" 
-                               min="0" max="100" oninput="validateTargetPercentages(this)" placeholder="-"
+                               min="0" placeholder="-"
                                style="border:none; width:100%; text-align:center; padding:4px; font-size:11px;">
                     </td>
                 `;
@@ -2378,42 +2378,9 @@
 
 
 
+        // Target percentages have no maximum limit - users can enter any value per month
         function validateTargetPercentages(input) {
-            const row = input.closest('tr');
-            const inputs = row.querySelectorAll('.target-input');
-            let total = 0;
-
-            inputs.forEach(el => {
-                total += parseInt(el.value) || 0;
-            });
-
-            if (total > 100) {
-                if (!row.classList.contains('target-invalid')) {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.addEventListener('mouseenter', Swal.stopTimer)
-                            toast.addEventListener('mouseleave', Swal.resumeTimer)
-                        }
-                    });
-
-                    Toast.fire({
-                        icon: 'warning',
-                        title: 'Melebihi 100%',
-                        text: 'Total target persentase tidak boleh lebih dari 100%.'
-                    });
-                }
-                
-                inputs.forEach(el => { el.style.color = '#ef4444'; el.style.backgroundColor = '#fee2e2'; });
-                row.classList.add('target-invalid');
-            } else {
-                inputs.forEach(el => { el.style.color = '#3b82f6'; el.style.backgroundColor = 'transparent'; });
-                row.classList.remove('target-invalid');
-            }
+            // No validation - any value is allowed (can exceed 100% per month)
         }
 
 

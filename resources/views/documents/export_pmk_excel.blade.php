@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <title>PMK Export</title>
     <style>
-        /* CSS for PDF/Browser view, Excel might ignore some of this but good for fallback */
         body {
             font-family: Arial, sans-serif;
             font-size: 11pt;
@@ -19,16 +18,16 @@
             font-weight: bold;
         }
 
+        .bg-header {
+            background-color: #e2e8f0;
+        }
+
         .bg-gray {
-            background-color: #f2f2f2;
+            background-color: #f9f9f9;
         }
 
         .border-all {
             border: 1px solid #000000;
-        }
-
-        .border-none {
-            border: none;
         }
     </style>
 </head>
@@ -47,37 +46,65 @@
         $revision = "0";
         $date = now()->locale('id')->isoFormat('D MMMM YYYY');
 
-        // Signatories
-        $kaUnit = $pmkProgram->approvedByUnit;
-        $kaDept = $pmkProgram->approvedByDept;
-        $direktur = $pmkProgram->approvedByDireksi;
+        // Signatories — Ambil berdasar unit/dept dari dokumen submitter
+        // Kepala Unit dari unit submitter
+        $kaUnit = null;
+        if ($document->id_unit) {
+            $kaUnit = \App\Models\User::where('id_unit', $document->id_unit)
+                ->where('role_jabatan', 3) // Kepala Unit
+                ->where('user_aktif', 1)
+                ->first();
+        }
+
+        // Kepala Departemen dari dept submitter
+        $kaDept = null;
+        if ($document->id_dept) {
+            $kaDept = \App\Models\User::where('id_dept', $document->id_dept)
+                ->where('role_jabatan', 2) // Kepala Departemen
+                ->where('user_aktif', 1)
+                ->first();
+        }
+
+        // Direktur
+        $direktur = null;
+        if ($document->id_direktorat) {
+            $direktur = \App\Models\User::where('id_direktorat', $document->id_direktorat)
+                ->where('role_jabatan', 1)
+                ->where('user_aktif', 1)
+                ->first();
+        }
     @endphp
 
-    {{-- layout is 17 columns (A-Q) --}}
+    {{-- Layout: 17 kolom (A–Q) --}}
+    {{-- Kolom: A=No, B=Uraian, C=PIC, D=Pelaksana, E-P=Target(12bln), Q=Anggaran --}}
 
     <table>
-        {{-- PAGE 1: COVER --}}
+
+        {{-- ===== HALAMAN 1: COVER ===== --}}
         <tr>
-            <td colspan="17"></td>
-        </tr> {{-- Spacer --}}
+            <td colspan="17" height="20"></td>
+        </tr>
         <tr>
-            <td colspan="17"></td>
+            <td colspan="17" height="20"></td>
         </tr>
 
         <tr>
-            <td colspan="17" align="center" style="font-size: 20pt; font-weight: bold;">PROGRAM MANAJEMEN
-                {{ $categoryTitle }}</td>
+            <td colspan="17" align="center" style="font-size: 20pt; font-weight: bold;">
+                PROGRAM MANAJEMEN {{ $categoryTitle }}
+            </td>
         </tr>
         <tr>
-            <td colspan="17" align="center" style="font-size: 16pt; font-weight: bold;">{{ strtoupper($unitName) }}</td>
+            <td colspan="17" align="center" style="font-size: 16pt; font-weight: bold;">
+                {{ strtoupper($unitName) }}
+            </td>
         </tr>
 
         <tr>
             <td colspan="17" height="30"></td>
-        </tr> {{-- Spacer --}}
+        </tr>
 
+        {{-- Placeholder baris untuk logo (logo di-inject via WithDrawings di I6) --}}
         <tr>
-            {{-- Logo Inserted via PmkProgramExport class (WithDrawings) --}}
             <td colspan="17" height="80"></td>
         </tr>
 
@@ -87,7 +114,7 @@
 
         {{-- Cover Details --}}
         <tr>
-            <td colspan="6"></td> {{-- Left Spacer --}}
+            <td colspan="6"></td>
             <td colspan="2" style="font-weight: bold;">No. Dok.</td>
             <td align="center">:</td>
             <td colspan="8">{{ $docNo }}</td>
@@ -123,23 +150,23 @@
         </tr>
 
         <tr>
-            <td colspan="17" height="50"></td>
-        </tr> {{-- Page Break Simulation --}}
+            <td colspan="17" height="60"></td>
+        </tr> {{-- Simulasi page break --}}
 
-        {{-- PAGE 2: SIGNATURES --}}
+        {{-- ===== HALAMAN 2: LEMBAR PENGESAHAN ===== --}}
         <tr>
             <td colspan="17" align="center" style="font-size: 16pt; font-weight: bold; text-decoration: underline;">
-                LEMBAR PENGESAHAN</td>
+                LEMBAR PENGESAHAN
+            </td>
         </tr>
         <tr>
             <td colspan="17" align="center">Padang, {{ $date }}</td>
         </tr>
-
         <tr>
             <td colspan="17" height="20"></td>
         </tr>
 
-        {{-- Signatures Header --}}
+        {{-- Label Signatures --}}
         <tr>
             <td colspan="5" align="center" style="font-weight: bold;">Disiapkan oleh</td>
             <td colspan="1"></td>
@@ -148,24 +175,92 @@
             <td colspan="5" align="center" style="font-weight: bold;">Disahkan oleh</td>
         </tr>
 
-        <tr>
-            <td colspan="17" height="60"></td>
-        </tr> {{-- Space for signature --}}
+        @php
+            // Logic approval dengan fallback untuk data lama
+            $isApprovedStatus = $pmkProgram->status === 'APPROVED';
 
-        {{-- Signatures Names --}}
-        <tr>
-            <td colspan="5" align="center" style="font-weight: bold; text-decoration: underline;">
-                {{ $kaUnit ? strtoupper($kaUnit->nama_user) : '........................' }}</td>
-            <td colspan="1"></td>
-            <td colspan="5" align="center" style="font-weight: bold; text-decoration: underline;">
-                {{ $kaDept ? strtoupper($kaDept->nama_user) : '........................' }}</td>
-            <td colspan="1"></td>
-            <td colspan="5" align="center" style="font-weight: bold; text-decoration: underline;">
-                {{ $direktur ? strtoupper($direktur->nama_user) : '........................' }}</td>
-        </tr>
+            // Individual per-level: masing-masing kolom hanya approved jika level itu sendiri yang approve
+            // ATAU jika status final APPROVED (untuk data lama)
+            $unitApproved = !empty($pmkProgram->unit_approval_at) || $isApprovedStatus;
+            $deptApproved = !empty($pmkProgram->dept_approval_at) || $isApprovedStatus;
+            $direksiApproved = !empty($pmkProgram->direksi_approval_at) || $isApprovedStatus;
+
+            // Timestamp fallback
+            $fallbackDate = $pmkProgram->updated_at->locale('id')->isoFormat('D MMM YYYY, HH:mm');
+
+            $unitApprovalAt = !empty($pmkProgram->unit_approval_at) ? $pmkProgram->unit_approval_at->locale('id')->isoFormat('D MMM YYYY, HH:mm') : ($isApprovedStatus ? $fallbackDate : null);
+            $deptApprovalAt = !empty($pmkProgram->dept_approval_at) ? $pmkProgram->dept_approval_at->locale('id')->isoFormat('D MMM YYYY, HH:mm') : ($isApprovedStatus ? $fallbackDate : null);
+            $direksiAt = !empty($pmkProgram->direksi_approval_at) ? $pmkProgram->direksi_approval_at->locale('id')->isoFormat('D MMM YYYY, HH:mm') : ($isApprovedStatus ? $fallbackDate : null);
+        @endphp
+
+        {{-- Badge Approved per kolom --}}
         <tr>
             <td colspan="5" align="center">
-                {{ $kaUnit && $kaUnit->roleJabatan ? $kaUnit->roleJabatan->nama_role_jabatan : 'Kepala Unit' }}</td>
+                @if($unitApproved)
+                    <div
+                        style="display:inline-block; background:#f0fdf4; border:1.5px solid #16a34a; border-radius:8px; padding:6px 10px; text-align:center;">
+                        <div style="font-size:14pt; color:#16a34a; font-weight:bold;">&#10003;</div>
+                        <div style="font-weight:bold; color:#15803d; font-size:9pt;">Approved by System</div>
+                        <div style="font-size:7.5pt; color:#166534; margin-top:2px;">{{ $unitApprovalAt }}</div>
+                    </div>
+                @else
+                    &nbsp;
+                @endif
+            </td>
+            <td colspan="1"></td>
+            <td colspan="5" align="center">
+                @if($deptApproved)
+                    <div
+                        style="display:inline-block; background:#f0fdf4; border:1.5px solid #16a34a; border-radius:8px; padding:6px 10px; text-align:center;">
+                        <div style="font-size:14pt; color:#16a34a; font-weight:bold;">&#10003;</div>
+                        <div style="font-weight:bold; color:#15803d; font-size:9pt;">Approved by System</div>
+                        <div style="font-size:7.5pt; color:#166534; margin-top:2px;">{{ $deptApprovalAt }}</div>
+                    </div>
+                @else
+                    &nbsp;
+                @endif
+            </td>
+            <td colspan="1"></td>
+            <td colspan="5" align="center">
+                @if($direksiApproved)
+                    <div
+                        style="display:inline-block; background:#f0fdf4; border:1.5px solid #16a34a; border-radius:8px; padding:6px 10px; text-align:center;">
+                        <div style="font-size:14pt; color:#16a34a; font-weight:bold;">&#10003;</div>
+                        <div style="font-weight:bold; color:#15803d; font-size:9pt;">Approved by System</div>
+                        <div style="font-size:7.5pt; color:#166534; margin-top:2px;">{{ $direksiAt }}</div>
+                    </div>
+                @else
+                    &nbsp;
+                @endif
+            </td>
+        </tr>
+
+        @if(!$unitApproved || !$deptApproved || !$direksiApproved)
+            <tr>
+                <td colspan="17" height="40"></td>
+            </tr> {{-- Ruang TTD jika belum semua approve --}}
+        @endif
+
+        {{-- Nama --}}
+        <tr>
+            <td colspan="5" align="center" style="border-top: 1.5px solid #000; font-weight: bold;">
+                {{ $kaUnit ? strtoupper($kaUnit->nama_user) : '.................................' }}
+            </td>
+            <td colspan="1"></td>
+            <td colspan="5" align="center" style="border-top: 1.5px solid #000; font-weight: bold;">
+                {{ $kaDept ? strtoupper($kaDept->nama_user) : '.................................' }}
+            </td>
+            <td colspan="1"></td>
+            <td colspan="5" align="center" style="border-top: 1.5px solid #000; font-weight: bold;">
+                {{ $direktur ? strtoupper($direktur->nama_user) : '.................................' }}
+            </td>
+        </tr>
+
+        {{-- Jabatan --}}
+        <tr>
+            <td colspan="5" align="center">
+                {{ $kaUnit && $kaUnit->roleJabatan ? $kaUnit->roleJabatan->nama_role_jabatan : 'Kepala Unit' }}
+            </td>
             <td colspan="1"></td>
             <td colspan="5" align="center">
                 {{ $kaDept && $kaDept->roleJabatan ? $kaDept->roleJabatan->nama_role_jabatan : 'Kepala Departemen' }}
@@ -175,20 +270,16 @@
         </tr>
 
         <tr>
-            <td colspan="17" height="50"></td>
-        </tr>
+            <td colspan="17" height="60"></td>
+        </tr> {{-- Simulasi page break --}}
 
-        {{-- PAGE 3: CONTENT --}}
+        {{-- ===== HALAMAN 3: KONTEN PROGRAM ===== --}}
 
-        {{-- Program Info --}}
+        {{-- Info Program --}}
         <tr>
             <td colspan="3" style="font-weight: bold;">1. Judul</td>
             <td align="center">:</td>
             <td colspan="13">{{ $pmkProgram->judul }}</td>
-        </tr>
-        <tr>
-            <td colspan="4"></td>
-            <td colspan="13" style="font-style: italic; color: #555;">(Judul Program Manajemen)</td>
         </tr>
 
         <tr>
@@ -222,41 +313,36 @@
         <tr>
             <td colspan="17" style="font-weight: bold; font-size: 12pt;">6. Program Kerja</td>
         </tr>
-        <tr>
-            <td colspan="17" style="font-style: italic; color: #555;">(menjelaskan tentang Uraian kegiatan program
-                skedul pelaksanaan, PIC, target dan anggaran program yang diisi pada tabel dibawah)</td>
-        </tr>
 
         <tr>
-            <td colspan="17" height="10"></td>
+            <td colspan="17" height="5"></td>
         </tr>
 
-        {{-- Program Table Header --}}
-        {{-- Row 1 of Header --}}
+        {{-- Header Tabel --}}
+        {{-- Baris 1: Judul Kolom --}}
         <tr>
             <td rowspan="2" align="center" valign="middle"
-                style="border: 1px solid #000; font-weight: bold; background-color: #e2e8f0;">NO</td>
+                style="border: 1px solid #000; font-weight: bold; background-color: #d1dce8;">NO</td>
             <td rowspan="2" align="center" valign="middle"
-                style="border: 1px solid #000; font-weight: bold; background-color: #e2e8f0; width: 40px;">URAIAN
-                KEGIATAN</td>
+                style="border: 1px solid #000; font-weight: bold; background-color: #d1dce8;">URAIAN KEGIATAN</td>
             <td rowspan="2" align="center" valign="middle"
-                style="border: 1px solid #000; font-weight: bold; background-color: #e2e8f0; width: 20px;">PIC</td>
+                style="border: 1px solid #000; font-weight: bold; background-color: #d1dce8;">PIC</td>
             <td rowspan="2" align="center" valign="middle"
-                style="border: 1px solid #000; font-weight: bold; background-color: #e2e8f0;">PELAKSANA</td>
+                style="border: 1px solid #000; font-weight: bold; background-color: #d1dce8;">PELAKSANA</td>
             <td colspan="12" align="center" valign="middle"
-                style="border: 1px solid #000; font-weight: bold; background-color: #e2e8f0;">TARGET (%)</td>
+                style="border: 1px solid #000; font-weight: bold; background-color: #d1dce8;">TARGET (%)</td>
             <td rowspan="2" align="center" valign="middle"
-                style="border: 1px solid #000; font-weight: bold; background-color: #e2e8f0;">ANGGARAN</td>
+                style="border: 1px solid #000; font-weight: bold; background-color: #d1dce8;">ANGGARAN</td>
         </tr>
-        {{-- Row 2 of Header (Months) --}}
+        {{-- Baris 2: Bulan 1-12 --}}
         <tr>
             @for($m = 1; $m <= 12; $m++)
                 <td align="center" valign="middle"
-                    style="border: 1px solid #000; font-weight: bold; background-color: #e2e8f0; width: 5px;">{{ $m }}</td>
+                    style="border: 1px solid #000; font-weight: bold; background-color: #d1dce8;">{{ $m }}</td>
             @endfor
         </tr>
 
-        {{-- Table Content --}}
+        {{-- Isi Tabel --}}
         @if($pmkProgram->program_kerja && is_array($pmkProgram->program_kerja) && count($pmkProgram->program_kerja) > 0)
             @foreach($pmkProgram->program_kerja as $index => $item)
                 <tr>
@@ -287,7 +373,8 @@
             @endforeach
         @else
             <tr>
-                <td colspan="17" align="center" style="border: 1px solid #000; padding: 20px;">Belum ada data program kerja
+                <td colspan="17" align="center" style="border: 1px solid #000; padding: 20px;">
+                    Belum ada data program kerja
                 </td>
             </tr>
         @endif

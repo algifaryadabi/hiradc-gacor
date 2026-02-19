@@ -77,8 +77,12 @@
 
         .signature-label {
             font-weight: bold;
-            margin-bottom: 90px;
+            margin-bottom: 8px;
             font-size: 11pt;
+        }
+
+        .signature-gap {
+            height: 70px;
         }
 
         .signature-name {
@@ -288,15 +292,49 @@
             <div class="cover-info-item"><strong>Tanggal:</strong> Padang, {{ $tanggal }}</div>
         </div>
 
+        @php
+            // Logic approval dengan fallback untuk data lama
+            $isApprovedStatus = $pukProgram->status === 'APPROVED';
+            $pukApproved = !empty($pukProgram->approved_at) || $isApprovedStatus;
+
+            if (!empty($pukProgram->approved_at)) {
+                $approvedByKaUnit = $pukProgram->approved_at->locale('id')->isoFormat('D MMM YYYY, HH:mm');
+            } elseif ($isApprovedStatus) {
+                // Fallback ke updated_at jika status APPROVED tapi approved_at null
+                $approvedByKaUnit = $pukProgram->updated_at->locale('id')->isoFormat('D MMM YYYY, HH:mm');
+            } else {
+                $approvedByKaUnit = null;
+            }
+        @endphp
+
         <div class="signature-section">
             <div class="signature-box">
                 <div class="signature-label">Disiapkan oleh</div>
-                <div class="signature-name">{{ $kaSeksi ? $kaSeksi->nama_user : '........................' }}</div>
+                {{-- Disiapkan oleh tetap manual karena tidak ada timestamp khusus --}}
+                <div class="signature-gap"></div>
+
+                <div
+                    style="border-top: 1.5px solid #000; padding-top: 5px; font-weight: bold; text-transform: uppercase;">
+                    {{ $kaSeksi ? $kaSeksi->nama_user : '.................................' }}
+                </div>
                 <div class="signature-title">{{ $kaSeksiJabatan }}</div>
             </div>
             <div class="signature-box">
                 <div class="signature-label">Disahkan oleh</div>
-                <div class="signature-name">{{ $kaUnit ? $kaUnit->nama_user : '........................' }}</div>
+                @if($pukApproved)
+                    <div
+                        style="margin: 10px auto; width: 200px; background:#f0fdf4; border: 1.5px solid #16a34a; border-radius: 8px; padding: 8px 12px; text-align:center;">
+                        <div style="font-size: 18pt; color: #16a34a; font-weight: bold;">&#10003;</div>
+                        <div style="font-weight: bold; color: #15803d; font-size: 9pt;">Approved by System</div>
+                        <div style="font-size: 7.5pt; color: #166534; margin-top: 2px;">{{ $approvedByKaUnit }}</div>
+                    </div>
+                @else
+                    <div class="signature-gap"></div>
+                @endif
+                <div
+                    style="border-top: 1.5px solid #000; padding-top: 5px; font-weight: bold; text-transform: uppercase;">
+                    {{ $kaUnit ? $kaUnit->nama_user : '.................................' }}
+                </div>
                 <div class="signature-title">{{ $kaUnitJabatan }}</div>
             </div>
         </div>

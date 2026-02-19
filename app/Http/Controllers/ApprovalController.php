@@ -47,6 +47,33 @@ class ApprovalController extends Controller
                 $document->current_level = 2;
                 $document->status = 'pending_level2';
 
+                // === AUTO-APPROVE PUK & PMK (Start) ===
+                // Saat Kepala Unit approve dokumen utama, otomatis approve PUK & PMK terkait
+                foreach ($document->details as $detail) {
+                    // 1. PUK Program
+                    if ($detail->pukProgram) {
+                        $puk = $detail->pukProgram;
+                        if ($puk->status == 'pending') { // Hanya jika masih pending
+                            $puk->status = 'approved';
+                            $puk->approved_by_kepala_unit = $user->id_user;
+                            $puk->approved_at = now();
+                            $puk->save();
+                        }
+                    }
+
+                    // 2. PMK Program
+                    if ($detail->pmkProgram) {
+                        $pmk = $detail->pmkProgram;
+                        if ($pmk->status == 'pending_unit') { // Hanya jika masih di level unit
+                            $pmk->status = 'pending_dept'; // Lanjut ke Dept
+                            $pmk->approved_by_kepala_unit = $user->id_user;
+                            $pmk->unit_approval_at = now();
+                            $pmk->save();
+                        }
+                    }
+                }
+                // === AUTO-APPROVE PUK & PMK (End) ===
+
                 // Initialize Split Statuses
                 if ($document->hasSheContent())
                     $document->status_she = 'pending_head'; // Need SHE Head approval

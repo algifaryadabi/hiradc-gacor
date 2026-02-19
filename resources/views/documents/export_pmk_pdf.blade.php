@@ -108,8 +108,12 @@
         }
 
         .sign-label {
-            margin-bottom: 100px;
+            margin-bottom: 8px;
             font-weight: bold;
+        }
+
+        .sign-gap {
+            height: 70px;
         }
 
         .sign-name {
@@ -244,29 +248,88 @@
 
         <div style="margin-top: 150px; text-align: center;">Padang, {{ $date }}</div>
 
+        @php
+            // Logic approval dengan fallback untuk data lama
+            $isApprovedStatus = $pmkProgram->status === 'APPROVED';
+
+            // Individual per-level: masing-masing kolom hanya approved jika level itu sendiri yang approve
+            // ATAU jika status final APPROVED (untuk data lama)
+            $unitApproved = !empty($pmkProgram->unit_approval_at) || $isApprovedStatus;
+            $deptApproved = !empty($pmkProgram->dept_approval_at) || $isApprovedStatus;
+            $direksiApproved = !empty($pmkProgram->direksi_approval_at) || $isApprovedStatus;
+
+            // Timestamp fallback
+            $fallbackDate = $pmkProgram->updated_at->locale('id')->isoFormat('D MMM YYYY, HH:mm');
+
+            $unitApprovalAt = !empty($pmkProgram->unit_approval_at) ? $pmkProgram->unit_approval_at->locale('id')->isoFormat('D MMM YYYY, HH:mm') : ($isApprovedStatus ? $fallbackDate : null);
+            $deptApprovalAt = !empty($pmkProgram->dept_approval_at) ? $pmkProgram->dept_approval_at->locale('id')->isoFormat('D MMM YYYY, HH:mm') : ($isApprovedStatus ? $fallbackDate : null);
+            $direksiAt = !empty($pmkProgram->direksi_approval_at) ? $pmkProgram->direksi_approval_at->locale('id')->isoFormat('D MMM YYYY, HH:mm') : ($isApprovedStatus ? $fallbackDate : null);
+        @endphp
+
         <table class="signature-table">
             <tr>
+                {{-- Disiapkan oleh: Kepala Unit --}}
                 <td class="signature-cell">
                     <div class="sign-label">Disiapkan oleh</div>
-                    <div class="sign-name uppercase">{{ $kaUnit ? $kaUnit->nama_user : '........................' }}
+                    @if($unitApproved)
+                        <div
+                            style="margin: 10px auto; width: 180px; background:#f0fdf4; border: 1.5px solid #16a34a; border-radius: 8px; padding: 8px 12px; text-align:center;">
+                            <div style="font-size: 16pt; color: #16a34a; font-weight: bold;">&#10003;</div>
+                            <div style="font-weight: bold; color: #15803d; font-size: 9pt;">Approved by System</div>
+                            <div style="font-size: 7.5pt; color: #166534; margin-top: 2px;">{{ $unitApprovalAt }}</div>
+                        </div>
+                    @else
+                        <div class="sign-gap"></div>
+                    @endif
+                    <div
+                        style="border-top: 1.5px solid #000; padding-top: 5px; font-weight: bold; text-transform: uppercase;">
+                        {{ $kaUnit ? $kaUnit->nama_user : '.................................' }}
                     </div>
                     <div class="sign-jabatan">
                         {{ $kaUnit && $kaUnit->roleJabatan ? $kaUnit->roleJabatan->nama_role_jabatan : 'Kepala Unit' }}
                     </div>
                 </td>
+
+                {{-- Disetujui oleh: Kepala Departemen --}}
                 <td class="signature-cell">
                     <div class="sign-label">Disetujui oleh</div>
-                    <div class="sign-name uppercase">{{ $kaDept ? $kaDept->nama_user : '........................' }}
+                    @if($deptApproved)
+                        <div
+                            style="margin: 10px auto; width: 180px; background:#f0fdf4; border: 1.5px solid #16a34a; border-radius: 8px; padding: 8px 12px; text-align:center;">
+                            <div style="font-size: 16pt; color: #16a34a; font-weight: bold;">&#10003;</div>
+                            <div style="font-weight: bold; color: #15803d; font-size: 9pt;">Approved by System</div>
+                            <div style="font-size: 7.5pt; color: #166534; margin-top: 2px;">{{ $deptApprovalAt }}</div>
+                        </div>
+                    @else
+                        <div class="sign-gap"></div>
+                    @endif
+                    <div
+                        style="border-top: 1.5px solid #000; padding-top: 5px; font-weight: bold; text-transform: uppercase;">
+                        {{ $kaDept ? $kaDept->nama_user : '.................................' }}
                     </div>
                     <div class="sign-jabatan">
                         {{ $kaDept && $kaDept->roleJabatan ? $kaDept->roleJabatan->nama_role_jabatan : 'Kepala Departemen' }}
                     </div>
                 </td>
+
+                {{-- Disahkan oleh: Direktur --}}
                 <td class="signature-cell">
                     <div class="sign-label">Disahkan oleh</div>
-                    <div class="sign-name uppercase">{{ $direktur ? $direktur->nama_user : '........................' }}
+                    @if($direksiApproved)
+                        <div
+                            style="margin: 10px auto; width: 180px; background:#f0fdf4; border: 1.5px solid #16a34a; border-radius: 8px; padding: 8px 12px; text-align:center;">
+                            <div style="font-size: 16pt; color: #16a34a; font-weight: bold;">&#10003;</div>
+                            <div style="font-weight: bold; color: #15803d; font-size: 9pt;">Approved by System</div>
+                            <div style="font-size: 7.5pt; color: #166534; margin-top: 2px;">{{ $direksiAt }}</div>
+                        </div>
+                    @else
+                        <div class="sign-gap"></div>
+                    @endif
+                    <div
+                        style="border-top: 1.5px solid #000; padding-top: 5px; font-weight: bold; text-transform: uppercase;">
+                        {{ $direktur ? $direktur->nama_user : '.................................' }}
                     </div>
-                    <div class="sign-jabatan">Direktur</div> <!-- Usually just 'Direktur' or specific title -->
+                    <div class="sign-jabatan">Direktur</div>
                 </td>
             </tr>
         </table>
@@ -280,11 +343,6 @@
                 <td class="info-label">1. Judul</td>
                 <td class="info-colon">:</td>
                 <td>{{ $pmkProgram->judul }}</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td style="font-style: italic; color: #555;">(Judul Program Manajemen)</td>
             </tr>
 
             <tr>
@@ -313,10 +371,6 @@
         </table>
 
         <div class="section-title">6. Program Kerja</div>
-        <div style="font-style: italic; color: #555; margin-bottom: 10px;">
-            (menjelaskan tentang Uraian kegiatan program skedul pelaksanaan, PIC, target dan anggaran program yang diisi
-            pada tabel dibawah)
-        </div>
 
         @if($pmkProgram->program_kerja && is_array($pmkProgram->program_kerja) && count($pmkProgram->program_kerja) > 0)
             <table class="program-table">

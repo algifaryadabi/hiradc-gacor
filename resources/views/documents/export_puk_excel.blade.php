@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <style>
@@ -7,7 +8,7 @@
             font-family: Arial, sans-serif;
             font-size: 10pt;
         }
-        
+
         .cover-section {
             text-align: center;
             padding: 40px 20px;
@@ -15,61 +16,61 @@
             border: 2px solid #3b82f6;
             margin-bottom: 20px;
         }
-        
+
         .cover-title {
             font-size: 18pt;
             font-weight: bold;
             color: #1e40af;
             margin-bottom: 10px;
         }
-        
+
         .cover-subtitle {
             font-size: 14pt;
             font-weight: bold;
             color: #334155;
             margin-bottom: 20px;
         }
-        
+
         .cover-info {
             margin: 20px 0;
         }
-        
+
         .signature-row {
             display: table;
             width: 100%;
             margin-top: 30px;
         }
-        
+
         .signature-cell {
             display: table-cell;
             width: 50%;
             text-align: center;
             padding: 10px;
         }
-        
+
         .info-section {
             background: #f8fafc;
             border: 1px solid #cbd5e1;
             padding: 15px;
             margin-bottom: 20px;
         }
-        
+
         .info-table {
             width: 100%;
             border-collapse: collapse;
         }
-        
+
         .info-table td {
             padding: 8px 0;
             vertical-align: top;
         }
-        
+
         .info-table td:first-child {
             width: 180px;
             font-weight: bold;
             color: #475569;
         }
-        
+
         .section-header {
             background: #3b82f6;
             color: white;
@@ -78,13 +79,13 @@
             font-size: 11pt;
             margin: 20px 0 10px 0;
         }
-        
+
         table.program-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 9pt;
         }
-        
+
         table.program-table th {
             background-color: #1e293b;
             color: white;
@@ -93,25 +94,25 @@
             border: 1px solid #000;
             font-weight: bold;
         }
-        
+
         table.program-table td {
             padding: 6px 5px;
             border: 1px solid #475569;
             vertical-align: middle;
         }
-        
+
         .target-header {
             background-color: #334155;
             color: white;
         }
-        
+
         .target-cell {
             background: #eff6ff;
             text-align: center;
             font-weight: bold;
             color: #1e40af;
         }
-        
+
         .number-cell {
             text-align: center;
             font-weight: bold;
@@ -119,38 +120,39 @@
         }
     </style>
 </head>
+
 <body>
     @php
         use App\Models\User;
-        
+
         // Get Kepala Seksi: User with role_jabatan = 4 (Kepala Seksi) from submitter's seksi
         $kaSeksi = null;
         $kaSeksiJabatan = 'Ka. Seksi';
         if ($document->user && $document->user->id_seksi) {
             $kaSeksi = User::where('id_seksi', $document->user->id_seksi)
-                           ->where('role_jabatan', 4)
-                           ->where('user_aktif', 1)
-                           ->with('roleJabatan')
-                           ->first();
+                ->where('role_jabatan', 4)
+                ->where('user_aktif', 1)
+                ->with('roleJabatan')
+                ->first();
             if ($kaSeksi && $kaSeksi->roleJabatan) {
                 $kaSeksiJabatan = $kaSeksi->roleJabatan->nama_role_jabatan;
             }
         }
-        
+
         // Get Kepala Unit: User with role_jabatan = 3 (Kepala Unit) from document's unit
         $kaUnit = null;
         $kaUnitJabatan = 'Ka. Unit';
         if ($document->id_unit) {
             $kaUnit = User::where('id_unit', $document->id_unit)
-                          ->where('role_jabatan', 3)
-                          ->where('user_aktif', 1)
-                          ->with('roleJabatan')
-                          ->first();
+                ->where('role_jabatan', 3)
+                ->where('user_aktif', 1)
+                ->with('roleJabatan')
+                ->first();
             if ($kaUnit && $kaUnit->roleJabatan) {
                 $kaUnitJabatan = $kaUnit->roleJabatan->nama_role_jabatan;
             }
         }
-        
+
         $unitName = $document->unit ? $document->unit->nama_unit : '-';
         $tanggal = $pukProgram->approved_at ? $pukProgram->approved_at->locale('id')->isoFormat('D MMMM YYYY') : now()->locale('id')->isoFormat('D MMMM YYYY');
     @endphp
@@ -163,19 +165,51 @@
             <strong>Unit:</strong> {{ $unitName }}<br>
             <strong>Tanggal:</strong> Padang, {{ $tanggal }}
         </div>
+        @php
+            $isApprovedStatus = $pukProgram->status === 'APPROVED';
+            $pukApproved = !empty($pukProgram->approved_at) || $isApprovedStatus;
+
+            if (!empty($pukProgram->approved_at)) {
+                $approvedAt = $pukProgram->approved_at->locale('id')->isoFormat('D MMM YYYY, HH:mm');
+            } elseif ($isApprovedStatus) {
+                // Fallback: data lama status APPROVED tapi timestamp null
+                $approvedAt = $pukProgram->updated_at->locale('id')->isoFormat('D MMM YYYY, HH:mm');
+            } else {
+                $approvedAt = null;
+            }
+        @endphp
+
         <div class="signature-row">
             <div class="signature-cell">
-                <strong>Disiapkan oleh</strong><br><br><br>
-                <strong>{{ $kaSeksi ? $kaSeksi->nama_user : '........................' }}</strong><br>
+                <strong>Disiapkan oleh</strong><br>
+                {{-- Manual hanya space kosong --}}
+                <br><br><br><br>
+                <span
+                    style="border-top: 1.5px solid #000; display:inline-block; padding-top:4px; font-weight:bold; min-width: 180px;">
+                    {{ $kaSeksi ? $kaSeksi->nama_user : '.................................' }}
+                </span><br>
                 {{ $kaSeksiJabatan }}
             </div>
             <div class="signature-cell">
-                <strong>Disahkan oleh</strong><br><br><br>
-                <strong>{{ $kaUnit ? $kaUnit->nama_user : '........................' }}</strong><br>
+                <strong>Disahkan oleh</strong><br>
+                @if($pukApproved)
+                    <div
+                        style="display:inline-block; margin:10px 0; background:#f0fdf4; border: 1.5px solid #16a34a; border-radius: 8px; padding: 8px 14px; text-align:center;">
+                        <div style="font-size: 16pt; color: #16a34a; font-weight: bold;">&#10003;</div>
+                        <div style="font-weight: bold; color: #15803d; font-size: 9pt;">Approved by System</div>
+                        <div style="font-size: 7.5pt; color: #166534; margin-top: 2px;">{{ $approvedAt }}</div>
+                    </div><br>
+                @else
+                    <br><br><br><br>
+                @endif
+                <span
+                    style="border-top: 1.5px solid #000; display:inline-block; padding-top:4px; font-weight:bold; min-width: 180px;">
+                    {{ $kaUnit ? $kaUnit->nama_user : '.................................' }}
+                </span><br>
                 {{ $kaUnitJabatan }}
             </div>
         </div>
-        <div style="margin-top: 20px; font-style: italic; color: #64748b;">*bila tidak ada maka coret</div>
+        <div style="margin-top: 8px; font-style: italic; color: #64748b;">*bila tidak ada maka coret</div>
     </div>
 
     <!-- INFO -->
@@ -208,52 +242,53 @@
     <div class="section-header">PROGRAM KERJA</div>
 
     @if($pukProgram->program_kerja && is_array($pukProgram->program_kerja) && count($pukProgram->program_kerja) > 0)
-    <table class="program-table">
-        <thead>
-            <tr>
-                <th rowspan="2">NO</th>
-                <th rowspan="2">URAIAN KEGIATAN</th>
-                <th rowspan="2">KOORDINATOR</th>
-                <th rowspan="2">PELAKSANA</th>
-                <th colspan="12">TARGET (%)</th>
-                <th rowspan="2">ANGGARAN</th>
-            </tr>
-            <tr class="target-header">
-                @for($m=1; $m<=12; $m++)
-                    <th>{{ $m }}</th>
-                @endfor
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($pukProgram->program_kerja as $index => $item)
-            <tr>
-                <td class="number-cell">{{ $index + 1 }}</td>
-                <td>{{ $item['uraian'] ?? '-' }}</td>
-                <td>{{ $item['koordinator'] ?? '-' }}</td>
-                <td>{{ $item['pelaksana'] ?? '-' }}</td>
-                @php $targets = $item['target'] ?? []; @endphp
-                @for($m=0; $m<12; $m++)
-                    @if(isset($targets[$m]) && $targets[$m] !== '' && $targets[$m] !== null)
-                        <td class="target-cell">{{ $targets[$m] }}</td>
-                    @else
-                        <td style="text-align: center; color: #94a3b8;">-</td>
-                    @endif
-                @endfor
-                <td style="text-align: right; font-weight: bold; color: #059669;">
-                    @if(isset($item['anggaran']) && $item['anggaran'])
-                        Rp {{ number_format($item['anggaran'], 0, ',', '.') }}
-                    @else
-                        -
-                    @endif
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+        <table class="program-table">
+            <thead>
+                <tr>
+                    <th rowspan="2">NO</th>
+                    <th rowspan="2">URAIAN KEGIATAN</th>
+                    <th rowspan="2">KOORDINATOR</th>
+                    <th rowspan="2">PELAKSANA</th>
+                    <th colspan="12">TARGET (%)</th>
+                    <th rowspan="2">ANGGARAN</th>
+                </tr>
+                <tr class="target-header">
+                    @for($m = 1; $m <= 12; $m++)
+                        <th>{{ $m }}</th>
+                    @endfor
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($pukProgram->program_kerja as $index => $item)
+                    <tr>
+                        <td class="number-cell">{{ $index + 1 }}</td>
+                        <td>{{ $item['uraian'] ?? '-' }}</td>
+                        <td>{{ $item['koordinator'] ?? '-' }}</td>
+                        <td>{{ $item['pelaksana'] ?? '-' }}</td>
+                        @php $targets = $item['target'] ?? []; @endphp
+                        @for($m = 0; $m < 12; $m++)
+                            @if(isset($targets[$m]) && $targets[$m] !== '' && $targets[$m] !== null)
+                                <td class="target-cell">{{ $targets[$m] }}</td>
+                            @else
+                                <td style="text-align: center; color: #94a3b8;">-</td>
+                            @endif
+                        @endfor
+                        <td style="text-align: right; font-weight: bold; color: #059669;">
+                            @if(isset($item['anggaran']) && $item['anggaran'])
+                                Rp {{ number_format($item['anggaran'], 0, ',', '.') }}
+                            @else
+                                -
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
     @else
-    <div style="padding: 15px; text-align: center; color: #64748b; font-style: italic; background: #f8fafc;">
-        Belum ada detail program kerja
-    </div>
+        <div style="padding: 15px; text-align: center; color: #64748b; font-style: italic; background: #f8fafc;">
+            Belum ada detail program kerja
+        </div>
     @endif
 </body>
+
 </html>

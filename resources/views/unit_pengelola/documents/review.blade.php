@@ -636,7 +636,7 @@
         .review-footer {
             position: fixed;
             bottom: 0;
-            left: 250px;
+            left: 280px;
             right: 0;
             background: white;
             padding: 20px 48px;
@@ -1946,8 +1946,25 @@
                             if (in_array($status, ['assigned_approval', 'process_verification'])) $showChecklist = true;
                         }
                     } elseif ($isReviewer) {
-                        // Reviewer (Band 4) TIDAK BOLEH melihat checklist
-                        $showChecklist = false; 
+                        // Reviewer Stage 2 (returned from verifikator): tampilkan dan boleh edit
+                        $isStage2Reviewer = false;
+                        if ($isSheUnit) {
+                            $isStage2Reviewer = (
+                                ($isReviewerK3 && $document->status_k3 == 'awaiting_final_review') ||
+                                ($isReviewerKO && $document->status_ko == 'awaiting_final_review') ||
+                                ($isReviewerLingkungan && $document->status_lingkungan == 'awaiting_final_review') ||
+                                ($isReviewerGeneric && (
+                                    $document->status_k3 == 'awaiting_final_review' ||
+                                    $document->status_ko == 'awaiting_final_review' ||
+                                    $document->status_lingkungan == 'awaiting_final_review'
+                                ))
+                            );
+                        } elseif ($isSecurityUnit) {
+                            $isStage2Reviewer = ($document->status_security == 'awaiting_final_review' || $status == 'staff_verified');
+                        } else {
+                            $isStage2Reviewer = ($status == 'staff_verified' || $status == 'awaiting_final_review');
+                        }
+                        $showChecklist = $isStage2Reviewer;
                     } elseif ($isHead) {
                         // Kepala Unit: Show during disposition (pending_head) and approval phases
                         $visibleToHead = ['pending_head', 'process_approval', 'staff_verified', 'returned_to_head', 'approved', 'published', 'level3_approved', 'pending_level3_ready'];
@@ -2046,11 +2063,10 @@
                                      $canEditThisCat = true;
                                  }
                              } elseif ($isReviewer) {
-                                 // Reviewer: Show if category relevant to form.
-                                 // Stage 1 or Stage 2: Always show my categories' checklists
-                                 if ($isMyCat) {
+                                 // Reviewer Stage 2: tampil dan boleh edit untuk konfirmasi sebelum kirim ke Head
+                                 if ($isMyCat && isset($isStage2Reviewer) && $isStage2Reviewer) {
                                      $shouldShowThisCat = true;
-                                     $canEditThisCat = true;
+                                     $canEditThisCat = true; // Reviewer Stage 2 bisa edit
                                  }
                              }
 
@@ -2100,7 +2116,7 @@
                                                 $n = $existing[$c['key']]['note'] ?? '';
                                                 
                                                 $disabled = $canEditThisCat ? '' : 'disabled';
-                                                $noteDisabled = ($canEditThisCat && ($s == 'NOK' || $s == 'Tdk Penting')) ? '' : 'disabled';
+                                                $noteDisabled = ($canEditThisCat && $s == 'NOK') ? '' : 'disabled';
                                                 $noteStyle = $noteDisabled ? 'background:#f1f5f9;cursor:not-allowed;' : 'background:white;cursor:text;';
                                             @endphp
                                             <tr style="border-bottom:1px solid #e2e8f0;">
@@ -2114,7 +2130,6 @@
                                                         <option value="">-- Pilih --</option>
                                                         <option value="OK" {{ $s == 'OK' ? 'selected' : '' }}>OK</option>
                                                         <option value="NOK" {{ $s == 'NOK' ? 'selected' : '' }}>NOK</option>
-                                                        <option value="Tdk Penting" {{ $s == 'Tdk Penting' ? 'selected' : '' }}>Tdk Penting</option>
                                                     </select>
                                                 </td>
                                                 <td style="padding:12px;">
@@ -2237,11 +2252,10 @@
                                                     <span class="view-mode">{{ $item['uraian'] ?? '-' }}</span>
                                                     <textarea class="edit-mode form-control" style="display:none; width:100%; min-height:60px; padding:8px;" name="program_kerja[{{ $index }}][uraian]">{{ $item['uraian'] ?? '' }}</textarea>
                                                 </td>
-                                                <td style="border: 1px solid #cbd5e1; padding: 10px;">
-                                                    <span class="view-mode">{{ $item['koordinator'] ?? '-' }}</span>
-                                                    <select class="edit-mode form-control" style="display:none; width:100%; padding:6px;" name="program_kerja[{{ $index }}][koordinator]">
-                                                        <option value="">-- Pilih --</option>
-                                                        @foreach($band3Users as $u)
+                                                <td style="border: 1px solid #cbd5e1; padding: 8px;">
+                                                    <select class="form-control" style="width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;" name="program_kerja[{{ $index }}][koordinator]" onchange="savePukFieldInline({{ $detailIndex }}, {{ $puk->id }})">
+                                                        <option value="">-- Pilih Koordinator --</option>
+                                                        @foreach($pukKoordinatorUsers as $u)
                                                             <option value="{{ $u->nama_user }}" {{ ($item['koordinator'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{ $u->nama_user }}</option>
                                                         @endforeach
                                                     </select>
@@ -2259,7 +2273,7 @@
                                                 @for($m=0; $m<12; $m++)
                                                     <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 12px;">
                                                         <span class="view-mode">{{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}</span>
-                                                        <input type="number" class="edit-mode form-control" style="display:none; width:100%; padding:4px; text-align:center;" name="program_kerja[{{ $index }}][target][]" value="{{ $targets[$m] ?? '' }}" min="0" max="100">
+                                                        <input type="number" class="edit-mode form-control" style="display:none; width:100%; padding:4px; text-align:center;" name="program_kerja[{{ $index }}][target][]" value="{{ $targets[$m] ?? '' }}" min="0">
                                                     </td>
                                                 @endfor
                                             </tr>
@@ -2355,9 +2369,8 @@
                                                     <span class="view-mode">{{ $item['uraian'] ?? '-' }}</span>
                                                     <textarea class="edit-mode form-control" style="display:none; width:100%; min-height:60px; padding:8px;" name="program_kerja[{{ $index }}][uraian]">{{ $item['uraian'] ?? '' }}</textarea>
                                                 </td>
-                                                <td style="border: 1px solid #cbd5e1; padding: 10px;">
-                                                    <span class="view-mode">{{ (!empty($item['koordinator']) && $item['koordinator'] !== '-') ? $item['koordinator'] : ($item['pelaksana'] ?? $item['pic'] ?? '-') }}</span>
-                                                    <select class="edit-mode form-control" style="display:none; width:100%; padding:6px;" name="program_kerja[{{ $index }}][koordinator]">
+                                                <td style="border: 1px solid #cbd5e1; padding: 8px;">
+                                                    <select class="form-control" style="width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;" name="program_kerja[{{ $index }}][koordinator]" onchange="savePmkFieldInline({{ $detailIndex }}, {{ $pmk->id }})">
                                                         <option value="">-- Pilih PIC --</option>
                                                         @foreach($pmkPicUsers as $u)
                                                             <option value="{{ $u->nama_user }}" {{ ($item['koordinator'] ?? $item['pic'] ?? $item['pelaksana'] ?? '') == $u->nama_user ? 'selected' : '' }}>{{ $u->nama_user }}</option>
@@ -2368,7 +2381,7 @@
                                                 @for($m=0; $m<12; $m++)
                                                     <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 12px;">
                                                         <span class="view-mode">{{ isset($targets[$m]) && $targets[$m] !== '' ? $targets[$m] : '-' }}</span>
-                                                        <input type="number" class="edit-mode form-control" style="display:none; width:100%; padding:4px; text-align:center;" name="program_kerja[{{ $index }}][target][]" value="{{ $targets[$m] ?? '' }}" min="0" max="100">
+                                                        <input type="number" class="edit-mode form-control" style="display:none; width:100%; padding:4px; text-align:center;" name="program_kerja[{{ $index }}][target][]" value="{{ $targets[$m] ?? '' }}" min="0">
                                                     </td>
                                                 @endfor
                                                 <td style="border: 1px solid #cbd5e1; padding: 10px;">
@@ -2460,7 +2473,68 @@
                         else Swal.fire('Gagal!', data.message, 'error');
                     }).catch(err => Swal.fire('Error', 'Terjadi kesalahan', 'error'));
                 }
+
+                /**
+                 * Inline save PUK - triggered on koordinator dropdown change
+                 * Collects all rows from the table and saves the full program_kerja
+                 */
+                function savePukFieldInline(index, pukId) {
+                    const programKerja = [];
+                    const rows = document.querySelectorAll(`#pukTableBody-${index} tr`);
+                    rows.forEach((row, idx) => {
+                        // uraian: from textarea (edit-mode) or span text (view-mode)
+                        const uraianInput = row.querySelector(`[name="program_kerja[${idx}][uraian]"]`);
+                        const uraian = uraianInput ? uraianInput.value : (row.querySelector('.view-mode') ? row.querySelector('.view-mode').textContent.trim() : '');
+                        const koord = row.querySelector(`[name="program_kerja[${idx}][koordinator]"]`) ? row.querySelector(`[name="program_kerja[${idx}][koordinator]"]`).value : '';
+                        const pelaksanaSel = row.querySelector(`[name="program_kerja[${idx}][pelaksana]"]`);
+                        const pelaksana = pelaksanaSel ? pelaksanaSel.value : '';
+                        const targets = [];
+                        row.querySelectorAll(`[name="program_kerja[${idx}][target][]"]`).forEach(input => targets.push(input.value));
+                        programKerja.push({uraian, koordinator: koord, pelaksana, target: targets});
+                    });
+                    fetch(`/unit-pengelola/puk/${pukId}/update-program-kerja`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                        body: JSON.stringify({ program_kerja: programKerja })
+                    }).then(res => res.json()).then(data => {
+                        if (data.success) {
+                            Swal.fire({icon: 'success', title: 'Tersimpan!', text: 'Koordinator berhasil diperbarui.', timer: 1500, showConfirmButton: false});
+                        } else {
+                            Swal.fire('Gagal!', data.message || 'Gagal menyimpan', 'error');
+                        }
+                    }).catch(() => Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error'));
+                }
+
+                /**
+                 * Inline save PMK - triggered on PIC dropdown change
+                 */
+                function savePmkFieldInline(index, pmkId) {
+                    const programKerja = [];
+                    const rows = document.querySelectorAll(`#pmkTableBody-${index} tr`);
+                    rows.forEach((row, idx) => {
+                        const uraianInput = row.querySelector(`[name="program_kerja[${idx}][uraian]"]`);
+                        const uraian = uraianInput ? uraianInput.value : '';
+                        const koord = row.querySelector(`[name="program_kerja[${idx}][koordinator]"]`) ? row.querySelector(`[name="program_kerja[${idx}][koordinator]"]`).value : '';
+                        const anggaranInput = row.querySelector(`[name="program_kerja[${idx}][anggaran]"]`);
+                        const anggaran = anggaranInput ? anggaranInput.value : '';
+                        const targets = [];
+                        row.querySelectorAll(`[name="program_kerja[${idx}][target][]"]`).forEach(input => targets.push(input.value));
+                        programKerja.push({uraian, koordinator: koord, target: targets, anggaran: anggaran ? parseInt(anggaran) : null});
+                    });
+                    fetch(`/unit-pengelola/pmk/${pmkId}/update-program-kerja`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                        body: JSON.stringify({ program_kerja: programKerja })
+                    }).then(res => res.json()).then(data => {
+                        if (data.success) {
+                            Swal.fire({icon: 'success', title: 'Tersimpan!', text: 'PIC berhasil diperbarui.', timer: 1500, showConfirmButton: false});
+                        } else {
+                            Swal.fire('Gagal!', data.message || 'Gagal menyimpan', 'error');
+                        }
+                    }).catch(() => Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error'));
+                }
                 </script>
+
             </div> <!-- End Tab Programs -->
 
             <!-- TIMELINE -->
@@ -2603,9 +2677,10 @@
                         <div class="notes-area">
                              <textarea name="catatan" class="notes-input" placeholder="Tambahkan komentar/catatan (Opsional untuk Approve, Wajib untuk Revisi)..."></textarea>
                         </div>
-                        <div class="action-btns" style="display:flex; justify-content: flex-end; gap:15px;">
+                        <div class="action-btns" style="display:flex; justify-content: flex-end; gap:15px; align-items:center;">
+                            <span id="nokWarningMsg" style="display:none; color:#dc2626; font-size:13px; font-weight:600;"><i class="fas fa-exclamation-triangle"></i> Ada item NOK — tidak dapat approve</span>
                             <button type="button" class="btn btn-revise" onclick="submitHeadAction('revise')">Revisi</button>
-                            <button type="button" class="btn btn-approve" onclick="submitHeadAction('approve')">Approve</button>
+                            <button type="button" id="btnHeadApprove" class="btn btn-approve" onclick="submitHeadAction('approve')">Approve</button>
                         </div>
                     </form>
                 @elseif($status == 'approved')
@@ -2963,6 +3038,46 @@
             }
         }
 
+        // --- NOK Compliance Checker for Head Approve Button ---
+        function checkComplianceNok() {
+            const btn = document.getElementById('btnHeadApprove');
+            const warning = document.getElementById('nokWarningMsg');
+            if (!btn) return; // Bukan Head, skip
+
+            // Cek semua select compliance_checklist yang tidak disabled
+            const selects = document.querySelectorAll('select[name*="compliance_checklist_"]:not([disabled])');
+            let hasNok = false;
+            selects.forEach(function(sel) {
+                if (sel.value === 'NOK') hasNok = true;
+            });
+
+            if (hasNok) {
+                btn.disabled = true;
+                btn.style.opacity = '0.45';
+                btn.style.cursor = 'not-allowed';
+                btn.style.transform = 'none';
+                btn.style.boxShadow = 'none';
+                if (warning) warning.style.display = 'inline-flex';
+            } else {
+                btn.disabled = false;
+                btn.style.opacity = '';
+                btn.style.cursor = '';
+                btn.style.transform = '';
+                btn.style.boxShadow = '';
+                if (warning) warning.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Run on load to reflect saved NOK values
+            checkComplianceNok();
+
+            // Re-check whenever any compliance select changes
+            document.querySelectorAll('select[name*="compliance_checklist_"]').forEach(function(sel) {
+                sel.addEventListener('change', checkComplianceNok);
+            });
+        });
+
         // collectComplianceData moved to bottom with new logic
 
         function submitStaffAction(target = 'default') {
@@ -3029,6 +3144,22 @@
                       const firstError = document.querySelector('select[style*="border: 1px solid red"]');
                       if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                       return;
+                  }
+
+                  // Validasi tambahan: Jika target=head, tidak boleh ada NOK
+                  if (target === 'head') {
+                      const nokSelects = document.querySelectorAll('select[name*="compliance_checklist_"]:not([disabled])');
+                      let hasNok = false;
+                      nokSelects.forEach(sel => { if (sel.value === 'NOK') hasNok = true; });
+                      if (hasNok) {
+                          Swal.fire({
+                              icon: 'error',
+                              title: 'Ada Item NOK',
+                              text: 'Tabel Kesesuaian masih memiliki item NOK. Pastikan semua item sudah OK sebelum mengirim ke Kepala Unit.',
+                              confirmButtonColor: '#dc2626'
+                          });
+                          return;
+                      }
                   }
              }
 

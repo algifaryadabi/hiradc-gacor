@@ -1325,13 +1325,13 @@
                 $programs = [];
                 $hasPrograms = false;
                 $programCount = 0;
-                
-                foreach($document->details as $detail) {
-                    if($detail->pukProgram) {
+
+                foreach ($document->details as $detail) {
+                    if ($detail->pukProgram) {
                         $hasPrograms = true;
                         $programCount++;
                     }
-                    if($detail->pmkProgram) {
+                    if ($detail->pmkProgram) {
                         $hasPrograms = true;
                         $programCount++;
                     }
@@ -1390,7 +1390,8 @@
                                 <!-- Header Row 2: Column Details -->
                                 <tr>
                                     <!-- BAGIAN 1 (Kolom 2-5) -->
-                                    <th style="width: 300px;">PROSES BISNIS /<br>KEGIATAN / ASET<br><small>(Kol 2)</small></th>
+                                    <th style="width: 300px;">PROSES BISNIS /<br>KEGIATAN / ASET<br><small>(Kol
+                                            2)</small></th>
                                     <th style="width: 120px;">Lokasi<br><small>(Kol 3)</small></th>
                                     <th style="width: 80px;">Kategori<br><small>(Kol 4)</small></th>
                                     <th style="width: 90px;" class="section-border-right">Kondisi<br><small>(Kol
@@ -1496,7 +1497,8 @@
                                         <td>
                                             <div class="cell-text"><strong>{{ $item->kolom2_proses }}</strong></div>
                                             @if($item->kolom2_kegiatan)
-                                                <div class="cell-text" style="margin-top:4px; color:#64748b;">kegiatan/aset : {{ $item->kolom2_kegiatan }}</div>
+                                                <div class="cell-text" style="margin-top:4px; color:#64748b;">kegiatan/aset :
+                                                    {{ $item->kolom2_kegiatan }}</div>
                                             @endif
                                         </td>
                                         <!-- Kolom 3: Lokasi -->
@@ -1882,7 +1884,8 @@
                                     @endphp
 
                                     @if($canEditPuk)
-                                        <button type="button" onclick="toggleEditModePuk({{ $detailIndex }})" id="btnEditPuk-{{ $detailIndex }}" class="btn btn-sm"
+                                        <button type="button" onclick="toggleEditModePuk({{ $detailIndex }})"
+                                            id="btnEditPuk-{{ $detailIndex }}" class="btn btn-sm"
                                             style="background:#3b82f6; color:white; padding:6px 12px; border-radius:6px; font-size: 13px; border:none; cursor: pointer;">
                                             <i class="fas fa-edit me-1"></i> Edit
                                         </button>
@@ -1974,7 +1977,7 @@
                                                                 <input type="number" class="edit-mode form-control"
                                                                     style="display:none; width:100%; padding:4px; text-align:center; border:1px solid #cbd5e1; border-radius:4px;"
                                                                     name="program_kerja[{{ $idx }}][target][]"
-                                                                    value="{{ $targets[$m] ?? '' }}" min="0" max="100">
+                                                                    value="{{ $targets[$m] ?? '' }}" min="0">
                                                             </td>
                                                         @endfor
                                                     </tr>
@@ -1982,12 +1985,14 @@
                                             </tbody>
                                         </table>
 
-                                        <div id="pukEditActions-{{ $detailIndex }}" style="display:none; margin-top:15px; text-align:right;">
+                                        <div id="pukEditActions-{{ $detailIndex }}"
+                                            style="display:none; margin-top:15px; text-align:right;">
                                             <button type="button" onclick="cancelEditPuk({{ $detailIndex }})" class="btn"
                                                 style="background:#e2e8f0; color:#475569; padding:8px 16px; border-radius:6px; border:none; margin-right:8px; cursor:pointer;">
                                                 <i class="fas fa-times me-1"></i> Batal
                                             </button>
-                                            <button type="button" onclick="savePukChanges({{ $detailIndex }}, {{ $puk->id }})" class="btn"
+                                            <button type="button" onclick="savePukChanges({{ $detailIndex }}, {{ $puk->id }})"
+                                                class="btn"
                                                 style="background:#10b981; color:white; padding:8px 16px; border-radius:6px; border:none; cursor:pointer;">
                                                 <i class="fas fa-save me-1"></i> Simpan PUK
                                             </button>
@@ -2004,7 +2009,8 @@
                                 style="display: flex; justify-content: space-between; align-items: center;">
                                 <div style="display: flex; align-items: center; gap: 12px; color: #dc2626;">
                                     <i class="fas fa-project-diagram"></i>
-                                    <h2 style="color: #dc2626;">Review Program Manajemen Korporat (PMK) #{{ $detailIndex + 1 }}</h2>
+                                    <h2 style="color: #dc2626;">Review Program Manajemen Korporat (PMK) #{{ $detailIndex + 1 }}
+                                    </h2>
                                 </div>
                                 <!-- Download Buttons for PMK -->
                                 <div style="display: flex; gap: 8px;">
@@ -2067,7 +2073,8 @@
                                     @endphp
 
                                     @if($canEditPmk)
-                                        <button type="button" onclick="toggleEditModePmk({{ $detailIndex }})" id="btnEditPmk-{{ $detailIndex }}" class="btn btn-sm"
+                                        <button type="button" onclick="toggleEditModePmk({{ $detailIndex }})"
+                                            id="btnEditPmk-{{ $detailIndex }}" class="btn btn-sm"
                                             style="background:#c026d3; color:white; padding:6px 12px; border-radius:6px; font-size: 13px; border:none; cursor: pointer;">
                                             <i class="fas fa-edit me-1"></i> Edit
                                         </button>
@@ -2142,7 +2149,7 @@
                                                                 <input type="number" class="edit-mode form-control"
                                                                     style="display:none; width:100%; padding:4px; text-align:center; border:1px solid #cbd5e1; border-radius:4px;"
                                                                     name="program_kerja[{{ $idx }}][target][]"
-                                                                    value="{{ $targets[$m] ?? '' }}" min="0" max="100">
+                                                                    value="{{ $targets[$m] ?? '' }}" min="0">
                                                             </td>
                                                         @endfor
                                                         <!-- Anggaran -->
@@ -2159,12 +2166,14 @@
                                             </tbody>
                                         </table>
 
-                                        <div id="pmkEditActions-{{ $detailIndex }}" style="display:none; margin-top:15px; text-align:right;">
+                                        <div id="pmkEditActions-{{ $detailIndex }}"
+                                            style="display:none; margin-top:15px; text-align:right;">
                                             <button type="button" onclick="cancelEditPmk({{ $detailIndex }})" class="btn"
                                                 style="background:#e2e8f0; color:#475569; padding:8px 16px; border-radius:6px; border:none; margin-right:8px; cursor:pointer;">
                                                 <i class="fas fa-times me-1"></i> Batal
                                             </button>
-                                            <button type="button" onclick="savePmkChanges({{ $detailIndex }}, {{ $pmk->id }})" class="btn"
+                                            <button type="button" onclick="savePmkChanges({{ $detailIndex }}, {{ $pmk->id }})"
+                                                class="btn"
                                                 style="background:#c026d3; color:white; padding:8px 16px; border-radius:6px; border:none; cursor:pointer;">
                                                 <i class="fas fa-save me-1"></i> Simpan PMK
                                             </button>
@@ -2185,7 +2194,7 @@
                     }
 
                     function cancelEditPuk(index) {
-                        document.querySelectorAll(`#pukTableBody-${index} .view-mode`).forEach(el => el.style.display = 'inline'); 
+                        document.querySelectorAll(`#pukTableBody-${index} .view-mode`).forEach(el => el.style.display = 'inline');
                         document.querySelectorAll(`#pukTableBody-${index} .edit-mode`).forEach(el => el.style.display = 'none');
                         document.getElementById(`btnEditPuk-${index}`).style.display = 'inline-block';
                         document.getElementById(`pukEditActions-${index}`).style.display = 'none';
@@ -2194,7 +2203,7 @@
 
                     function savePukChanges(index, pukId) {
                         const form = document.getElementById(`pukEditForm-${index}`);
-                        
+
                         const programKerja = [];
                         const rows = document.querySelectorAll(`#pukTableBody-${index} tr`);
                         rows.forEach((row, idx) => {

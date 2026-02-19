@@ -366,7 +366,7 @@ class DocumentController extends Controller
         }
 
         $pdf = Pdf::loadView('documents.export_pmk_pdf', compact('document', 'pmkProgram', 'kaUnit', 'kaDept', 'direktur', 'latestRevision'));
-        $pdf->setPaper('a4', 'portrait');
+        $pdf->setPaper('a4', 'landscape');
 
         $unitName = $document->unit ? $this->sanitizeFilename($document->unit->nama_unit) : 'Unit';
         $filename = "PMK_{$unitName}_" . date('Y-m-d') . ".pdf";
@@ -633,28 +633,30 @@ class DocumentController extends Controller
         $probis = \App\Models\BusinessProcess::whereIn('id', $unitSeksiIds)->get();
 
         // Fetch Users for PUK/PMK Program Kerja
-        // Band 3 = role_jabatan 4, 5 (Koordinator for PUK)
+        // PUK Koordinator = Band 3: role_jabatan 3 (Kepala Unit) + 4, 5 (Koordinator)
         $band3Users = \App\Models\User::where('id_unit', $user->id_unit)
-            ->whereIn('role_jabatan', [4, 5])
+            ->whereIn('role_jabatan', [3, 4, 5])
+            ->orderBy('nama_user')
             ->get();
 
         // Band 4 = role_jabatan 6 (Pelaksana for PUK)
         $band4Users = \App\Models\User::where('id_unit', $user->id_unit)
             ->where('role_jabatan', 6)
+            ->orderBy('nama_user')
             ->get();
 
-        // PUK Specific Roles (Requested: Koord=Role3, Pelaksana=Role4)
-        $pukKoordinatorUsers = \App\Models\User::where('id_unit', $user->id_unit)
-            ->where('role_jabatan', 3)
-            ->get();
+        // PUK Koordinator (alias)
+        $pukKoordinatorUsers = $band3Users;
 
         $pukPelaksanaUsers = \App\Models\User::where('id_unit', $user->id_unit)
             ->whereIn('role_jabatan', [1, 2, 3, 4, 5, 6])
+            ->orderBy('nama_user')
             ->get();
 
-        // New Requirement: PIC for PMK is Manager (Role 3)
+        // PMK PIC = Band 2 + Band 3: role_jabatan 2 (Kepala Dept) + 3, 4, 5 (Kepala Unit + Koordinator)
         $pmkPicUsers = \App\Models\User::where('id_unit', $user->id_unit)
-            ->where('role_jabatan', 3)
+            ->whereIn('role_jabatan', [2, 3, 4, 5])
+            ->orderBy('nama_user')
             ->get();
 
         return view('user.documents.create', compact('user', 'direktorats', 'departemens', 'units', 'seksis', 'probis', 'band3Users', 'band4Users', 'pmkPicUsers', 'pukKoordinatorUsers', 'pukPelaksanaUsers'));
@@ -952,28 +954,30 @@ class DocumentController extends Controller
         // Use Document's Unit ID to ensure consistency
         $unitId = $document->id_unit;
 
-        // Band 3 = role_jabatan 4, 5 (Koordinator for PUK)
+        // PUK Koordinator = Band 3: role_jabatan 3 (Kepala Unit) + 4, 5 (Koordinator)
         $band3Users = \App\Models\User::where('id_unit', $unitId)
-            ->whereIn('role_jabatan', [4, 5])
+            ->whereIn('role_jabatan', [3, 4, 5])
+            ->orderBy('nama_user')
             ->get();
 
         // Band 4 = role_jabatan 6 (Pelaksana for PUK)
         $band4Users = \App\Models\User::where('id_unit', $unitId)
             ->where('role_jabatan', 6)
+            ->orderBy('nama_user')
             ->get();
 
-        // PUK Specific Roles
-        $pukKoordinatorUsers = \App\Models\User::where('id_unit', $unitId)
-            ->where('role_jabatan', 3)
-            ->get();
+        // PUK Koordinator (alias)
+        $pukKoordinatorUsers = $band3Users;
 
         $pukPelaksanaUsers = \App\Models\User::where('id_unit', $unitId)
             ->whereIn('role_jabatan', [1, 2, 3, 4, 5, 6])
+            ->orderBy('nama_user')
             ->get();
 
-        // PMK PIC = Role 3 (Manager)
+        // PMK PIC = Band 2 + Band 3: role_jabatan 2 (Kepala Dept) + 3, 4, 5 (Kepala Unit + Koordinator)
         $pmkPicUsers = \App\Models\User::where('id_unit', $unitId)
-            ->where('role_jabatan', 3)
+            ->whereIn('role_jabatan', [2, 3, 4, 5])
+            ->orderBy('nama_user')
             ->get();
 
         // Fetch Probis for Unit (Needed for Item Template)
@@ -1078,8 +1082,8 @@ class DocumentController extends Controller
             ]);
 
             // Save Revision Comment if Resubmitting
-            if($request->input('action') === 'submit' && $request->has('revision_comment') && !empty($request->revision_comment)) {
-                 $document->approvals()->create([
+            if ($request->input('action') === 'submit' && $request->has('revision_comment') && !empty($request->revision_comment)) {
+                $document->approvals()->create([
                     'level' => 1, // Reset to level 1 flow
                     'approver_id' => Auth::id(),
                     'action' => 'resubmitted', // New action type
@@ -1971,20 +1975,10 @@ class DocumentController extends Controller
             } elseif ($filter == 'Security') {
                 $verifyingUnit = 'Unit Pengelola Keamanan';
             }
-        } elseif (auth()->user()->role_jabatan == 3) { // Kepala Unit (Approver) Filter
-            $excludedCategories = [];
-            // If SHE is done, hide SHE rows
-            if (in_array($document->status_she, ['approved', 'published'])) {
-                $excludedCategories = array_merge($excludedCategories, ['K3', 'KO', 'Lingkungan']);
-            }
-            // If Security is done, hide Security rows
-            if (in_array($document->status_security, ['approved', 'published'])) {
-                $excludedCategories = array_merge($excludedCategories, ['Keamanan']);
-            }
-
-            if (!empty($excludedCategories)) {
-                $document->setRelation('details', $document->details->whereNotIn('kategori', $excludedCategories));
-            }
+        } elseif (auth()->user()->role_jabatan == 3) { // Kepala Unit (Approver)
+            // FIX: Jangan sembunyikan detail yang sudah approved.
+            // Kepala Unit perlu melihat semua detail (PUK/PMK) meskipun status sudah approved.
+            // Logic exclusion dihapus.
         }
 
         // Add 'direktur' or 'admin' check if needed (Using getRoleName usually returns 'user' for Dir unless defined)
@@ -2013,11 +2007,14 @@ class DocumentController extends Controller
         };
 
         // Fetch Users for PUK/PMK Edit Dropdown (Based on Document Unit)
-        // Band 3 = role_jabatan 4, 5 (Koordinator PUK)
-        $band3Users = \App\Models\User::where('id_unit', $document->id_unit)
-            ->whereIn('role_jabatan', [4, 5])
+        // PUK Koordinator = Band 3: role_jabatan 3 (Kepala Unit) + 4, 5 (Koordinator)
+        $pukKoordinatorUsers = \App\Models\User::where('id_unit', $document->id_unit)
+            ->whereIn('role_jabatan', [3, 4, 5])
             ->orderBy('nama_user')
             ->get();
+
+        // Keep $band3Users for backward compat with other parts of the view
+        $band3Users = $pukKoordinatorUsers;
 
         // Band 4 = role_jabatan 6 (Pelaksana PUK)
         $band4Users = \App\Models\User::where('id_unit', $document->id_unit)
@@ -2025,13 +2022,13 @@ class DocumentController extends Controller
             ->orderBy('nama_user')
             ->get();
 
-        // PMK PIC = Manager (Role 3)
+        // PMK PIC = Band 2 + Band 3: role_jabatan 2 (Kepala Dept) + 3, 4, 5 (Kepala Unit + Koordinator)
         $pmkPicUsers = \App\Models\User::where('id_unit', $document->id_unit)
-            ->where('role_jabatan', 3)
+            ->whereIn('role_jabatan', [2, 3, 4, 5])
             ->orderBy('nama_user')
             ->get();
 
-        return view($view, compact('document', 'staffReviewers', 'staffApprovers', 'filter', 'verifyingUnit', 'band3Users', 'band4Users', 'pmkPicUsers'));
+        return view($view, compact('document', 'staffReviewers', 'staffApprovers', 'filter', 'verifyingUnit', 'band3Users', 'band4Users', 'pmkPicUsers', 'pukKoordinatorUsers'));
     }
 
 
@@ -2313,21 +2310,25 @@ class DocumentController extends Controller
                                     ->where('is_reviewer', true)
                                     ->whereJsonContains('assigned_categories', $cat)
                                     ->exists();
-                                if (!$hasReviewer) $missingReviewer[] = $cat;
+                                if (!$hasReviewer)
+                                    $missingReviewer[] = $cat;
 
                                 // Check for Verifier
                                 $hasVerifier = \App\Models\User::where('id_unit', 56)
                                     ->where('is_verifier', true)
                                     ->whereJsonContains('assigned_categories', $cat)
                                     ->exists();
-                                if (!$hasVerifier) $missingVerifier[] = $cat;
+                                if (!$hasVerifier)
+                                    $missingVerifier[] = $cat;
                             }
 
                             if (!empty($missingReviewer) || !empty($missingVerifier)) {
                                 $errorMsg = "Gagal Disposisi! ";
-                                if (!empty($missingReviewer)) $errorMsg .= "Belum ada Staff Reviewer untuk kategori: " . implode(', ', $missingReviewer) . ". ";
-                                if (!empty($missingVerifier)) $errorMsg .= "Belum ada Staff Verifikator untuk kategori: " . implode(', ', $missingVerifier) . ".";
-                                
+                                if (!empty($missingReviewer))
+                                    $errorMsg .= "Belum ada Staff Reviewer untuk kategori: " . implode(', ', $missingReviewer) . ". ";
+                                if (!empty($missingVerifier))
+                                    $errorMsg .= "Belum ada Staff Verifikator untuk kategori: " . implode(', ', $missingVerifier) . ".";
+
                                 throw \Illuminate\Validation\ValidationException::withMessages(['disposition' => $errorMsg]);
                             }
                         }
@@ -2342,12 +2343,12 @@ class DocumentController extends Controller
                         // STAGE 1 vs STAGE 2 Logic
                         // If Checklist is empty -> Stage 1 -> Send to Verificator
                         // If Checklist is filled -> Stage 2 -> Send to Head (staff_verified)
-                        
+
                         // We check the specific checklist column
                         if (!empty($document->compliance_checklist_she)) {
-                             $document->update(['status_she' => 'staff_verified']);
+                            $document->update(['status_she' => 'staff_verified']);
                         } else {
-                             $document->update(['status_she' => 'assigned_approval']);
+                            $document->update(['status_she' => 'assigned_approval']);
                         }
                     } elseif ($document->status_she == 'assigned_approval') {
                         // Verificator sends back to Reviewer for Final Check
@@ -2356,7 +2357,7 @@ class DocumentController extends Controller
                         // CONSOLIDATED APPROVAL CHECK
                         // 1. Identify active categories in this document
                         $docCategories = $document->details->pluck('kategori')->unique()->toArray();
-                        
+
                         $requiredCats = array_intersect($docCategories, ['K3', 'KO', 'Lingkungan']);
                         $allVerified = true;
                         $pendingCats = [];
@@ -2377,7 +2378,7 @@ class DocumentController extends Controller
                         }
 
                         if (!$allVerified) {
-                             throw \Illuminate\Validation\ValidationException::withMessages([
+                            throw \Illuminate\Validation\ValidationException::withMessages([
                                 'approval' => "Gagal Approve! Kategori berikut belum diverifikasi oleh staff: " . implode(', ', $pendingCats)
                             ]);
                         }
@@ -2406,35 +2407,39 @@ class DocumentController extends Controller
                                     ->where('is_reviewer', true)
                                     ->whereJsonContains('assigned_categories', $cat)
                                     ->exists();
-                                if (!$hasReviewer) $missingReviewer[] = $cat;
+                                if (!$hasReviewer)
+                                    $missingReviewer[] = $cat;
 
                                 // Check for Verifier
                                 $hasVerifier = \App\Models\User::where('id_unit', 55)
                                     ->where('is_verifier', true)
                                     ->whereJsonContains('assigned_categories', $cat)
                                     ->exists();
-                                if (!$hasVerifier) $missingVerifier[] = $cat;
+                                if (!$hasVerifier)
+                                    $missingVerifier[] = $cat;
                             }
 
                             if (!empty($missingReviewer) || !empty($missingVerifier)) {
                                 $errorMsg = "Gagal Disposisi! ";
-                                if (!empty($missingReviewer)) $errorMsg .= "Belum ada Staff Reviewer untuk kategori: " . implode(', ', $missingReviewer) . ". ";
-                                if (!empty($missingVerifier)) $errorMsg .= "Belum ada Staff Verifikator untuk kategori: " . implode(', ', $missingVerifier) . ".";
-                                
+                                if (!empty($missingReviewer))
+                                    $errorMsg .= "Belum ada Staff Reviewer untuk kategori: " . implode(', ', $missingReviewer) . ". ";
+                                if (!empty($missingVerifier))
+                                    $errorMsg .= "Belum ada Staff Verifikator untuk kategori: " . implode(', ', $missingVerifier) . ".";
+
                                 throw \Illuminate\Validation\ValidationException::withMessages(['disposition' => $errorMsg]);
                             }
                         }
 
                         $document->update(['status_security' => 'assigned_review']);
                     } elseif ($document->status_security == 'assigned_review') {
-                         // STAGE 1 vs STAGE 2 Logic (Security)
+                        // STAGE 1 vs STAGE 2 Logic (Security)
                         if (!empty($document->compliance_checklist_security)) {
-                             $document->update(['status_security' => 'staff_verified']);
+                            $document->update(['status_security' => 'staff_verified']);
                         } else {
-                             $document->update(['status_security' => 'assigned_approval']);
+                            $document->update(['status_security' => 'assigned_approval']);
                         }
                     } elseif ($document->status_security == 'assigned_approval') {
-                         // Verificator sends back to Reviewer
+                        // Verificator sends back to Reviewer
                         $document->update(['status_security' => 'assigned_review']);
                     } elseif ($document->status_security == 'staff_verified') {
                         $document->update([
@@ -2822,26 +2827,30 @@ class DocumentController extends Controller
             // Partial Revision Logic
             // Partial Revision Logic
             if ($isShe) {
-            // SHE Unit revising
-            $revisedCats = $request->input('revised_categories', []);
-            if (!is_array($revisedCats)) $revisedCats = explode(',', $revisedCats);
+                // SHE Unit revising
+                $revisedCats = $request->input('revised_categories', []);
+                if (!is_array($revisedCats))
+                    $revisedCats = explode(',', $revisedCats);
 
-            $updateData['status_she'] = 'revision';
-            $updateData['current_level'] = 1; 
-            $updateData['status'] = 'revision'; 
+                $updateData['status_she'] = 'revision';
+                $updateData['current_level'] = 1;
+                $updateData['status'] = 'revision';
 
-            if (!empty($revisedCats)) {
-                // Partial Revision: Only reset specific categories
-                if (in_array('K3', $revisedCats)) $updateData['status_k3'] = 'revision';
-                if (in_array('KO', $revisedCats)) $updateData['status_ko'] = 'revision';
-                if (in_array('Lingkungan', $revisedCats)) $updateData['status_lingkungan'] = 'revision';
-            } else {
-                // Default: Reset all SHE categories
-                $updateData['status_k3'] = 'revision';
-                $updateData['status_ko'] = 'revision';
-                $updateData['status_lingkungan'] = 'revision';
-            }
-        } elseif ($isSecurity) {
+                if (!empty($revisedCats)) {
+                    // Partial Revision: Only reset specific categories
+                    if (in_array('K3', $revisedCats))
+                        $updateData['status_k3'] = 'revision';
+                    if (in_array('KO', $revisedCats))
+                        $updateData['status_ko'] = 'revision';
+                    if (in_array('Lingkungan', $revisedCats))
+                        $updateData['status_lingkungan'] = 'revision';
+                } else {
+                    // Default: Reset all SHE categories
+                    $updateData['status_k3'] = 'revision';
+                    $updateData['status_ko'] = 'revision';
+                    $updateData['status_lingkungan'] = 'revision';
+                }
+            } elseif ($isSecurity) {
                 // Security Unit revising -> Only Security category needs revision
                 $updateData['status_security'] = 'revision';
                 // Keep status_she as is
@@ -3106,20 +3115,21 @@ class DocumentController extends Controller
         $docCats = $docDetails ? $docDetails->pluck('kategori')->filter()->unique()->values()->toArray() : [];
         // Fallback to document level category if details empty
         if (empty($docCats) && $document->kategori) {
-             $docCats[] = $document->kategori;
+            $docCats[] = $document->kategori;
         }
 
         if (!$reviewerId) {
             $candidates = \App\Models\User::where('id_unit', $user->id_unit)
                 ->where('is_reviewer', true)
                 ->get();
-            
+
             // Try Strict Match First
-            $matched = $candidates->filter(function($u) use ($docCats) {
+            $matched = $candidates->filter(function ($u) use ($docCats) {
                 $uCats = $u->assigned_categories ?? [];
                 // If user has NO categories, treat as fallback? Or strict? 
                 // User requirement: "menerima form dengan kategori k3 saja" implies strict filtering.
-                if (empty($uCats)) return false; 
+                if (empty($uCats))
+                    return false;
                 return !empty(array_intersect($uCats, $docCats));
             });
 
@@ -3131,11 +3141,11 @@ class DocumentController extends Controller
                 // or if there is only 1 candidate total, just assign them?
                 $generalists = $candidates->filter(fn($u) => empty($u->assigned_categories));
                 if ($generalists->count() > 0) {
-                     $reviewerId = $generalists->first()->id_user;
+                    $reviewerId = $generalists->first()->id_user;
                 } elseif ($candidates->count() === 1) {
-                     // Last resort: Only 1 reviewer exists, assign regardless of category mismatch?
-                     // Maybe dangerous if strict, but better than blocking.
-                     $reviewerId = $candidates->first()->id_user;
+                    // Last resort: Only 1 reviewer exists, assign regardless of category mismatch?
+                    // Maybe dangerous if strict, but better than blocking.
+                    $reviewerId = $candidates->first()->id_user;
                 }
             }
         }
@@ -3184,7 +3194,7 @@ class DocumentController extends Controller
         } elseif ($user->id_unit == 56) { // SHE
             \Illuminate\Support\Facades\Log::info("Disposition Logic: SHE Block");
             $document->status_she = 'assigned_review';
-            
+
             if ($reviewerId)
                 $document->she_reviewer_id = $reviewerId;
             if ($approverId)
@@ -3192,10 +3202,10 @@ class DocumentController extends Controller
 
             // PARALEL CATEGORY ASSIGNMENT (K3, KO, Lingkungan)
             $sheCats = ['K3', 'KO', 'Lingkungan'];
-            
+
             // Re-fetch or use candidates if already available
             // Note: $candidates and $activeApprovers are already scoped to is_reviewer/is_verifier above.
-            
+
             $revCandidates = $candidates ?? \App\Models\User::where('id_unit', 56)->where('is_reviewer', true)->get();
             $verCandidates = $activeApprovers ?? \App\Models\User::where('id_unit', 56)->where('is_verifier', true)->get();
 
@@ -3209,11 +3219,11 @@ class DocumentController extends Controller
                     $document->$statusField = 'assigned_review';
 
                     // Find matching reviewer
-                    $catReviewer = $revCandidates->filter(function($u) use ($cat) {
+                    $catReviewer = $revCandidates->filter(function ($u) use ($cat) {
                         $uCats = is_string($u->assigned_categories) ? json_decode($u->assigned_categories, true) : $u->assigned_categories;
                         return is_array($uCats) && in_array($cat, $uCats);
                     })->first();
-                    
+
                     if ($catReviewer) {
                         $document->$revField = $catReviewer->id_user;
                     } else if ($reviewerId) {
@@ -3221,7 +3231,7 @@ class DocumentController extends Controller
                     }
 
                     // Find matching verifier
-                    $catVerifier = $verCandidates->filter(function($u) use ($cat) {
+                    $catVerifier = $verCandidates->filter(function ($u) use ($cat) {
                         $uCats = is_string($u->assigned_categories) ? json_decode($u->assigned_categories, true) : $u->assigned_categories;
                         return is_array($uCats) && in_array($cat, $uCats);
                     })->first();
@@ -3305,13 +3315,13 @@ class DocumentController extends Controller
                 $cats = is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories;
                 $hasAssignedCategory = is_array($cats) && in_array('Keamanan', $cats);
             }
-            
+
             $trackActive = !in_array($document->status_security, ['approved', 'published', 'level3_approved', 'none', null]);
-            
+
             $isAssigned = ($user->id_user == $document->security_reviewer_id) ||
                 ($user->is_reviewer == 1 && $trackActive) ||
                 ($hasAssignedCategory && $trackActive);
-            
+
             // Auto-assign self if not yet assigned
             if ($isAssigned && empty($document->security_reviewer_id)) {
                 $document->update(['security_reviewer_id' => $user->id_user]);
@@ -3326,9 +3336,9 @@ class DocumentController extends Controller
                     in_array('K3', $cats) || in_array('KO', $cats) || in_array('Lingkungan', $cats)
                 );
             }
-            
+
             $trackActive = !in_array($document->status_she, ['approved', 'published', 'level3_approved', 'none', null]);
-            
+
             $isAssigned = ($user->id_user == $document->she_reviewer_id) ||
                 ($user->is_reviewer == 1 && $trackActive) ||
                 ($hasAssignedCategory && $trackActive);
@@ -3390,19 +3400,19 @@ class DocumentController extends Controller
             // IF status is 'staff_verified' (Stage 2 - returned from Verifier) -> Send to Head ('process_approval') - Wait, we need a distinct status?
             // Actually, if Verifier sends back, status becomes 'staff_verified' for Reviewer to see.
             // When Reviewer submits AGAIN, it should go to Head.
-            
+
             if ($document->status_security == 'assigned_review') {
-                 // Stage 1: Reviewer -> Verifier
-                 $document->update(['status_security' => 'assigned_approval']);
-                 return redirect()->route('unit_pengelola.staff.index')->with('success', 'Review Tahap 1 selesai. Dokumen diteruskan ke Staff Verifikator.');
+                // Stage 1: Reviewer -> Verifier
+                $document->update(['status_security' => 'assigned_approval']);
+                return redirect()->route('unit_pengelola.staff.index')->with('success', 'Review Tahap 1 selesai. Dokumen diteruskan ke Staff Verifikator.');
             } elseif ($document->status_security == 'staff_verified') {
-                 // Stage 2: Reviewer -> Head
-                 $document->update(['status_security' => 'process_approval']); // Ready for Head
-                 return redirect()->route('unit_pengelola.staff.index')->with('success', 'Final Review selesai. Dokumen diteruskan ke Kepala Unit.');
+                // Stage 2: Reviewer -> Head
+                $document->update(['status_security' => 'process_approval']); // Ready for Head
+                return redirect()->route('unit_pengelola.staff.index')->with('success', 'Final Review selesai. Dokumen diteruskan ke Kepala Unit.');
             } else {
-                 // Fallback/Safety
-                 $document->update(['status_security' => 'assigned_approval']);
-                 return redirect()->route('unit_pengelola.staff.index')->with('success', 'Review selesai.');
+                // Fallback/Safety
+                $document->update(['status_security' => 'assigned_approval']);
+                return redirect()->route('unit_pengelola.staff.index')->with('success', 'Review selesai.');
             }
 
         } elseif ($user->id_unit == 56) { // SHE
@@ -3414,21 +3424,21 @@ class DocumentController extends Controller
             // LOGIC:
             // 1. If Category Status is 'assigned_review' -> Update to 'assigned_approval' (To Verifier)
             // 2. If Category Status is 'awaiting_final_review' (Returned from Verifier) -> Update to 'verified' (Ready for Head)
-            
+
             $movedToVerifier = false;
             $movedToHead = false;
 
             // K3 Isolation
             if (in_array('K3', $selectedCategories)) {
-                $canReviewK3 = ($document->k3_reviewer_id == $user->id_user) || 
-                               ($document->she_reviewer_id == $user->id_user) || 
-                               (!$document->k3_reviewer_id && in_array('K3', $cats));
-                if($canReviewK3) {
+                $canReviewK3 = ($document->k3_reviewer_id == $user->id_user) ||
+                    ($document->she_reviewer_id == $user->id_user) ||
+                    (!$document->k3_reviewer_id && in_array('K3', $cats));
+                if ($canReviewK3) {
                     if ($document->status_k3 == 'assigned_review' || $document->status_k3 == 'pending' || empty($document->status_k3)) {
                         $document->update(['status_k3' => 'assigned_approval']);
                         $movedToVerifier = true;
                     } elseif ($document->status_k3 == 'awaiting_final_review') {
-                        $document->update(['status_k3' => 'verified']); 
+                        $document->update(['status_k3' => 'verified']);
                         $movedToHead = true;
                     }
                 }
@@ -3436,11 +3446,11 @@ class DocumentController extends Controller
 
             // KO Isolation
             if (in_array('KO', $selectedCategories)) {
-                $canReviewKO = ($document->ko_reviewer_id == $user->id_user) || 
-                               ($document->she_reviewer_id == $user->id_user) || 
-                               (!$document->ko_reviewer_id && in_array('KO', $cats));
-                if($canReviewKO) {
-                     if ($document->status_ko == 'assigned_review' || $document->status_ko == 'pending' || empty($document->status_ko)) {
+                $canReviewKO = ($document->ko_reviewer_id == $user->id_user) ||
+                    ($document->she_reviewer_id == $user->id_user) ||
+                    (!$document->ko_reviewer_id && in_array('KO', $cats));
+                if ($canReviewKO) {
+                    if ($document->status_ko == 'assigned_review' || $document->status_ko == 'pending' || empty($document->status_ko)) {
                         $document->update(['status_ko' => 'assigned_approval']);
                         $movedToVerifier = true;
                     } elseif ($document->status_ko == 'awaiting_final_review') {
@@ -3452,11 +3462,11 @@ class DocumentController extends Controller
 
             // Lingkungan Isolation
             if (in_array('Lingkungan', $selectedCategories)) {
-                $canReviewLingkungan = ($document->lingkungan_reviewer_id == $user->id_user) || 
-                                       ($document->she_reviewer_id == $user->id_user) || 
-                                       (!$document->lingkungan_reviewer_id && in_array('Lingkungan', $cats));
-                if($canReviewLingkungan) {
-                     if ($document->status_lingkungan == 'assigned_review' || $document->status_lingkungan == 'pending' || empty($document->status_lingkungan)) {
+                $canReviewLingkungan = ($document->lingkungan_reviewer_id == $user->id_user) ||
+                    ($document->she_reviewer_id == $user->id_user) ||
+                    (!$document->lingkungan_reviewer_id && in_array('Lingkungan', $cats));
+                if ($canReviewLingkungan) {
+                    if ($document->status_lingkungan == 'assigned_review' || $document->status_lingkungan == 'pending' || empty($document->status_lingkungan)) {
                         $document->update(['status_lingkungan' => 'assigned_approval']);
                         $movedToVerifier = true;
                     } elseif ($document->status_lingkungan == 'awaiting_final_review') {
@@ -3468,10 +3478,11 @@ class DocumentController extends Controller
 
             // Update Global SHE Status based on movement
             $docCats = $document->details ? $document->details->pluck('kategori')->filter()->unique()->values()->toArray() : [];
-            if (empty($docCats) && $document->kategori) $docCats[] = $document->kategori;
-            
+            if (empty($docCats) && $document->kategori)
+                $docCats[] = $document->kategori;
+
             $freshDoc = $document->fresh();
-            
+
             $allVerified = true;
             $anyVerifier = false;
             $anyReviewer = false;
@@ -3482,24 +3493,27 @@ class DocumentController extends Controller
                     $stField = 'status_' . strtolower($sc);
                     $stValue = $freshDoc->$stField;
 
-                    if ($stValue != 'verified') $allVerified = false;
-                    if ($stValue == 'assigned_approval') $anyVerifier = true;
-                    if ($stValue == 'assigned_review' || $stValue == 'awaiting_final_review' || $stValue == 'revision') $anyReviewer = true;
+                    if ($stValue != 'verified')
+                        $allVerified = false;
+                    if ($stValue == 'assigned_approval')
+                        $anyVerifier = true;
+                    if ($stValue == 'assigned_review' || $stValue == 'awaiting_final_review' || $stValue == 'revision')
+                        $anyReviewer = true;
                 }
             }
 
             if ($allVerified) {
-                 $document->update(['status_she' => 'process_approval']);
-                 $msg = 'Final Review selesai. Semua kategori telah terverifikasi. Dokumen siap untuk Approval Kepala Unit.';
+                $document->update(['status_she' => 'process_approval']);
+                $msg = 'Final Review selesai. Semua kategori telah terverifikasi. Dokumen siap untuk Approval Kepala Unit.';
             } elseif ($anyVerifier && !$anyReviewer) {
-                 $document->update(['status_she' => 'process_verification']);
-                 $msg = 'Review selesai. Dokumen diteruskan ke Staff Verifikator.';
+                $document->update(['status_she' => 'process_verification']);
+                $msg = 'Review selesai. Dokumen diteruskan ke Staff Verifikator.';
             } else {
-                 // If there's still a reviewer (or revision), global status remains 'assigned_review'
-                 $document->update(['status_she' => 'assigned_review']);
-                 $msg = 'Review parsial selesai. Sisa kategori masih dalam proses review.';
+                // If there's still a reviewer (or revision), global status remains 'assigned_review'
+                $document->update(['status_she' => 'assigned_review']);
+                $msg = 'Review parsial selesai. Sisa kategori masih dalam proses review.';
             }
-            
+
             return redirect()->route('unit_pengelola.staff.index')->with('success', $msg);
 
         } else {
@@ -3528,11 +3542,11 @@ class DocumentController extends Controller
                 $cats = is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories;
                 $hasAssignedCategory = is_array($cats) && in_array('Keamanan', $cats);
             }
-            
+
             $isAssigned = ($user->id_user == $document->security_verificator_id) ||
                 ($user->is_verifier == 1 && $document->status_security == 'assigned_approval') ||
                 ($hasAssignedCategory && $document->status_security == 'assigned_approval');
-                
+
         } elseif ($user->id_unit == 56) { // SHE
             // PERBAIKAN: Sama seperti Security, tapi untuk kategori K3, KO, Lingkungan
             $hasAssignedCategory = false;
@@ -3542,7 +3556,7 @@ class DocumentController extends Controller
                     in_array('K3', $cats) || in_array('KO', $cats) || in_array('Lingkungan', $cats)
                 );
             }
-            
+
             $isAssigned = ($user->id_user == $document->she_verificator_id) ||
                 ($user->is_verifier == 1 && in_array($document->status_she, ['assigned_approval', 'process_verification'])) ||
                 ($hasAssignedCategory && in_array($document->status_she, ['assigned_approval', 'process_verification']));
@@ -3583,7 +3597,7 @@ class DocumentController extends Controller
             // PING-PONG: Verifier sends back to Reviewer
             // Status: 'staff_verified' tells Reviewer it's back
             $document->update([
-                'status_security' => 'staff_verified', 
+                'status_security' => 'staff_verified',
             ]);
             return redirect()->route('unit_pengelola.staff.index')->with('success', 'Verifikasi selesai. Dokumen dikembalikan ke Staff Reviewer untuk Final Review.');
 
@@ -3592,12 +3606,12 @@ class DocumentController extends Controller
             $cats = !empty($user->assigned_categories)
                 ? (is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories)
                 : [];
-            
+
             // PING-PONG: Use intermediate status 'awaiting_final_review'
             // K3 Isolation
             if (in_array('K3', $selectedCategories)) {
                 $canVerifyK3 = ($document->k3_verificator_id == $user->id_user) || (!$document->k3_verificator_id && in_array('K3', $cats));
-                if($canVerifyK3) {
+                if ($canVerifyK3) {
                     $document->update(['status_k3' => 'awaiting_final_review']);
                 }
             }
@@ -3605,7 +3619,7 @@ class DocumentController extends Controller
             // KO Isolation
             if (in_array('KO', $selectedCategories)) {
                 $canVerifyKO = ($document->ko_verificator_id == $user->id_user) || (!$document->ko_verificator_id && in_array('KO', $cats));
-                if($canVerifyKO) {
+                if ($canVerifyKO) {
                     $document->update(['status_ko' => 'awaiting_final_review']);
                 }
             }
@@ -3613,7 +3627,7 @@ class DocumentController extends Controller
             // Lingkungan Isolation
             if (in_array('Lingkungan', $selectedCategories)) {
                 $canVerifyLingkungan = ($document->lingkungan_verificator_id == $user->id_user) || (!$document->lingkungan_verificator_id && in_array('Lingkungan', $cats));
-                if($canVerifyLingkungan) {
+                if ($canVerifyLingkungan) {
                     $document->update(['status_lingkungan' => 'awaiting_final_review']);
                 }
             }
@@ -3621,22 +3635,24 @@ class DocumentController extends Controller
             // Update main status to indicate sent back to Reviewer
             // Only update global if NO categories are left with Verifiers
             $docCats = $document->details ? $document->details->pluck('kategori')->filter()->unique()->values()->toArray() : [];
-            if (empty($docCats) && $document->kategori) $docCats[] = $document->kategori;
-            
+            if (empty($docCats) && $document->kategori)
+                $docCats[] = $document->kategori;
+
             $freshDoc = $document->fresh();
             $anyLeftWithVerifier = false;
             $sheCats = ['K3', 'KO', 'Lingkungan'];
             foreach ($sheCats as $sc) {
                 if (in_array($sc, $docCats)) {
                     $stField = 'status_' . strtolower($sc);
-                    if ($freshDoc->$stField == 'assigned_approval') $anyLeftWithVerifier = true;
+                    if ($freshDoc->$stField == 'assigned_approval')
+                        $anyLeftWithVerifier = true;
                 }
             }
 
             if (!$anyLeftWithVerifier) {
-                $document->update(['status_she' => 'assigned_review']); 
+                $document->update(['status_she' => 'assigned_review']);
             }
-            
+
             return redirect()->route('unit_pengelola.staff.index')->with('success', 'Verifikasi selesai. Dokumen dikembalikan ke Staff Reviewer untuk Final Review.');
 
         } else {
@@ -3660,30 +3676,31 @@ class DocumentController extends Controller
 
             if ($user->id_unit == 56) { // SHE
                 // Support both flat and structured (K3/KO/Lingkungan) JSON
-            if (isset($incoming['K3']) || isset($incoming['KO']) || isset($incoming['Lingkungan'])) {
-                // Structured Data - Merge with existing to prevent overwriting other categories with empty data
-                $existingShe = $document->compliance_checklist_she ?? [];
-                if (!is_array($existingShe)) $existingShe = [];
+                if (isset($incoming['K3']) || isset($incoming['KO']) || isset($incoming['Lingkungan'])) {
+                    // Structured Data - Merge with existing to prevent overwriting other categories with empty data
+                    $existingShe = $document->compliance_checklist_she ?? [];
+                    if (!is_array($existingShe))
+                        $existingShe = [];
 
-                if (!empty($incoming['K3'])) {
-                    $document->compliance_checklist_k3 = $incoming['K3'];
-                    $existingShe['K3'] = $incoming['K3'];
+                    if (!empty($incoming['K3'])) {
+                        $document->compliance_checklist_k3 = $incoming['K3'];
+                        $existingShe['K3'] = $incoming['K3'];
+                    }
+                    if (!empty($incoming['KO'])) {
+                        $document->compliance_checklist_ko = $incoming['KO'];
+                        $existingShe['KO'] = $incoming['KO'];
+                    }
+                    if (!empty($incoming['Lingkungan'])) {
+                        $document->compliance_checklist_lingkungan = $incoming['Lingkungan'];
+                        $existingShe['Lingkungan'] = $incoming['Lingkungan'];
+                    }
+
+                    $document->compliance_checklist_she = $existingShe;
+                } else {
+                    // Legacy Flat Data or direct input
+                    $document->compliance_checklist_she = $incoming;
                 }
-                if (!empty($incoming['KO'])) {
-                    $document->compliance_checklist_ko = $incoming['KO'];
-                    $existingShe['KO'] = $incoming['KO'];
-                }
-                if (!empty($incoming['Lingkungan'])) {
-                    $document->compliance_checklist_lingkungan = $incoming['Lingkungan'];
-                    $existingShe['Lingkungan'] = $incoming['Lingkungan'];
-                }
-                
-                $document->compliance_checklist_she = $existingShe;
-            } else {
-                // Legacy Flat Data or direct input
-                $document->compliance_checklist_she = $incoming;
-            }
-            $document->save();
+                $document->save();
             } elseif ($user->id_unit == 55) { // Security
                 // Support both flat and wrapped (Keamanan) JSON
                 $data = $incoming;
@@ -3872,13 +3889,15 @@ class DocumentController extends Controller
             // UPDATED: Strict Category Check
             $isUnitStaff = false;
             if (in_array($user->role_jabatan, [4, 5, 6]) && in_array($user->id_unit, [55, 56])) {
-                 $userCats = !empty($user->assigned_categories)
+                $userCats = !empty($user->assigned_categories)
                     ? (is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories)
                     : [];
-                
+
                 // Allow if they are the generic reviewer/verificator or if category matches their assignment
-                if ($user->id_user == $document->she_reviewer_id || $user->id_user == $document->she_verificator_id || 
-                    $user->id_user == $document->security_reviewer_id || $user->id_user == $document->security_verificator_id) {
+                if (
+                    $user->id_user == $document->she_reviewer_id || $user->id_user == $document->she_verificator_id ||
+                    $user->id_user == $document->security_reviewer_id || $user->id_user == $document->security_verificator_id
+                ) {
                     $isUnitStaff = true;
                 } elseif (in_array($detail->kategori, $userCats)) {
                     $isUnitStaff = true;
@@ -3989,7 +4008,7 @@ class DocumentController extends Controller
             // Auth Check
             $isAuthor = $document->id_user == $user->id_user;
             $isApprover = ($user->role_jabatan == 3 && $document->id_unit == $user->id_unit);
-            
+
             // Unit Pengelola Head (Role 2 or 3)
             $isUnitPengelolaHead = false;
             if (in_array($user->role_jabatan, [2, 3])) {
@@ -4006,10 +4025,12 @@ class DocumentController extends Controller
                 $userCats = !empty($user->assigned_categories)
                     ? (is_string($user->assigned_categories) ? json_decode($user->assigned_categories, true) : $user->assigned_categories)
                     : [];
-                
+
                 // Allow if they are the generic reviewer/verificator or if category matches their assignment
-                if ($user->id_user == $document->she_reviewer_id || $user->id_user == $document->she_verificator_id || 
-                    $user->id_user == $document->security_reviewer_id || $user->id_user == $document->security_verificator_id) {
+                if (
+                    $user->id_user == $document->she_reviewer_id || $user->id_user == $document->she_verificator_id ||
+                    $user->id_user == $document->security_reviewer_id || $user->id_user == $document->security_verificator_id
+                ) {
                     $isUnitStaff = true;
                 } elseif (in_array($detail->kategori, $userCats)) {
                     $isUnitStaff = true;
@@ -4248,22 +4269,26 @@ class DocumentController extends Controller
             ->get();
 
         // Fetch Users for PUK/PMK Edit Dropdown (Based on Document Unit)
+        // PUK Koordinator = Band 3: role_jabatan 3 (Kepala Unit) + 4, 5 (Koordinator)
         $band3Users = \App\Models\User::where('id_unit', $document->id_unit)
-            ->whereIn('role_jabatan', [4, 5])
+            ->whereIn('role_jabatan', [3, 4, 5])
             ->orderBy('nama_user')
             ->get();
+
+        $pukKoordinatorUsers = $band3Users;
 
         $band4Users = \App\Models\User::where('id_unit', $document->id_unit)
             ->where('role_jabatan', 6)
             ->orderBy('nama_user')
             ->get();
 
+        // PMK PIC = Band 2 + Band 3: role_jabatan 2 (Kepala Dept) + 3, 4, 5 (Kepala Unit + Koordinator)
         $pmkPicUsers = \App\Models\User::where('id_unit', $document->id_unit)
-            ->where('role_jabatan', 3)
+            ->whereIn('role_jabatan', [2, 3, 4, 5])
             ->orderBy('nama_user')
             ->get();
 
-        return view('unit_pengelola.documents.review', compact('document', 'filteredDetails', 'staffReviewers', 'staffApprovers', 'band3Users', 'band4Users', 'pmkPicUsers'));
+        return view('unit_pengelola.documents.review', compact('document', 'filteredDetails', 'staffReviewers', 'staffApprovers', 'band3Users', 'band4Users', 'pmkPicUsers', 'pukKoordinatorUsers'));
     }
 
     /**
@@ -4405,12 +4430,12 @@ class DocumentController extends Controller
         /**
          * Unified Helper for Filtering
          */
-        $getBaseQuery = function($state) use ($user, $cats) {
+        $getBaseQuery = function ($state) use ($user, $cats) {
             $q = Document::query();
-            
+
             // 1. Mandatory Category Filter (Row Level Security)
             // Ensures staff only see information they are allowed to see
-            $q->whereHas('details', function($sub) use ($cats) {
+            $q->whereHas('details', function ($sub) use ($cats) {
                 $sub->whereIn('kategori', $cats);
             });
 
@@ -4418,145 +4443,163 @@ class DocumentController extends Controller
             if ($state === 'inbox') {
                 if ($user->id_unit == 55) { // Security
                     // Reviewer Task
-                    $q->where(function($subQ) use ($user) {
-                         $subQ->where('status_security', 'assigned_review')
-                              ->where(function($s) use ($user) {
-                                  $s->where('security_reviewer_id', $user->id_user)
+                    $q->where(function ($subQ) use ($user) {
+                        $subQ->where('status_security', 'assigned_review')
+                            ->where(function ($s) use ($user) {
+                                $s->where('security_reviewer_id', $user->id_user)
                                     ->orWhereNull('security_reviewer_id');
-                              });
-                    })->orWhere(function($subQ) use ($user) {
-                         // Verificator Task
-                         $subQ->where('status_security', 'assigned_approval')
-                              ->where(function($s) use ($user) {
-                                  $s->where('security_verificator_id', $user->id_user)
+                            });
+                    })->orWhere(function ($subQ) use ($user) {
+                        // Verificator Task
+                        $subQ->where('status_security', 'assigned_approval')
+                            ->where(function ($s) use ($user) {
+                                $s->where('security_verificator_id', $user->id_user)
                                     ->orWhereNull('security_verificator_id');
-                              });
+                            });
                     });
                 } else { // SHE
-                    $q->where(function($container) use ($cats, $user) {
+                    $q->where(function ($container) use ($cats, $user) {
                         // Reviewer Tasks (assigned_review OR awaiting_final_review)
-                        $container->where(function($sub) use ($cats, $user) {
-                            $sub->where(function($statusCheck) use ($cats) {
-                                if (in_array('K3', $cats)) $statusCheck->orWhereIn('status_k3', ['assigned_review', 'awaiting_final_review']);
-                                if (in_array('KO', $cats)) $statusCheck->orWhereIn('status_ko', ['assigned_review', 'awaiting_final_review']);
-                                if (in_array('Lingkungan', $cats)) $statusCheck->orWhereIn('status_lingkungan', ['assigned_review', 'awaiting_final_review']);
+                        $container->where(function ($sub) use ($cats, $user) {
+                            $sub->where(function ($statusCheck) use ($cats) {
+                                if (in_array('K3', $cats))
+                                    $statusCheck->orWhereIn('status_k3', ['assigned_review', 'awaiting_final_review']);
+                                if (in_array('KO', $cats))
+                                    $statusCheck->orWhereIn('status_ko', ['assigned_review', 'awaiting_final_review']);
+                                if (in_array('Lingkungan', $cats))
+                                    $statusCheck->orWhereIn('status_lingkungan', ['assigned_review', 'awaiting_final_review']);
                                 // Only check status_she if NO specific categories are present
                                 if (empty($cats) || (!in_array('K3', $cats) && !in_array('KO', $cats) && !in_array('Lingkungan', $cats))) {
                                     $statusCheck->orWhereIn('status_she', ['assigned_review', 'awaiting_final_review']);
                                 }
-                            })->where(function($assignCheck) use ($user) {
+                            })->where(function ($assignCheck) use ($user) {
                                 $assignCheck->where('she_reviewer_id', $user->id_user)
-                                   ->orWhere('k3_reviewer_id', $user->id_user)
-                                   ->orWhere('ko_reviewer_id', $user->id_user)
-                                   ->orWhere('lingkungan_reviewer_id', $user->id_user)
-                                   ->orWhereNull('she_reviewer_id');
+                                    ->orWhere('k3_reviewer_id', $user->id_user)
+                                    ->orWhere('ko_reviewer_id', $user->id_user)
+                                    ->orWhere('lingkungan_reviewer_id', $user->id_user)
+                                    ->orWhereNull('she_reviewer_id');
                             });
                         });
 
                         // Verificator Tasks (assigned_approval) - NEW: Parallel Routing
-                        $container->orWhere(function($sub) use ($cats, $user) {
-                             $sub->where(function($statusCheck) use ($cats) {
-                                if (in_array('K3', $cats)) $statusCheck->orWhere('status_k3', 'assigned_approval');
-                                if (in_array('KO', $cats)) $statusCheck->orWhere('status_ko', 'assigned_approval');
-                                if (in_array('Lingkungan', $cats)) $statusCheck->orWhere('status_lingkungan', 'assigned_approval');
+                        $container->orWhere(function ($sub) use ($cats, $user) {
+                            $sub->where(function ($statusCheck) use ($cats) {
+                                if (in_array('K3', $cats))
+                                    $statusCheck->orWhere('status_k3', 'assigned_approval');
+                                if (in_array('KO', $cats))
+                                    $statusCheck->orWhere('status_ko', 'assigned_approval');
+                                if (in_array('Lingkungan', $cats))
+                                    $statusCheck->orWhere('status_lingkungan', 'assigned_approval');
                                 // Removed global status_she fallback to prevent 'stickiness'
-                             })->where(function($assignCheck) use ($user) {
+                            })->where(function ($assignCheck) use ($user) {
                                 // Strict check: Am I the specific verificator?
                                 // Or generic 'she_verificator_id'
                                 $assignCheck->where('she_verificator_id', $user->id_user)
-                                   ->orWhere('k3_verificator_id', $user->id_user)
-                                   ->orWhere('ko_verificator_id', $user->id_user)
-                                   ->orWhere('lingkungan_verificator_id', $user->id_user);
-                             });
+                                    ->orWhere('k3_verificator_id', $user->id_user)
+                                    ->orWhere('ko_verificator_id', $user->id_user)
+                                    ->orWhere('lingkungan_verificator_id', $user->id_user);
+                            });
                         });
                     });
                 }
             } elseif ($state === 'returned') {
                 if ($user->id_unit == 55) { // Security
-                    $q->where(function($sub) use ($user) {
+                    $q->where(function ($sub) use ($user) {
                         // 1. As Reviewer: Received back from Verifier
-                        $sub->where(function($r) use ($user) {
+                        $sub->where(function ($r) use ($user) {
                             $r->where('status_security', 'staff_verified')
-                              ->where('security_reviewer_id', $user->id_user);
+                                ->where('security_reviewer_id', $user->id_user);
                         })
-                        // 2. As Verifier: Documents I have already verified
-                        ->orWhere(function($v) use ($user) {
-                            $v->whereIn('status_security', ['staff_verified', 'process_approval', 'approved', 'published'])
-                              ->where('security_verificator_id', $user->id_user);
-                        });
+                            // 2. As Verifier: Documents I have already verified
+                            ->orWhere(function ($v) use ($user) {
+                                $v->whereIn('status_security', ['staff_verified', 'process_approval', 'approved', 'published'])
+                                    ->where('security_verificator_id', $user->id_user);
+                            });
                     });
                 } else { // SHE
-                    $q->where(function($container) use ($cats, $user) {
+                    $q->where(function ($container) use ($cats, $user) {
                         // 1. As Reviewer: Items awaiting FINAL review
-                        $container->where(function($sub) use ($cats, $user) {
-                             $sub->where(function($statusCheck) use ($cats) {
-                                if (in_array('K3', $cats)) $statusCheck->orWhere('status_k3', 'awaiting_final_review');
-                                if (in_array('KO', $cats)) $statusCheck->orWhere('status_ko', 'awaiting_final_review');
-                                if (in_array('Lingkungan', $cats)) $statusCheck->orWhere('status_lingkungan', 'awaiting_final_review');
-                             })->where(function($assignCheck) use ($user) {
+                        $container->where(function ($sub) use ($cats, $user) {
+                            $sub->where(function ($statusCheck) use ($cats) {
+                                if (in_array('K3', $cats))
+                                    $statusCheck->orWhere('status_k3', 'awaiting_final_review');
+                                if (in_array('KO', $cats))
+                                    $statusCheck->orWhere('status_ko', 'awaiting_final_review');
+                                if (in_array('Lingkungan', $cats))
+                                    $statusCheck->orWhere('status_lingkungan', 'awaiting_final_review');
+                            })->where(function ($assignCheck) use ($user) {
                                 $assignCheck->where('she_reviewer_id', $user->id_user)
-                                   ->orWhere('k3_reviewer_id', $user->id_user)
-                                   ->orWhere('ko_reviewer_id', $user->id_user)
-                                   ->orWhere('lingkungan_reviewer_id', $user->id_user);
-                             });
+                                    ->orWhere('k3_reviewer_id', $user->id_user)
+                                    ->orWhere('ko_reviewer_id', $user->id_user)
+                                    ->orWhere('lingkungan_reviewer_id', $user->id_user);
+                            });
                         });
-                        
+
                         // 2. As Verifier: Items I have verified (Status past 'assigned_approval')
-                        $container->orWhere(function($sub) use ($cats, $user) {
-                             $sub->where(function($statusCheck) use ($cats) {
+                        $container->orWhere(function ($sub) use ($cats, $user) {
+                            $sub->where(function ($statusCheck) use ($cats) {
                                 // Verified if status is awaiting_final_review OR already approved/published
-                                if (in_array('K3', $cats)) $statusCheck->orWhereIn('status_k3', ['awaiting_final_review', 'verified', 'approved', 'published']);
-                                if (in_array('KO', $cats)) $statusCheck->orWhereIn('status_ko', ['awaiting_final_review', 'verified', 'approved', 'published']);
-                                if (in_array('Lingkungan', $cats)) $statusCheck->orWhereIn('status_lingkungan', ['awaiting_final_review', 'verified', 'approved', 'published']);
-                             })->where(function($assignCheck) use ($user) {
+                                if (in_array('K3', $cats))
+                                    $statusCheck->orWhereIn('status_k3', ['awaiting_final_review', 'verified', 'approved', 'published']);
+                                if (in_array('KO', $cats))
+                                    $statusCheck->orWhereIn('status_ko', ['awaiting_final_review', 'verified', 'approved', 'published']);
+                                if (in_array('Lingkungan', $cats))
+                                    $statusCheck->orWhereIn('status_lingkungan', ['awaiting_final_review', 'verified', 'approved', 'published']);
+                            })->where(function ($assignCheck) use ($user) {
                                 $assignCheck->where('she_verificator_id', $user->id_user)
-                                   ->orWhere('k3_verificator_id', $user->id_user)
-                                   ->orWhere('ko_verificator_id', $user->id_user)
-                                   ->orWhere('lingkungan_verificator_id', $user->id_user);
-                             });
+                                    ->orWhere('k3_verificator_id', $user->id_user)
+                                    ->orWhere('ko_verificator_id', $user->id_user)
+                                    ->orWhere('lingkungan_verificator_id', $user->id_user);
+                            });
                         });
                     });
                 }
             } elseif ($state === 'processing') {
                 if ($user->id_unit == 55) { // Security
                     $q->whereIn('status_security', ['assigned_approval', 'process_verification'])
-                      ->where(function($sub) use ($user) {
-                          // Allow if I am Verificator
-                          $sub->where('security_verificator_id', $user->id_user)
-                             // OR if I am Reviewer and waiting (Tracking my submission)
-                             ->orWhere('security_reviewer_id', $user->id_user);
-                      });
-                } else { // SHE
-                    $q->where(function($container) use ($cats, $user) {
-                        // 1. Items where I am Verificator (Standard 'Processing' for Verificator User)
-                         $container->where(function($sub) use ($cats, $user) {
-                             $sub->where(function($statusCheck) use ($cats) {
-                                if (in_array('K3', $cats)) $statusCheck->orWhereIn('status_k3', ['assigned_approval', 'process_verification']);
-                                if (in_array('KO', $cats)) $statusCheck->orWhereIn('status_ko', ['assigned_approval', 'process_verification']);
-                                if (in_array('Lingkungan', $cats)) $statusCheck->orWhereIn('status_lingkungan', ['assigned_approval', 'process_verification']);
-                                $statusCheck->orWhereIn('status_she', ['assigned_approval', 'process_verification']);
-                             })->where(function($assignCheck) use ($user) {
-                                $assignCheck->where('she_verificator_id', $user->id_user)
-                                   ->orWhere('k3_verificator_id', $user->id_user)
-                                   ->orWhere('ko_verificator_id', $user->id_user)
-                                   ->orWhere('lingkungan_verificator_id', $user->id_user);
-                             });
+                        ->where(function ($sub) use ($user) {
+                            // Allow if I am Verificator
+                            $sub->where('security_verificator_id', $user->id_user)
+                                // OR if I am Reviewer and waiting (Tracking my submission)
+                                ->orWhere('security_reviewer_id', $user->id_user);
                         });
-                        
+                } else { // SHE
+                    $q->where(function ($container) use ($cats, $user) {
+                        // 1. Items where I am Verificator (Standard 'Processing' for Verificator User)
+                        $container->where(function ($sub) use ($cats, $user) {
+                            $sub->where(function ($statusCheck) use ($cats) {
+                                if (in_array('K3', $cats))
+                                    $statusCheck->orWhereIn('status_k3', ['assigned_approval', 'process_verification']);
+                                if (in_array('KO', $cats))
+                                    $statusCheck->orWhereIn('status_ko', ['assigned_approval', 'process_verification']);
+                                if (in_array('Lingkungan', $cats))
+                                    $statusCheck->orWhereIn('status_lingkungan', ['assigned_approval', 'process_verification']);
+                                $statusCheck->orWhereIn('status_she', ['assigned_approval', 'process_verification']);
+                            })->where(function ($assignCheck) use ($user) {
+                                $assignCheck->where('she_verificator_id', $user->id_user)
+                                    ->orWhere('k3_verificator_id', $user->id_user)
+                                    ->orWhere('ko_verificator_id', $user->id_user)
+                                    ->orWhere('lingkungan_verificator_id', $user->id_user);
+                            });
+                        });
+
                         // 2. Items where I am Reviewer but I sent it to Verificator (My 'Waiting' List)
-                        $container->orWhere(function($sub) use ($cats, $user) {
-                             $sub->where(function($statusCheck) use ($cats) {
+                        $container->orWhere(function ($sub) use ($cats, $user) {
+                            $sub->where(function ($statusCheck) use ($cats) {
                                 // Check if MY categories are in verification stage
-                                if (in_array('K3', $cats)) $statusCheck->orWhereIn('status_k3', ['assigned_approval', 'process_verification']);
-                                if (in_array('KO', $cats)) $statusCheck->orWhereIn('status_ko', ['assigned_approval', 'process_verification']);
-                                if (in_array('Lingkungan', $cats)) $statusCheck->orWhereIn('status_lingkungan', ['assigned_approval', 'process_verification']);
-                             })->where(function($assignCheck) use ($user) {
+                                if (in_array('K3', $cats))
+                                    $statusCheck->orWhereIn('status_k3', ['assigned_approval', 'process_verification']);
+                                if (in_array('KO', $cats))
+                                    $statusCheck->orWhereIn('status_ko', ['assigned_approval', 'process_verification']);
+                                if (in_array('Lingkungan', $cats))
+                                    $statusCheck->orWhereIn('status_lingkungan', ['assigned_approval', 'process_verification']);
+                            })->where(function ($assignCheck) use ($user) {
                                 // I am the Reviewer
                                 $assignCheck->where('she_reviewer_id', $user->id_user)
-                                   ->orWhere('k3_reviewer_id', $user->id_user)
-                                   ->orWhere('ko_reviewer_id', $user->id_user)
-                                   ->orWhere('lingkungan_reviewer_id', $user->id_user);
-                             });
+                                    ->orWhere('k3_reviewer_id', $user->id_user)
+                                    ->orWhere('ko_reviewer_id', $user->id_user)
+                                    ->orWhere('lingkungan_reviewer_id', $user->id_user);
+                            });
                         });
                     });
                 }
@@ -4584,11 +4627,11 @@ class DocumentController extends Controller
             ->get();
 
         return view('unit_pengelola.documents.staff_index', compact(
-            'documents', 
-            'countInbox', 
-            'countReturned', 
-            'countProcessing', 
-            'countHistory', 
+            'documents',
+            'countInbox',
+            'countReturned',
+            'countProcessing',
+            'countHistory',
             'filter'
         ));
     }
@@ -4888,7 +4931,7 @@ class DocumentController extends Controller
             if ($request->has('is_reviewer')) {
                 // VALIDATION: Only Role 4 (Manager/Reviewer) unless unassigning
                 if ($request->is_reviewer && $targetUser->role_jabatan != 4 && $targetUser->id_role_jabatan != 4) {
-                     return response()->json(['success' => false, 'message' => 'Hanya Staff dengan jabatan Reviewer (Role 4) yang dapat menjadi Reviewer.'], 422);
+                    return response()->json(['success' => false, 'message' => 'Hanya Staff dengan jabatan Reviewer (Role 4) yang dapat menjadi Reviewer.'], 422);
                 }
 
                 if ($request->is_reviewer) {
@@ -4897,10 +4940,10 @@ class DocumentController extends Controller
                         \App\Models\User::where('id_unit', $currentUser->id_unit)
                             ->where('is_reviewer', 1)
                             ->update(['is_reviewer' => 0, 'assigned_categories' => null]);
-                            
+
                         // Auto-Assign Category
                         $targetUser->assigned_categories = ['Keamanan'];
-                    } 
+                    }
                     // SHE Unit (56): No strict limit (multiple categories need flexibility)
                     // Each category (K3, KO, Lingkungan) can have multiple reviewers
 
@@ -4915,7 +4958,7 @@ class DocumentController extends Controller
             if ($request->has('is_verifier')) {
                 // VALIDATION: Only Role 5 & 6 (Superintendent/Verifier) unless unassigning
                 if ($request->is_verifier && !in_array($targetUser->role_jabatan, [5, 6]) && !in_array($targetUser->id_role_jabatan, [5, 6])) {
-                     return response()->json(['success' => false, 'message' => 'Hanya Staff dengan jabatan Verifikator (Role 5/6) yang dapat menjadi Verifikator.'], 422);
+                    return response()->json(['success' => false, 'message' => 'Hanya Staff dengan jabatan Verifikator (Role 5/6) yang dapat menjadi Verifikator.'], 422);
                 }
 
                 if ($request->is_verifier) {
@@ -4927,7 +4970,7 @@ class DocumentController extends Controller
 
                         // Auto-Assign Category
                         $targetUser->assigned_categories = ['Keamanan'];
-                    } 
+                    }
                     // SHE Unit (56): No strict limit (multiple categories need flexibility)
                     // Each category (K3, KO, Lingkungan) can have multiple verificators
 
@@ -4945,7 +4988,7 @@ class DocumentController extends Controller
                         ->where('can_create_documents', 1)
                         ->where('id_user', '!=', $targetUser->id_user)
                         ->count();
-                    
+
                     if ($count >= 2) {
                         return response()->json(['success' => false, 'message' => 'Hanya boleh 2 orang akses form'], 422);
                     }
@@ -4960,11 +5003,13 @@ class DocumentController extends Controller
             // 4. Handle Category Assignment (Unique Constraint)
             if ($request->has('assigned_categories')) {
                 $newCategories = $request->assigned_categories;
-                
+
                 // Determine current role to check uniqueness against
                 $roleToCheck = null;
-                if ($targetUser->is_reviewer) $roleToCheck = 'is_reviewer';
-                elseif ($targetUser->is_verifier) $roleToCheck = 'is_verifier';
+                if ($targetUser->is_reviewer)
+                    $roleToCheck = 'is_reviewer';
+                elseif ($targetUser->is_verifier)
+                    $roleToCheck = 'is_verifier';
 
                 if ($roleToCheck && !empty($newCategories)) {
                     foreach ($newCategories as $cat) {
@@ -4978,7 +5023,7 @@ class DocumentController extends Controller
                         if ($conflict) {
                             $roleLabel = ($roleToCheck == 'is_reviewer') ? 'Reviewer' : 'Verifikator';
                             return response()->json([
-                                'success' => false, 
+                                'success' => false,
                                 'message' => "Kategori '$cat' sudah diambil oleh Staff $roleLabel lain."
                             ], 422);
                         }
