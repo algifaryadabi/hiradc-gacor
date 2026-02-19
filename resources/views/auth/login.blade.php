@@ -90,13 +90,12 @@
         .brand-logo-container {
             width: 150px;
             height: 150px;
-            background: white;
+            background: transparent;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             font-size: 60px;
             font-weight: bold;
             color: var(--primary-color);

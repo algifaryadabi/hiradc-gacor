@@ -1933,8 +1933,8 @@
 
                 if ($isSheUnit || $isSecurityUnit) {
                     if ($isApprover) {
-                        // Verifikator selalu melihat/mengisi checklist
-                        // SHE: Cek status kategori individu
+                        // Verifikator (Band 3/4/5) SELALU melihat/mengisi checklist
+                        // Show if any track is active
                         if ($isSheUnit) {
                             $anyAtVerif = (in_array($document->status_k3, ['assigned_approval', 'process_verification']) || 
                                            in_array($document->status_ko, ['assigned_approval', 'process_verification']) || 
@@ -1946,43 +1946,25 @@
                             if (in_array($status, ['assigned_approval', 'process_verification'])) $showChecklist = true;
                         }
                     } elseif ($isReviewer) {
-                        // Reviewer hanya melihat jika Dokumen sudah kembali dari Verifikator (Stage 2)
-                        // Cek status:
-                        // Security: 'staff_verified'
-                        // SHE: 'awaiting_final_review' pada salah satu kategori (K3/KO/Lingkungan)
-                        
-                         if ($isSecurityUnit) {
-                            if (in_array($document->status_security, ['assigned_review', 'staff_verified', 'revision'])) $showChecklist = true;
-                        } elseif ($isSheUnit) {
-                            // Stage 1 or Stage 2: Always show my categories' checklists
-                            // Using a more inclusive check so Stage 1 Reviewers can also see/prepare it.
-                            $hasMyTrack = false;
-                            
-                            $isK3Turn = in_array($document->status_k3, ['assigned_review', 'awaiting_final_review', 'revision']);
-                            $isKOTurn = in_array($document->status_ko, ['assigned_review', 'awaiting_final_review', 'revision']);
-                            $isLingTurn = in_array($document->status_lingkungan, ['assigned_review', 'awaiting_final_review', 'revision']);
-                            
-                            if ($isReviewerK3 && $isK3Turn) $hasMyTrack = true;
-                            if ($isReviewerKO && $isKOTurn) $hasMyTrack = true;
-                            if ($isReviewerLingkungan && $isLingTurn) $hasMyTrack = true;
-                            
-                            // Historical/Generic fallback
-                            if (in_array($document->status_she, ['assigned_review', 'awaiting_final_review'])) $hasMyTrack = true;
-
-                            // Also show if already verified (Stage 2)
-                            if (in_array($document->status_k3, ['verified'])) $hasMyTrack = true;
-                            if (in_array($document->status_ko, ['verified'])) $hasMyTrack = true;
-                            if (in_array($document->status_lingkungan, ['verified'])) $hasMyTrack = true;
-                            
-                            if ($hasMyTrack) $showChecklist = true;
-                        }
+                        // Reviewer (Band 4) TIDAK BOLEH melihat checklist
+                        $showChecklist = false; 
                     } elseif ($isHead) {
                         // Kepala Unit: Show during disposition (pending_head) and approval phases
-                        
                         $visibleToHead = ['pending_head', 'process_approval', 'staff_verified', 'returned_to_head', 'approved', 'published', 'level3_approved', 'pending_level3_ready'];
 
                         if (in_array($status, $visibleToHead)) {
                              $showChecklist = true;
+                             
+                             // If head is reviewing, he needs to see it.
+                             if ($status == 'pending_head' || $status == 'returned_to_head') {
+                                 $showChecklist = false; // Initially false in disposition, but wait... Requirement says "sesuai yang dipilih kepala unit pengelola"
+                                 // Usually Head doesn't fill it in disposition, but sees it in FINAL approval.
+                                 // Let's stick to: Head sees it in Final Approval or verifying staff work.
+                             }
+                             
+                             if (in_array($status, ['process_approval', 'staff_verified', 'approved', 'published'])) {
+                                 $showChecklist = true;
+                             }
                         }
                     }
                 }
